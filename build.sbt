@@ -42,35 +42,3 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.0-M1" % "test"
 javaOptions in Universal ++= Seq(
   "-Dconfig.file=../conf/system.conf"
 )
-
-//enablePlugins(SbtProguard)
-//
-//// to configure proguard for scala, see
-//// http://proguard.sourceforge.net/manual/examples.html#scala
-//proguardOptions in Proguard ++= Seq(
-//  "-dontoptimize",
-//  "-dontnote",
-//  "-dontwarn",
-//  "-ignorewarnings",
-//  // ...
-//)
-//
-//// specify the entry point for a standalone app
-//proguardOptions in Proguard += ProguardOptions.keepMain("o.lartifa.arfies.Bootloader")
-//
-//proguardVersion in Proguard := "6.0.3"
-//
-//// filter out jar files from the list of generated files, while
-//// keeping non-jar output such as generated launch scripts
-//mappings in Universal := (mappings in Universal).value.
-//  filter {
-//    case (file, name) => !name.endsWith(".jar")
-//  }
-//
-//// ... and then append the jar file emitted from the proguard task to
-//// the file list
-//mappings in Universal ++= (proguard in Proguard).
-//  value.map(jar => jar -> ("lib/" + jar.getName))
-//
-//// point the classpath to the output from the proguard task
-//scriptClasspath := (proguard in Proguard).value.map(jar => jar.getName)
