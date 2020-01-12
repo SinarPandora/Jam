@@ -86,5 +86,5 @@ hs_err_pid*
 
 .idea/ZeppelinRemoteNotebooks/
 .idea/sonarlint/
-src/main/scala/o/lartifa/jam/extension/
-src/test/
+
+TODO.md
