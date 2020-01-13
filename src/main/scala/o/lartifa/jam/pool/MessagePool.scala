@@ -6,6 +6,7 @@ import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMe
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.database.temporary.TemporaryMemory.database.db
 import o.lartifa.jam.database.temporary.schema.Tables._
+import o.lartifa.jam.pool.MessagePool.Constant
 
 import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
@@ -16,14 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2020/1/13 22:11 
  */
-object MessagePool {
-
-  object Constant {
-    val SUB_TYPE_NORMAL: String = "normal"
-    val SUB_TYPE_FRIEND: String = "friend"
-    val PRIVATE: String = "private"
-    val GROUP: String = "group"
-  }
+class MessagePool {
 
   import o.lartifa.jam.database.temporary.TemporaryMemory.database.profile.api._
 
@@ -80,5 +74,14 @@ object MessagePool {
         ) += (msg.getMessage, msg.getMessageId, msg.getMessageType, Constant.SUB_TYPE_NORMAL, msg.getPostType,
         msg.getRawMessage, msg.getSelfId, msg.getSelfId, msg.getGroup.getId, msg.getFont, msg.getTime)
     }
+  }
+}
+
+object MessagePool {
+  object Constant {
+    val SUB_TYPE_NORMAL: String = "normal"
+    val SUB_TYPE_FRIEND: String = "friend"
+    val PRIVATE: String = "private"
+    val GROUP: String = "group"
   }
 }

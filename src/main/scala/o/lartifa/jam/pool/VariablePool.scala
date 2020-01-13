@@ -19,7 +19,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2020/1/3 23:58 
  */
-object VariablePool {
+class VariablePool {
 
   import o.lartifa.jam.database.temporary.TemporaryMemory.database.profile.api._
 

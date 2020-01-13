@@ -15,9 +15,9 @@ import o.lartifa.jam.model.patterns.ContentMatcher
 object JamContext {
   val editLock: AtomicBoolean = new AtomicBoolean(false)
   val stepPool: AtomicReference[StepPool] = new AtomicReference[StepPool]()
-  val variablePool: VariablePool.type = VariablePool
+  val variablePool: VariablePool = new VariablePool()
   val matchers: AtomicReference[List[ContentMatcher]] = new AtomicReference[List[ContentMatcher]]()
   val logger: AtomicReference[HyLogger] = new AtomicReference[HyLogger]()
-  val clock: Biochronometer.type = Biochronometer
-  val messagePool: MessagePool.type = MessagePool
+  val clock: Biochronometer = new Biochronometer()
+  val messagePool: MessagePool = new MessagePool()
 }

@@ -6,6 +6,6 @@ package o.lartifa.jam.bionic.clock
  * Author: sinar
  * 2020/1/11 11:41 
  */
-object Biochronometer {
+class Biochronometer {
 
 }
