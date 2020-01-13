@@ -7,10 +7,10 @@ import slick.codegen.SourceCodeGenerator
  * 2019/11/3 13:44
  */
 object CodeGen {
-  final val profile: String = "slick.jdbc.SQLiteProfile"
-  final val driver: String = "org.sqlite.JDBC"
+  final val profile: String = "slick.jdbc.H2Profile"
+  final val driver: String = "org.h2.Driver"
 
-  def url: String = s"jdbc:sqlite:db/example.sqlite"
+  def url: String = s"jdbc:h2:./db/temporary_memory"
 
   def main(args: Array[String]): Unit = {
     SourceCodeGenerator.run(
