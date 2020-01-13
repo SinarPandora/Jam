@@ -18,7 +18,7 @@ object CodeGen {
       jdbcDriver = driver,
       url = url,
       outputDir = "/Users/sinar/IdeaProjects/Jam/src/main/scala",
-      pkg = s"o.lartifa.jam.database.temporary.schema",
+      pkg = s"o.lartifa.jam.database.temporary.codeGen.gen",
       user = None,
       password = None,
       ignoreInvalidDefaults = true,

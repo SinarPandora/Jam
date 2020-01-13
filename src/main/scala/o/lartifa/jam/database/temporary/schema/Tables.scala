@@ -11,8 +11,6 @@ object Tables extends {
 trait Tables extends MessageRecordsTable with VariablesTable {
   val profile: slick.jdbc.JdbcProfile
   import profile.api._
-  // import slick.model.ForeignKeyAction
-  // import slick.jdbc.{GetResult => GR}
   // NOTE: GetResult mappers for plain SQL are only generated for tables where Slick knows how to map the types of all columns.
 
   /** DDL for all tables. Call .create to execute. */
