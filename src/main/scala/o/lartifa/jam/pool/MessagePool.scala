@@ -20,13 +20,16 @@ object MessagePool {
 
   object Constant {
     val SUB_TYPE_NORMAL: String = "normal"
+    val SUB_TYPE_FRIEND: String = "friend"
+    val PRIVATE: String = "private"
+    val GROUP: String = "group"
   }
 
   import o.lartifa.jam.database.temporary.TemporaryMemory.database.profile.api._
 
   private case class ChatInfo(chatType: String, chatId: Long)
 
-  implicit val exec: ExecutionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
+  private implicit val exec: ExecutionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
   private lazy val logger: HyLogger = JamContext.logger.get()
 

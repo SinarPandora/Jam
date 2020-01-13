@@ -10,7 +10,8 @@ import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch
 import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.model.CommandExecuteContext
-import o.lartifa.jam.pool.JamContext
+import o.lartifa.jam.model.patterns.ContentMatcher
+import o.lartifa.jam.pool.{JamContext, MessagePool}
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.util.{Failure, Success}
@@ -27,51 +28,86 @@ object RuleEngineListener extends IcqListener {
 
   private lazy val logger: HyLogger = JamContext.logger.get()
 
+  private val messageRecorder: MessagePool.type = JamContext.messagePool
+
+  /**
+   * 消息监听
+   *
+   * @param eventMessage 消息对象
+   */
   @EventHandler
   def listen(eventMessage: EventMessage): Unit = {
-    val matchCost = new StopWatch()
-    matchCost.start()
-    val stepId: AtomicReference[Option[Long]] = new AtomicReference[Option[Long]](None)
-    if (!JamContext.editLock.get()) {
-      import scala.util.control._
-      val loop = new Breaks
-      loop.breakable {
-        for (matcher <- JamContext.matchers.get()) {
-          if (matcher.isMatched(eventMessage.message)) {
-            implicit val context: CommandExecuteContext = CommandExecuteContext(eventMessage)
-            stepId.set(Some(matcher.stepId))
-            JamContext.stepPool.get().goto(matcher.stepId).onComplete {
-              case Failure(exception) =>
-                exception.printStackTrace()
-                notifyMaster(matcher.stepId, exception.getMessage, eventMessage)
-              case Success(_) =>
-            }
-            loop.break()
-          }
-        }
-      }
-    }
-    matchCost.stop()
-    stepId.get().foreach { id =>
-      val cost = matchCost.getTotalTimeSeconds
-      if (cost < 1) {
-        logger.log(s"${AnsiColor.GREEN}成功捕获！步骤ID：$id，耗时：小于1s")
-      } else if (cost < 4) {
-        logger.log(s"${AnsiColor.GREEN}成功捕获！步骤ID：$id，耗时：${cost}s")
-      } else {
-        logger.warning(s"${AnsiColor.RED}成功捕获但耗时较长，请考虑对步骤进行优化。步骤ID：$id，耗时：${cost}s")
-      }
+    messageRecorder.recordMessage(eventMessage).onComplete {
+      case Failure(exception) =>
+        logger.error(exception)
+        notifyMaster(s"发生严重错误：${eventMessage.message}", eventMessage)
+      case Success(isRecordSuccess) =>
+        if (!isRecordSuccess) notifyMaster(s"消息记录失败，消息内容为：${eventMessage.getMessage}", eventMessage)
+        findThenDoStep(eventMessage)
     }
   }
 
   /**
+   * 搜索匹配的步骤并启动
+   *
+   * @param eventMessage 消息对象
+   */
+  def findThenDoStep(eventMessage: EventMessage): Unit = {
+    val matchCost = new StopWatch()
+    matchCost.start()
+    val stepId: AtomicReference[Option[Long]] = new AtomicReference[Option[Long]](None)
+
+    // 查找匹配的步骤
+    if (!JamContext.editLock.get()) {
+      findMatchedStep(eventMessage.getMessage, JamContext.matchers.get()) match {
+        case Some(matcher) =>
+          implicit val context: CommandExecuteContext = CommandExecuteContext(eventMessage)
+          stepId.set(Some(matcher.stepId))
+          JamContext.stepPool.get().goto(matcher.stepId).onComplete {
+            case Failure(exception) =>
+              logger.error(exception)
+              notifyMaster(s"步骤${stepId}执行失败！原因：${exception.getMessage}", eventMessage)
+            case Success(_) =>
+          }
+        case None =>
+      }
+    }
+
+    // 输出统计内容
+    matchCost.stop()
+    stepId.get().foreach { id =>
+      val cost = matchCost.getTotalTimeSeconds
+      if (cost < 1) logger.log(s"${AnsiColor.GREEN}成功捕获！步骤ID：$id，耗时：小于1s")
+      else if (cost < 4) logger.log(s"${AnsiColor.GREEN}成功捕获！步骤ID：$id，耗时：${cost}s")
+      else logger.warning(s"${AnsiColor.RED}成功捕获但耗时较长，请考虑对步骤进行优化。步骤ID：$id，耗时：${cost}s")
+    }
+  }
+
+  /**
+   * 寻找匹配的步骤
+   *
+   * @param message  消息对象
+   * @param matchers 捕获器列表
+   * @return 匹配结果
+   */
+  @scala.annotation.tailrec
+  private def findMatchedStep(message: String, matchers: List[ContentMatcher]): Option[ContentMatcher] = {
+    matchers match {
+      case matcher :: next =>
+        if (matcher.isMatched(message)) Some(matcher)
+        else findMatchedStep(message, next)
+      case Nil => None
+    }
+  }
+
+
+  /**
    * 通知管理者
    *
-   * @param stepId       步骤 ID
    * @param message      错误信息
    * @param eventMessage 消息内容
    */
-  private def notifyMaster(stepId: Long, message: String, eventMessage: EventMessage): Unit = {
-    eventMessage.getHttpApi.sendPrivateMsg(JamConfig.masterQID, s"步骤${stepId}执行失败！原因：$message")
+  private def notifyMaster(message: String, eventMessage: EventMessage): Unit = {
+    eventMessage.getHttpApi.sendPrivateMsg(JamConfig.masterQID, message)
   }
 }

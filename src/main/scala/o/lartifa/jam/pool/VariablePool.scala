@@ -25,7 +25,7 @@ object VariablePool {
 
   private case class ChatInfo(chatType: String, chatId: Long)
 
-  implicit val exec: ExecutionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
+  private implicit val exec: ExecutionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
   private lazy val logger: HyLogger = JamContext.logger.get()
 
