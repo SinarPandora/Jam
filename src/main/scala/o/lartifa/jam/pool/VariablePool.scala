@@ -2,13 +2,14 @@ package o.lartifa.jam.pool
 
 import java.util.concurrent.Executors
 
-import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
+import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.exception.ExecuteException
+import o.lartifa.jam.common.util.TimeUtil
 import o.lartifa.jam.database.temporary.TemporaryMemory.database.db
 import o.lartifa.jam.database.temporary.schema.Tables
 import o.lartifa.jam.database.temporary.schema.Tables._
-import o.lartifa.jam.model.CommandExecuteContext
+import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 
 import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
@@ -23,8 +24,6 @@ class VariablePool {
 
   import o.lartifa.jam.database.temporary.TemporaryMemory.database.profile.api._
 
-  private case class ChatInfo(chatType: String, chatId: Long)
-
   private implicit val exec: ExecutionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
   private lazy val logger: HyLogger = JamContext.logger.get()
@@ -38,11 +37,12 @@ class VariablePool {
    * @return 更新结果
    */
   def update(name: String, value: String)(implicit context: CommandExecuteContext): Future[String] = {
-    val ChatInfo(chatType, chatId) = getChatInfo(context.eventMessage)
+    val ChatInfo(chatType, chatId) = ChatInfo(context.eventMessage)
     logger.debug(s"变量更新：名称：$name，值：$value，聊天类型：$chatType，会话 ID：$chatId")
     val task = Variables
       .filter(row => row.chatId === chatId && row.chatType === chatType && row.name === name)
-      .map(row => (row.name, row.value, row.chatType, row.chatId)) update ((name, value, chatType, chatId))
+      .map(row => (row.name, row.value, row.chatType, row.chatId, row.lastUpdateDate))
+      .update((name, value, chatType, chatId, TimeUtil.currentTimeStamp))
     db.run(task) map (count => if (count != 1) throw ExecuteException(s"变量更新失败！变量名为：$name") else value)
   }
 
@@ -70,7 +70,7 @@ class VariablePool {
    * @return 添加结果
    */
   private def add(name: String, value: String)(implicit context: CommandExecuteContext): Future[Boolean] = {
-    val ChatInfo(chatType, chatId) = getChatInfo(context.eventMessage)
+    val ChatInfo(chatType, chatId) = ChatInfo(context.eventMessage)
     logger.debug(s"变量添加：名称：$name，值：$value，聊天类型：$chatType，会话 ID：$chatId")
     val task = Variables
       .map(row => (row.name, row.value, row.chatType, row.chatId)) += ((name, value, chatType, chatId))
@@ -85,7 +85,7 @@ class VariablePool {
    * @return 变量值（Optional）
    */
   def get(name: String)(implicit context: CommandExecuteContext): Future[Option[String]] = {
-    val ChatInfo(chatType, chatId) = getChatInfo(context.eventMessage)
+    val ChatInfo(chatType, chatId) = ChatInfo(context.eventMessage)
     db.run {
       Variables
         .filter(row => row.chatId === chatId && row.chatType === chatType && row.name === name)
@@ -114,10 +114,10 @@ class VariablePool {
    *
    * @param name    变量名
    * @param context 执行上下文
-   * @return True：删除成功
+   * @return true：删除成功
    */
   def delete(name: String)(implicit context: CommandExecuteContext): Future[Boolean] = async {
-    val ChatInfo(chatType, chatId) = getChatInfo(context.eventMessage)
+    val ChatInfo(chatType, chatId) = ChatInfo(context.eventMessage)
     logger.debug(s"变量移除：名称：$name，聊天类型：$chatType，会话 ID：$chatId")
     await {
       db.run {
@@ -131,10 +131,10 @@ class VariablePool {
    * 清除当前会话中的全部变量
    *
    * @param eventMessage 消息事件
-   * @return True：删除成功
+   * @return true：删除成功
    */
   def cleanAllInChat(eventMessage: EventMessage): Future[Boolean] = async {
-    val ChatInfo(chatType, chatId) = getChatInfo(eventMessage)
+    val ChatInfo(chatType, chatId) = ChatInfo(eventMessage)
     await {
       db.run {
         Variables.filter(row => row.chatId === chatId && row.chatType === chatType).delete
@@ -146,7 +146,7 @@ class VariablePool {
   /**
    * 清除全部变量
    *
-   * @return True：删除成功
+   * @return true：删除成功
    */
   def cleanAll(): Future[Boolean] = async {
     await(db.run(Variables.delete))
@@ -169,22 +169,7 @@ class VariablePool {
    * @return 全部变量
    */
   def listAllInChart(eventMessage: EventMessage): Future[Seq[Tables.VariablesRow]] = async {
-    val ChatInfo(chatType, chatId) = getChatInfo(eventMessage)
+    val ChatInfo(chatType, chatId) = ChatInfo(eventMessage)
     await(db.run(Variables.filter(row => row.chatType === chatType && row.chatId === chatId).result))
-  }
-
-  /**
-   * 获取聊天信息
-   *
-   * @param eventMessage 消息事件
-   * @return 聊天信息对象
-   */
-  private def getChatInfo(eventMessage: EventMessage): ChatInfo = {
-    eventMessage match {
-      case message: EventGroupOrDiscussMessage =>
-        ChatInfo(message.getMessageType, message.getGroup.getId)
-      case message: EventPrivateMessage =>
-        ChatInfo(message.getMessageType, message.getSenderId)
-    }
   }
 }
