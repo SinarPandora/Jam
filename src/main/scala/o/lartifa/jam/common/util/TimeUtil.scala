@@ -1,7 +1,7 @@
 package o.lartifa.jam.common.util
 
 import java.sql.Timestamp
-import java.time.LocalDateTime
+import java.time.{Instant, LocalDateTime}
 
 /**
  * 时间相关的工具类
@@ -18,4 +18,12 @@ object TimeUtil {
    * @return 当前时间戳
    */
   def currentTimeStamp: Timestamp = Timestamp.valueOf(LocalDateTime.now())
+
+  /**
+   * 将纪元秒转换为时间戳
+   *
+   * @param milliseconds 纪元秒
+   * @return 时间戳
+   */
+  def epochMilliToTimeStamp(milliseconds: Long): Timestamp = Timestamp.from(Instant.ofEpochMilli(milliseconds))
 }
