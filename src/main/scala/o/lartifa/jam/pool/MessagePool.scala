@@ -21,8 +21,6 @@ class MessagePool {
 
   import o.lartifa.jam.database.temporary.TemporaryMemory.database.profile.api._
 
-  private case class ChatInfo(chatType: String, chatId: Long)
-
   private implicit val exec: ExecutionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
   private lazy val logger: HyLogger = JamContext.logger.get()

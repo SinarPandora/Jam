@@ -10,7 +10,7 @@ import o.lartifa.jam.pool.{JamContext, StepPool, VariablePool}
  * Author: sinar
  * 2020/1/3 23:50 
  */
-case class CommandExecuteContext(eventMessage: EventMessage, variablePool: VariablePool.type, stepPool: StepPool) {
+case class CommandExecuteContext(eventMessage: EventMessage, variablePool: VariablePool, stepPool: StepPool) {
   def logger: HyLogger = JamContext.logger.get()
 }
 

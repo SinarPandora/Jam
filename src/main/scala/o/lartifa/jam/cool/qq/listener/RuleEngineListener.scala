@@ -28,7 +28,7 @@ object RuleEngineListener extends IcqListener {
 
   private lazy val logger: HyLogger = JamContext.logger.get()
 
-  private val messageRecorder: MessagePool.type = JamContext.messagePool
+  private val messageRecorder: MessagePool = JamContext.messagePool
 
   /**
    * 消息监听
