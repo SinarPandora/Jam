@@ -88,3 +88,4 @@ hs_err_pid*
 .idea/sonarlint/
 
 TODO.md
+*.DS_Store
