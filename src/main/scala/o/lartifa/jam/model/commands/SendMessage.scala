@@ -4,7 +4,7 @@ import java.util.Base64
 
 import better.files.File
 import cc.moecraft.icq.sender.message.MessageBuilder
-import cc.moecraft.icq.sender.message.components.{ComponentImage, ComponentImageBase64}
+import cc.moecraft.icq.sender.message.components.{ComponentImage, ComponentImageBase64, ComponentRecord}
 import cc.moecraft.icq.sender.returndata.ReturnData
 import cc.moecraft.icq.sender.returndata.returnpojo.send.RMessageReturnData
 import o.lartifa.jam.common.exception.{ExecuteException, ParamNotFoundException}
@@ -35,6 +35,7 @@ case class SendMessage(`type`: Type, message: String, isMessageAParam: Boolean =
     (`type`: @unchecked) match {
       case SendMessage.SEND_TEXT => sendTextMessage()
       case SendMessage.SEND_PIC => sendPic()
+      case SendMessage.SEND_AUDIO => sendPic()
     }
   }
 
@@ -60,7 +61,8 @@ case class SendMessage(`type`: Type, message: String, isMessageAParam: Boolean =
   def sendPic()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[ReturnData[RMessageReturnData]] = async {
     val message = await(getMessageContent())
     val content = new MessageBuilder().add({
-      if (message.toLowerCase.startsWith("http://") || message.toLowerCase.startsWith("http://")) {
+      val lowCaseName = message.toLowerCase
+      if (lowCaseName.startsWith("http://") || lowCaseName.startsWith("http://") || lowCaseName.contains("data/image") || lowCaseName.contains("data\\image")) {
         new ComponentImage(message)
       } else {
         val bytes = Try(File(message).byteArray).getOrElse(throw ExecuteException(s"图片文件获取失败，地址：$message"))
@@ -69,8 +71,25 @@ case class SendMessage(`type`: Type, message: String, isMessageAParam: Boolean =
     }).toString
     Try(context.eventMessage.respond(content)) match {
       case Failure(exception) =>
-        exception.printStackTrace()
-        throw ExecuteException("图片发送可能失败，请检查是否图片较大或地址不正确")
+        throw ExecuteException("图片发送可能失败，请检查是否图片较大或地址不正确").initCause(exception)
+      case Success(value) => value
+    }
+  }
+
+  /**
+   * 发送语音消息
+   * 由于酷Q系统限制，语音文件必须位于酷Q文件夹/data/record 下
+   *
+   * @param context 执行上下文
+   * @param exec    异步执行上下文
+   * @return 异步消息返回对象
+   */
+  def sendAudio()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[ReturnData[RMessageReturnData]] = async {
+    val audioUri = await(getMessageContent())
+    val audioMessage = new MessageBuilder().add(new ComponentRecord(audioUri)).toString
+    Try(context.eventMessage.respond(audioMessage)) match {
+      case Failure(exception) =>
+        throw ExecuteException("图片发送可能失败，请检查是否语音文件较大或语音文件没有存放在酷Q /data/record 目录下").initCause(exception)
       case Success(value) => value
     }
   }
@@ -97,9 +116,12 @@ object SendMessage {
 
   case object SEND_PIC extends Type
 
+  case object SEND_AUDIO extends Type
+
   object Constant {
-    val SEND_TEXT: List[String] = List("回复", "说")
+    val SEND_TEXT: String = "回复"
     val SEND_PIC: String = "发送"
+    val SEND_AUDIO: String = "说"
 
     object MessageType {
       val PRIVATE = "private"

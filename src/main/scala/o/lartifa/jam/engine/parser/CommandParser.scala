@@ -62,8 +62,9 @@ object CommandParser extends Parser {
     import SendMessage.Constant
     CommandPattern.messageSend.findFirstMatchIn(string).map(result => {
       val `type` = result.group("type") match {
-        case s if Constant.SEND_TEXT.contains(s) => SendMessage.SEND_TEXT
+        case Constant.SEND_TEXT => SendMessage.SEND_TEXT
         case Constant.SEND_PIC => SendMessage.SEND_PIC
+        case Constant.SEND_AUDIO => SendMessage.SEND_AUDIO
       }
       result.group("message") match {
         case variable if variable.startsWith("变量") =>
