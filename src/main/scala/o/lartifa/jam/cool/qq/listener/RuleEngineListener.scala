@@ -1,5 +1,6 @@
 package o.lartifa.jam.cool.qq.listener
 
+import java.security.SecureRandom
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicReference
 
@@ -30,6 +31,19 @@ object RuleEngineListener extends IcqListener {
 
   private val messageRecorder: MessagePool = JamContext.messagePool
 
+  private val willResponse: () => Boolean = {
+    val frequency = JamConfig.responseFrequency
+    if (frequency == 100) () => true
+    else {
+      val random = new SecureRandom()
+      () => {
+        val will = random.nextInt(100) < frequency
+        if (!will) logger.debug("受回复几率影响，消息被忽略")
+        will
+      }
+    }
+  }
+
   /**
    * 消息监听
    *
@@ -59,17 +73,15 @@ object RuleEngineListener extends IcqListener {
 
     // 查找匹配的步骤
     if (!JamContext.editLock.get()) {
-      findMatchedStep(eventMessage.getMessage, JamContext.matchers.get()) match {
-        case Some(matcher) =>
+      findMatchedStep(eventMessage.getMessage, JamContext.matchers.get()).foreach { matcher =>
+        if (willResponse()) {
           implicit val context: CommandExecuteContext = CommandExecuteContext(eventMessage)
           stepId.set(Some(matcher.stepId))
-          JamContext.stepPool.get().goto(matcher.stepId).onComplete {
-            case Failure(exception) =>
-              logger.error(exception)
-              notifyMaster(s"步骤${stepId}执行失败！原因：${exception.getMessage}", eventMessage)
-            case Success(_) =>
-          }
-        case None =>
+          JamContext.stepPool.get().goto(matcher.stepId).recover(exception => {
+            logger.error(exception)
+            notifyMaster(s"步骤${stepId}执行失败！原因：${exception.getMessage}", eventMessage)
+          })
+        }
       }
     }
 
