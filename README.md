@@ -11,7 +11,7 @@
 
 ## Release History 版本历史
 
-* 3.0.1 基础版本
+* 3.0.0-beta 基础版本
 
 ## Authors 关于作者
 
