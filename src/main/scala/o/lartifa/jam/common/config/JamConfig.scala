@@ -11,7 +11,12 @@ import com.typesafe.config.{Config, ConfigFactory}
 object JamConfig {
   private val config: Config = ConfigFactory.load().getConfig("bot")
 
+  // Bot 姓名
   val name: String = config.getString("name")
 
+  // Master 用户
   val masterQID: Long = config.getLong("master_qq")
+
+  // 响应频率
+  val responseFrequency: Int = config.getInt("response_frequency")
 }
