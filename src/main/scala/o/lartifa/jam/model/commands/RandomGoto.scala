@@ -1,6 +1,5 @@
 package o.lartifa.jam.model.commands
 
-import o.lartifa.jam.common.exception.ExecuteException
 import o.lartifa.jam.model.CommandExecuteContext
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -24,10 +23,7 @@ case class RandomGoto(stepIds: List[Long], amount: Int) extends Command[List[Fut
     val pool = context.stepPool
     LazyList.from(Random.shuffle(stepIds))
       .take(amount)
-      .map(id => (id, pool.get(id)))
-      .tapEach(pair => if (pair._2.isEmpty) throw ExecuteException(s"指定步骤${pair._1}不存在"))
-      .flatMap(_._2)
-      .map(_.execute())
+      .map(pool.goto)
       .toList
   }
 }

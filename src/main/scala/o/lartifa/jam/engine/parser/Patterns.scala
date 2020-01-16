@@ -49,6 +49,7 @@ object Patterns {
     val paramDel: Regex = """将\{变量(.+?)\}删除""".r("name")
     val paramOpt: Regex = """将\{变量(.+?)\}(增加|减少|乘以|除以|取余|设置为)\{((随机)?(变量)?.+?)\}""".r("name", "opt", "value")
     val goto: Regex = """执行步骤([0-9]+)""".r("stepId")
+    val oneByOne: Regex = """依次执行([0-9|]+)""".r("stepIds")
     var randomGoto: Regex = """随机从\{([0-9|]+?)\}中选择\{([0-9])\}个执行""".r("stepIds", "amount")
     val waiting: Regex = """等待([0-9]+)秒""".r("sec")
     val noting: String = "什么也不做"

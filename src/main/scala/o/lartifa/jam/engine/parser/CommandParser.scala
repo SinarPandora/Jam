@@ -26,7 +26,7 @@ object CommandParser extends Parser {
       case Some(executableCommand) =>
         Some(executableCommand)
       case None =>
-        LazyList(parseMessageSend _, parseGoto _, parseParamOpt _, parseRandomGoto _, parseParamDel _, parseWaiting _, parseDoNoting _)
+        LazyList(parseMessageSend _, parseGoto _, parseOneByOne _, parseParamOpt _, parseRandomGoto _, parseParamDel _, parseWaiting _, parseDoNoting _)
           .map(_.apply(string))
           .find(_.isDefined)
           .flatten
@@ -146,6 +146,24 @@ object CommandParser extends Parser {
         Try(result.group("stepId").toLong).getOrElse(throw ParseFailException("步骤 ID 必须为整数"))
       )
     )
+  }
+
+  /**
+   * 解析依次执行指令
+   *
+   * @param string 待解析字符串
+   * @return 解析结果
+   */
+  private def parseOneByOne(string: String): Option[OneByOne] = {
+    CommandPattern.oneByOne.findFirstMatchIn(string).map(result => {
+      val stepIds = Try(
+        result
+          .group("stepIds")
+          .split("\\|")
+          .map(_.toLong).toList)
+        .getOrElse(throw ParseFailException("解析依次执行事件指令时失败，请检查指令 ID 列表格式是否为：数字|数字..."))
+      OneByOne(stepIds)
+    })
   }
 
   /**
