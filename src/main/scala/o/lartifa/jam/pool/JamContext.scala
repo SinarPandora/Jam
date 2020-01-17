@@ -18,6 +18,6 @@ object JamContext {
   val variablePool: VariablePool = new VariablePool()
   val matchers: AtomicReference[List[ContentMatcher]] = new AtomicReference[List[ContentMatcher]]()
   val logger: AtomicReference[HyLogger] = new AtomicReference[HyLogger]()
-  val clock: Biochronometer = new Biochronometer()
+  val clock: Biochronometer = Biochronometer()
   val messagePool: MessagePool = new MessagePool()
 }
