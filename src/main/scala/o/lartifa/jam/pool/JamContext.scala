@@ -2,6 +2,7 @@ package o.lartifa.jam.pool
 
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 
+import cc.moecraft.icq.PicqConfig
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.bionic.Biochronometer
 import o.lartifa.jam.model.patterns.ContentMatcher
@@ -20,4 +21,5 @@ object JamContext {
   val logger: AtomicReference[HyLogger] = new AtomicReference[HyLogger]()
   val clock: Biochronometer = Biochronometer()
   val messagePool: MessagePool = new MessagePool()
+  val clientConfig: AtomicReference[PicqConfig] = new AtomicReference[PicqConfig]()
 }

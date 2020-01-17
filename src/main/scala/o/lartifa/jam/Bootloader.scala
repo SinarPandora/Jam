@@ -21,6 +21,7 @@ object Bootloader {
     val client = CoolQQLoader.createCoolQQClient()
     JamContext.logger.set(client.getLoggerInstanceManager.getLoggerInstance(name, SystemConfig.debugMode))
     Await.result(JamLoader.init(), Duration.Inf)
+    JamContext.clientConfig.getAndSet(client.getConfig)
     client.startBot()
     JamContext.logger.get().log(s"${AnsiColor.GREEN}${name}已苏醒")
   }
