@@ -22,6 +22,7 @@ object Bootloader {
     JamContext.logger.set(client.getLoggerInstanceManager.getLoggerInstance(name, SystemConfig.debugMode))
     Await.result(JamLoader.init(), Duration.Inf)
     JamContext.clientConfig.getAndSet(client.getConfig)
+    JamContext.httpApi.getAndSet(() => client.getAccountManager.getNonAccountSpecifiedApi)
     client.startBot()
     JamContext.logger.get().log(s"${AnsiColor.GREEN}${name}已苏醒")
   }
