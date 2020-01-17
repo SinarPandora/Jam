@@ -24,9 +24,9 @@ object Patterns {
   // 4
   object ConditionPattern {
     // 5
-    var paramCondition: Regex = """\{变量(.+?)\}的值(等于|大于|小于|不大于|不小于|不等于)\{((变量)?.+?)\}""".r("name", "op", "value")
-    var senderCondition: Regex = """发送者的\{(昵称|QQ号|年龄|性别)\}为\{((变量)?.+?)\}""".r("info", "value")
-    var sessionCondition: Regex = """会话的\{(类型|QQ号|群号)\}为\{((变量)?.+?)\}""".r("info", "value")
+    val paramCondition: Regex = """\{变量(.+?)\}的值(等于|大于|小于|不大于|不小于|不等于)\{((变量)?.+?)\}""".r("name", "op", "value")
+    val senderCondition: Regex = """发送者的\{(昵称|QQ号|年龄|性别)\}为\{((变量)?.+?)\}""".r("info", "value")
+    val sessionCondition: Regex = """会话的\{(类型|QQ号|群号)\}为\{((变量)?.+?)\}""".r("info", "value")
   }
 
   object LogicStructurePattern {
@@ -36,7 +36,7 @@ object Patterns {
     val or: Regex = """([，,]或(.+)[，,])|(或(.+))""".r("command")
     val and: Regex = """([，,][且并](.+)[，,])|([且并](.+))""".r("command")
     // 1
-    var `else`: Regex = """[，,]否则(.+)""".r("command")
+    val `else`: Regex = """[，,]否则(.+)""".r("command")
     val loopPattern: Regex = """循环\{(.+?)\}([0-9]+)次""".r("command", "times")
   }
 
@@ -50,7 +50,7 @@ object Patterns {
     val paramOpt: Regex = """将\{变量(.+?)\}(增加|减少|乘以|除以|取余|设置为)\{((随机)?(变量)?.+?)\}""".r("name", "opt", "value")
     val goto: Regex = """执行步骤([0-9]+)""".r("stepId")
     val oneByOne: Regex = """依次执行([0-9|]+)""".r("stepIds")
-    var randomGoto: Regex = """随机从\{([0-9|]+?)\}中选择\{([0-9])\}个执行""".r("stepIds", "amount")
+    val randomGoto: Regex = """随机从\{([0-9|]+?)\}中选择\{([0-9])\}个执行""".r("stepIds", "amount")
     val waiting: Regex = """等待([0-9]+)秒""".r("sec")
     val noting: String = "什么也不做"
   }
