@@ -32,6 +32,7 @@ object JamLoader {
   def init(): Future[Unit] = async {
     await(TemporaryMemory.init())
     await(loadSSDL()).foreach(errorMessages => logger.error(errorMessages.mkString("\n")))
+    JamContext.clock.activeAll()
   }
 
   /**
@@ -84,6 +85,12 @@ object JamLoader {
     }
   }
 
+  /**
+   * 重新解析 SSDL
+   *
+   * @param context 指令上下文
+   * @return 异步结果
+   */
   def reloadSSDL()(implicit context: CommandExecuteContext): Future[Unit] = async {
     if (!JamContext.editLock.get()) {
       JamContext.editLock.set(true)
