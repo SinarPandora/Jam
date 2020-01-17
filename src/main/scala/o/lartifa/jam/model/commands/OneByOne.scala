@@ -2,8 +2,8 @@ package o.lartifa.jam.model.commands
 
 import o.lartifa.jam.model.CommandExecuteContext
 
-import scala.async.Async._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 /**
  * 依次执行指令
@@ -19,10 +19,10 @@ case class OneByOne(stepIds: List[Long]) extends Command[Unit] {
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = Future {
     val pool = context.stepPool
     for (id <- stepIds) {
-      await(pool.goto(id))
+      Await.result(pool.goto(id), Duration.Inf)
     }
   }
 }
