@@ -7,7 +7,7 @@ import cc.moecraft.icq.sender.message.MessageBuilder
 import cc.moecraft.icq.sender.message.components.{ComponentImage, ComponentImageBase64, ComponentRecord}
 import cc.moecraft.icq.sender.returndata.ReturnData
 import cc.moecraft.icq.sender.returndata.returnpojo.send.RMessageReturnData
-import o.lartifa.jam.common.exception.{ExecuteException, ParamNotFoundException}
+import o.lartifa.jam.common.exception.{ExecutionException, ParamNotFoundException}
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.SendMessage.Type
 import o.lartifa.jam.pool.JamContext
@@ -65,13 +65,13 @@ case class SendMessage(`type`: Type, message: String, isMessageAParam: Boolean =
       if (lowCaseName.startsWith("http://") || lowCaseName.startsWith("http://") || lowCaseName.contains("data/image") || lowCaseName.contains("data\\image")) {
         new ComponentImage(message)
       } else {
-        val bytes = Try(File(message).byteArray).getOrElse(throw ExecuteException(s"图片文件获取失败，地址：$message"))
+        val bytes = Try(File(message).byteArray).getOrElse(throw ExecutionException(s"图片文件获取失败，地址：$message"))
         new ComponentImageBase64(Base64.getEncoder.encodeToString(bytes))
       }
     }).toString
     Try(context.eventMessage.respond(content)) match {
       case Failure(exception) =>
-        throw ExecuteException("图片发送可能失败，请检查是否图片较大或地址不正确").initCause(exception)
+        throw ExecutionException("图片发送可能失败，请检查是否图片较大或地址不正确").initCause(exception)
       case Success(value) => value
     }
   }
@@ -89,7 +89,7 @@ case class SendMessage(`type`: Type, message: String, isMessageAParam: Boolean =
     val audioMessage = new MessageBuilder().add(new ComponentRecord(audioUri)).toString
     Try(context.eventMessage.respond(audioMessage)) match {
       case Failure(exception) =>
-        throw ExecuteException("图片发送可能失败，请检查是否语音文件较大或语音文件没有存放在酷Q /data/record 目录下").initCause(exception)
+        throw ExecutionException("图片发送可能失败，请检查是否语音文件较大或语音文件没有存放在酷Q /data/record 目录下").initCause(exception)
       case Success(value) => value
     }
   }

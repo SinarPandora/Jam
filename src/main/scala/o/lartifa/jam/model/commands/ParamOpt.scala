@@ -1,6 +1,6 @@
 package o.lartifa.jam.model.commands
 
-import o.lartifa.jam.common.exception.{ExecuteException, ParamNotFoundException}
+import o.lartifa.jam.common.exception.{ExecutionException, ParamNotFoundException}
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.ParamOpt.Operation
 
@@ -45,9 +45,9 @@ case class ParamOpt(paramName: String, opt: Operation, value: String = "", isVal
     if (opt == ParamOpt.SET) {
       await(pool.updateOrElseDefault(paramName, value))
     } else {
-      Try(BigDecimal(value)).getOrElse(throw ExecuteException("试图使用非数字进行加减乘除"))
+      Try(BigDecimal(value)).getOrElse(throw ExecutionException("试图使用非数字进行加减乘除"))
       val originValue = await(pool.get(paramName)).getOrElse(throw ParamNotFoundException(paramName))
-      Try(BigDecimal(originValue)).getOrElse(throw ExecuteException("变量的原始值不为数字"))
+      Try(BigDecimal(originValue)).getOrElse(throw ExecutionException("变量的原始值不为数字"))
       await(pool.update(paramName, operate(originValue, value)))
     }
   }

@@ -4,7 +4,7 @@ import java.util.concurrent.Executors
 
 import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.common.exception.ExecuteException
+import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.database.temporary.TemporaryMemory.database.db
 import o.lartifa.jam.database.temporary.schema.Tables._
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
@@ -56,9 +56,9 @@ class MessagePool {
    * @param context 执行上下文
    * @return
    */
-  @throws[ExecuteException]
+  @throws[ExecutionException]
   def last(number: Int)(implicit context: CommandExecuteContext): Future[Option[MessageRecord]] = {
-    if (number <= 0) ExecuteException("倒数条数必须大于零")
+    if (number <= 0) ExecutionException("倒数条数必须大于零")
     val ChatInfo(chatType, chatId) = ChatInfo(context.eventMessage)
     db.run {
       MessageRecords.filter(row => row.messageType === chatType && (row.groupId === chatId || row.senderId === chatId))

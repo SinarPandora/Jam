@@ -4,7 +4,7 @@ import java.util.concurrent.Executors
 
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.common.exception.ExecuteException
+import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.TimeUtil
 import o.lartifa.jam.database.temporary.TemporaryMemory.database.db
 import o.lartifa.jam.database.temporary.schema.Tables
@@ -43,7 +43,7 @@ class VariablePool {
       .filter(row => row.chatId === chatId && row.chatType === chatType && row.name === name)
       .map(row => (row.name, row.value, row.chatType, row.chatId, row.lastUpdateDate))
       .update((name, value, chatType, chatId, TimeUtil.currentTimeStamp))
-    db.run(task) map (count => if (count != 1) throw ExecuteException(s"变量更新失败！变量名为：$name") else value)
+    db.run(task) map (count => if (count != 1) throw ExecutionException(s"变量更新失败！变量名为：$name") else value)
   }
 
   /**
@@ -74,7 +74,7 @@ class VariablePool {
     logger.debug(s"变量添加：名称：$name，值：$value，聊天类型：$chatType，会话 ID：$chatId")
     val task = Variables
       .map(row => (row.name, row.value, row.chatType, row.chatId)) += ((name, value, chatType, chatId))
-    db.run(task) map (count => if (count != 1) throw ExecuteException(s"变量更新失败！变量名为：$name") else true)
+    db.run(task) map (count => if (count != 1) throw ExecutionException(s"变量更新失败！变量名为：$name") else true)
   }
 
   /**

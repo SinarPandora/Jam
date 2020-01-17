@@ -3,7 +3,7 @@ package o.lartifa.jam.pool
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.bionic.clock.Biochronometer
+import o.lartifa.jam.bionic.Biochronometer
 import o.lartifa.jam.model.patterns.ContentMatcher
 
 /**

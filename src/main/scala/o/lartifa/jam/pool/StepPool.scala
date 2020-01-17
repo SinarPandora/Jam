@@ -3,7 +3,7 @@ package o.lartifa.jam.pool
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch
-import o.lartifa.jam.common.exception.ExecuteException
+import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.{CommandExecuteContext, Step}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -24,13 +24,13 @@ case class StepPool(private val steps: Map[Long, Step]) {
    * @param exec   异步执行上下文
    * @return 异步执行结果钩子
    */
-  @throws[ExecuteException]
+  @throws[ExecutionException]
   def goto(stepId: Long)(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = {
     val cost = new StopWatch()
     cost.start()
     this.get(stepId).getOrElse({
       cost.stop()
-      throw ExecuteException(s"尝试执行步骤${stepId}时失败，原因：步骤缺失！")
+      throw ExecutionException(s"尝试执行步骤${stepId}时失败，原因：步骤缺失！")
     }).execute().map(_ => {
       cost.stop()
       val time = if (cost.getTotalTimeSeconds < 1) "不到一" else cost.getTotalTimeSeconds.toString

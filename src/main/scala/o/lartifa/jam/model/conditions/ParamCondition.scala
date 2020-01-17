@@ -1,6 +1,6 @@
 package o.lartifa.jam.model.conditions
 
-import o.lartifa.jam.common.exception.{ExecuteException, ParamNotFoundException}
+import o.lartifa.jam.common.exception.{ExecutionException, ParamNotFoundException}
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.conditions.ParamCondition.Op
 
@@ -30,8 +30,8 @@ case class ParamCondition(paramName: String, op: Op, value: String, isValueAPara
     val paramValue: String = await(pool.get(paramName)).getOrElse(throw ParamNotFoundException(paramName))
     val comparedValue: String = if (isValueAParam) await(pool.get(value)).getOrElse(throw ParamNotFoundException(value)) else value
     if (op != eqOp && op != neOp) {
-      val a = Try(BigDecimal(paramValue)).getOrElse(throw ExecuteException("执行数值比较的左侧必须为数字"))
-      val b = Try(BigDecimal(comparedValue)).getOrElse(throw ExecuteException("执行数值比较的右侧必须为数字"))
+      val a = Try(BigDecimal(paramValue)).getOrElse(throw ExecutionException("执行数值比较的左侧必须为数字"))
+      val b = Try(BigDecimal(comparedValue)).getOrElse(throw ExecutionException("执行数值比较的右侧必须为数字"))
       (op: @unchecked) match {
         case ParamCondition.gtOp => a > b
         case ParamCondition.geOp => a >= b

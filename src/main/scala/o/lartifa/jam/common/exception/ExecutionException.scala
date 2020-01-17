@@ -5,6 +5,6 @@ package o.lartifa.jam.common.exception
  * Author: sinar
  * 2020/1/4 01:36 
  */
-case class ExecuteException(message: String) extends Exception(message) {
+case class ExecutionException(message: String) extends Exception(message) {
   // TODO notify master user
 }
