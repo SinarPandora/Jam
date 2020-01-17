@@ -57,7 +57,7 @@ object RuleEngineListener extends IcqListener {
         notifyMaster(s"发生严重错误：${eventMessage.message}", eventMessage)
       case Success(isRecordSuccess) =>
         if (!isRecordSuccess) notifyMaster(s"消息记录失败，消息内容为：${eventMessage.getMessage}", eventMessage)
-        findThenDoStep(eventMessage)
+        if (willResponse()) findThenDoStep(eventMessage)
     }
   }
 
@@ -74,14 +74,12 @@ object RuleEngineListener extends IcqListener {
     // 查找匹配的步骤
     if (!JamContext.editLock.get()) {
       findMatchedStep(eventMessage.getMessage, JamContext.matchers.get()).foreach { matcher =>
-        if (willResponse()) {
-          implicit val context: CommandExecuteContext = CommandExecuteContext(eventMessage)
-          stepId.set(Some(matcher.stepId))
-          JamContext.stepPool.get().goto(matcher.stepId).recover(exception => {
-            logger.error(exception)
-            notifyMaster(s"步骤${stepId}执行失败！原因：${exception.getMessage}", eventMessage)
-          })
-        }
+        implicit val context: CommandExecuteContext = CommandExecuteContext(eventMessage)
+        stepId.set(Some(matcher.stepId))
+        JamContext.stepPool.get().goto(matcher.stepId).recover(exception => {
+          logger.error(exception)
+          notifyMaster(s"步骤${stepId}执行失败！原因：${exception.getMessage}", eventMessage)
+        })
       }
     }
 
