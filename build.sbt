@@ -1,6 +1,6 @@
 name := "Jam"
 
-version := "3.0"
+version := "3.0.1"
 
 scalaVersion := "2.13.1"
 
@@ -32,6 +32,7 @@ libraryDependencies += "org.json4s" %% "json4s-native" % "3.6.7"
 libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.28"
 libraryDependencies += "com.lihaoyi" %% "requests" % "0.2.0"
 libraryDependencies += "org.scala-lang" % "scala-reflect" % "2.13.1"
+libraryDependencies += "org.reflections" % "reflections" % "0.9.12"
 libraryDependencies += "org.scala-lang.modules" %% "scala-async" % "0.10.0"
 libraryDependencies += "org.scala-lang.modules" %% "scala-parallel-collections" % "0.2.0"
 
@@ -41,4 +42,8 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.0-M1" % "test"
 
 javaOptions in Universal ++= Seq(
   "-Dconfig.file=../conf/system.conf"
+)
+
+scalacOptions ++= Seq(
+  "-deprecation"
 )
