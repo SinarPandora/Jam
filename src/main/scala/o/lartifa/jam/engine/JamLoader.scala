@@ -32,7 +32,7 @@ object JamLoader {
   def init(): Future[Unit] = async {
     await(TemporaryMemory.init())
     await(loadSSDL()).foreach(errorMessages => logger.error(errorMessages.mkString("\n")))
-    JamContext.clock.activeAll()
+    JamContext.taskScanners.activeAll()
   }
 
   /**
