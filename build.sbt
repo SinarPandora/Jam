@@ -41,7 +41,7 @@ libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.0-M1"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.0-M1" % "test"
 
 javaOptions in Universal ++= Seq(
-  "-Dconfig.file=../conf/system.conf"
+  "-Dconfig.file=../conf/bot.conf"
 )
 
 scalacOptions ++= Seq(
