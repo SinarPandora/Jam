@@ -28,7 +28,7 @@ object MasterCommands {
     SetVariable,
     RemoveVariable,
     ReloadSSDL,
-    SessionType,
+    SessionInfo,
     Refresh
   )
 
@@ -127,7 +127,7 @@ object MasterCommands {
     }
   }
 
-  private object SessionType extends MasterEverywhereCommand("聊天类型", "会话类型") {
+  private object SessionInfo extends MasterEverywhereCommand("聊天信息", "会话信息") {
     /**
      * 指令操作
      *
