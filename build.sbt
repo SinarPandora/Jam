@@ -37,8 +37,9 @@ libraryDependencies += "org.scala-lang.modules" %% "scala-async" % "0.10.0"
 libraryDependencies += "org.scala-lang.modules" %% "scala-parallel-collections" % "0.2.0"
 
 // Test
-libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.0-M1"
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.0-M1" % "test"
+libraryDependencies += "org.scalactic" %% "scalactic" % "3.1.0"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.0" % "test"
+libraryDependencies += "org.scalamock" %% "scalamock" % "4.4.0" % Test
 
 javaOptions in Universal ++= Seq(
   "-Dconfig.file=../conf/bot.conf"
