@@ -7,10 +7,11 @@
 
 ## Getting Started 使用指南
 
-参照[文档](https://mubu.com/doc/3bFLT3d0X8)
+参照[文档（最新版本）](https://mubu.com/doc/X8zrTpx7c)
 
 ## Release History 版本历史
 
+* 3.0.1 生物钟
 * 3.0.0-beta 基础版本
 
 ## Authors 关于作者
