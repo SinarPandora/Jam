@@ -26,7 +26,18 @@ object CommandParser extends Parser {
       case Some(executableCommand) =>
         Some(executableCommand)
       case None =>
-        LazyList(parseMessageSend _, parseGoto _, parseOneByOne _, parseParamOpt _, parseRandomGoto _, parseParamDel _, parseWaiting _, parseDoNoting _)
+        LazyList(
+          parseMessageSend _,
+          parseGoto _,
+          parseOneByOne _,
+          parseParamOpt _,
+          parseRandomGoto _,
+          parseParamDel _,
+          parseWaiting _,
+          parseGroupWholeBan _,
+          parseGroupWholeUnBan _,
+          parseDoNoting _
+        )
           .map(_.apply(string))
           .find(_.isDefined)
           .flatten
@@ -205,4 +216,22 @@ object CommandParser extends Parser {
    */
   private def parseDoNoting(string: String): Option[DoNoting.type] =
     if (CommandPattern.noting == string) Some(DoNoting) else None
+
+  /**
+   * 解析全体禁言指令
+   *
+   * @param string 待解析字符串
+   * @return 解析结果
+   */
+  private def parseGroupWholeBan(string: String): Option[GroupWholeBan] =
+    if (CommandPattern.groupWholeBan == string) Some(GroupWholeBan(true)) else None
+
+  /**
+   * 解析解除全体禁言指令
+   *
+   * @param string 待解析字符串
+   * @return 解析结果
+   */
+  private def parseGroupWholeUnBan(string: String): Option[GroupWholeBan] =
+    if (CommandPattern.groupWholeUnBan == string) Some(GroupWholeBan(false)) else None
 }

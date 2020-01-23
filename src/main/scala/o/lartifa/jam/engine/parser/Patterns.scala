@@ -53,6 +53,8 @@ object Patterns {
     val randomGoto: Regex = """随机从\{([0-9|]+?)\}中选择\{([0-9])\}个执行""".r("stepIds", "amount")
     val waiting: Regex = """等待([0-9]+)秒""".r("sec")
     val noting: String = "什么也不做"
+    val groupWholeBan: String = "全体禁言"
+    val groupWholeUnBan: String = "解除全体禁言"
   }
 
 }
