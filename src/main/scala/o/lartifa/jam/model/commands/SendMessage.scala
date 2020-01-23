@@ -122,13 +122,6 @@ object SendMessage {
     val SEND_TEXT: String = "回复"
     val SEND_PIC: String = "发送"
     val SEND_AUDIO: String = "说"
-
-    object MessageType {
-      val PRIVATE = "private"
-      val GROUP = "group"
-      val DISCUSS = "discuss"
-    }
-
   }
 
 }
