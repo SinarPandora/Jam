@@ -1,11 +1,14 @@
 package o.lartifa.jam.bionic
 
+import cc.moecraft.logger.HyLogger
+import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.cron.CronUtil
 import com.typesafe.config.Config
 import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.engine.parser.Parser
 import o.lartifa.jam.model.tasks.{ChangeRespFrequency, GoASleep, WakeUp}
+import o.lartifa.jam.pool.JamContext
 
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Try}
@@ -18,6 +21,7 @@ import scala.util.{Failure, Try}
  */
 object BiochronometerParser extends Parser {
   private val config: Config = JamConfig.config.getConfig("biochronometer")
+  private val logger: HyLogger = JamContext.logger.get()
 
   /**
    * 解析
@@ -41,6 +45,7 @@ object BiochronometerParser extends Parser {
       .getOrElse(throw ParseFailException("起床时间必须设置为数字"))
     need(wakeUpTime >= 0 && wakeUpTime <= 23, "起床时间范围需要为 0 - 23")
     CronUtil.schedule(s"0 0 $wakeUpTime * * ? ", WakeUp)
+    logger.log(s"${AnsiColor.GREEN}起床时间设置为每日${wakeUpTime}时")
   }
 
   /**
@@ -51,6 +56,7 @@ object BiochronometerParser extends Parser {
       .getOrElse(throw ParseFailException("就寝时间必须设置为数字"))
     need(goASleepTime >= 0 && goASleepTime <= 23, "就寝时间范围应为 0 - 23")
     CronUtil.schedule(s"0 0 $goASleepTime * * ? ", GoASleep)
+    logger.log(s"${AnsiColor.GREEN}睡眠时间设置为每日${goASleepTime}时")
   }
 
   /**
@@ -61,7 +67,7 @@ object BiochronometerParser extends Parser {
     .getOrElse(throw ParseFailException("'活跃时间模式'设置有误，如需设置为不使用，请填写为 [\"None\"]（包括所有符号）"))
     need(activeTimes.lengthIs > 0, "'活跃时间模式'设置有误，如需设置为不使用，请填写为 [\"None\"]（包括所有符号）")
     if (activeTimes.lengthIs == 1 && activeTimes.head == "None") return
-    activeTimes.foreach(pair => parseActiveTime(pair).recover(throw _))
+    activeTimes.foreach(pair => logger.log(s"${AnsiColor.GREEN}活跃时间段添加：${parseActiveTime(pair).recover(throw _).get}时"))
   }
 
   /**
@@ -70,18 +76,19 @@ object BiochronometerParser extends Parser {
    * @param pair 字符串
    * @return 解析结果
    */
-  private def parseActiveTime(pair: String): Try[Unit] = Try {
+  private def parseActiveTime(pair: String): Try[String] = Try {
     val split = pair.split("-")
     need(split.lengthIs == 2, "活跃时间段应设置为：\"数字-数字\" 的格式")
     val start = Try(split.head.toInt).getOrElse(throw ParseFailException("起始时间必须为数字"))
     need(start >= 0 && start <= 23, "起始时间范围应为 0 - 23")
     val end = Try(split.last.toInt).getOrElse(throw ParseFailException("结束时间必须为数字"))
     need(end >= 0 && end <= 23, "结束时间范围应为 0 - 23")
+    need(end > start, "结束时间必须大于起始时间")
     CronUtil.schedule(s"0 0 $start * * ? ", ChangeRespFrequency(100))
     CronUtil.schedule(s"0 0 $end * * ? ", ChangeRespFrequency(JamConfig.responseFrequency))
-    ()
+    pair
   } recoverWith { err =>
-    val thr = ParseFailException(err.getMessage + s"，错误的时间段为：$pair")
+    val thr = ParseFailException("'活跃时间模式'设置有误，" + err.getMessage + s"，错误的时间段为：$pair")
     thr.initCause(err)
     Failure(thr)
   }
