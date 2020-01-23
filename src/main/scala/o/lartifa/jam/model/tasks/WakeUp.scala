@@ -18,5 +18,6 @@ object WakeUp extends Task {
     if (SystemConfig.debugMode) {
       MasterUtil.notifyMaster(s"${JamConfig.name} 已苏醒")
     }
+    JamContext.logger.get().log(s"${JamConfig.name} 已苏醒")
   }
 }

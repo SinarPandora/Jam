@@ -18,5 +18,6 @@ object GoASleep extends Task {
     if (SystemConfig.debugMode) {
       MasterUtil.notifyMaster(s"${JamConfig.name} 已经休眠")
     }
+    JamContext.logger.get().log(s"${JamConfig.name} 已经休眠")
   }
 }

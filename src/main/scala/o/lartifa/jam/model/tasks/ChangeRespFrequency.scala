@@ -4,6 +4,7 @@ import cn.hutool.cron.task.Task
 import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.listener.RuleEngineListener
+import o.lartifa.jam.pool.JamContext
 
 /**
  * 调整回复频率
@@ -17,6 +18,7 @@ class ChangeRespFrequency(val freq: Int) extends Task {
     if (SystemConfig.debugMode) {
       MasterUtil.notifyMaster(s"${JamConfig.name}的回复频率以变更为：$freq%")
     }
+    JamContext.logger.get().log(s"${JamConfig.name}的回复频率以变更为：$freq%")
   }
 }
 
