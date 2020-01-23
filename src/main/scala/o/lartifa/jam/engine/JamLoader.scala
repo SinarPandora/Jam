@@ -2,6 +2,7 @@ package o.lartifa.jam.engine
 
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
+import o.lartifa.jam.bionic.BehaviorInitializer
 import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.database.temporary.TemporaryMemory
 import o.lartifa.jam.engine.SSDLParseEngine.ParseFailResult
@@ -32,7 +33,7 @@ object JamLoader {
   def init(): Future[Unit] = async {
     await(TemporaryMemory.init())
     await(loadSSDL()).foreach(errorMessages => logger.error(errorMessages.mkString("\n")))
-    JamContext.taskScanners.activeAll()
+    await(BehaviorInitializer.init())
   }
 
   /**
