@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 import cc.moecraft.icq.PicqConfig
 import cc.moecraft.icq.sender.IcqHttpApi
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.bionic.JamTaskScanner
 import o.lartifa.jam.model.patterns.ContentMatcher
 
 /**
@@ -20,7 +19,6 @@ object JamContext {
   val variablePool: VariablePool = new VariablePool()
   val matchers: AtomicReference[List[ContentMatcher]] = new AtomicReference[List[ContentMatcher]]()
   val logger: AtomicReference[HyLogger] = new AtomicReference[HyLogger]()
-  val taskScanners: JamTaskScanner = JamTaskScanner()
   val messagePool: MessagePool = new MessagePool()
   val clientConfig: AtomicReference[PicqConfig] = new AtomicReference[PicqConfig]()
   val httpApi: AtomicReference[() => IcqHttpApi] = new AtomicReference()
