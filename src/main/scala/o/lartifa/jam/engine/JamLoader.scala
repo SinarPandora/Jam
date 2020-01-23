@@ -5,7 +5,7 @@ import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.bionic.BehaviorInitializer
 import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.database.temporary.TemporaryMemory
-import o.lartifa.jam.engine.SSDLParseEngine.ParseFailResult
+import o.lartifa.jam.engine.SSDLParseEngine.{ParseFailResult, ParseSuccessResult}
 import o.lartifa.jam.model.patterns.ContentMatcher
 import o.lartifa.jam.model.{CommandExecuteContext, Step}
 import o.lartifa.jam.pool.{JamContext, StepPool}
@@ -43,46 +43,61 @@ object JamLoader {
    */
   private def loadSSDL(): Future[Option[List[String]]] = async {
     val result = await(SSDLParseEngine.load())
-    val success = result.get(true)
-    val fails = result.get(false)
-    if (fails.nonEmpty) {
-      fails.map(_.map {
-        case Left(ParseFailResult(lineId, filepath, message)) =>
-          s"""文件：${filepath.stripPrefix(SystemConfig.ssdlPath)}，行数：$lineId，$message""".stripMargin
-        case _ => ""
-      }.toList)
-    } else {
-      val steps = mutable.Map[Long, Step]()
-      val matchers = mutable.ListBuffer[ContentMatcher]()
-      val errorMessage = mutable.ListBuffer[String]()
-      success
-        .foreach(_.map(_.map(_.result)
-          .foreach { result =>
-            if (steps.contains(result.id)) {
-              errorMessage += s"存在重复的步骤 ID：${result.id}"
-            } else {
-              steps += result.id -> result.toStep
-              result.matcher.foreach(matchers.addOne)
-            }
-          }))
-      if (errorMessage.nonEmpty) {
-        Some(errorMessage.toList)
+    val success: Option[Seq[Either[ParseFailResult, ParseSuccessResult]]] = result.get(true)
+    val fails: Option[Seq[Either[ParseFailResult, SSDLParseEngine.ParseSuccessResult]]] = result.get(false)
+    if (fails.nonEmpty) handleParseFail(fails.get.flatMap(_.swap.toSeq))
+    else if (success.isDefined) handleParseResult(success.get.flatMap(_.toSeq))
+    else None
+  }
+
+  /**
+   * 处理解析失败的结果
+   *
+   * @param fails 解析失败结果列表
+   * @return 错误信息
+   */
+  def handleParseFail(fails: Seq[ParseFailResult]): Option[List[String]] = Some {
+    fails.map {
+      case ParseFailResult(lineId, filepath, message) =>
+        s"""文件：${filepath.stripPrefix(SystemConfig.ssdlPath)}，行数：$lineId，$message""".stripMargin
+    }.toList
+  }
+
+  /**
+   * 处理解析成功的结果
+   *
+   * @param success 解析成功结果列表
+   * @return 错误信息
+   */
+  private def handleParseResult(success: Seq[ParseSuccessResult]): Option[List[String]] = {
+    val steps = mutable.Map[Long, Step]()
+    val matchers = mutable.ListBuffer[ContentMatcher]()
+    val errorMessage = mutable.ListBuffer[String]()
+    success.map(_.result).foreach { result =>
+      if (steps.contains(result.id)) {
+        errorMessage += s"存在重复的步骤 ID：${result.id}"
       } else {
-        // 正则 - 开头 - 结尾 - 等于 - 包含
-        val matcherMap = matchers.groupBy(_.`type`)
-        JamContext.matchers.getAndSet {
-          List() ++
-            matcherMap.getOrElse(ContentMatcher.EQUALS, List.empty) ++
-            matcherMap.getOrElse(ContentMatcher.REGEX, List.empty) ++
-            matcherMap.getOrElse(ContentMatcher.STARTS_WITH, List.empty) ++
-            matcherMap.getOrElse(ContentMatcher.ENDS_WITH, List.empty) ++
-            matcherMap.getOrElse(ContentMatcher.CONTAINS, List.empty)
-        }
-        JamContext.stepPool.getAndSet(StepPool(steps.toMap))
-        logger.log(s"${AnsiColor.GREEN}共加载${JamContext.matchers.get().length}条捕获信息")
-        logger.log(s"${AnsiColor.GREEN}共加载${steps.size}条步骤")
-        None
+        steps += result.id -> result.toStep
+        result.matcher.foreach(matchers.addOne)
       }
+    }
+    if (errorMessage.nonEmpty) {
+      Some(errorMessage.toList)
+    } else {
+      // 正则 - 开头 - 结尾 - 等于 - 包含
+      val matcherMap = matchers.groupBy(_.`type`)
+      JamContext.matchers.getAndSet {
+        List() ++
+          matcherMap.getOrElse(ContentMatcher.EQUALS, List.empty) ++
+          matcherMap.getOrElse(ContentMatcher.REGEX, List.empty) ++
+          matcherMap.getOrElse(ContentMatcher.STARTS_WITH, List.empty) ++
+          matcherMap.getOrElse(ContentMatcher.ENDS_WITH, List.empty) ++
+          matcherMap.getOrElse(ContentMatcher.CONTAINS, List.empty)
+      }
+      JamContext.stepPool.getAndSet(StepPool(steps.toMap))
+      logger.log(s"${AnsiColor.GREEN}共加载${JamContext.matchers.get().length}条捕获信息")
+      logger.log(s"${AnsiColor.GREEN}共加载${steps.size}条步骤")
+      None
     }
   }
 
