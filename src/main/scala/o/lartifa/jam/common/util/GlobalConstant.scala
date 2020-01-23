@@ -7,7 +7,9 @@ package o.lartifa.jam.common.util
  * 2020/1/23 22:15 
  */
 object GlobalConstant {
-  val PRIVATE: String = "private"
-  val GROUP: String = "group"
-  val DISCUSS: String = "discuss"
+  object MessageType {
+    val PRIVATE: String = "private"
+    val GROUP: String = "group"
+    val DISCUSS: String = "discuss"
+  }
 }
