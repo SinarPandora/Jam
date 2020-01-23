@@ -22,7 +22,7 @@ object MasterCommands {
 
   private implicit val exec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
-  val commands: List[IcqCommand] = List(ListVariable, ClearVariableInChat, SetVariable, RemoveVariable, ReloadSSDL)
+  val commands: List[IcqCommand] = List(ListVariable, ClearVariableInChat, SetVariable, RemoveVariable, ReloadSSDL, SessionType)
 
   private object ListVariable extends MasterEverywhereCommand("列出变量") {
     /**
@@ -116,6 +116,21 @@ object MasterCommands {
     override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = async {
       await(JamLoader.reloadSSDL()(CommandExecuteContext(event)))
       NO_RESPONSE
+    }
+  }
+
+  private object SessionType extends MasterEverywhereCommand("聊天类型", "会话类型") {
+    /**
+     * 指令操作
+     *
+     * @param event   消息事件
+     * @param sender  发送者
+     * @param command 指令内容
+     * @param args    参数
+     * @return 输出内容
+     */
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = async {
+      event.getMessageType
     }
   }
 

@@ -7,11 +7,12 @@ import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.database.temporary.TemporaryMemory
 import o.lartifa.jam.engine.SSDLParseEngine.{ParseFailResult, ParseSuccessResult}
 import o.lartifa.jam.model.patterns.ContentMatcher
-import o.lartifa.jam.model.{CommandExecuteContext, Step}
+import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext, Step}
 import o.lartifa.jam.pool.{JamContext, StepPool}
 
 import scala.async.Async._
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -41,13 +42,14 @@ object JamLoader {
    *
    * @return 错误信息
    */
-  private def loadSSDL(): Future[Option[List[String]]] = async {
-    val result = await(SSDLParseEngine.load())
-    val success: Option[Seq[Either[ParseFailResult, ParseSuccessResult]]] = result.get(true)
-    val fails: Option[Seq[Either[ParseFailResult, SSDLParseEngine.ParseSuccessResult]]] = result.get(false)
-    if (fails.isDefined) handleParseFail(fails.get.flatMap(_.left.toSeq))
-    else if (success.isDefined) handleParseResult(success.get.flatMap(_.toSeq))
-    else None
+  private def loadSSDL(): Future[Option[List[String]]] = {
+    SSDLParseEngine.load().map(result => {
+      val success: Option[Seq[Either[ParseFailResult, ParseSuccessResult]]] = result.get(true)
+      val fails: Option[Seq[Either[ParseFailResult, SSDLParseEngine.ParseSuccessResult]]] = result.get(false)
+      if (fails.isDefined) handleParseFail(fails.get.flatMap(_.left.toSeq))
+      else if (success.isDefined) handleParseResult(success.get.flatMap(_.toSeq))
+      else None
+    }).recover(e => Some(List(e.getMessage)))
   }
 
   /**
@@ -71,34 +73,61 @@ object JamLoader {
    */
   private def handleParseResult(success: Seq[ParseSuccessResult]): Option[List[String]] = {
     val steps = mutable.Map[Long, Step]()
-    val matchers = mutable.ListBuffer[ContentMatcher]()
+    val globalMatchers = ListBuffer[ContentMatcher]()
+    val customMatchers = mutable.Map[String, mutable.Map[Long, ListBuffer[ContentMatcher]]]()
     val errorMessage = mutable.ListBuffer[String]()
-    success.map(_.result).foreach { result =>
-      if (steps.contains(result.id)) {
-        errorMessage += s"存在重复的步骤 ID：${result.id}"
-      } else {
-        steps += result.id -> result.toStep
-        result.matcher.foreach(matchers.addOne)
-      }
+    success.map(result => (result.result, result.chatInfo)).foreach {
+      case (result, chatInfo) =>
+        if (steps.contains(result.id)) {
+          errorMessage += s"存在重复的步骤 ID：${result.id}"
+        } else {
+          steps += result.id -> result.toStep
+          chatInfo match {
+            case Some(ChatInfo(chatType, chatId)) =>
+              result.matcher.foreach(
+                customMatchers
+                  .getOrElseUpdate(chatType, mutable.Map())
+                  .getOrElseUpdate(chatId, ListBuffer())
+                  .addOne
+              )
+            case None => result.matcher.foreach(globalMatchers.addOne)
+          }
+        }
     }
     if (errorMessage.nonEmpty) {
       Some(errorMessage.toList)
     } else {
       // 正则 - 开头 - 结尾 - 等于 - 包含
-      val matcherMap = matchers.groupBy(_.`type`)
-      JamContext.matchers.getAndSet {
-        List() ++
-          matcherMap.getOrElse(ContentMatcher.EQUALS, List.empty) ++
-          matcherMap.getOrElse(ContentMatcher.REGEX, List.empty) ++
-          matcherMap.getOrElse(ContentMatcher.STARTS_WITH, List.empty) ++
-          matcherMap.getOrElse(ContentMatcher.ENDS_WITH, List.empty) ++
-          matcherMap.getOrElse(ContentMatcher.CONTAINS, List.empty)
+      JamContext.globalMatchers.getAndSet(sortMatchers(globalMatchers))
+      JamContext.customMatchers.getAndSet {
+        customMatchers.map {
+          case (k, v) =>
+            (k, v.map {
+              case (k2, v2) => (k2, sortMatchers(v2))
+            }.toMap)
+        }.toMap
       }
       JamContext.stepPool.getAndSet(StepPool(steps.toMap))
-      logger.log(s"${AnsiColor.GREEN}共加载${JamContext.matchers.get().length}条捕获信息")
+      logger.log(s"${AnsiColor.GREEN}共加载${JamContext.globalMatchers.get().length}条捕获信息")
       logger.log(s"${AnsiColor.GREEN}共加载${steps.size}条步骤")
       None
     }
+  }
+
+  /**
+   * Matcher 排序
+   *
+   * @param matchers 无序 Matcher 列表
+   * @return 排序后的 Matcher 列表
+   */
+  private def sortMatchers(matchers: ListBuffer[ContentMatcher]): List[ContentMatcher] = {
+    val matcherMap = matchers.groupBy(_.`type`)
+    List() ++
+      matcherMap.getOrElse(ContentMatcher.EQUALS, List.empty) ++
+      matcherMap.getOrElse(ContentMatcher.REGEX, List.empty) ++
+      matcherMap.getOrElse(ContentMatcher.STARTS_WITH, List.empty) ++
+      matcherMap.getOrElse(ContentMatcher.ENDS_WITH, List.empty) ++
+      matcherMap.getOrElse(ContentMatcher.CONTAINS, List.empty)
   }
 
   /**
@@ -117,7 +146,7 @@ object JamLoader {
           messages.sliding(10).foreach(lines => context.eventMessage.respond(lines.mkString("\n")))
         case None =>
           context.eventMessage.respond("Compile Success! 0 Warning, 0 Error")
-          context.eventMessage.respond(s"共加载${JamContext.matchers.get().length}条捕获信息")
+          context.eventMessage.respond(s"共加载${JamContext.globalMatchers.get().length}条捕获信息")
           context.eventMessage.respond(s"共加载${JamContext.stepPool.get().size}条步骤")
       }
 

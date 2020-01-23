@@ -11,8 +11,8 @@ import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch
 import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.util.MasterUtil
-import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.patterns.ContentMatcher
+import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.pool.{JamContext, MessagePool}
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
@@ -62,10 +62,12 @@ object RuleEngineListener extends IcqListener {
     val matchCost = new StopWatch()
     matchCost.start()
     val stepId: AtomicReference[Option[Long]] = new AtomicReference[Option[Long]](None)
+    val ChatInfo(chatType, chatId) = ChatInfo(eventMessage)
 
     // 查找匹配的步骤
     if (!JamContext.editLock.get()) {
-      findMatchedStep(eventMessage.getMessage, JamContext.matchers.get()).foreach { matcher =>
+      val scanList = JamContext.customMatchers.get().getOrElse(chatType, Map()).getOrElse(chatId, List()) ++ JamContext.globalMatchers.get()
+      findMatchedStep(eventMessage.getMessage, scanList).foreach { matcher =>
         implicit val context: CommandExecuteContext = CommandExecuteContext(eventMessage)
         stepId.set(Some(matcher.stepId))
         JamContext.stepPool.get().goto(matcher.stepId).recover(exception => {
