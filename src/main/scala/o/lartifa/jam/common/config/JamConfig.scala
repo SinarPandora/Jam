@@ -9,7 +9,7 @@ import com.typesafe.config.{Config, ConfigFactory}
  * 2020/1/2 22:01 
  */
 object JamConfig {
-  private val config: Config = ConfigFactory.load().getConfig("bot")
+  val config: Config = ConfigFactory.load().getConfig("bot")
 
   // Bot 姓名
   val name: String = config.getString("name")
