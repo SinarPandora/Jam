@@ -48,7 +48,8 @@ object SSDLParseEngine extends Parser {
   private def loadFiles(): List[(List[File], Option[ChatInfo])] = {
     import SystemConfig._
     File(ssdlPath).list.filterNot(f => f.isRegularFile || f.pathAsString.contains("modes")).map { dir =>
-      val dirName = dir.pathAsString.split("[\\\\/]").last
+      // 忽略备注 + 获取会话格式
+      val dirName = dir.pathAsString.split("[）)]").last.split("[\\\\/]").last
       if (dirName == "global") {
         dir.listRecursively.filter(file => ssdlFileExtension.contains(file.extension.getOrElse(""))).toList -> None
       } else {
