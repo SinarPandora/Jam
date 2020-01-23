@@ -11,7 +11,7 @@ import o.lartifa.jam.pool.JamContext
  * Author: sinar
  * 2020/1/23 14:10 
  */
-object GoSleep extends Task {
+object GoASleep extends Task {
   override def execute(): Unit = {
     JamContext.clientConfig.get().setHttpPaused(true)
     JamContext.clientConfig.get().setEventPaused(true)
