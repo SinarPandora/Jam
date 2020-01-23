@@ -10,6 +10,7 @@ import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch
 import o.lartifa.jam.common.config.JamConfig
+import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.patterns.ContentMatcher
 import o.lartifa.jam.pool.{JamContext, MessagePool}
@@ -31,18 +32,9 @@ object RuleEngineListener extends IcqListener {
 
   private val messageRecorder: MessagePool = JamContext.messagePool
 
-  private val willResponse: () => Boolean = {
-    val frequency = JamConfig.responseFrequency
-    if (frequency == 100) () => true
-    else {
-      val random = new SecureRandom()
-      () => {
-        val will = random.nextInt(100) < frequency
-        if (!will) logger.debug("受回复几率影响，消息被忽略")
-        will
-      }
-    }
-  }
+  private val willResponse: AtomicReference[() => Boolean] = new AtomicReference[() => Boolean](
+    createFrequencyFunc(JamConfig.responseFrequency)
+  )
 
   /**
    * 消息监听
@@ -54,10 +46,10 @@ object RuleEngineListener extends IcqListener {
     messageRecorder.recordMessage(eventMessage).onComplete {
       case Failure(exception) =>
         logger.error(exception)
-        notifyMaster(s"发生严重错误：${eventMessage.message}", eventMessage)
+        MasterUtil.notifyMaster(s"发生严重错误：${eventMessage.message}")
       case Success(isRecordSuccess) =>
-        if (!isRecordSuccess) notifyMaster(s"消息记录失败，消息内容为：${eventMessage.getMessage}", eventMessage)
-        if (willResponse()) findThenDoStep(eventMessage)
+        if (!isRecordSuccess) MasterUtil.notifyMaster(s"消息记录失败，消息内容为：${eventMessage.getMessage}")
+        if (willResponse.get().apply()) findThenDoStep(eventMessage)
     }
   }
 
@@ -78,7 +70,7 @@ object RuleEngineListener extends IcqListener {
         stepId.set(Some(matcher.stepId))
         JamContext.stepPool.get().goto(matcher.stepId).recover(exception => {
           logger.error(exception)
-          notifyMaster(s"步骤${stepId}执行失败！原因：${exception.getMessage}", eventMessage)
+          MasterUtil.notifyMaster(s"步骤${stepId.get().get}执行失败！原因：${exception.getMessage}")
         })
       }
     }
@@ -110,14 +102,30 @@ object RuleEngineListener extends IcqListener {
     }
   }
 
+  /**
+   * 调整回复频率
+   *
+   * @param frequency 回复频率
+   */
+  def adjustFrequency(frequency: Int): Unit = {
+    this.willResponse.getAndSet(createFrequencyFunc(frequency))
+  }
 
   /**
-   * 通知管理者
+   * 生成回复影响函数
    *
-   * @param message      错误信息
-   * @param eventMessage 消息内容
+   * @param frequency 回复频率
+   * @return 回复影响函数
    */
-  private def notifyMaster(message: String, eventMessage: EventMessage): Unit = {
-    eventMessage.getHttpApi.sendPrivateMsg(JamConfig.masterQID, message)
+  private def createFrequencyFunc(frequency: Int): () => Boolean = {
+    if (frequency == 100) () => true
+    else {
+      val random = new SecureRandom()
+      () => {
+        val will = random.nextInt(100) < frequency
+        if (!will) logger.debug("受回复几率影响，消息被忽略")
+        will
+      }
+    }
   }
 }
