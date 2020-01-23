@@ -45,7 +45,7 @@ object JamLoader {
     val result = await(SSDLParseEngine.load())
     val success: Option[Seq[Either[ParseFailResult, ParseSuccessResult]]] = result.get(true)
     val fails: Option[Seq[Either[ParseFailResult, SSDLParseEngine.ParseSuccessResult]]] = result.get(false)
-    if (fails.isDefined) handleParseFail(fails.get.flatMap(_.swap.toSeq))
+    if (fails.isDefined) handleParseFail(fails.get.flatMap(_.left.toSeq))
     else if (success.isDefined) handleParseResult(success.get.flatMap(_.toSeq))
     else None
   }
