@@ -21,7 +21,7 @@ import scala.util.{Failure, Success, Try}
  */
 object SSDLParseEngine extends Parser {
 
-  sealed case class ParseSuccessResult(lineId: Long, filepath: String, result: ParseResult, chatInfo: Option[ChatInfo], name: Option[String] = None)
+  sealed case class ParseSuccessResult(lineId: Long, filepath: String, result: ParseResult, chatInfo: ChatInfo, name: Option[String] = None)
 
   sealed case class ParseFailResult(lineId: Long, filepath: String, message: String)
 
@@ -45,18 +45,18 @@ object SSDLParseEngine extends Parser {
    *
    * @return 文件列表
    */
-  private def loadFiles(): List[(List[File], Option[ChatInfo])] = {
+  private def loadFiles(): List[(List[File], ChatInfo)] = {
     import SystemConfig._
     File(ssdlPath).list.filterNot(f => f.isRegularFile || f.pathAsString.contains("modes")).map { dir =>
       // 忽略备注 + 获取会话格式
       val dirName = dir.name.split("[）)]").last
       if (dirName == "global") {
-        dir.listRecursively.filter(file => ssdlFileExtension.contains(file.extension.getOrElse(""))).toList -> None
+        dir.listRecursively.filter(file => ssdlFileExtension.contains(file.extension.getOrElse(""))).toList -> ChatInfo.None
       } else {
         val split = dirName.split("_")
         need(split.length == 2, s"文件夹名：${dir.pathAsString}格式不正确（起名格式：global，private_xxx, group_xxx，discuss_xxx）")
         val Array(tp, id) = split.take(2)
-        dir.listRecursively.filter(file => ssdlFileExtension.contains(file.extension.getOrElse(""))).toList -> Some(ChatInfo(tp, id.toLong))
+        dir.listRecursively.filter(file => ssdlFileExtension.contains(file.extension.getOrElse(""))).toList -> ChatInfo(tp, id.toLong)
       }
     }.toList
   }
@@ -68,7 +68,7 @@ object SSDLParseEngine extends Parser {
    * @param chatInfo  会话信息（针对非全局步骤）
    * @return 解析结果
    */
-  private def parseFiles(ssdlFiles: List[File], chatInfo: Option[ChatInfo]): Seq[Either[ParseFailResult, ParseSuccessResult]] = {
+  private def parseFiles(ssdlFiles: List[File], chatInfo: ChatInfo): Seq[Either[ParseFailResult, ParseSuccessResult]] = {
     ssdlFiles.flatMap(parseFileContent(_, chatInfo))
   }
 
@@ -79,13 +79,13 @@ object SSDLParseEngine extends Parser {
    * @param chatInfo 会话信息（针对非全局步骤）
    * @return 解析结果
    */
-  private def parseFileContent(file: File, chatInfo: Option[ChatInfo]): Iterable[Either[ParseFailResult, ParseSuccessResult]] = {
+  private def parseFileContent(file: File, chatInfo: ChatInfo): Iterable[Either[ParseFailResult, ParseSuccessResult]] = {
     file.lines
       .map(_.trim)
       .map(line => {
         if (line.startsWith("(") || line.startsWith("（")) {
           val (name, step)= line.splitAt(line.indexWhere(c => c == ')' || c == '）') + 1)
-          Some(name) -> step
+          Some(name.substring(1, name.length - 1)) -> step
         } else None -> line
       })
       .zipWithIndex
@@ -107,7 +107,7 @@ object SSDLParseEngine extends Parser {
    * @param chatInfo 会话信息（针对非全局步骤）
    * @return 解析结果
    */
-  private def parseSSDL(string: String, filepath: String, lineId: Long, chatInfo: Option[ChatInfo], name: Option[String]): Either[ParseFailResult, ParseSuccessResult] = {
+  private def parseSSDL(string: String, filepath: String, lineId: Long, chatInfo: ChatInfo, name: Option[String]): Either[ParseFailResult, ParseSuccessResult] = {
     Try(PatternParser.parseBasePattern(string)) match {
       case Failure(exception) => Left(ParseFailResult(lineId, filepath, exception.getMessage))
       case Success(result) => Right(ParseSuccessResult(lineId, filepath, result, chatInfo, name))

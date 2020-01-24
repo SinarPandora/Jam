@@ -72,25 +72,25 @@ object JamLoader {
    * @return 错误信息
    */
   private def handleParseResult(success: Seq[ParseSuccessResult]): Option[List[String]] = {
-    val steps = mutable.Map[Long, Step]()
+    val steps = mutable.Map[Long, (Option[String], ChatInfo, Step)]()
     val globalMatchers = ListBuffer[ContentMatcher]()
     val customMatchers = mutable.Map[String, mutable.Map[Long, ListBuffer[ContentMatcher]]]()
     val errorMessage = mutable.ListBuffer[String]()
-    success.map(result => (result.result, result.chatInfo)).foreach {
-      case (result, chatInfo) =>
+    success.map(result => (result.result, result.chatInfo, result.name)).foreach {
+      case (result, chatInfo, name) =>
         if (steps.contains(result.id)) {
           errorMessage += s"存在重复的步骤 ID：${result.id}"
         } else {
-          steps += result.id -> result.toStep
+          steps += result.id -> (name, chatInfo, result.toStep)
           chatInfo match {
-            case Some(ChatInfo(chatType, chatId)) =>
+            case ChatInfo.None => result.matcher.foreach(globalMatchers.addOne)
+            case ChatInfo(chatType, chatId) =>
               result.matcher.foreach(
                 customMatchers
                   .getOrElseUpdate(chatType, mutable.Map())
                   .getOrElseUpdate(chatId, ListBuffer())
                   .addOne
               )
-            case None => result.matcher.foreach(globalMatchers.addOne)
           }
         }
     }
