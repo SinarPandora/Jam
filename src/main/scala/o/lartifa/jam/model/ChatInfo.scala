@@ -21,4 +21,6 @@ object ChatInfo {
         new ChatInfo(eventMessage.getMessageType, message.getSenderId)
     }
   }
+
+  object None extends ChatInfo("None", -1L)
 }
