@@ -1,6 +1,5 @@
 package o.lartifa.jam.model.tasks
 
-import cn.hutool.cron.task.Task
 import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.pool.JamContext
@@ -11,7 +10,7 @@ import o.lartifa.jam.pool.JamContext
  * Author: sinar
  * 2020/1/23 14:07 
  */
-class WakeUp extends Task {
+class WakeUp extends JamTask(name = "起床") {
   override def execute(): Unit = {
     JamContext.clientConfig.get().setEventPaused(false)
     JamContext.clientConfig.get().setHttpPaused(false)

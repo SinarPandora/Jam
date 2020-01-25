@@ -1,6 +1,5 @@
 package o.lartifa.jam.model.tasks
 
-import cn.hutool.cron.task.Task
 import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.listener.RuleEngineListener
@@ -12,7 +11,7 @@ import o.lartifa.jam.pool.JamContext
  * Author: sinar
  * 2020/1/23 14:26 
  */
-class ChangeRespFrequency(val freq: Int) extends Task {
+class ChangeRespFrequency(val freq: Int) extends JamTask(name = "回复频率变更") {
   override def execute(): Unit = {
     RuleEngineListener.adjustFrequency(freq)
     if (SystemConfig.debugMode) {
