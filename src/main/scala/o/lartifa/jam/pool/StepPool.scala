@@ -15,7 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2020/1/4 01:18
  */
-case class StepPool(private val steps: Map[Long, Step], private val names: Map[String, Map[ChatInfo, Long]]) {
+class StepPool(private val steps: Map[Long, Step], private val names: Map[String, Map[ChatInfo, Long]]) {
 
   private lazy val logger: HyLogger = JamContext.logger.get()
 

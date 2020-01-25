@@ -44,7 +44,7 @@ object BiochronometerParser extends Parser {
     val wakeUpTime = Try(config.getInt("wake_up_time"))
       .getOrElse(throw ParseFailException("起床时间必须设置为数字"))
     need(wakeUpTime >= 0 && wakeUpTime <= 23, "起床时间范围需要为 0 - 23")
-    CronUtil.schedule(s"0 0 $wakeUpTime * * ? ", WakeUp)
+    CronUtil.schedule(s"0 0 $wakeUpTime * * ? ", new WakeUp())
     logger.log(s"${AnsiColor.GREEN}起床时间设置为每日${wakeUpTime}时")
   }
 
@@ -55,7 +55,7 @@ object BiochronometerParser extends Parser {
     val goASleepTime = Try(config.getInt("go_asleep_time"))
       .getOrElse(throw ParseFailException("就寝时间必须设置为数字"))
     need(goASleepTime >= 0 && goASleepTime <= 23, "就寝时间范围应为 0 - 23")
-    CronUtil.schedule(s"0 0 $goASleepTime * * ? ", GoASleep)
+    CronUtil.schedule(s"0 0 $goASleepTime * * ? ", new GoASleep())
     logger.log(s"${AnsiColor.GREEN}睡眠时间设置为每日${goASleepTime}时")
   }
 
