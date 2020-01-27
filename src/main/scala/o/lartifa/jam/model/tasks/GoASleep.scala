@@ -10,7 +10,7 @@ import o.lartifa.jam.pool.JamContext
  * Author: sinar
  * 2020/1/23 14:10 
  */
-class GoASleep extends JamTask(name = "睡眠") {
+class GoASleep extends JamCronTask(name = "睡眠") {
   override def execute(): Unit = {
     JamContext.clientConfig.get().setHttpPaused(true)
     JamContext.clientConfig.get().setEventPaused(true)

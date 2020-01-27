@@ -11,7 +11,7 @@ import o.lartifa.jam.pool.JamContext
  * Author: sinar
  * 2020/1/23 14:26 
  */
-class ChangeRespFrequency(val freq: Int) extends JamTask(name = "回复频率变更") {
+class ChangeRespFrequency(val freq: Int) extends JamCronTask(name = "回复频率变更") {
   override def execute(): Unit = {
     RuleEngineListener.adjustFrequency(freq)
     if (SystemConfig.debugMode) {

@@ -7,4 +7,4 @@ import cn.hutool.cron.task.Task
  * Author: sinar
  * 2020/1/25 13:45 
  */
-abstract class JamTask(val name: String, val taskId: Option[Long] = None) extends Task
+abstract class JamCronTask(val name: String, val taskId: Option[Long] = None) extends Task
