@@ -1,14 +1,11 @@
 package o.lartifa.jam.pool
 
-import cn.hutool.core.lang.UUID
 import o.lartifa.jam.common.exception.ExecutionException
-import o.lartifa.jam.model.tasks.{CronTaskWithInfo, JamCronTask}
+import o.lartifa.jam.model.tasks.JamCronTask
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
-import org.reflections.Reflections
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.jdk.CollectionConverters._
 
 /**
  * 定时任务池
@@ -16,23 +13,23 @@ import scala.jdk.CollectionConverters._
  * Author: sinar
  * 2020/1/25 13:32
  */
-class CronTaskPool(private val tasks: mutable.Map[String, ListBuffer[CronTaskWithInfo]]) {
+class CronTaskPool(private val tasks: mutable.Map[String, ListBuffer[JamCronTask]] = mutable.Map.empty) {
   /**
    * 添加定时任务到定时任务池
    *
-   * @param taskWithInfo 任务信息组
+   * @param task 任务信息组
    */
-  def add(taskWithInfo: CronTaskWithInfo): Unit = {
-    tasks.getOrElseUpdate(taskWithInfo.task.name, ListBuffer.empty).addOne(taskWithInfo)
+  def add(task: JamCronTask): Unit = {
+    tasks.getOrElseUpdate(task.name, ListBuffer.empty).addOne(task)
   }
 
   /**
    * 添加全部任务到定时任务池
    *
-   * @param tasksWithInfo 任务信息组列表
+   * @param task 任务信息组列表
    */
-  def addAll(tasksWithInfo: Seq[CronTaskWithInfo]): Unit = {
-    tasksWithInfo.groupBy(_.task.name).foreach { case (name, tasksWithSameName) =>
+  def addAll(task: Seq[JamCronTask]): Unit = {
+    task.groupBy(_.name).foreach { case (name, tasksWithSameName) =>
       tasks.getOrElseUpdate(name, ListBuffer.empty).addAll(tasksWithSameName)
     }
   }
@@ -43,8 +40,8 @@ class CronTaskPool(private val tasks: mutable.Map[String, ListBuffer[CronTaskWit
    * @param name 任务名
    * @return 任务列表
    */
-  def getAll(name: String): List[CronTaskWithInfo] = {
-    tasks.getOrElse(name, ListBuffer.empty).filter(_.task.name == name).toList
+  def getAll(name: String): List[JamCronTask] = {
+    tasks.getOrElse(name, ListBuffer.empty).filter(_.name == name).toList
   }
 
   /**
@@ -54,8 +51,34 @@ class CronTaskPool(private val tasks: mutable.Map[String, ListBuffer[CronTaskWit
    * @param chatInfo 会话信息
    * @return 任务列表
    */
-  def getAll(name: String, chatInfo: ChatInfo): List[CronTaskWithInfo] = {
-    getAll(name).filter(_.chatInfo.contains(chatInfo))
+  def getAll(name: String, chatInfo: ChatInfo): List[JamCronTask] = {
+    getAll(name).filter(_.chatInfo == chatInfo)
+  }
+
+  /**
+   * 删除指定定时任务
+   *
+   * @param task 要删除的任务
+   * @return 删除结果
+   */
+  def remove(task: JamCronTask): Option[JamCronTask] = {
+    tasks.get(task.name).flatMap { taskList =>
+      taskList.find(_.id == task.id).map { task =>
+        taskList -= task
+        task
+      }
+    }
+  }
+
+  /**
+   * 删除全部指定的定时任务
+   *
+   * @param list 要删除的任务列表
+   */
+  def removeAll(list: List[JamCronTask]): Unit = {
+    list.groupBy(_.name).foreach { case (name, taskList) =>
+      tasks.get(name).foreach(_ --= taskList)
+    }
   }
 
   /**
@@ -67,7 +90,7 @@ class CronTaskPool(private val tasks: mutable.Map[String, ListBuffer[CronTaskWit
    * @return 定时任务
    */
   @throws[ExecutionException]
-  def get(name: String)(implicit context: CommandExecuteContext = null): Option[CronTaskWithInfo] = {
+  def get(name: String)(implicit context: CommandExecuteContext = null): Option[JamCronTask] = {
     val searchPath = this.getAll(name)
     if (searchPath.lengthIs == 0) {
       None
@@ -75,24 +98,10 @@ class CronTaskPool(private val tasks: mutable.Map[String, ListBuffer[CronTaskWit
       searchPath.headOption
     } else if (context != null) {
       val chatInfo = context.chatInfo
-      val tasks = searchPath.filter(_.chatInfo.contains(chatInfo))
+      val tasks = searchPath.filter(_.chatInfo == chatInfo)
       if (tasks.lengthIs == 1) tasks.headOption
       else throw ExecutionException("该聊天下存在重复的同名任务")
     } else throw ExecutionException("该聊天下存在重复的同名任务")
 
-  }
-}
-
-object CronTaskPool {
-  def apply(): CronTaskPool = {
-    val mutMap: mutable.Map[String, ListBuffer[CronTaskWithInfo]] = mutable.Map.empty
-    new Reflections("o.lartifa.jam.model.tasks")
-      .getSubTypesOf(classOf[JamCronTask])
-      .asScala
-      .foreach(taskClz => {
-        val task = taskClz.getDeclaredConstructor().newInstance()
-        mutMap.getOrElseUpdate(task.name, ListBuffer.empty).addOne(CronTaskWithInfo(task, None, UUID.randomUUID()))
-      })
-    new CronTaskPool(mutMap)
   }
 }

@@ -16,6 +16,7 @@ import o.lartifa.jam.model.patterns.ContentMatcher
 object JamContext {
   val editLock: AtomicBoolean = new AtomicBoolean(false)
   val stepPool: AtomicReference[StepPool] = new AtomicReference[StepPool]()
+  val cronTaskPool: AtomicReference[CronTaskPool] = new AtomicReference[CronTaskPool]()
   val variablePool: VariablePool = new VariablePool()
   val globalMatchers: AtomicReference[List[ContentMatcher]] = new AtomicReference[List[ContentMatcher]]()
   val customMatchers: AtomicReference[Map[String, Map[Long, List[ContentMatcher]]]] = new AtomicReference()

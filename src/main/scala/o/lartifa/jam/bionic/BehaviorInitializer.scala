@@ -3,7 +3,7 @@ package o.lartifa.jam.bionic
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.cron.CronUtil
-import o.lartifa.jam.pool.JamContext
+import o.lartifa.jam.pool.{CronTaskPool, JamContext}
 
 import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
@@ -23,6 +23,7 @@ object BehaviorInitializer {
    */
   def init()(implicit exec: ExecutionContext): Future[Unit] = async {
     logger.log(s"${AnsiColor.YELLOW}正在调整生物钟")
+    JamContext.cronTaskPool.getAndSet(new CronTaskPool())
     await {
       Future.sequence(Seq(
         Future(BiochronometerParser.parse())
