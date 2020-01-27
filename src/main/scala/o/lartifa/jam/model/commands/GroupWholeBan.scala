@@ -20,7 +20,7 @@ case class GroupWholeBan(isBan: Boolean) extends Command[Unit] {
    * @return 异步返回执行结果
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = Future {
-    val ChatInfo(chatType, chatId) = ChatInfo(context.eventMessage)
+    val ChatInfo(chatType, chatId) = context.chatInfo
     if (chatType != MessageType.GROUP) throw ExecutionException(s"尝试在非群聊中使用全体禁言，聊天类型：$chatType，QQ：$chatId")
     context.eventMessage.getHttpApi.setGroupWholeBan(chatId, isBan)
   }

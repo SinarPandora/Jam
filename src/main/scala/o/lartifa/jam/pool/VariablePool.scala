@@ -37,7 +37,7 @@ class VariablePool {
    * @return 更新结果
    */
   def update(name: String, value: String)(implicit context: CommandExecuteContext): Future[String] = {
-    val ChatInfo(chatType, chatId) = ChatInfo(context.eventMessage)
+    val ChatInfo(chatType, chatId) = context.chatInfo
     logger.debug(s"变量更新：名称：$name，值：$value，聊天类型：$chatType，会话 ID：$chatId")
     val task = Variables
       .filter(row => row.chatId === chatId && row.chatType === chatType && row.name === name)
@@ -70,7 +70,7 @@ class VariablePool {
    * @return 添加结果
    */
   private def add(name: String, value: String)(implicit context: CommandExecuteContext): Future[Boolean] = {
-    val ChatInfo(chatType, chatId) = ChatInfo(context.eventMessage)
+    val ChatInfo(chatType, chatId) = context.chatInfo
     logger.debug(s"变量添加：名称：$name，值：$value，聊天类型：$chatType，会话 ID：$chatId")
     val task = Variables
       .map(row => (row.name, row.value, row.chatType, row.chatId)) += ((name, value, chatType, chatId))
@@ -85,7 +85,7 @@ class VariablePool {
    * @return 变量值（Optional）
    */
   def get(name: String)(implicit context: CommandExecuteContext): Future[Option[String]] = {
-    val ChatInfo(chatType, chatId) = ChatInfo(context.eventMessage)
+    val ChatInfo(chatType, chatId) = context.chatInfo
     db.run {
       Variables
         .filter(row => row.chatId === chatId && row.chatType === chatType && row.name === name)
@@ -117,7 +117,7 @@ class VariablePool {
    * @return true：删除成功
    */
   def delete(name: String)(implicit context: CommandExecuteContext): Future[Boolean] = async {
-    val ChatInfo(chatType, chatId) = ChatInfo(context.eventMessage)
+    val ChatInfo(chatType, chatId) = context.chatInfo
     logger.debug(s"变量移除：名称：$name，聊天类型：$chatType，会话 ID：$chatId")
     await {
       db.run {

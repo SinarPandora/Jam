@@ -59,7 +59,7 @@ class StepPool(private val steps: Map[Long, Step], private val names: Map[String
       val ids = idPairs.values
       if (ids.sizeIs > 1) {
         if (context != null) {
-          idPairs.getOrElse(ChatInfo(context.eventMessage), return None)
+          idPairs.getOrElse(context.chatInfo, return None)
         } else throw ExecutionException(s"存在相同名称的步骤，且聊天情景缺失，请检查有关步骤：${stepName}的调用位置")
       } else if (ids.sizeIs == 1) {
         ids.head

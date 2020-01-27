@@ -12,6 +12,8 @@ import o.lartifa.jam.pool.{JamContext, StepPool, VariablePool}
  */
 case class CommandExecuteContext(eventMessage: EventMessage, variablePool: VariablePool, stepPool: StepPool) {
   def logger: HyLogger = JamContext.logger.get()
+
+  val chatInfo: ChatInfo = ChatInfo(eventMessage)
 }
 
 object CommandExecuteContext {

@@ -59,7 +59,7 @@ class MessagePool {
   @throws[ExecutionException]
   def last(number: Int)(implicit context: CommandExecuteContext): Future[Option[MessageRecord]] = {
     if (number <= 0) ExecutionException("倒数条数必须大于零")
-    val ChatInfo(chatType, chatId) = ChatInfo(context.eventMessage)
+    val ChatInfo(chatType, chatId) = context.chatInfo
     db.run {
       MessageRecords.filter(row => row.messageType === chatType && (row.groupId === chatId || row.senderId === chatId))
         .sortBy(_.timestamp.desc).drop(number - 1).take(1).result
