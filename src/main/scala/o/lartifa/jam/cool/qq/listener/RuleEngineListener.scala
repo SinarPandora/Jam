@@ -83,7 +83,7 @@ object RuleEngineListener extends IcqListener {
       val cost = matchCost.getTotalTimeSeconds
       if (cost < 1) logger.log(s"${AnsiColor.GREEN}成功捕获！步骤ID：$id，耗时：小于1s")
       else if (cost < 4) logger.log(s"${AnsiColor.GREEN}成功捕获！步骤ID：$id，耗时：${cost}s")
-      else logger.warning(s"${AnsiColor.RED}成功捕获但耗时较长，请考虑对步骤进行优化。步骤ID：$id，耗时：${cost}s")
+      else logger.warning(s"${AnsiColor.RED}成功捕获但耗时较长，请考虑对捕获条件进行优化。步骤ID：$id，耗时：${cost}s")
     }
   }
 
