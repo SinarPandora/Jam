@@ -16,7 +16,7 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
 /**
  * Author: sinar
- * 2020/1/5 03:12 
+ * 2020/1/5 03:12
  */
 object MasterCommands {
 
@@ -44,7 +44,7 @@ object MasterCommands {
      */
     override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = async {
       val pool = JamContext.variablePool
-      val result: String = await(pool.listAll()).sortBy(_.name).map(row => s"变量名：${row.name}，值：${row.value}").mkString("\n")
+      val result: String = await(pool.listAll()).sortBy(_.chatId).map(row => s"ID：${row.chatId}，变量名：${row.name}，值：${row.value}").mkString("\n")
       if ("" == result) event.respond("当前会话没有变量哦")
       result
     }

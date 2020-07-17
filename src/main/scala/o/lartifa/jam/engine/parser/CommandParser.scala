@@ -2,6 +2,7 @@ package o.lartifa.jam.engine.parser
 
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.model.commands._
+import o.lartifa.jam.plugins.picbot._
 
 import scala.util.Try
 
@@ -9,7 +10,7 @@ import scala.util.Try
  * SSDL 指令解析器
  *
  * Author: sinar
- * 2020/1/3 22:55 
+ * 2020/1/3 22:55
  */
 object CommandParser extends Parser {
 
@@ -36,7 +37,10 @@ object CommandParser extends Parser {
           parseWaiting _,
           parseGroupWholeBan _,
           parseGroupWholeUnBan _,
-          parseDoNoting _
+          parseDoNoting _,
+          parseFetchAndSendPic _,
+          parseSetPicFetcherMode _,
+          parseSetPicRating _
         )
           .map(_.apply(string))
           .find(_.isDefined)
@@ -234,4 +238,47 @@ object CommandParser extends Parser {
    */
   private def parseGroupWholeUnBan(string: String): Option[GroupWholeBan] =
     if (CommandPattern.groupWholeUnBan == string) Some(GroupWholeBan(false)) else None
+
+  /**
+   * 解析发送色图指令
+   *
+   * @param string 待解析字符串
+   * @return 解析结果
+   */
+  private def parseFetchAndSendPic(string: String): Option[NewFetchAndSendPic] =
+    if (CommandPattern.fetchAndSendPic == string) Some(NewFetchAndSendPic()) else None
+
+  /**
+   * 解析设置图片获取模式指令
+   *
+   * @param string 待解析字符串
+   * @return 解析结果
+   */
+  private def parseSetPicFetcherMode(string: String): Option[SetPicFetcherMode] = {
+    CommandPattern.setPicFetcherMode.findFirstMatchIn(string).map(result => {
+      val mode = result.group("mode") match {
+        case PatternMode.ONLY => ONLY
+        case PatternMode.RANGE => RANGE
+      }
+      SetPicFetcherMode(mode)
+    })
+  }
+
+  /**
+   * 解析设置图片获取模式指令
+   *
+   * @param string 待解析字符串
+   * @return 解析结果
+   */
+  private def parseSetPicRating(string: String): Option[SetPicRating] = {
+    CommandPattern.setPicRating.findFirstMatchIn(string).map(result => {
+      val rating = result.group("rating") match {
+        case PatternRating.SAFE => SAFE
+        case PatternRating.QUESTIONABLE => QUESTIONABLE
+        case PatternRating.EXPLICIT => EXPLICIT
+      }
+      SetPicRating(rating)
+    })
+  }
+
 }
