@@ -24,8 +24,24 @@ object Patterns {
    * 定时任务捕获器匹配
    * 返回结果：type keyword
    */
-  val cronTaskPattern: Regex = """^每到(.+?)时[,，](.+)""".r("expression", "command")
+  val cronTaskPattern: Regex = """^每到?(.+?)时[,，](.+)""".r("expression", "command")
 
+  // 3.5
+  object TimeExp {
+    // 月-日
+    val month: Regex = """^(每|一|二|三|四|五|六|七|八|九|十|十一|十二)月""".r("month")
+    val day: Regex = """([0-9]+)日""".r("day")
+    // 周
+    val weekday: Regex = """^周(一|二|三|四|五|六|日|末|工作日)""".r("weekday")
+    // 时
+    val hour: Regex = """([0-9]+)点""".r("hour")
+    // 分
+    val minute: Regex = """([0-9]+)分""".r("minute")
+    // 秒
+    val second: Regex = """([0-9]+)秒""".r("second")
+    // 时间表达式
+    val cron: Regex = """满足(.+?)""".r("cron")
+  }
 
   // 4
   object ConditionPattern {
