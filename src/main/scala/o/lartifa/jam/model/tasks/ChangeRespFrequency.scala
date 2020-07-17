@@ -9,15 +9,15 @@ import o.lartifa.jam.pool.JamContext
  * 调整回复频率
  *
  * Author: sinar
- * 2020/1/23 14:26 
+ * 2020/1/23 14:26
  */
 class ChangeRespFrequency(val freq: Int) extends JamCronTask(name = "回复频率变更") {
   override def execute(): Unit = {
     RuleEngineListener.adjustFrequency(freq)
     if (SystemConfig.debugMode) {
-      MasterUtil.notifyMaster(s"${JamConfig.name}的回复频率以变更为：$freq%")
+      MasterUtil.notifyMaster(s"${JamConfig.name}的回复频已变更为：$freq%")
     }
-    JamContext.logger.get().log(s"${JamConfig.name}的回复频率以变更为：$freq%")
+    JamContext.logger.get().log(s"${JamConfig.name}的回复频率已变更为：$freq%")
   }
 }
 
