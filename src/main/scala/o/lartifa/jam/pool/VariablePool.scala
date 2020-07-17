@@ -18,7 +18,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * 变量池
  *
  * Author: sinar
- * 2020/1/3 23:58 
+ * 2020/1/3 23:58
  */
 class VariablePool {
 
@@ -73,7 +73,8 @@ class VariablePool {
     val ChatInfo(chatType, chatId) = context.chatInfo
     logger.debug(s"变量添加：名称：$name，值：$value，聊天类型：$chatType，会话 ID：$chatId")
     val task = Variables
-      .map(row => (row.name, row.value, row.chatType, row.chatId)) += ((name, value, chatType, chatId))
+      .map(row => (row.name, row.value, row.chatType, row.chatId, row.lastUpdateDate)) +=
+      ((name, value, chatType, chatId, TimeUtil.currentTimeStamp))
     db.run(task) map (count => if (count != 1) throw ExecutionException(s"变量更新失败！变量名为：$name") else true)
   }
 
@@ -105,7 +106,9 @@ class VariablePool {
   def getOrElseUpdate(name: String, orElse: String)(implicit context: CommandExecuteContext): Future[String] = async {
     await(get(name)) match {
       case Some(value) => value
-      case None => await(update(name, orElse))
+      case None =>
+        await(add(name, orElse))
+        orElse
     }
   }
 
