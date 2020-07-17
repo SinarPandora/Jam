@@ -27,7 +27,7 @@ case class CommandExecuteContext(eventMessage: EventMessage, variablePool: Varia
   /**
    * 以名字获取当前范围内的指令参数
    */
-  val params: String => String = CommandParameterUtil.createGetParamFunc(parametersMap.get, eventMessage)
+  val getParameter: String => String = CommandParameterUtil.createGetParamFunc(parametersMap.get, eventMessage)
 
   /**
    * 添加一对参数
@@ -35,7 +35,7 @@ case class CommandExecuteContext(eventMessage: EventMessage, variablePool: Varia
    * @param key 键
    * @param value 值
    */
-  def addParam(key: String, value: String): Unit = {
+  def addParameter(key: String, value: String): Unit = {
     parametersMap += (key -> value)
     ()
   }
@@ -45,7 +45,7 @@ case class CommandExecuteContext(eventMessage: EventMessage, variablePool: Varia
    *
    * @param pairs 参数列表
    */
-  def addParams(pairs: IterableOnce[(String, String)]): Unit = {
+  def addParameters(pairs: IterableOnce[(String, String)]): Unit = {
     parametersMap ++= pairs
     ()
   }

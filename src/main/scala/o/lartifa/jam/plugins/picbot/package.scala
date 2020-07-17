@@ -22,12 +22,12 @@ package object picbot {
   val CONFIG_ALLOWED_RATING: String = "picbot_allowed_rating"
   val CONFIG_MODE: String = "picbot_mode"
 
-  sealed class Rating(val str: String)
+  sealed abstract class Rating(val str: String)
   case object SAFE extends Rating("s")
   case object QUESTIONABLE extends Rating("q")
   case object EXPLICIT extends Rating("e")
 
-  sealed class Mode(val str: String)
+  sealed abstract class Mode(val str: String)
   case object ONLY extends Mode("only")
   case object RANGE extends Mode("range")
 }
