@@ -1,7 +1,7 @@
 package o.lartifa.jam.model.conditions
 
 import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
-import o.lartifa.jam.common.exception.ParamNotFoundException
+import o.lartifa.jam.common.exception.VarNotFoundException
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.conditions.SenderCondition.Info
 
@@ -38,7 +38,7 @@ case class SenderCondition(info: Info, value: String, isValueAParam: Boolean = f
   override def isMatched(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = async {
     val info = getInfo(context.eventMessage)
     val value = if (isValueAParam) {
-      await(context.vars.get(this.value)).getOrElse(throw ParamNotFoundException(this.value))
+      await(context.vars.get(this.value)).getOrElse(throw VarNotFoundException(this.value))
     } else this.value
     info == value
   }

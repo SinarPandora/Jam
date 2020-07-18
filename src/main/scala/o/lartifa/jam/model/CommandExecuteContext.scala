@@ -5,7 +5,7 @@ import java.time.Instant
 
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.pool.{DBVariablePool, JamContext, StepPool, TempVariablePool}
+import o.lartifa.jam.pool.{DBVarPool, JamContext, StepPool, TempVarPool}
 
 import scala.concurrent.ExecutionContext
 
@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext
  * Author: sinar
  * 2020/1/3 23:50
  */
-case class CommandExecuteContext(eventMessage: EventMessage, vars: DBVariablePool, tempVars: TempVariablePool,
+case class CommandExecuteContext(eventMessage: EventMessage, vars: DBVarPool, tempVars: TempVarPool,
                                  stepPool: StepPool, executionContext: ExecutionContext, startTime: Timestamp,
                                  var lastResult: Option[String] = None) {
   // 日志输出器
@@ -33,7 +33,7 @@ object CommandExecuteContext {
     new CommandExecuteContext(
       eventMessage,
       JamContext.variablePool,
-      new TempVariablePool(eventMessage, startTime),
+      new TempVarPool(eventMessage, startTime),
       JamContext.stepPool.get(),
       exec,
       startTime

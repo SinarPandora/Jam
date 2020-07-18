@@ -20,7 +20,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2020/1/3 23:58
  */
-class DBVariablePool(implicit exec: ExecutionContext) extends VariablePool {
+class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
 
   import o.lartifa.jam.database.temporary.TemporaryMemory.database.profile.api._
 
@@ -190,8 +190,8 @@ class DBVariablePool(implicit exec: ExecutionContext) extends VariablePool {
   }
 }
 
-object DBVariablePool {
+object DBVarPool {
   private implicit val executionContext: ExecutionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
-  def apply(): DBVariablePool = new DBVariablePool()
+  def apply(): DBVarPool = new DBVarPool()
 }

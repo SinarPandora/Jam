@@ -114,9 +114,9 @@ object CommandParser extends Parser {
    * @param string 待解析字符串
    * @return 解析结果
    */
-  private def parseParamDel(string: String): Option[ParamDel] = {
+  private def parseParamDel(string: String): Option[VarDel] = {
     CommandPattern.paramDel.findFirstMatchIn(string).map(result => {
-      ParamDel(result.group("name"))
+      VarDel(result.group("name"))
     })
   }
 
@@ -126,25 +126,25 @@ object CommandParser extends Parser {
    * @param string 待解析字符串
    * @return 解析结果
    */
-  private def parseParamOpt(string: String): Option[ParamOpt] = {
-    import ParamOpt.Constant
+  private def parseParamOpt(string: String): Option[VarOpt] = {
+    import VarOpt.Constant
     CommandPattern.paramOpt.findFirstMatchIn(string).map(result => {
       val paramName = result.group("name")
       val opt = result.group("opt") match {
-        case Constant.PLUS => ParamOpt.PLUS
-        case Constant.MINUS => ParamOpt.MINUS
-        case Constant.TIMES => ParamOpt.TIMES
-        case Constant.DIVIDED => ParamOpt.DIVIDED
-        case Constant.MOD => ParamOpt.MOD
-        case Constant.SET => ParamOpt.SET
+        case Constant.PLUS => VarOpt.PLUS
+        case Constant.MINUS => VarOpt.MINUS
+        case Constant.TIMES => VarOpt.TIMES
+        case Constant.DIVIDED => VarOpt.DIVIDED
+        case Constant.MOD => VarOpt.MOD
+        case Constant.SET => VarOpt.SET
       }
       result.group("value") match {
         case value if value.startsWith("随机") =>
-          ParamOpt(paramName, opt, randomNumber = parseRandomNumber(value.stripPrefix("随机")))
+          VarOpt(paramName, opt, randomNumber = parseRandomNumber(value.stripPrefix("随机")))
         case value if value.startsWith("变量") =>
-          ParamOpt(paramName, opt, value = value.stripPrefix("变量"), isValueAParam = true)
+          VarOpt(paramName, opt, value = value.stripPrefix("变量"), isValueAParam = true)
         case value =>
-          ParamOpt(paramName, opt, value)
+          VarOpt(paramName, opt, value)
       }
     })
   }

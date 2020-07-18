@@ -1,8 +1,9 @@
 package o.lartifa.jam.model.conditions
 
-import o.lartifa.jam.common.exception.{ExecutionException, ParamNotFoundException}
-import o.lartifa.jam.model.CommandExecuteContext
-import o.lartifa.jam.model.conditions.ParamCondition.Op
+import o.lartifa.jam.common.exception.{ExecutionException, VarNotFoundException}
+import o.lartifa.jam.model.commands.RenderStrTemplate
+import o.lartifa.jam.model.conditions.VarCondition.Op
+import o.lartifa.jam.model.{CommandExecuteContext, VarKey}
 
 import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
@@ -14,9 +15,9 @@ import scala.util.Try
  * Author: sinar
  * 2020/1/4 16:17
  */
-case class ParamCondition(paramName: String, op: Op, value: String, isValueAParam: Boolean = false) extends Condition {
+case class VarCondition(varKey: VarKey, op: Op, template: RenderStrTemplate) extends Condition {
 
-  import ParamCondition._
+  import VarCondition._
 
   /**
    * 是否匹配该种情况
@@ -26,27 +27,27 @@ case class ParamCondition(paramName: String, op: Op, value: String, isValueAPara
    * @return 匹配结果
    */
   override def isMatched(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = async {
-    val paramValue: String = await(context.vars.get(paramName)).getOrElse(throw ParamNotFoundException(paramName))
-    val comparedValue: String = if (isValueAParam) await(context.vars.get(value)).getOrElse(throw ParamNotFoundException(value)) else value
+    val paramValue: String = await(varKey.query).getOrElse(throw VarNotFoundException(varKey))
+    val comparedValue: String = await(template.execute())
     if (op != eqOp && op != neOp) {
       val a = Try(BigDecimal(paramValue)).getOrElse(throw ExecutionException("执行数值比较的左侧必须为数字"))
       val b = Try(BigDecimal(comparedValue)).getOrElse(throw ExecutionException("执行数值比较的右侧必须为数字"))
       (op: @unchecked) match {
-        case ParamCondition.gtOp => a > b
-        case ParamCondition.geOp => a >= b
-        case ParamCondition.ltOp => a < b
-        case ParamCondition.leOp => a <= b
+        case VarCondition.gtOp => a > b
+        case VarCondition.geOp => a >= b
+        case VarCondition.ltOp => a < b
+        case VarCondition.leOp => a <= b
       }
     } else {
       (op: @unchecked) match {
-        case ParamCondition.eqOp => paramValue == comparedValue
-        case ParamCondition.neOp => paramValue != comparedValue
+        case VarCondition.eqOp => paramValue == comparedValue
+        case VarCondition.neOp => paramValue != comparedValue
       }
     }
   }
 }
 
-object ParamCondition {
+object VarCondition {
 
   sealed class Op
 

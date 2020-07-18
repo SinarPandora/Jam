@@ -10,7 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2020/1/4 00:35
  */
-case class ParamDel(name: String) extends Command[Boolean] {
+case class VarDel(name: String) extends Command[Boolean] {
   /**
    * 执行指令
    *

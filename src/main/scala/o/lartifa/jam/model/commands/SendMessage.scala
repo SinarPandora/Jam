@@ -7,7 +7,7 @@ import cc.moecraft.icq.sender.message.MessageBuilder
 import cc.moecraft.icq.sender.message.components.{ComponentImage, ComponentImageBase64, ComponentRecord}
 import cc.moecraft.icq.sender.returndata.ReturnData
 import cc.moecraft.icq.sender.returndata.returnpojo.send.RMessageReturnData
-import o.lartifa.jam.common.exception.{ExecutionException, ParamNotFoundException}
+import o.lartifa.jam.common.exception.{ExecutionException, VarNotFoundException}
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.SendMessage.Type
 import o.lartifa.jam.pool.JamContext
@@ -20,7 +20,7 @@ import scala.util.{Failure, Success, Try}
  * 指令：发送回复消息
  *
  * Author: sinar
- * 2020/1/3 23:05 
+ * 2020/1/3 23:05
  */
 case class SendMessage(`type`: Type, message: String, isMessageAParam: Boolean = false) extends Command[ReturnData[RMessageReturnData]] {
 
@@ -103,7 +103,7 @@ case class SendMessage(`type`: Type, message: String, isMessageAParam: Boolean =
    */
   def getMessageContent()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[String] = async {
     if (isMessageAParam) {
-      await(JamContext.variablePool.get(message)).getOrElse(throw ParamNotFoundException(message))
+      await(JamContext.variablePool.get(message)).getOrElse(throw VarNotFoundException(message))
     } else message
   }
 }

@@ -4,7 +4,7 @@ import java.sql.Timestamp
 
 import ammonite.ops.PipeableImplicit
 import cc.moecraft.icq.event.events.message.{EventGroupMessage, EventMessage}
-import o.lartifa.jam.common.exception.ExecutionException
+import o.lartifa.jam.common.exception.{ExecutionException, VarNotFoundException}
 import o.lartifa.jam.database.temporary.schema.Tables
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 
@@ -18,7 +18,7 @@ import scala.util.Try
  * Author: sinar
  * 2020/7/17 21:08
  */
-class TempVariablePool(eventMessage: EventMessage, commandStartTime: Timestamp)(implicit exec: ExecutionContext) extends VariablePool {
+class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(implicit exec: ExecutionContext) extends VariablePool {
 
   private val PREDEF_VARIABLES: Set[String] = Set("昵称", "群昵称", "发送者昵称", "发送者群昵称", "是否为好友", "对方昵称", "对方群昵称")
 
@@ -37,7 +37,7 @@ class TempVariablePool(eventMessage: EventMessage, commandStartTime: Timestamp)(
       if (CommandScopeParameters.contains(name)) {
         CommandScopeParameters += name -> value
         value
-      } else throw ExecutionException(s"临时变量 $name 不存在")
+      } else throw VarNotFoundException(name, "临时变量")
     } else throw ExecutionException(s"临时变量 $name 不可被覆盖！")
   }
 

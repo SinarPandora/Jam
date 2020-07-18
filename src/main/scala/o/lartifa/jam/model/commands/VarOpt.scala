@@ -1,8 +1,8 @@
 package o.lartifa.jam.model.commands
 
-import o.lartifa.jam.common.exception.{ExecutionException, ParamNotFoundException}
+import o.lartifa.jam.common.exception.{ExecutionException, VarNotFoundException}
 import o.lartifa.jam.model.CommandExecuteContext
-import o.lartifa.jam.model.commands.ParamOpt.Operation
+import o.lartifa.jam.model.commands.VarOpt.Operation
 
 import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
@@ -14,15 +14,15 @@ import scala.util.Try
  * Author: sinar
  * 2020/1/4 15:21
  */
-case class ParamOpt(paramName: String, opt: Operation, value: String = "", isValueAParam: Boolean = false, randomNumber: Option[RandomNumber] = None) extends Command[String] {
+case class VarOpt(paramName: String, opt: Operation, value: String = "", isValueAParam: Boolean = false, randomNumber: Option[RandomNumber] = None) extends Command[String] {
 
   private val operate: (String, String) => String = (opt: @unchecked) match {
-    case ParamOpt.PLUS => (a, b) => (BigDecimal(a) + BigDecimal(b)).toString()
-    case ParamOpt.MINUS => (a, b) => (BigDecimal(a) - BigDecimal(b)).toString()
-    case ParamOpt.TIMES => (a, b) => (BigDecimal(a) * BigDecimal(b)).toString()
-    case ParamOpt.DIVIDED => (a, b) => (BigDecimal(a) / BigDecimal(b)).toString()
-    case ParamOpt.MOD => (a, b) => (BigDecimal(a) % BigDecimal(b)).toString()
-    case ParamOpt.SET => (_, b) => b
+    case VarOpt.PLUS => (a, b) => (BigDecimal(a) + BigDecimal(b)).toString()
+    case VarOpt.MINUS => (a, b) => (BigDecimal(a) - BigDecimal(b)).toString()
+    case VarOpt.TIMES => (a, b) => (BigDecimal(a) * BigDecimal(b)).toString()
+    case VarOpt.DIVIDED => (a, b) => (BigDecimal(a) / BigDecimal(b)).toString()
+    case VarOpt.MOD => (a, b) => (BigDecimal(a) % BigDecimal(b)).toString()
+    case VarOpt.SET => (_, b) => b
   }
 
   /**
@@ -38,21 +38,21 @@ case class ParamOpt(paramName: String, opt: Operation, value: String = "", isVal
         await(random.execute()).toString
       case None =>
         if (isValueAParam)
-          await(context.vars.get(this.value)).getOrElse(throw ParamNotFoundException(this.value))
+          await(context.vars.get(this.value)).getOrElse(throw VarNotFoundException(this.value))
         else this.value
     }
-    if (opt == ParamOpt.SET) {
+    if (opt == VarOpt.SET) {
       await(context.vars.updateOrElseSet(paramName, value))
     } else {
       Try(BigDecimal(value)).getOrElse(throw ExecutionException("试图使用非数字进行加减乘除"))
-      val originValue = await(context.vars.get(paramName)).getOrElse(throw ParamNotFoundException(paramName))
+      val originValue = await(context.vars.get(paramName)).getOrElse(throw VarNotFoundException(paramName))
       Try(BigDecimal(originValue)).getOrElse(throw ExecutionException("变量的原始值不为数字"))
       await(context.vars.update(paramName, operate(originValue, value)))
     }
   }
 }
 
-object ParamOpt {
+object VarOpt {
 
   sealed class Operation
 

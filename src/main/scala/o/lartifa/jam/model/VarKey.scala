@@ -97,15 +97,15 @@ case class VarKey(name: String, category: Category) {
 
 object VarKey {
 
-  sealed abstract class Category
+  sealed abstract class Category(val name: String)
 
-  case object DB extends Category
+  case object DB extends Category("变量")
 
-  case object Temp extends Category
+  case object Temp extends Category("临时变量")
 
   object Type {
-    val temp: Set[String] = Set("")
-    val db: Set[String] = Set("")
+    val temp: Set[String] = Set("临时变量", "*变量")
+    val db: Set[String] = Set("变量")
   }
 
 }
