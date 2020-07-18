@@ -7,6 +7,12 @@ import scala.util.matching.Regex
  * 2020/1/2 23:44
  */
 object Patterns {
+  // 0
+  /**
+   * 变量匹配
+   * 返回结果：type name
+   */
+  val varKeyPattern: Regex = """\{(临时变量|\*变量|变量)(.+?)}""".r("type", "name")
   // 1
   /**
    * 基本模式匹配
@@ -15,10 +21,10 @@ object Patterns {
   val basePattern: Regex = """^(-?[0-9]+)[：:](.+)""".r("id", "content")
   // 2
   /**
-   * 立即执行！
+   * TODO 立即执行！
    * 返回结果：command
    */
-  val immediately: Regex = """^(解析后|启动后)立刻(.+?)""".r("ignored", "command")
+  val immediately: Regex = """^(解析后|启动后)立刻(.+)""".r("ignored", "command")
   // 3
   /**
    * 消息捕获器匹配
@@ -28,11 +34,11 @@ object Patterns {
 
   // 平行 4
   object CommandParameters {
-    // 捕获参数
-    val catchParameters: Regex = """将\{(.+?)}注册为临时变量\{(.+?)}""".r("regex", "names")
+    // TODO 捕获参数
+    val catchParameters: Regex = """用\{(.+?)}匹配捕获内容并注册临时变量\{(.+?)}""".r("regex", "names")
   }
 
-  // 平行 4
+  // TODO 平行 4
   object TimeExp {
     /**
      * 定时任务捕获器匹配
@@ -55,14 +61,16 @@ object Patterns {
     val cron: Regex = """满足(.+?)""".r("cron")
   }
 
-  // 5
+  // 平行 5
   object ConditionPattern {
     // 6
-    val paramCondition: Regex = """\{变量(.+?)}的值(等于|大于|小于|不大于|不小于|不等于)\{((变量)?.+?)}""".r("name", "op", "value")
+    // FIXME 正在调整该语句的变量
+    val paramCondition: Regex = """\{(.+?)}的值(等于|大于|小于|不大于|不小于|不等于)\{(.+?)}""".r("var", "op", "template")
     val senderCondition: Regex = """发送者的\{(昵称|QQ号|年龄|性别)}为\{((变量)?.+?)}""".r("info", "value")
     val sessionCondition: Regex = """会话的\{(类型|QQ号|群号)}为\{((变量)?.+?)}""".r("info", "value")
   }
 
+  // 平行 5
   object LogicStructurePattern {
     // 3
     val `if`: Regex = """^(如果|若|当)(.+?)时[，,](.+)""".r("ignored", "condition", "command")
@@ -75,6 +83,12 @@ object Patterns {
   }
 
   // 6
+  /**
+   * 保存解析到的指令的执行结果
+   */
+  val thenSaveTo: Regex = """并将结果保存到\{变量(.+?)}""".r("name")
+
+  // 7
   object CommandPattern {
     // no
     // 频率
@@ -107,10 +121,13 @@ object Patterns {
     val setPicRating: Regex = """设置色图等级=(健全|HSO|H)""".r("rating")
     // 设置"色图"模式
     val setPicFetcherMode: Regex = """设置色图模式=(仅当前|范围内)""".r("mode")
-    // 注册定时任务
+    // TODO 注册定时任务
     val registerCronTask: Regex = """注册定时任务\{([0-9]+)}为\{变量(.+?)}""".r("stepId", "value")
-    // 取消定时任务
+    // TODO 取消定时任务
     val deregisterCronTask: Regex = """取消定时任务\{变量(.+?)}""".r("value")
+    // TODO 设置临时变量
+    val setCommandParameter: Regex = paramOpt
+    // TODO 删除临时变量
+    val deleteCommandParameter: Regex = paramDel
   }
-
 }
