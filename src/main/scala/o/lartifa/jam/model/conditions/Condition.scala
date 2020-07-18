@@ -1,6 +1,7 @@
 package o.lartifa.jam.model.conditions
 
 import o.lartifa.jam.model.CommandExecuteContext
+import o.lartifa.jam.model.behaviors.StringAsVarKey
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -10,7 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2020/1/4 16:18
  */
-abstract class Condition {
+abstract class Condition extends StringAsVarKey {
   /**
    * 是否匹配该种情况
    *

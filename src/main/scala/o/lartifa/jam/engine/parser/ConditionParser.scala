@@ -1,12 +1,13 @@
 package o.lartifa.jam.engine.parser
 
-import o.lartifa.jam.model.conditions.{Condition, ParamCondition, SenderCondition, SessionCondition}
+import o.lartifa.jam.common.exception.ParseFailException
+import o.lartifa.jam.model.conditions.{Condition, SenderCondition, SessionCondition, VarCondition}
 
 /**
  * 解析条件结构
  *
  * Author: sinar
- * 2020/1/4 16:11 
+ * 2020/1/4 16:11
  */
 object ConditionParser {
 
@@ -31,24 +32,21 @@ object ConditionParser {
    * @param string 待解析字符串
    * @return 解析结果
    */
-  private def parseParamCondition(string: String): Option[ParamCondition] = {
-    import ParamCondition.Constant
+  private def parseParamCondition(string: String): Option[VarCondition] = {
+    import VarCondition.Constant
     ConditionPattern.paramCondition.findFirstMatchIn(string).map(result => {
-      val paramName = result.group("name")
+      val varKey = VarParser.parseVarKey(result.group("var")).getOrElse(throw ParseFailException("目标变量格式不正确"))
       val op = result.group("op") match {
-        case Constant.gtOp => ParamCondition.gtOp
-        case Constant.geOp => ParamCondition.geOp
-        case Constant.ltOp => ParamCondition.ltOp
-        case Constant.leOp => ParamCondition.leOp
-        case Constant.eqOp => ParamCondition.eqOp
-        case Constant.neOp => ParamCondition.neOp
+        case Constant.gtOp => VarCondition.gtOp
+        case Constant.geOp => VarCondition.geOp
+        case Constant.ltOp => VarCondition.ltOp
+        case Constant.leOp => VarCondition.leOp
+        case Constant.eqOp => VarCondition.eqOp
+        case Constant.neOp => VarCondition.neOp
       }
-      result.group("value") match {
-        case value if value.startsWith("变量") =>
-          ParamCondition(paramName, op, value.stripPrefix("变量"), isValueAParam = true)
-        case value =>
-          ParamCondition(paramName, op, value)
-      }
+      val template = VarParser.parseRenderStrTemplate(result.group("template"))
+        .getOrElse(throw ParseFailException("要设置的内容有误"))
+      VarCondition(varKey, op, template)
     })
   }
 
