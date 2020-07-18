@@ -64,8 +64,7 @@ object Patterns {
   // 平行 5
   object ConditionPattern {
     // 6
-    // FIXME 正在调整该语句的变量
-    val paramCondition: Regex = """\{(.+?)}的值(等于|大于|小于|不大于|不小于|不等于)\{(.+?)}""".r("var", "op", "template")
+    val paramCondition: Regex = """(\{.+?})的值(等于|大于|小于|不大于|不小于|不等于)(\{.+?})""".r("var", "op", "template")
     val senderCondition: Regex = """发送者的\{(昵称|QQ号|年龄|性别)}为\{((变量)?.+?)}""".r("info", "value")
     val sessionCondition: Regex = """会话的\{(类型|QQ号|群号)}为\{((变量)?.+?)}""".r("info", "value")
   }
