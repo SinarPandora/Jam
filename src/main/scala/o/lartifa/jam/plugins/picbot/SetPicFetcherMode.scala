@@ -21,6 +21,6 @@ case class SetPicFetcherMode(mode: Mode) extends Command[Unit] {
    * @return 异步返回执行结果
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
-    await(context.variablePool.updateOrElseDefault(CONFIG_MODE, mode.str))
+    await(context.vars.updateOrElseSet(CONFIG_MODE, mode.str))
   }
 }

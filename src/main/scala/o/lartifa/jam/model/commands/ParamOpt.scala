@@ -12,7 +12,7 @@ import scala.util.Try
  * 变量操作指令
  *
  * Author: sinar
- * 2020/1/4 15:21 
+ * 2020/1/4 15:21
  */
 case class ParamOpt(paramName: String, opt: Operation, value: String = "", isValueAParam: Boolean = false, randomNumber: Option[RandomNumber] = None) extends Command[String] {
 
@@ -33,22 +33,21 @@ case class ParamOpt(paramName: String, opt: Operation, value: String = "", isVal
    * @return 异步返回执行结果
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[String] = async {
-    val pool = context.variablePool
     val value: String = randomNumber match {
       case Some(random) =>
         await(random.execute()).toString
       case None =>
         if (isValueAParam)
-          await(pool.get(this.value)).getOrElse(throw ParamNotFoundException(this.value))
+          await(context.vars.get(this.value)).getOrElse(throw ParamNotFoundException(this.value))
         else this.value
     }
     if (opt == ParamOpt.SET) {
-      await(pool.updateOrElseDefault(paramName, value))
+      await(context.vars.updateOrElseSet(paramName, value))
     } else {
       Try(BigDecimal(value)).getOrElse(throw ExecutionException("试图使用非数字进行加减乘除"))
-      val originValue = await(pool.get(paramName)).getOrElse(throw ParamNotFoundException(paramName))
+      val originValue = await(context.vars.get(paramName)).getOrElse(throw ParamNotFoundException(paramName))
       Try(BigDecimal(originValue)).getOrElse(throw ExecutionException("变量的原始值不为数字"))
-      await(pool.update(paramName, operate(originValue, value)))
+      await(context.vars.update(paramName, operate(originValue, value)))
     }
   }
 }

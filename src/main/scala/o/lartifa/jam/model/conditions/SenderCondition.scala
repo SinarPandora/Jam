@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * 获取发送者信息进行判断
  *
  * Author: sinar
- * 2020/1/4 17:52 
+ * 2020/1/4 17:52
  */
 case class SenderCondition(info: Info, value: String, isValueAParam: Boolean = false) extends Condition {
 
@@ -38,8 +38,7 @@ case class SenderCondition(info: Info, value: String, isValueAParam: Boolean = f
   override def isMatched(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = async {
     val info = getInfo(context.eventMessage)
     val value = if (isValueAParam) {
-      val pool = context.variablePool
-      await(pool.get(this.value)).getOrElse(throw ParamNotFoundException(this.value))
+      await(context.vars.get(this.value)).getOrElse(throw ParamNotFoundException(this.value))
     } else this.value
     info == value
   }

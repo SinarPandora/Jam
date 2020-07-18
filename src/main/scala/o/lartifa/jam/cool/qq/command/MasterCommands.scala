@@ -85,7 +85,7 @@ object MasterCommands {
         val name = args.get(0)
         val value = args.get(1)
         val pool = JamContext.variablePool
-        await(pool.updateOrElseDefault(name, value)(CommandExecuteContext(event)).map(_ => "变量设置成功！"))
+        await(pool.updateOrElseSet(name, value)(CommandExecuteContext(event)).map(_ => "变量设置成功！"))
       }
     }
   }

@@ -1,12 +1,14 @@
 package o.lartifa.jam.model
 
+import o.lartifa.jam.model.behaviors.StringAsVarKey
+
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Author: sinar
- * 2020/1/4 18:59 
+ * 2020/1/4 18:59
  */
-trait Executable[T] {
+trait Executable[T] extends StringAsVarKey {
   /**
    * 执行
    *

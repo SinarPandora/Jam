@@ -1,11 +1,13 @@
 package o.lartifa.jam.model
 
+import java.sql.Timestamp
+import java.time.Instant
+
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.common.util.CommandParameterUtil
-import o.lartifa.jam.pool.{JamContext, StepPool, VariablePool}
+import o.lartifa.jam.pool.{DBVariablePool, JamContext, StepPool, TempVariablePool}
 
-import scala.collection.mutable
+import scala.concurrent.ExecutionContext
 
 /**
  * 指令执行上下文
@@ -13,7 +15,9 @@ import scala.collection.mutable
  * Author: sinar
  * 2020/1/3 23:50
  */
-case class CommandExecuteContext(eventMessage: EventMessage, variablePool: VariablePool, stepPool: StepPool) {
+case class CommandExecuteContext(eventMessage: EventMessage, vars: DBVariablePool, tempVars: TempVariablePool,
+                                 stepPool: StepPool, executionContext: ExecutionContext, startTime: Timestamp,
+                                 var lastResult: Option[String] = None) {
   // 日志输出器
   def logger: HyLogger = JamContext.logger.get()
 
@@ -21,37 +25,18 @@ case class CommandExecuteContext(eventMessage: EventMessage, variablePool: Varia
    * 当前聊天会话的信息
    */
   val chatInfo: ChatInfo = ChatInfo(eventMessage)
-
-  private val parametersMap: mutable.Map[String, String] = mutable.Map.empty
-
-  /**
-   * 以名字获取当前范围内的指令参数
-   */
-  val getParameter: String => String = CommandParameterUtil.createGetParamFunc(parametersMap.get, eventMessage)
-
-  /**
-   * 添加一对参数
-   *
-   * @param key 键
-   * @param value 值
-   */
-  def addParameter(key: String, value: String): Unit = {
-    parametersMap += (key -> value)
-    ()
-  }
-
-  /**
-   * 添加参数列表
-   *
-   * @param pairs 参数列表
-   */
-  def addParameters(pairs: IterableOnce[(String, String)]): Unit = {
-    parametersMap ++= pairs
-    ()
-  }
 }
 
 object CommandExecuteContext {
-  def apply(eventMessage: EventMessage): CommandExecuteContext =
-    new CommandExecuteContext(eventMessage, JamContext.variablePool, JamContext.stepPool.get())
+  def apply(eventMessage: EventMessage)(implicit exec: ExecutionContext): CommandExecuteContext = {
+    val startTime = Timestamp.from(Instant.now)
+    new CommandExecuteContext(
+      eventMessage,
+      JamContext.variablePool,
+      new TempVariablePool(eventMessage, startTime),
+      JamContext.stepPool.get(),
+      exec,
+      startTime
+    )
+  }
 }

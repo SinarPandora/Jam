@@ -51,10 +51,9 @@ case class FetchAndSendPic() extends Command[Unit] {
    * @return 异步返回执行结果
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
-    val pool = context.variablePool
-    val picPos = await(pool.getOrElseUpdate(CONFIG_PAGE, "0,0"))
-    val rating = await(pool.getOrElseUpdate(CONFIG_ALLOWED_RATING, SAFE.str))
-    val ratings = await(pool.getOrElseUpdate(CONFIG_MODE, ONLY.str)) match {
+    val picPos = await(context.vars.getOrElseUpdate(CONFIG_PAGE, "0,0"))
+    val rating = await(context.vars.getOrElseUpdate(CONFIG_ALLOWED_RATING, SAFE.str))
+    val ratings = await(context.vars.getOrElseUpdate(CONFIG_MODE, ONLY.str)) match {
       case RANGE.str => ratingList(rating)
       case ONLY.str => Set(rating)
     }
@@ -66,7 +65,7 @@ case class FetchAndSendPic() extends Command[Unit] {
         context.eventMessage.respond("图片丢了（o´ﾟ□ﾟ`o）")
         MasterUtil.notifyMaster("[FetchAndSendPic] 图片获取出错")
       case Success(picture) =>
-        context.variablePool.update(CONFIG_PAGE, picture.position.toString)
+        context.vars.update(CONFIG_PAGE, picture.position.toString)
         Try(context.eventMessage.respond(picture.base64Img.toString)) match {
           case Failure(exception) => logger.warning(s"图片发送错误：${exception.getMessage}")
           case Success(response) =>

@@ -21,6 +21,6 @@ case class SetPicRating(rating: Rating) extends Command[Unit] {
    * @return 异步返回执行结果
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
-    await(context.variablePool.updateOrElseDefault(CONFIG_ALLOWED_RATING, rating.str))
+    await(context.vars.updateOrElseSet(CONFIG_ALLOWED_RATING, rating.str))
   }
 }

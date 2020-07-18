@@ -12,7 +12,7 @@ import scala.util.Try
  * 获取变量进行判断
  *
  * Author: sinar
- * 2020/1/4 16:17 
+ * 2020/1/4 16:17
  */
 case class ParamCondition(paramName: String, op: Op, value: String, isValueAParam: Boolean = false) extends Condition {
 
@@ -26,9 +26,8 @@ case class ParamCondition(paramName: String, op: Op, value: String, isValueAPara
    * @return 匹配结果
    */
   override def isMatched(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = async {
-    val pool = context.variablePool
-    val paramValue: String = await(pool.get(paramName)).getOrElse(throw ParamNotFoundException(paramName))
-    val comparedValue: String = if (isValueAParam) await(pool.get(value)).getOrElse(throw ParamNotFoundException(value)) else value
+    val paramValue: String = await(context.vars.get(paramName)).getOrElse(throw ParamNotFoundException(paramName))
+    val comparedValue: String = if (isValueAParam) await(context.vars.get(value)).getOrElse(throw ParamNotFoundException(value)) else value
     if (op != eqOp && op != neOp) {
       val a = Try(BigDecimal(paramValue)).getOrElse(throw ExecutionException("执行数值比较的左侧必须为数字"))
       val b = Try(BigDecimal(comparedValue)).getOrElse(throw ExecutionException("执行数值比较的右侧必须为数字"))

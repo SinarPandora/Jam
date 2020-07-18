@@ -11,13 +11,13 @@ import o.lartifa.jam.model.patterns.ContentMatcher
  * 果酱（系统）上下文
  *
  * Author: sinar
- * 2020/1/4 23:52 
+ * 2020/1/4 23:52
  */
 object JamContext {
   val editLock: AtomicBoolean = new AtomicBoolean(false)
   val stepPool: AtomicReference[StepPool] = new AtomicReference[StepPool]()
   val cronTaskPool: AtomicReference[CronTaskPool] = new AtomicReference[CronTaskPool]()
-  val variablePool: VariablePool = new VariablePool()
+  val variablePool: DBVariablePool = DBVariablePool()
   val globalMatchers: AtomicReference[List[ContentMatcher]] = new AtomicReference[List[ContentMatcher]]()
   val customMatchers: AtomicReference[Map[String, Map[Long, List[ContentMatcher]]]] = new AtomicReference()
   val logger: AtomicReference[HyLogger] = new AtomicReference[HyLogger]()
