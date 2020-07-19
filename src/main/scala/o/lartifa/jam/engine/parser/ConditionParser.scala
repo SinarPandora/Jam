@@ -1,6 +1,6 @@
 package o.lartifa.jam.engine.parser
 
-import o.lartifa.jam.common.exception.ParseFailException
+import ammonite.ops.PipeableImplicit
 import o.lartifa.jam.model.conditions.{Condition, SenderCondition, SessionCondition, VarCondition}
 
 /**
@@ -16,10 +16,11 @@ object ConditionParser {
   /**
    * 解析条件
    *
-   * @param string 待解析字符串
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
    * @return 解析结果
    */
-  def parseCondition(string: String): Option[Condition] = {
+  def parseCondition(string: String)(implicit context: ParseEngineContext): Option[Condition] = {
     LazyList(parseParamCondition _, parseSenderCondition _, parseSessionCondition _)
       .map(_.apply(string))
       .find(_.isDefined)
@@ -29,13 +30,14 @@ object ConditionParser {
   /**
    * 解析变量条件
    *
-   * @param string 待解析字符串
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseParamCondition(string: String): Option[VarCondition] = {
+  private def parseParamCondition(string: String)(implicit context: ParseEngineContext): Option[VarCondition] = {
     import VarCondition.Constant
     ConditionPattern.paramCondition.findFirstMatchIn(string).map(result => {
-      val varKey = VarParser.parseVarKey(result.group("var")).getOrElse(throw ParseFailException("目标变量格式不正确"))
+      val varKey = result.group("var") |> context.getVar
       val op = result.group("op") match {
         case Constant.gtOp => VarCondition.gtOp
         case Constant.geOp => VarCondition.geOp
@@ -44,8 +46,7 @@ object ConditionParser {
         case Constant.eqOp => VarCondition.eqOp
         case Constant.neOp => VarCondition.neOp
       }
-      val template = VarParser.parseRenderStrTemplate(result.group("template"))
-        .getOrElse(throw ParseFailException("要设置的内容有误"))
+      val template = result.group("template") |> context.getTemplate
       VarCondition(varKey, op, template)
     })
   }
@@ -53,10 +54,11 @@ object ConditionParser {
   /**
    * 解析发送者信息条件
    *
-   * @param string 待解析字符串
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseSenderCondition(string: String): Option[SenderCondition] = {
+  private def parseSenderCondition(string: String)(implicit context: ParseEngineContext): Option[SenderCondition] = {
     import SenderCondition.Constant
     ConditionPattern.senderCondition.findFirstMatchIn(string).map(result => {
       val info = result.group("info") match {
@@ -77,10 +79,11 @@ object ConditionParser {
   /**
    * 解析会话信息条件
    *
-   * @param string 待解析字符串
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseSessionCondition(string: String): Option[SessionCondition] = {
+  private def parseSessionCondition(string: String)(implicit context: ParseEngineContext): Option[SessionCondition] = {
     import SessionCondition.Constant
     ConditionPattern.sessionCondition.findFirstMatchIn(string).map(result => {
       val info = result.group("info") match {

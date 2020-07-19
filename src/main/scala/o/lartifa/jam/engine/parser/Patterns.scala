@@ -5,6 +5,10 @@ import scala.util.matching.Regex
 /**
  * 全部 SSDL 正则表达式
  *
+ * FIXME
+ *  1. 因为变量会被预处理替换掉，所以下面出现的一切变量和模板，都应该只捕获大括号里面的内容
+ *  2. 因为预处理的缘故，下文中出现的数组应该换用中括号【】和 []
+ *
  * Author: sinar
  * 2020/1/2 23:44
  */
@@ -71,7 +75,7 @@ object Patterns {
   // 平行 5
   object ConditionPattern {
     // 6
-    val paramCondition: Regex = """(\{.+?})的值(等于|大于|小于|不大于|不小于|不等于)%\{(.+?)}%""".r("var", "op", "template")
+    val paramCondition: Regex = """\{(.+?)}的值(等于|大于|小于|不大于|不小于|不等于)%\{(.+?)}%""".r("var", "op", "template")
     val senderCondition: Regex = """发送者的\{(昵称|QQ号|年龄|性别)}为\{((变量)?.+?)}""".r("info", "value")
     val sessionCondition: Regex = """会话的\{(类型|QQ号|群号)}为\{((变量)?.+?)}""".r("info", "value")
   }
