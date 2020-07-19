@@ -3,6 +3,8 @@ package o.lartifa.jam.engine.parser
 import scala.util.matching.Regex
 
 /**
+ * 全部 SSDL 正则表达式
+ *
  * Author: sinar
  * 2020/1/2 23:44
  */
@@ -13,6 +15,11 @@ object Patterns {
    * 返回结果：type name
    */
   val varKeyPattern: Regex = """\{(临时变量|\*变量|变量)(.+?)}""".r("type", "name")
+  /**
+   * 字符串模板匹配
+   * 返回结果：template
+   */
+  val stringTemplatePattern: Regex = """%\{(.+?)}%""".r("template")
   // 1
   /**
    * 基本模式匹配

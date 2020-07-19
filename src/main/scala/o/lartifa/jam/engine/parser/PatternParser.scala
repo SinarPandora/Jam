@@ -26,9 +26,13 @@ object PatternParser extends Parser {
     val content = result.group("content")
     parseMatcher(content, stepId) match {
       case Some((matcher, command)) =>
+        // 为引擎设置上下文
+        implicit val context: ParseEngineContext = preprocessStatement(command, stepId)
         val executable = LogicStructureParser.parseLogic(command).getOrElse(throw ParseFailException("没有指令内容，或指令内容不正确！"))
         ParseResult(stepId, executable, Some(matcher))
       case None =>
+        // 为引擎设置上下文
+        implicit val context: ParseEngineContext = preprocessStatement(content, stepId)
         val executable = LogicStructureParser.parseLogic(content).getOrElse(throw ParseFailException("没有指令内容，或指令内容不正确！"))
         ParseResult(stepId, executable)
     }
@@ -56,5 +60,25 @@ object PatternParser extends Parser {
       } else None
       (ContentMatcher(stepId, `type`, result.group("keyword"), regex), result.group("command"))
     })
+  }
+
+  /**
+   * 预处理语句中的变量和模板
+   *
+   * @param string 待解析字符串
+   * @param stepId 步骤 ID
+   * @return 解析引擎上下文
+   */
+  private def preprocessStatement(string: String, stepId: Long): ParseEngineContext = {
+    // 1. 找到全部模板，替换为 %{1}%
+    val templates = VarParser.parseTemplates(string).getOrElse(Nil).zipWithIndex
+    val str1 = templates.foldLeft(string) { case (str, (it, idx)) => str.replace(it.source, s"%{$idx}%") }
+    // 2. 找到剩余的全部变量，替换掉 {1}
+    val varKeys = VarParser.parseVars(str1).getOrElse(Nil).zipWithIndex
+    val processedStr = varKeys.foldLeft(str1) { case (str, (it, idx)) => str.replace(it.source, s"{$idx}") }
+    // 3. 组装解析上下文
+    val templateMap = templates.map(it => it._2 -> it._1.command).toMap
+    val varKeysMap = varKeys.map(it => it._2 -> it._1.varKey).toMap
+    ParseEngineContext(stepId, varKeysMap, templateMap, string, processedStr)
   }
 }

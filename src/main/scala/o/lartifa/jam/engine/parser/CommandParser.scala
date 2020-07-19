@@ -19,10 +19,11 @@ object CommandParser extends Parser {
   /**
    * 解析指令
    *
-   * @param string 待解析字符串
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
    * @return 指令对象（Optional）
    */
-  def parseCommand(string: String): Option[Command[_]] = {
+  def parseCommand(string: String)(implicit context: ParseEngineContext): Option[Command[_]] = {
     parseExecuteCommand(string) match {
       case Some(executableCommand) =>
         Some(executableCommand)
@@ -51,10 +52,11 @@ object CommandParser extends Parser {
   /**
    * 解析频率模式
    *
-   * @param string 待解析字符串
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseExecuteCommand(string: String): Option[ExecutableCommand] = {
+  private def parseExecuteCommand(string: String)(implicit context: ParseEngineContext): Option[ExecutableCommand] = {
     import ExecutableCommand.Constant
     CommandPattern.frequencyPattern.findFirstMatchIn(string).map(result => {
       val frequency = result.group("frequency") match {
