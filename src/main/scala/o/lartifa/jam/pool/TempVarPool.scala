@@ -20,7 +20,8 @@ import scala.util.Try
  */
 class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(implicit exec: ExecutionContext) extends VariablePool {
 
-  private val PREDEF_VARIABLES: Set[String] = Set("昵称", "群昵称", "发送者昵称", "发送者群昵称", "是否为好友", "对方昵称", "对方群昵称")
+  private val PREDEF_VARIABLES: Set[String] = Set("昵称", "群号", "群名", "群昵称", "发送者昵称", "对方昵称", "发送者QQ", "对方QQ",
+    "发送者年龄", "对方性别", "发送者年龄", "对方性别", "会话类型", "发送者群昵称", "对方群昵称", "是否为好友")
 
   private val CommandScopeParameters: mutable.Map[String, String] = mutable.Map.empty
 
@@ -157,8 +158,14 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    */
   private def getVar(name: String): Option[String] = name match {
     case "昵称" => eventMessage.getBotAccount.getName |> Some.apply
+    case "群号" => toGroupMessage(eventMessage).getGroupId |> Some.apply
+    case "群名" => toGroupMessage(eventMessage).getGroup.getInfo.getGroupName |> Some.apply
     case "群昵称" => toGroupMessage(eventMessage).getGroupUser(eventMessage.getSenderId).getInfo.getNickname |> Some.apply
     case "发送者昵称" | "对方昵称" => eventMessage.getSender.getInfo.getNickname |> Some.apply
+    case "发送者QQ" | "对方QQ" => eventMessage.getSender.getInfo.getUserId |> Some.apply
+    case "发送者年龄" | "对方性别" => eventMessage.getSender.getInfo.getAge |> Some.apply
+    case "发送者年龄" | "对方性别" => eventMessage.getSender.getInfo.getSex |> Some.apply
+    case "会话类型" => ChatInfo(eventMessage).chatType |> Some.apply
     case "发送者群昵称" | "对方群昵称" => toGroupMessage(eventMessage).getGroupSender.getInfo.getNickname |> Some.apply
     case "是否为好友" => (if (toGroupMessage(eventMessage).getGroupSender.getInfo.getUnfriendly) "是" else "否") |> Some.apply
     case other => CommandScopeParameters.get(other)
