@@ -41,12 +41,12 @@ object Patterns {
    * 消息捕获器匹配
    * 返回结果：type keyword command
    */
-  val matcherPattern: Regex = """^(当|如果)(句中出现|句首出现|句末出现|内容为|匹配)\{(.+?)}时?[,，](.+)""".r("ignored", "type", "keyword", "command")
+  val matcherPattern: Regex = """^(当|如果)(句中出现|句首出现|句末出现|内容为|匹配)%\{(.+?)}%时?[,，](.+)""".r("ignored", "type", "template", "command")
 
   // 平行 4
   object CommandParameters {
     // TODO 捕获参数
-    val catchParameters: Regex = """用\{(.+?)}匹配捕获内容并注册临时变量[\[【](.+?)[】\]]""".r("regex", "names")
+    val catchParameters: Regex = """用\{(.+?)}匹配捕获内容并注册\{(.+?)}""".r("regex", "names")
   }
 
   // TODO 平行 4

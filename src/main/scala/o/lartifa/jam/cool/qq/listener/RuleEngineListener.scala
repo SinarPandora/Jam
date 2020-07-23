@@ -22,7 +22,7 @@ import scala.util.{Failure, Success}
  * 全局消息解析器
  *
  * Author: sinar
- * 2020/1/2 22:20 
+ * 2020/1/2 22:20
  */
 object RuleEngineListener extends IcqListener {
 
@@ -67,8 +67,8 @@ object RuleEngineListener extends IcqListener {
     // 查找匹配的步骤
     if (!JamContext.editLock.get()) {
       val scanList = JamContext.customMatchers.get().getOrElse(chatType, Map()).getOrElse(chatId, List()) ++ JamContext.globalMatchers.get()
+      implicit val context: CommandExecuteContext = CommandExecuteContext(eventMessage)
       findMatchedStep(eventMessage.getMessage, scanList).foreach { matcher =>
-        implicit val context: CommandExecuteContext = CommandExecuteContext(eventMessage)
         stepId.set(Some(matcher.stepId))
         JamContext.stepPool.get().goto(matcher.stepId).recover(exception => {
           logger.error(exception)
@@ -92,10 +92,13 @@ object RuleEngineListener extends IcqListener {
    *
    * @param message  消息对象
    * @param matchers 捕获器列表
+   * @param context  指令执行上下文
+   * @param exec     异步执行上下文
    * @return 匹配结果
    */
   @scala.annotation.tailrec
-  private def findMatchedStep(message: String, matchers: List[ContentMatcher]): Option[ContentMatcher] = {
+  private def findMatchedStep(message: String, matchers: List[ContentMatcher])(implicit context: CommandExecuteContext,
+                              exec: ExecutionContext): Option[ContentMatcher] = {
     matchers match {
       case matcher :: next =>
         if (matcher.isMatched(message)) Some(matcher)

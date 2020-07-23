@@ -15,9 +15,12 @@ import scala.concurrent.ExecutionContext
  * Author: sinar
  * 2020/1/3 23:50
  */
-case class CommandExecuteContext(eventMessage: EventMessage, vars: DBVarPool, tempVars: TempVarPool,
+case class CommandExecuteContext(eventMessage: EventMessage, vars: DBVarPool,
                                  stepPool: StepPool, executionContext: ExecutionContext, startTime: Timestamp,
                                  var lastResult: Option[String] = None) {
+  // 懒加载的临时变量池
+  lazy val tempVars: TempVarPool = new TempVarPool(eventMessage, startTime)(executionContext)
+
   // 日志输出器
   def logger: HyLogger = JamContext.logger.get()
 
@@ -33,7 +36,6 @@ object CommandExecuteContext {
     new CommandExecuteContext(
       eventMessage,
       JamContext.variablePool,
-      new TempVarPool(eventMessage, startTime),
       JamContext.stepPool.get(),
       exec,
       startTime

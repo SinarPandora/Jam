@@ -4,7 +4,6 @@ import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.model.patterns.{ContentMatcher, ParseResult}
 
 import scala.util.Try
-import scala.util.matching.Regex
 
 /**
  * SSDL 基本模式语法解析器
@@ -24,15 +23,13 @@ object PatternParser extends Parser {
     val result = Patterns.basePattern.findFirstMatchIn(string).getOrElse(throw ParseFailException("书写内容没有以标准格式开头"))
     val stepId = Try(result.group("id").toLong).getOrElse(throw ParseFailException("步骤编号过大，过小或不合法"))
     val content = result.group("content")
+    // 为引擎设置上下文
+    implicit val context: ParseEngineContext = preprocessStatement(content, stepId)
     parseMatcher(content, stepId) match {
       case Some((matcher, command)) =>
-        // 为引擎设置上下文
-        implicit val context: ParseEngineContext = preprocessStatement(command, stepId)
         val executable = LogicStructureParser.parseLogic(command).getOrElse(throw ParseFailException("没有指令内容，或指令内容不正确！"))
         ParseResult(stepId, executable, Some(matcher))
       case None =>
-        // 为引擎设置上下文
-        implicit val context: ParseEngineContext = preprocessStatement(content, stepId)
         val executable = LogicStructureParser.parseLogic(content).getOrElse(throw ParseFailException("没有指令内容，或指令内容不正确！"))
         ParseResult(stepId, executable)
     }
@@ -41,11 +38,12 @@ object PatternParser extends Parser {
   /**
    * 解析消息内容捕获器
    *
-   * @param string 待解析字符串
-   * @param stepId 步骤 ID
+   * @param string  待解析字符串
+   * @param stepId  步骤 ID
+   * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseMatcher(string: String, stepId: Long): Option[(ContentMatcher, String)] = {
+  private def parseMatcher(string: String, stepId: Long)(implicit context: ParseEngineContext): Option[(ContentMatcher, String)] = {
     import ContentMatcher.Constant
     Patterns.matcherPattern.findFirstMatchIn(string).map(result => {
       val `type`: ContentMatcher.Type = result.group("type") match {
@@ -55,10 +53,11 @@ object PatternParser extends Parser {
         case Constant.STARTS_WITH => ContentMatcher.STARTS_WITH
         case s if s.startsWith(Constant.REGEX) => ContentMatcher.REGEX
       }
-      val regex: Option[Regex] = if (`type` == ContentMatcher.REGEX) {
-        Some(Try(result.group("keyword").r).getOrElse(throw ParseFailException("提供的正则表达式不正确")))
-      } else None
-      (ContentMatcher(stepId, `type`, result.group("keyword"), regex), result.group("command"))
+      val template = result.group("template")
+      if (`type` == ContentMatcher.REGEX) {
+        Try(template.r).getOrElse(throw ParseFailException("提供的正则表达式不正确"))
+      }
+      (ContentMatcher(stepId, `type`, context.getTemplate(template)), result.group("command"))
     })
   }
 
