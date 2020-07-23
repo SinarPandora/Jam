@@ -22,15 +22,15 @@ object PatternParser extends Parser {
   def parseBasePattern(string: String): ParseResult = {
     val result = Patterns.basePattern.findFirstMatchIn(string).getOrElse(throw ParseFailException("书写内容没有以标准格式开头"))
     val stepId = Try(result.group("id").toLong).getOrElse(throw ParseFailException("步骤编号过大，过小或不合法"))
-    val content = result.group("content")
     // 为引擎设置上下文
-    implicit val context: ParseEngineContext = preprocessStatement(content, stepId)
-    parseMatcher(content, stepId) match {
+    implicit val context: ParseEngineContext = preprocessStatement(result.group("content"), stepId)
+    val processedStr = context.processedStr
+    parseMatcher(processedStr, stepId) match {
       case Some((matcher, command)) =>
         val executable = LogicStructureParser.parseLogic(command).getOrElse(throw ParseFailException("没有指令内容，或指令内容不正确！"))
         ParseResult(stepId, executable, Some(matcher))
       case None =>
-        val executable = LogicStructureParser.parseLogic(content).getOrElse(throw ParseFailException("没有指令内容，或指令内容不正确！"))
+        val executable = LogicStructureParser.parseLogic(processedStr).getOrElse(throw ParseFailException("没有指令内容，或指令内容不正确！"))
         ParseResult(stepId, executable)
     }
   }

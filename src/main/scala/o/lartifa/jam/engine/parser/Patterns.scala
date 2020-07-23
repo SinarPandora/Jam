@@ -94,7 +94,7 @@ object Patterns {
   /**
    * 保存解析到的指令的执行结果
    */
-  val thenSaveTo: Regex = """并将结果保存到(\{.+?})""".r("name")
+  val thenSaveTo: Regex = """并将结果保存到\{(.+?)}""".r("name")
 
   // 7
   object CommandPattern {
@@ -112,11 +112,11 @@ object Patterns {
     // 跳转执行
     val goto: Regex = """(执行步骤|跳转至)([0-9]+)""".r("ignored", "stepId")
     // 依次执行
-    val oneByOne: Regex = """依次执行[\[【]([0-9,，]+)[】]]""".r("stepIds")
+    val oneByOne: Regex = """依次执行[\[【]([0-9,，]+)[】\]]""".r("stepIds")
     // 随机执行
-    val randomGoto: Regex = """随机从[\[【]([0-9,，]+)[】]]中选择([0-9]+)个执行""".r("stepIds", "amount")
+    val randomGoto: Regex = """随机从[\[【]([0-9,，]+)[】\]]中选择([0-9]+)个执行""".r("stepIds", "amount")
     // 循环执行
-    val loopGoto: Regex = """(循环顺序|循环)执行[\[【]([0-9,，]+)[】]]([0-9]+)次""".r("inOrder", "stepIds", "times")
+    val loopGoto: Regex = """(循环顺序|循环)执行[\[【]([0-9,，]+)[】\]]([0-9]+)次""".r("inOrder", "stepIds", "times")
     // 等待
     val waiting: Regex = """等待([0-9]+)秒""".r("sec")
     // 什么也不做
