@@ -106,7 +106,7 @@ object Patterns {
     // 消息发送
     val messageSend: Regex = """(回复|发送|说)\{((变量)?.+?)}""".r("type", "message")
     // 变量删除
-    val paramDel: Regex = """将\{变量(.+?)}删除""".r("name")
+    val paramDel: Regex = """将\{(.+?)}删除""".r("name")
     // 变量操作
     val paramOpt: Regex = """将\{变量(.+?)}(增加|减少|乘以|除以|取余|设置为)\{((随机)?(变量)?.+?)}""".r("name", "opt", "value")
     // 跳转执行

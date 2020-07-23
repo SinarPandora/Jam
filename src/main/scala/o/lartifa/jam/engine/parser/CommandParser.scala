@@ -122,7 +122,7 @@ object CommandParser extends Parser {
    */
   private def parseParamDel(string: String)(implicit context: ParseEngineContext): Option[VarDel] = {
     CommandPattern.paramDel.findFirstMatchIn(string).map(result => {
-      VarDel(result.group("name"))
+      VarDel(context.getVar(result.group("name")))
     })
   }
 
