@@ -34,6 +34,7 @@ object CommandParser extends Parser {
           parseOneByOne _,
           parseParamOpt _,
           parseRandomGoto _,
+          parseLoopGoto _,
           parseParamDel _,
           parseWaiting _,
           parseGroupWholeBan _,
@@ -182,15 +183,15 @@ object CommandParser extends Parser {
       val stepIds = Try(
         result
           .group("stepIds")
-          .split("\\|")
+          .split("[,，]")
           .map(_.toLong).toList)
-        .getOrElse(throw ParseFailException("解析依次执行事件指令时失败，请检查指令 ID 列表格式是否为：数字|数字..."))
+        .getOrElse(throw ParseFailException("解析依次执行事件指令时失败，请检查指令 ID 列表格式是否为：数字，数字..."))
       OneByOne(stepIds)
     })
   }
 
   /**
-   * 解析随机执行事件指令
+   * 解析随机执行指令
    *
    * @param string  待解析字符串
    * @param context 解析引擎上下文
@@ -201,11 +202,36 @@ object CommandParser extends Parser {
       val stepIds = Try(
         result
           .group("stepIds")
-          .split("\\|")
+          .split("[,，]")
           .map(_.toLong).toList)
-        .getOrElse(throw ParseFailException("解析随机执行事件指令时失败，请检查指令 ID 列表格式是否为：数字|数字..."))
+        .getOrElse(throw ParseFailException("解析随机执行指令时失败，请检查指令 ID 列表格式是否为：数字，数字..."))
       val amount = Try(result.group("amount").toInt).getOrElse(throw ParseFailException("请输入正确的执行事件数量"))
       RandomGoto(stepIds, amount)
+    })
+  }
+
+  /**
+   * 解析循环执行指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseLoopGoto(string: String)(implicit context: ParseEngineContext): Option[LoopGoto] = {
+    import LoopGoto._
+    CommandPattern.loopGoto.findFirstMatchIn(string).map(result => {
+      val stepIds = Try(
+        result
+          .group("stepIds")
+          .split("[,，]")
+          .map(_.toLong).toList)
+        .getOrElse(throw ParseFailException("解析循环执行执行指令时失败，请检查指令 ID 列表格式是否为：数字，数字..."))
+      val inOrder = result.group("inOrder") match {
+        case InOrder.str => InOrder.value
+        case NotInOrder.str => NotInOrder.value
+      }
+      val times = Try(result.group("amount").toInt).getOrElse(throw ParseFailException("请输入正确的执行事件数量"))
+      LoopGoto(stepIds, inOrder, times)
     })
   }
 

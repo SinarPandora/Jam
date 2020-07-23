@@ -9,9 +9,9 @@ import scala.concurrent.{Await, ExecutionContext, Future}
  * 依次执行指令
  *
  * Author: sinar
- * 2020/1/16 23:59 
+ * 2020/1/16 23:59
  */
-case class OneByOne(stepIds: List[Long]) extends Command[Unit] {
+case class OneByOne(stepIds: List[Long], inOrder: Boolean = true) extends Command[Unit] {
   /**
    * 执行
    *
@@ -21,8 +21,12 @@ case class OneByOne(stepIds: List[Long]) extends Command[Unit] {
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = Future {
     val pool = context.stepPool
-    for (id <- stepIds) {
-      Await.result(pool.goto(id), Duration.Inf)
+    if (inOrder) {
+      for (id <- stepIds) {
+        Await.result(pool.goto(id), Duration.Inf)
+      }
+    } else {
+      Await.result(Future.sequence(stepIds.map(pool.goto)), Duration.Inf)
     }
   }
 }
