@@ -1,8 +1,8 @@
 package o.lartifa.jam.model.commands
 import o.lartifa.jam.model.CommandExecuteContext
 
-import scala.async.Async._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 /**
  * 循环执行指令
@@ -19,9 +19,9 @@ case class LoopGoto(stepIds: List[Long], inOrder: Boolean, times: Int) extends C
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = Future {
     for (_ <- 1 to times) {
-      await(run.execute())
+      Await.result(run.execute(), Duration.Inf)
     }
   }
 }
