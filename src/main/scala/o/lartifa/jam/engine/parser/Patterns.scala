@@ -108,7 +108,7 @@ object Patterns {
     // 变量删除
     val paramDel: Regex = """将\{(.+?)}删除""".r("name")
     // 变量操作
-    val paramOpt: Regex = """将\{变量(.+?)}(增加|减少|乘以|除以|取余|设置为)\{((随机)?(变量)?.+?)}""".r("name", "opt", "value")
+    val paramOpt: Regex = """将\{(.+?)}(增加|减少|乘以|除以|取余|设置为)%\{(.+?)}%""".r("name", "opt", "template")
     // 跳转执行
     val goto: Regex = """(执行步骤|跳转至)([0-9]+)""".r("ignored", "stepId")
     // 依次执行

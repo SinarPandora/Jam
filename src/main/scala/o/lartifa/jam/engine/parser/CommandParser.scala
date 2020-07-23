@@ -131,7 +131,7 @@ object CommandParser extends Parser {
   private def parseParamOpt(string: String)(implicit context: ParseEngineContext): Option[VarOpt] = {
     import VarOpt.Constant
     CommandPattern.paramOpt.findFirstMatchIn(string).map(result => {
-      val paramName = result.group("name")
+      val varKey = context.getVar(result.group("name"))
       val opt = result.group("opt") match {
         case Constant.PLUS => VarOpt.PLUS
         case Constant.MINUS => VarOpt.MINUS
@@ -140,14 +140,8 @@ object CommandParser extends Parser {
         case Constant.MOD => VarOpt.MOD
         case Constant.SET => VarOpt.SET
       }
-      result.group("value") match {
-        case value if value.startsWith("随机") =>
-          VarOpt(paramName, opt, randomNumber = parseRandomNumber(value.stripPrefix("随机")))
-        case value if value.startsWith("变量") =>
-          VarOpt(paramName, opt, value = value.stripPrefix("变量"), isValueAParam = true)
-        case value =>
-          VarOpt(paramName, opt, value)
-      }
+      val template = context.getTemplate(result.group("template"))
+      VarOpt(varKey, opt, template)
     })
   }
 

@@ -1,8 +1,8 @@
 package o.lartifa.jam.model.commands
 
 import o.lartifa.jam.common.exception.{ExecutionException, VarNotFoundException}
-import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.VarOpt.Operation
+import o.lartifa.jam.model.{CommandExecuteContext, VarKey}
 
 import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
@@ -14,7 +14,7 @@ import scala.util.Try
  * Author: sinar
  * 2020/1/4 15:21
  */
-case class VarOpt(paramName: String, opt: Operation, value: String = "", isValueAParam: Boolean = false, randomNumber: Option[RandomNumber] = None) extends Command[String] {
+case class VarOpt(varKey: VarKey, opt: Operation, template: RenderStrTemplate) extends Command[String] {
 
   private val operate: (String, String) => String = (opt: @unchecked) match {
     case VarOpt.PLUS => (a, b) => (BigDecimal(a) + BigDecimal(b)).toString()
@@ -33,21 +33,14 @@ case class VarOpt(paramName: String, opt: Operation, value: String = "", isValue
    * @return 异步返回执行结果
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[String] = async {
-    val value: String = randomNumber match {
-      case Some(random) =>
-        await(random.execute()).toString
-      case None =>
-        if (isValueAParam)
-          await(context.vars.get(this.value)).getOrElse(throw VarNotFoundException(this.value))
-        else this.value
-    }
+    val value: String = await(template.execute())
     if (opt == VarOpt.SET) {
-      await(context.vars.updateOrElseSet(paramName, value))
+      await(varKey.updateOrElseSet(value))
     } else {
       Try(BigDecimal(value)).getOrElse(throw ExecutionException("试图使用非数字进行加减乘除"))
-      val originValue = await(context.vars.get(paramName)).getOrElse(throw VarNotFoundException(paramName))
+      val originValue = await(varKey.query).getOrElse(throw VarNotFoundException(varKey.name))
       Try(BigDecimal(originValue)).getOrElse(throw ExecutionException("变量的原始值不为数字"))
-      await(context.vars.update(paramName, operate(originValue, value)))
+      await(varKey.update(operate(originValue, value)))
     }
   }
 }
