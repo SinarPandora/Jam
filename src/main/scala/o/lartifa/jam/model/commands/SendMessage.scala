@@ -7,10 +7,9 @@ import cc.moecraft.icq.sender.message.MessageBuilder
 import cc.moecraft.icq.sender.message.components.{ComponentImage, ComponentImageBase64, ComponentRecord}
 import cc.moecraft.icq.sender.returndata.ReturnData
 import cc.moecraft.icq.sender.returndata.returnpojo.send.RMessageReturnData
-import o.lartifa.jam.common.exception.{ExecutionException, VarNotFoundException}
+import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.SendMessage.Type
-import o.lartifa.jam.pool.JamContext
 
 import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
@@ -22,7 +21,7 @@ import scala.util.{Failure, Success, Try}
  * Author: sinar
  * 2020/1/3 23:05
  */
-case class SendMessage(`type`: Type, message: String, isMessageAParam: Boolean = false) extends Command[ReturnData[RMessageReturnData]] {
+case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Command[ReturnData[RMessageReturnData]] {
 
   /**
    * 发送回复消息
@@ -47,7 +46,7 @@ case class SendMessage(`type`: Type, message: String, isMessageAParam: Boolean =
    * @return 异步消息返回对象
    */
   def sendTextMessage()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[ReturnData[RMessageReturnData]] = async {
-    val message = await(getMessageContent())
+    val message = await(template.execute())
     context.eventMessage.respond(message)
   }
 
@@ -59,7 +58,7 @@ case class SendMessage(`type`: Type, message: String, isMessageAParam: Boolean =
    * @return 异步消息返回对象
    */
   def sendPic()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[ReturnData[RMessageReturnData]] = async {
-    val message = await(getMessageContent())
+    val message = await(template.execute())
     val content = new MessageBuilder().add({
       val lowCaseName = message.toLowerCase
       if (lowCaseName.startsWith("http://") || lowCaseName.startsWith("http://") || lowCaseName.contains("data/image") || lowCaseName.contains("data\\image")) {
@@ -85,26 +84,13 @@ case class SendMessage(`type`: Type, message: String, isMessageAParam: Boolean =
    * @return 异步消息返回对象
    */
   def sendAudio()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[ReturnData[RMessageReturnData]] = async {
-    val audioUri = await(getMessageContent())
+    val audioUri = await(template.execute())
     val audioMessage = new MessageBuilder().add(new ComponentRecord(audioUri)).toString
     Try(context.eventMessage.respond(audioMessage)) match {
       case Failure(exception) =>
         throw ExecutionException("图片发送可能失败，请检查是否语音文件较大或语音文件没有存放在酷Q /data/record 目录下").initCause(exception)
       case Success(value) => value
     }
-  }
-
-  /**
-   * 获取消息真实内容
-   *
-   * @param context 指令执行上下文
-   * @param exec    异步执行上下午
-   * @return 真实内容
-   */
-  def getMessageContent()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[String] = async {
-    if (isMessageAParam) {
-      await(JamContext.variablePool.get(message)).getOrElse(throw VarNotFoundException(message))
-    } else message
   }
 }
 

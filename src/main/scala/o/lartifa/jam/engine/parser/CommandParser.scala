@@ -85,12 +85,7 @@ object CommandParser extends Parser {
         case Constant.SEND_PIC => SendMessage.SEND_PIC
         case Constant.SEND_AUDIO => SendMessage.SEND_AUDIO
       }
-      result.group("message") match {
-        case variable if variable.startsWith("变量") =>
-          SendMessage(`type`, variable.stripPrefix("变量"), isMessageAParam = true)
-        case message =>
-          SendMessage(`type`, message)
-      }
+      SendMessage(`type`, context.getTemplate(result.group("template")))
     })
   }
 

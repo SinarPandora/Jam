@@ -104,7 +104,7 @@ object Patterns {
     // 随机
     val randomNumber: Regex = """随机[(（]([0-9]+)-([0-9]*)[)）]""".r("down", "up")
     // 消息发送
-    val messageSend: Regex = """(回复|发送|说)\{((变量)?.+?)}""".r("type", "message")
+    val messageSend: Regex = """(回复|发送|说)%\{(.+?)}%""".r("type", "template")
     // 变量删除
     val paramDel: Regex = """将\{(.+?)}删除""".r("name")
     // 变量操作
