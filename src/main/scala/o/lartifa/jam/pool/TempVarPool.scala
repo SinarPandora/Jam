@@ -2,7 +2,6 @@ package o.lartifa.jam.pool
 
 import java.sql.Timestamp
 
-import ammonite.ops.PipeableImplicit
 import cc.moecraft.icq.event.events.message.{EventGroupMessage, EventMessage}
 import o.lartifa.jam.common.exception.{ExecutionException, VarNotFoundException}
 import o.lartifa.jam.database.temporary.schema.Tables
@@ -156,19 +155,45 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    * @param name 参数名
    * @return 函数
    */
-  private def getVar(name: String): Option[String] = name match {
-    case "昵称" => eventMessage.getBotAccount.getName |> Some.apply
-    case "群号" => toGroupMessage(eventMessage).getGroupId.toString |> Some.apply
-    case "群名" => toGroupMessage(eventMessage).getGroup.getInfo.getGroupName |> Some.apply
-    case "群昵称" => toGroupMessage(eventMessage).getGroupUser(eventMessage.getSenderId).getInfo.getNickname |> Some.apply
-    case "发送者昵称" | "对方昵称" => eventMessage.getSender.getInfo.getNickname |> Some.apply
-    case "发送者QQ" | "对方QQ" => eventMessage.getSender.getInfo.getUserId.toString |> Some.apply
-    case "发送者年龄" | "对方年龄" => eventMessage.getSender.getInfo.getAge.toString |> Some.apply
-    case "发送者性别" | "对方性别" => eventMessage.getSender.getInfo.getSex |> Some.apply
-    case "会话类型" => ChatInfo(eventMessage).chatType |> Some.apply
-    case "发送者群昵称" | "对方群昵称" => toGroupMessage(eventMessage).getGroupSender.getInfo.getNickname |> Some.apply
-    case "是否为好友" => (if (toGroupMessage(eventMessage).getGroupSender.getInfo.getUnfriendly) "是" else "否") |> Some.apply
-    case other => CommandScopeParameters.get(other)
+  private def getVar(name: String): Option[String] = Some {
+    name match {
+      case "昵称" => eventMessage.getBotAccount.getName
+      case "群号" => toGroupMessage(eventMessage).getGroupId.toString
+      case "群名" => toGroupMessage(eventMessage).getGroup.refreshInfo().getGroupName
+      case "群昵称" => getGroupNickName(false)
+      case "发送者昵称" | "对方昵称" => getNickName(true)
+      case "发送者QQ" | "对方QQ" => eventMessage.getSender.refreshInfo(true).getUserId.toString
+      case "发送者年龄" | "对方年龄" => eventMessage.getSender.refreshInfo(true).getAge.toString
+      case "发送者性别" | "对方性别" => eventMessage.getSender.refreshInfo(true).getSex
+      case "会话类型" => ChatInfo(eventMessage).chatType
+      case "发送者群昵称" | "对方群昵称" => getGroupNickName(true)
+      case "是否为好友" => if (toGroupMessage(eventMessage).getGroupSender.getInfo.getUnfriendly) "是" else "否"
+      case other => return CommandScopeParameters.get(other)
+    }
+  }
+
+  /**
+   * 获取昵称
+   *
+   * @param isSender 是否为发送者
+   * @return 昵称
+   */
+  private def getNickName(isSender: Boolean): String = {
+    if (isSender) eventMessage.getSender.refreshInfo(true).getNickname
+    else eventMessage.getBotAccount.getName
+  }
+
+  /**
+   * 获取群昵称，当未设置时，获取昵称
+   *
+   * @param isSender 是否为发送者
+   * @return 群昵称
+   */
+  private def getGroupNickName(isSender: Boolean): String = {
+    val qid = if (isSender) eventMessage.getSenderId else eventMessage.getSelfId
+    val groupNickName = toGroupMessage(eventMessage).getGroupUser(qid).refreshInfo.getCard
+    if (groupNickName.isEmpty) getNickName(isSender)
+    else groupNickName
   }
 
   /**
