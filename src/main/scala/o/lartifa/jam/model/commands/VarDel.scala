@@ -1,6 +1,6 @@
 package o.lartifa.jam.model.commands
 
-import o.lartifa.jam.model.CommandExecuteContext
+import o.lartifa.jam.model.{CommandExecuteContext, VarKey}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -10,7 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2020/1/4 00:35
  */
-case class VarDel(name: String) extends Command[Boolean] {
+case class VarDel(varKey: VarKey) extends Command[Boolean] {
   /**
    * 执行指令
    *
@@ -19,6 +19,6 @@ case class VarDel(name: String) extends Command[Boolean] {
    * @return 异步返回执行结果
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = {
-    context.vars.delete(name)
+    varKey.delete
   }
 }
