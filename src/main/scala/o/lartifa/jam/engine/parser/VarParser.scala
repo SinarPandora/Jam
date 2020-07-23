@@ -76,9 +76,10 @@ object VarParser extends Parser {
    */
   def parseTemplates(string: String): Option[List[StringTemplateResult]] = {
     val templates = Patterns.stringTemplatePattern.findAllMatchIn(string)
-      .map(_.group("template"))
-      .map(x => StringTemplateResult(
-        parseRenderStrTemplate(x).getOrElse(throw ParseFailException("字符串模板格式不正确")), x))
+      .map(x => (x.group("template"), x.matched))
+      .map { case (content, source) => StringTemplateResult(
+        parseRenderStrTemplate(content).getOrElse(throw ParseFailException("字符串模板格式不正确")), source)
+      }
       .toList
     if (templates.isEmpty) None
     else Some(templates)
