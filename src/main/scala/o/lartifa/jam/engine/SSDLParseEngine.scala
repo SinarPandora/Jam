@@ -17,7 +17,7 @@ import scala.util.{Failure, Success, Try}
  * SSDL 解析引擎
  *
  * Author: sinar
- * 2020/1/4 22:41 
+ * 2020/1/4 22:41
  */
 object SSDLParseEngine extends Parser {
 
@@ -84,17 +84,14 @@ object SSDLParseEngine extends Parser {
       .map(_.trim)
       .map(line => {
         if (line.startsWith("(") || line.startsWith("（")) {
-          val (name, step)= line.splitAt(line.indexWhere(c => c == ')' || c == '）') + 1)
+          val (name, step) = line.splitAt(line.indexWhere(c => c == ')' || c == '）') + 1)
           Some(name.substring(1, name.length - 1)) -> step
         } else None -> line
       })
       .zipWithIndex
       .par
-      .filterNot(_._1._2.startsWith("#"))
-      .map(pair => {
-        val ((name, step), idx) = pair
-        parseSSDL(step, file.pathAsString, idx + 1, chatInfo, name)
-      })
+      .filterNot { case ((_, line), _) => line.startsWith("#") || line.isEmpty }
+      .map { case ((name, step), idx) => parseSSDL(step, file.pathAsString, idx + 1, chatInfo, name) }
       .seq
   }
 
