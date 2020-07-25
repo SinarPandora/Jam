@@ -26,6 +26,6 @@ case class ThenSaveTo(command: Executable[_], key: VarKey) extends Command[Unit]
       case () => "没有值"
       case other => other.toString
     }
-    key.updateOrElseSet(value)
+    await(key.updateOrElseSet(value))
   }
 }

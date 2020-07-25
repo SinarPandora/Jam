@@ -1,16 +1,17 @@
 package o.lartifa.jam.database.temporary
 
 import com.typesafe.config.ConfigFactory
-import slick.jdbc.{H2Profile, SQLiteProfile}
+import slick.jdbc.{H2Profile, PostgresProfile}
 
 /**
  * Author: sinar
- * 2019/10/13 19:38 
+ * 2019/10/13 19:38
  */
 package object schema {
-  val (databaseType, databaseName) = if (ConfigFactory.load().getBoolean("system.debugMode")) {
-    (SQLiteProfile, "databases.temporary_memory_debug")
-  } else {
-    (H2Profile, "databases.temporary_memory")
-  }
+  val (databaseType, databaseName) =
+    ConfigFactory.load().getString("databases.use") match {
+      case "PGSQL" => (PostgresProfile, "databases.temporary_memory_PGSQL")
+      case "H2" => (H2Profile, "databases.temporary_memory_H2")
+      case other => throw new IllegalArgumentException(s"不支持的数据库类型：$other")
+    }
 }
