@@ -88,7 +88,7 @@ object Patterns {
   /**
    * 保存解析到的指令的执行结果
    */
-  val thenSaveTo: Regex = """并将结果保存到\{(.+?)}""".r("name")
+  val thenSaveTo: Regex = """(.+?)之后将结果保存到\{(.+?)}""".r("command", "name")
 
   // 7
   object CommandPattern {

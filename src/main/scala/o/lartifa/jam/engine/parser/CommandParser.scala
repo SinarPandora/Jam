@@ -1,5 +1,6 @@
 package o.lartifa.jam.engine.parser
 
+import ammonite.ops.PipeableImplicit
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.model.commands._
 import o.lartifa.jam.plugins.picbot._
@@ -34,6 +35,7 @@ object CommandParser extends Parser {
           parseGoto _,
           parseOneByOne _,
           parseParamOpt _,
+          parseRandomNumber _,
           parseRandomGoto _,
           parseLoopGoto _,
           parseParamDel _,
@@ -48,6 +50,10 @@ object CommandParser extends Parser {
           .map(_.apply(string))
           .find(_.isDefined)
           .flatten
+          .map(command =>
+            parseThenSaveTo(string, command)
+              .getOrElse(command)
+          )
     }
   }
 
@@ -74,7 +80,7 @@ object CommandParser extends Parser {
   /**
    * 解析捕获指令内容指令
    *
-   * @param string 待解析字符串
+   * @param string  待解析字符串
    * @param context 解析引擎上下文
    * @return 解析结果
    */
@@ -328,6 +334,21 @@ object CommandParser extends Parser {
         case PatternRating.EXPLICIT => EXPLICIT
       }
       SetPicRating(rating)
+    })
+  }
+
+  /**
+   * 解析保存结果指令
+   *
+   * @param string  待解析字符串
+   * @param command 目标指令
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseThenSaveTo(string: String, command: Command[_])(implicit context: ParseEngineContext): Option[ThenSaveTo] = {
+    Patterns.thenSaveTo.findFirstMatchIn(string).map(result => {
+      val varKey = result.group("name") |> context.getVar
+      ThenSaveTo(command, varKey)
     })
   }
 
