@@ -3,6 +3,8 @@ package o.lartifa.jam.model.tasks
 import java.util.concurrent.atomic.AtomicBoolean
 
 import cc.moecraft.logger.HyLogger
+import cc.moecraft.logger.format.AnsiColor
+import cn.hutool.core.date.StopWatch
 import cn.hutool.core.lang.UUID
 import cn.hutool.cron.CronUtil
 import cn.hutool.cron.task.Task
@@ -37,6 +39,8 @@ abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.N
     if (isRunning.get()) {
       logger.log(s"任务：${name}正在运行，本次触发被跳过")
     } else {
+      val stopWatch = new StopWatch()
+      stopWatch.start()
       logger.log(s"任务执行开始：定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id")
       Try(Await.result(run(), Duration.Inf)) match {
         case Failure(exception) =>
@@ -46,6 +50,10 @@ abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.N
           }
         case Success(_) => logger.log(s"任务执行结束：定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id")
       }
+      stopWatch.stop()
+      val cost = stopWatch.getTotalTimeSeconds
+      if (cost < 1) logger.log(s"${AnsiColor.GREEN}任务 ID：$id 执行耗时：小于1s")
+      else logger.log(s"${AnsiColor.GREEN}}任务 ID：$id 执行耗时：${cost}s")
       isRunning.getAndSet(false)
     }
   }
