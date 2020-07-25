@@ -81,6 +81,6 @@ abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.N
 object JamCronTask {
   val logger: HyLogger = JamContext.logger.get()
 
-  case class TaskDefinition(name: String, cls: Class[JamCronTask], isSingleton: Boolean)
+  case class TaskDefinition(name: String, cls: Class[_ <: JamCronTask], isSingleton: Boolean)
 
 }

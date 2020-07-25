@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext
  * Author: sinar
  * 2020/1/25 13:32
  */
-class CronTaskPool(val taskDefinition: Map[String, TaskDefinition[_]]) {
+class CronTaskPool(val taskDefinition: Map[String, TaskDefinition]) {
 
   private val runningTasks: mutable.Map[String, ListBuffer[JamCronTask]] = mutable.Map.empty
   /**
