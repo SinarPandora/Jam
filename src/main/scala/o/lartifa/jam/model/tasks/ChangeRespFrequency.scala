@@ -5,6 +5,8 @@ import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.listener.RuleEngineListener
 import o.lartifa.jam.pool.JamContext
 
+import scala.concurrent.{ExecutionContext, Future}
+
 /**
  * 调整回复频率
  *
@@ -12,12 +14,13 @@ import o.lartifa.jam.pool.JamContext
  * 2020/1/23 14:26
  */
 class ChangeRespFrequency(val freq: Int) extends JamCronTask(name = "回复频率变更") {
-  override def execute(): Unit = {
+  override def run()(implicit exec: ExecutionContext): Future[Unit] = {
     RuleEngineListener.adjustFrequency(freq)
     if (SystemConfig.debugMode) {
       MasterUtil.notifyMaster(s"${JamConfig.name}的回复频已变更为：$freq%")
     }
     JamContext.logger.get().log(s"${JamConfig.name}的回复频率已变更为：$freq%")
+    Future.successful(())
   }
 }
 

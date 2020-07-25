@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * 仿生行为初始化器
  *
  * Author: sinar
- * 2020/1/23 14:54 
+ * 2020/1/23 14:54
  */
 object BehaviorInitializer {
 
@@ -23,7 +23,7 @@ object BehaviorInitializer {
    */
   def init()(implicit exec: ExecutionContext): Future[Unit] = async {
     logger.log(s"${AnsiColor.YELLOW}正在调整生物钟")
-    JamContext.cronTaskPool.getAndSet(new CronTaskPool())
+    JamContext.cronTaskPool.getAndSet(CronTaskPool())
     await {
       Future.sequence(Seq(
         Future(BiochronometerParser.parse())

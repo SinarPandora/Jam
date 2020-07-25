@@ -6,9 +6,11 @@ import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMe
  * 会话信息结构体
  *
  * Author: sinar
- * 2020/1/14 22:46 
+ * 2020/1/14 22:46
  */
-case class ChatInfo(chatType: String, chatId: Long)
+case class ChatInfo(chatType: String, chatId: Long) {
+  override def toString: String = s"聊天类型：$chatType，会话 ID：$chatId"
+}
 
 object ChatInfo {
   def apply(chatType: String, chatId: Long): ChatInfo = new ChatInfo(chatType, chatId)
