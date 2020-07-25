@@ -1,4 +1,4 @@
-package o.lartifa.jam.database.temporary.codeGen
+package code_generator
 
 import slick.codegen.SourceCodeGenerator
 
@@ -7,10 +7,10 @@ import slick.codegen.SourceCodeGenerator
  * 2019/11/3 13:44
  */
 object CodeGen {
-  final val profile: String = "slick.jdbc.H2Profile"
-  final val driver: String = "org.h2.Driver"
+  final val profile: String = "slick.jdbc.PostgresProfile"
+  final val driver: String = "org.postgresql.Driver"
 
-  def url: String = s"jdbc:h2:./db/temporary_memory"
+  def url: String = s"jdbc:postgresql://localhost:5432/jam_bot"
 
   def main(args: Array[String]): Unit = {
     SourceCodeGenerator.run(
@@ -19,7 +19,7 @@ object CodeGen {
       url = url,
       outputDir = "/Users/sinar/IdeaProjects/Jam/src/main/scala",
       pkg = s"o.lartifa.jam.database.temporary.codeGen.gen",
-      user = None,
+      user = Some("sinar"),
       password = None,
       ignoreInvalidDefaults = true,
       outputToMultipleFiles = true)

@@ -8,54 +8,54 @@ trait MessageRecordsTable {
   // NOTE: GetResult mappers for plain SQL are only generated for tables where Slick knows how to map the types of all columns.
   import slick.jdbc.{GetResult => GR}
   /** Entity class storing rows of table MessageRecords
-   *  @param id Database column ID SqlType(INTEGER), AutoInc, PrimaryKey
-   *  @param message Database column MESSAGE SqlType(VARCHAR)
-   *  @param messageId Database column MESSAGE_ID SqlType(BIGINT)
-   *  @param messageType Database column MESSAGE_TYPE SqlType(VARCHAR)
-   *  @param messageSubType Database column MESSAGE_SUB_TYPE SqlType(VARCHAR)
-   *  @param postType Database column POST_TYPE SqlType(VARCHAR)
-   *  @param rawMessage Database column RAW_MESSAGE SqlType(VARCHAR)
-   *  @param selfId Database column SELF_ID SqlType(BIGINT)
-   *  @param senderId Database column SENDER_ID SqlType(BIGINT)
-   *  @param groupId Database column GROUP_ID SqlType(BIGINT), Default(-1)
-   *  @param font Database column FONT SqlType(BIGINT)
-   *  @param timestamp Database column TIMESTAMP SqlType(BIGINT) */
-  case class MessageRecord(id: Int, message: String, messageId: Long, messageType: String, messageSubType: String, postType: String, rawMessage: String, selfId: Long, senderId: Long, groupId: Long = -1L, font: Long, timestamp: Long)
-  /** GetResult implicit for fetching MessageRecordsRow objects using plain SQL queries */
-  implicit def GetResultMessageRecordsRow(implicit e0: GR[Int], e1: GR[String], e2: GR[Long]): GR[MessageRecord] = GR{
+   *  @param id Database column id SqlType(bigserial), AutoInc, PrimaryKey
+   *  @param message Database column message SqlType(text), Default()
+   *  @param messageId Database column message_id SqlType(int8), Default(0)
+   *  @param messageType Database column message_type SqlType(text), Default()
+   *  @param messageSubType Database column message_sub_type SqlType(text), Default()
+   *  @param postType Database column post_type SqlType(text), Default()
+   *  @param rawMessage Database column raw_message SqlType(text), Default()
+   *  @param selfId Database column self_id SqlType(int8), Default(0)
+   *  @param senderId Database column sender_id SqlType(int8), Default(0)
+   *  @param groupId Database column group_id SqlType(int8), Default(-1)
+   *  @param font Database column font SqlType(int8), Default(0)
+   *  @param timestamp Database column timestamp SqlType(int8), Default(-1) */
+  case class MessageRecord(id: Long, message: String = "", messageId: Long = 0L, messageType: String = "", messageSubType: String = "", postType: String = "", rawMessage: String = "", selfId: Long = 0L, senderId: Long = 0L, groupId: Long = -1L, font: Long = 0L, timestamp: Long = -1L)
+  /** GetResult implicit for fetching MessageRecord objects using plain SQL queries */
+  implicit def GetResultMessageRecord(implicit e0: GR[Long], e1: GR[String]): GR[MessageRecord] = GR{
     prs => import prs._
-      MessageRecord.tupled((<<[Int], <<[String], <<[Long], <<[String], <<[String], <<[String], <<[String], <<[Long], <<[Long], <<[Long], <<[Long], <<[Long]))
+    MessageRecord.tupled((<<[Long], <<[String], <<[Long], <<[String], <<[String], <<[String], <<[String], <<[Long], <<[Long], <<[Long], <<[Long], <<[Long]))
   }
-  /** Table description of table MESSAGE_RECORDS. Objects of this class serve as prototypes for rows in queries. */
-  class MessageRecords(_tableTag: Tag) extends profile.api.Table[MessageRecord](_tableTag, "MESSAGE_RECORDS") {
+  /** Table description of table message_records. Objects of this class serve as prototypes for rows in queries. */
+  class MessageRecords(_tableTag: Tag) extends profile.api.Table[MessageRecord](_tableTag, "message_records") {
     def * = (id, message, messageId, messageType, messageSubType, postType, rawMessage, selfId, senderId, groupId, font, timestamp) <> (MessageRecord.tupled, MessageRecord.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
     def ? = ((Rep.Some(id), Rep.Some(message), Rep.Some(messageId), Rep.Some(messageType), Rep.Some(messageSubType), Rep.Some(postType), Rep.Some(rawMessage), Rep.Some(selfId), Rep.Some(senderId), Rep.Some(groupId), Rep.Some(font), Rep.Some(timestamp))).shaped.<>({r=>import r._; _1.map(_=> MessageRecord.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10.get, _11.get, _12.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
-    /** Database column ID SqlType(INTEGER), AutoInc, PrimaryKey */
-    val id: Rep[Int] = column[Int]("ID", O.AutoInc, O.PrimaryKey)
-    /** Database column MESSAGE SqlType(VARCHAR) */
-    val message: Rep[String] = column[String]("MESSAGE")
-    /** Database column MESSAGE_ID SqlType(BIGINT) */
-    val messageId: Rep[Long] = column[Long]("MESSAGE_ID")
-    /** Database column MESSAGE_TYPE SqlType(VARCHAR) */
-    val messageType: Rep[String] = column[String]("MESSAGE_TYPE")
-    /** Database column MESSAGE_SUB_TYPE SqlType(VARCHAR) */
-    val messageSubType: Rep[String] = column[String]("MESSAGE_SUB_TYPE")
-    /** Database column POST_TYPE SqlType(VARCHAR) */
-    val postType: Rep[String] = column[String]("POST_TYPE")
-    /** Database column RAW_MESSAGE SqlType(VARCHAR) */
-    val rawMessage: Rep[String] = column[String]("RAW_MESSAGE")
-    /** Database column SELF_ID SqlType(BIGINT) */
-    val selfId: Rep[Long] = column[Long]("SELF_ID")
-    /** Database column SENDER_ID SqlType(BIGINT) */
-    val senderId: Rep[Long] = column[Long]("SENDER_ID")
-    /** Database column GROUP_ID SqlType(BIGINT), Default(-1) */
-    val groupId: Rep[Long] = column[Long]("GROUP_ID", O.Default(-1L))
-    /** Database column FONT SqlType(BIGINT) */
-    val font: Rep[Long] = column[Long]("FONT")
-    /** Database column TIMESTAMP SqlType(BIGINT) */
-    val timestamp: Rep[Long] = column[Long]("TIMESTAMP")
+    /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
+    val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)
+    /** Database column message SqlType(text), Default() */
+    val message: Rep[String] = column[String]("message", O.Default(""))
+    /** Database column message_id SqlType(int8), Default(0) */
+    val messageId: Rep[Long] = column[Long]("message_id", O.Default(0L))
+    /** Database column message_type SqlType(text), Default() */
+    val messageType: Rep[String] = column[String]("message_type", O.Default(""))
+    /** Database column message_sub_type SqlType(text), Default() */
+    val messageSubType: Rep[String] = column[String]("message_sub_type", O.Default(""))
+    /** Database column post_type SqlType(text), Default() */
+    val postType: Rep[String] = column[String]("post_type", O.Default(""))
+    /** Database column raw_message SqlType(text), Default() */
+    val rawMessage: Rep[String] = column[String]("raw_message", O.Default(""))
+    /** Database column self_id SqlType(int8), Default(0) */
+    val selfId: Rep[Long] = column[Long]("self_id", O.Default(0L))
+    /** Database column sender_id SqlType(int8), Default(0) */
+    val senderId: Rep[Long] = column[Long]("sender_id", O.Default(0L))
+    /** Database column group_id SqlType(int8), Default(-1) */
+    val groupId: Rep[Long] = column[Long]("group_id", O.Default(-1L))
+    /** Database column font SqlType(int8), Default(0) */
+    val font: Rep[Long] = column[Long]("font", O.Default(0L))
+    /** Database column timestamp SqlType(int8), Default(-1) */
+    val timestamp: Rep[Long] = column[Long]("timestamp", O.Default(-1L))
   }
   /** Collection-like TableQuery object for table MessageRecords */
   lazy val MessageRecords = new TableQuery(tag => new MessageRecords(tag))

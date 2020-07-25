@@ -24,6 +24,7 @@ libraryDependencies += "com.typesafe.slick" %% "slick-codegen" % "3.3.2"
 libraryDependencies += "com.typesafe.slick" %% "slick-hikaricp" % "3.3.2"
 libraryDependencies += "com.h2database" % "h2" % "1.4.200"
 libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.32.3"
+libraryDependencies += "org.postgresql" % "postgresql" % "42.2.14"
 
 // Tools
 libraryDependencies += "io.reactivex.rxjava3" % "rxjava" % "3.0.4"
