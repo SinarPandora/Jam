@@ -191,7 +191,8 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
 }
 
 object DBVarPool {
-  private implicit val executionContext: ExecutionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
+  private implicit val executionContext: ExecutionContext =
+    ExecutionContext.fromExecutor(Executors.newWorkStealingPool(Runtime.getRuntime.availableProcessors() * 2))
 
   def apply(): DBVarPool = new DBVarPool()
 }

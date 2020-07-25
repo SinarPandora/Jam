@@ -20,7 +20,8 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
  */
 object MasterCommands {
 
-  private implicit val exec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
+  private implicit val exec: ExecutionContextExecutor = ExecutionContext.fromExecutor(
+    Executors.newFixedThreadPool(Runtime.getRuntime.availableProcessors()))
 
   val commands: List[IcqCommand] = List(
     ListVariable,

@@ -17,13 +17,15 @@ import scala.concurrent.{ExecutionContext, Future}
  * 全局消息词 / 短期记忆
  *
  * Author: sinar
- * 2020/1/13 22:11 
+ * 2020/1/13 22:11
  */
 class MessagePool {
 
   import o.lartifa.jam.database.temporary.TemporaryMemory.database.profile.api._
 
-  private implicit val exec: ExecutionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
+  private implicit val exec: ExecutionContext = ExecutionContext.fromExecutor(Executors.newWorkStealingPool(
+    Runtime.getRuntime.availableProcessors() * 2
+  ))
 
   private lazy val logger: HyLogger = JamContext.logger.get()
 
