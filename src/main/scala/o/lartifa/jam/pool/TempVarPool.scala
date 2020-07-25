@@ -32,13 +32,13 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    * @param context 执行上下文
    * @return 更新结果
    */
-  override def update(name: String, value: String)(implicit context: CommandExecuteContext): Future[String] = Future {
+  override def update(name: String, value: String)(implicit context: CommandExecuteContext): Future[String] = {
     if (checkOverridable(name)) {
       if (CommandScopeParameters.contains(name)) {
         CommandScopeParameters += name -> value
-        value
-      } else throw VarNotFoundException(name, "临时变量")
-    } else throw ExecutionException(s"临时变量 $name 不可被覆盖！")
+        Future.successful(value)
+      } else Future.failed(VarNotFoundException(name, "临时变量"))
+    } else Future.failed(ExecutionException(s"临时变量 $name 不可被覆盖！"))
   }
 
   /**
@@ -49,11 +49,11 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    * @param context 执行上下文
    * @return 执行结果
    */
-  override def updateOrElseSet(name: String, value: String)(implicit context: CommandExecuteContext): Future[String] = Future {
+  override def updateOrElseSet(name: String, value: String)(implicit context: CommandExecuteContext): Future[String] = {
     if (checkOverridable(name)) {
       CommandScopeParameters += name -> value
-      value
-    } else throw ExecutionException(s"临时变量 $name 不可被覆盖！")
+      Future.successful(value)
+    } else Future.failed(ExecutionException(s"临时变量 $name 不可被覆盖！"))
   }
 
   /**
@@ -64,13 +64,13 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    * @param context 执行上下文
    * @return 执行结果
    */
-  override def updateOrElseUse(name: String, value: String)(implicit context: CommandExecuteContext): Future[String] = Future {
+  override def updateOrElseUse(name: String, value: String)(implicit context: CommandExecuteContext): Future[String] = {
     if (checkOverridable(name)) {
       if (CommandScopeParameters.contains(name)) {
         CommandScopeParameters += name -> value
       }
-      value
-    } else throw ExecutionException(s"临时变量 $name 不可被覆盖！")
+      Future.successful(value)
+    } else Future.failed(ExecutionException(s"临时变量 $name 不可被覆盖！"))
   }
 
   /**
@@ -106,9 +106,9 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    * @param context 执行上下文
    * @return true：删除成功
    */
-  override def delete(name: String)(implicit context: CommandExecuteContext): Future[Boolean] = Future {
+  override def delete(name: String)(implicit context: CommandExecuteContext): Future[Boolean] = {
     CommandScopeParameters.remove(name)
-    true
+    Future.successful(true)
   }
 
   /**
@@ -124,9 +124,9 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    *
    * @return true：删除成功
    */
-  override def cleanAll(): Future[Boolean] = Future {
+  override def cleanAll(): Future[Boolean] = {
     CommandScopeParameters.clear()
-    true
+    Future.successful(true)
   }
 
   /**
