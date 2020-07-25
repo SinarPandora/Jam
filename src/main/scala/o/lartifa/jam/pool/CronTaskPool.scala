@@ -1,11 +1,15 @@
 package o.lartifa.jam.pool
 
+import java.util.concurrent.Executors
+
 import o.lartifa.jam.common.exception.ExecutionException
-import o.lartifa.jam.model.tasks.JamCronTask
+import o.lartifa.jam.model.tasks.JamCronTask.TaskDefinition
+import o.lartifa.jam.model.tasks.{ChangeRespFrequency, GoASleep, JamCronTask, WakeUp}
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.ExecutionContext
 
 /**
  * 定时任务池
@@ -13,14 +17,16 @@ import scala.collection.mutable.ListBuffer
  * Author: sinar
  * 2020/1/25 13:32
  */
-class CronTaskPool(private val tasks: mutable.Map[String, ListBuffer[JamCronTask]] = mutable.Map.empty) {
+class CronTaskPool(val taskDefinition: Map[String, TaskDefinition[_]]) {
+
+  private val runningTasks: mutable.Map[String, ListBuffer[JamCronTask]] = mutable.Map.empty
   /**
    * 添加定时任务到定时任务池
    *
    * @param task 任务信息组
    */
   def add(task: JamCronTask): Unit = {
-    tasks.getOrElseUpdate(task.name, ListBuffer.empty).addOne(task)
+    runningTasks.getOrElseUpdate(task.name, ListBuffer.empty).addOne(task)
   }
 
   /**
@@ -30,7 +36,7 @@ class CronTaskPool(private val tasks: mutable.Map[String, ListBuffer[JamCronTask
    */
   def addAll(task: Seq[JamCronTask]): Unit = {
     task.groupBy(_.name).foreach { case (name, tasksWithSameName) =>
-      tasks.getOrElseUpdate(name, ListBuffer.empty).addAll(tasksWithSameName)
+      runningTasks.getOrElseUpdate(name, ListBuffer.empty).addAll(tasksWithSameName)
     }
   }
 
@@ -41,7 +47,7 @@ class CronTaskPool(private val tasks: mutable.Map[String, ListBuffer[JamCronTask
    * @return 任务列表
    */
   def getAll(name: String): List[JamCronTask] = {
-    tasks.getOrElse(name, ListBuffer.empty).filter(_.name == name).toList
+    runningTasks.getOrElse(name, ListBuffer.empty).filter(_.name == name).toList
   }
 
   /**
@@ -62,7 +68,7 @@ class CronTaskPool(private val tasks: mutable.Map[String, ListBuffer[JamCronTask
    * @return 删除结果
    */
   def remove(task: JamCronTask): Option[JamCronTask] = {
-    tasks.get(task.name).flatMap { taskList =>
+    runningTasks.get(task.name).flatMap { taskList =>
       taskList.find(_.id == task.id).map { task =>
         taskList -= task
         task
@@ -77,7 +83,7 @@ class CronTaskPool(private val tasks: mutable.Map[String, ListBuffer[JamCronTask
    */
   def removeAll(list: List[JamCronTask]): Unit = {
     list.groupBy(_.name).foreach { case (name, taskList) =>
-      tasks.get(name).foreach(_ --= taskList)
+      runningTasks.get(name).foreach(_ --= taskList)
     }
   }
 
@@ -103,5 +109,19 @@ class CronTaskPool(private val tasks: mutable.Map[String, ListBuffer[JamCronTask
       else throw ExecutionException("该聊天下存在重复的同名任务")
     } else throw ExecutionException("该聊天下存在重复的同名任务")
 
+  }
+}
+
+object CronTaskPool {
+  // 用于定时任务的转换操作
+  implicit val cronTaskWaitingPool: ExecutionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
+
+  def apply(): CronTaskPool = {
+    val taskDefinition = Map(
+      "回复频率变更" -> TaskDefinition("", classOf[ChangeRespFrequency], isSingleton = false),
+      "睡眠" -> TaskDefinition("", classOf[GoASleep], isSingleton = true),
+      "起床" -> TaskDefinition("", classOf[WakeUp], isSingleton = true),
+    )
+    new CronTaskPool(taskDefinition)
   }
 }
