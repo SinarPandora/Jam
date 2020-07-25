@@ -35,8 +35,13 @@ class StepPool(private val steps: Map[Long, Step], private val names: Map[String
       throw ExecutionException(s"尝试执行步骤${stepId}时失败，原因：步骤缺失！")
     }).execute().map(_ => {
       cost.stop()
-      val time = if (cost.getTotalTimeSeconds < 1) "不到一" else cost.getTotalTimeSeconds.toString
-      logger.log(s"${AnsiColor.GREEN}步骤${stepId}执行结束，总计耗时：${time}秒")
+      val time = if (cost.getTotalTimeSeconds < 1) "小于1" else cost.getTotalTimeSeconds.toString
+      logger.log(s"${AnsiColor.GREEN}步骤${stepId}执行结束，总计耗时：${time}s")
+    }).recover(err => {
+      cost.stop()
+      val time = if (cost.getTotalTimeSeconds < 1) "小于1" else cost.getTotalTimeSeconds.toString
+      logger.error(err)
+      logger.log(s"${AnsiColor.RED}步骤${stepId}执行失败，当前耗时：${time}s")
     })
   }
 
