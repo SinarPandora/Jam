@@ -4,6 +4,7 @@ import ammonite.ops.PipeableImplicit
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.model.commands._
 import o.lartifa.jam.plugins.picbot._
+import o.lartifa.jam.pool.JamContext
 
 import scala.util.Try
 
@@ -45,7 +46,8 @@ object CommandParser extends Parser {
           parseDoNoting _,
           parseFetchAndSendPic _,
           parseSetPicFetcherMode _,
-          parseSetPicRating _
+          parseSetPicRating _,
+          parseRunTaskNow _
         )
           .map(_.apply(string))
           .find(_.isDefined)
@@ -349,6 +351,23 @@ object CommandParser extends Parser {
     Patterns.thenSaveTo.findFirstMatchIn(string).map(result => {
       val varKey = result.group("name") |> context.getVar
       ThenSaveTo(command, varKey)
+    })
+  }
+
+  /**
+   * 解析立即运行任务指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseRunTaskNow(string: String)(implicit context: ParseEngineContext): Option[RunTaskNow] = {
+    CommandPattern.runTaskNow.findFirstMatchIn(string).map(result => {
+      val name = result.group("task")
+      JamContext.cronTaskPool.get().taskDefinition
+        .getOrElse(name, throw ParseFailException(s"没有名为：${name}的定时任务"))
+        .cls.getDeclaredConstructor()
+        .newInstance() |> RunTaskNow.apply
     })
   }
 

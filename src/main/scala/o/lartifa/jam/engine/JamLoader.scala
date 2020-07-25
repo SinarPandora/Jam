@@ -20,7 +20,7 @@ import scala.concurrent.Future
  * 应用加载器
  *
  * Author: sinar
- * 2020/1/4 23:50 
+ * 2020/1/4 23:50
  */
 object JamLoader {
 
@@ -33,8 +33,8 @@ object JamLoader {
    */
   def init(): Future[Unit] = async {
     await(TemporaryMemory.init())
-    await(loadSSDL()).foreach(errorMessages => logger.error(errorMessages.mkString("\n")))
     await(BehaviorInitializer.init())
+    await(loadSSDL()).foreach(errorMessages => logger.error(errorMessages.mkString("\n")))
   }
 
   /**

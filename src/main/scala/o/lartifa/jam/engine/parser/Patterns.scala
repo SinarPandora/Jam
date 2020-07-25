@@ -135,5 +135,7 @@ object Patterns {
     val setCommandParameter: Regex = paramOpt
     // TODO 删除临时变量
     val deleteCommandParameter: Regex = paramDel
+    // 立即执行任务
+    val runTaskNow: Regex = """立即执行任务\{([0-9A-Za-z一-龥,，]+)}""".r("task")
   }
 }
