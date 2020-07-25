@@ -19,8 +19,8 @@ import scala.util.Try
  */
 class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(implicit exec: ExecutionContext) extends VariablePool {
 
-  private val PREDEF_VARIABLES: Set[String] = Set("昵称", "群号", "群名", "群昵称", "发送者昵称", "对方昵称", "发送者QQ", "对方QQ",
-    "发送者年龄", "对方性别", "发送者年龄", "对方性别", "会话类型", "发送者群昵称", "对方群昵称", "是否为好友")
+  private val PREDEF_VARIABLES: Set[String] = Set("昵称", "群号", "群名", "群昵称", "发送者昵称", "对方昵称", "发送者QQ",
+    "对方QQ", "发送者年龄", "对方年龄", "发送者性别", "对方性别", "会话类型", "发送者群昵称", "对方群昵称", "是否为好友")
 
   private val CommandScopeParameters: mutable.Map[String, String] = mutable.Map.empty
 
@@ -202,7 +202,7 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    * @param name 变量名
    * @return 是否可以覆盖
    */
-  private def checkOverridable(name: String): Boolean = PREDEF_VARIABLES.contains(name)
+  private def checkOverridable(name: String): Boolean = !PREDEF_VARIABLES.contains(name)
 
   /**
    * 尝试将消息转换成群消息

@@ -29,6 +29,7 @@ object CommandParser extends Parser {
         Some(executableCommand)
       case None =>
         LazyList(
+          parseCatchParameters _,
           parseMessageSend _,
           parseGoto _,
           parseOneByOne _,
@@ -67,6 +68,24 @@ object CommandParser extends Parser {
         case Constant.VERY_RARELY => ExecutableCommand.VERY_RARELY
       }
       ExecutableCommand(frequency, parseCommand(result.group("command")).getOrElse(throw ParseFailException("解析失败！没有找到指令内容")))
+    })
+  }
+
+  /**
+   * 解析捕获指令内容指令
+   *
+   * @param string 待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseCatchParameters(string: String)(implicit context: ParseEngineContext): Option[CatchParameters] = {
+    CommandPattern.catchParameters.findFirstMatchIn(string).map(result => {
+      val regex = Try(result.group("regex").r).getOrElse(throw ParseFailException("正则表达式不合法"))
+      val names = result.group("names").split("[,，]").toSeq
+      if (names.forall(_.isBlank)) {
+        throw ParseFailException("变量名不能为空或者空格")
+      }
+      CatchParameters(regex, names.map(_.asTempVar).zipWithIndex)
     })
   }
 

@@ -1,14 +1,15 @@
 package o.lartifa.jam.engine.parser
 
 import o.lartifa.jam.common.exception.ParseFailException
+import o.lartifa.jam.model.behaviors.StringAsVarKey
 
 /**
  * 解析器工具方法
  *
  * Author: sinar
- * 2020/1/4 15:16 
+ * 2020/1/4 15:16
  */
-trait Parser {
+trait Parser extends StringAsVarKey {
   /**
    * 检查参数是否满足条件
    *

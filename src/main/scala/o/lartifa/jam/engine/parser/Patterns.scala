@@ -43,13 +43,7 @@ object Patterns {
    */
   val matcherPattern: Regex = """^(当|如果)(句中出现|句首出现|句末出现|内容为|匹配)%\{(.+?)}%时?[,，](.+)""".r("ignored", "type", "template", "command")
 
-  // 平行 4
-  object CommandParameters {
-    // TODO 捕获参数
-    val catchParameters: Regex = """用\{(.+?)}匹配捕获内容并注册\{(.+?)}""".r("regex", "names")
-  }
-
-  // TODO 平行 4
+  // TODO 4
   object TimeExp {
     /**
      * 定时任务捕获器匹配
@@ -103,6 +97,8 @@ object Patterns {
     val frequencyPattern: Regex = """(总是|偶尔|很少|极少)(.+)""".r("frequency", "command")
     // 随机
     val randomNumber: Regex = """随机[(（]([0-9]+)-([0-9]*)[)）]""".r("down", "up")
+    // 捕获参数
+    val catchParameters: Regex = """用\{(.+?)}匹配捕获内容之后注册临时变量[\[【]([0-9A-Za-z一-龥,，]+)[】\]]""".r("regex", "names")
     // 消息发送
     val messageSend: Regex = """(回复|发送|说)%\{(.+?)}%""".r("type", "template")
     // 变量删除
