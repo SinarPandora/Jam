@@ -122,19 +122,15 @@ object Patterns {
     // 解除全体禁言
     val groupWholeUnBan: String = "解除全体禁言"
     // 发送"色图"
-    val fetchAndSendPic: String = "发送色图"
+    val fetchAndSendPic: Regex = """发送([0-9]+)张色图""".r("amount")
     // 设置"色图"等级
-    val setPicRating: Regex = """设置色图等级=(健全|HSO|H)""".r("rating")
+    val setPicRating: Regex = """设置图片(允许|禁止)R18""".r("enableR18")
     // 设置"色图"模式
-    val setPicFetcherMode: Regex = """设置色图模式=(仅当前|范围内)""".r("mode")
+    val setPicFetcherMode: Regex = """设置图片模式为(仅当前|范围内)""".r("mode")
     // TODO 注册定时任务
     val registerCronTask: Regex = """注册定时任务\{([0-9]+)}为\{变量(.+?)}""".r("stepId", "value")
     // TODO 取消定时任务
     val deregisterCronTask: Regex = """取消定时任务\{变量(.+?)}""".r("value")
-    // TODO 设置临时变量
-    val setCommandParameter: Regex = paramOpt
-    // TODO 删除临时变量
-    val deleteCommandParameter: Regex = paramDel
     // 立即执行任务
     val runTaskNow: Regex = """立即执行任务\{([0-9A-Za-z一-龥,，]+)}""".r("task")
   }

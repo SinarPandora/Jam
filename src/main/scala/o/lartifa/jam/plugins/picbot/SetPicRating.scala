@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2020/7/12 15:00
  */
-case class SetPicRating(rating: Rating) extends Command[Unit] {
+case class SetPicRating(enableR18: Boolean) extends Command[Unit] {
   /**
    * 执行
    *
@@ -21,6 +21,6 @@ case class SetPicRating(rating: Rating) extends Command[Unit] {
    * @return 异步返回执行结果
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
-    await(context.vars.updateOrElseSet(CONFIG_ALLOWED_RATING, rating.str))
+    await(CONFIG_ALLOWED_R18.updateOrElseSet(enableR18.toString))
   }
 }

@@ -61,7 +61,7 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
     val message = await(template.execute())
     val content = new MessageBuilder().add({
       val lowCaseName = message.toLowerCase
-      if (lowCaseName.startsWith("http://") || lowCaseName.startsWith("http://") || lowCaseName.contains("data/image") || lowCaseName.contains("data\\image")) {
+      if (lowCaseName.startsWith("http://") || lowCaseName.startsWith("https://") || lowCaseName.contains("data/image") || lowCaseName.contains("data\\image")) {
         new ComponentImage(message)
       } else {
         val bytes = Try(File(message).byteArray).getOrElse(throw ExecutionException(s"图片文件获取失败，地址：$message"))

@@ -41,13 +41,14 @@ object CommandParser extends Parser {
           parseLoopGoto _,
           parseParamDel _,
           parseWaiting _,
-          parseGroupWholeBan _,
-          parseGroupWholeUnBan _,
-          parseDoNoting _,
-          parseFetchAndSendPic _,
           parseSetPicFetcherMode _,
           parseSetPicRating _,
-          parseRunTaskNow _
+          parseRunTaskNow _,
+          // 包含类模式放在后边
+          parseDoNoting _,
+          parseGroupWholeBan _,
+          parseGroupWholeUnBan _,
+          parseFetchAndSendPic _,
         )
           .map(_.apply(string))
           .find(_.isDefined)
@@ -272,7 +273,7 @@ object CommandParser extends Parser {
    * @return 解析结果
    */
   private def parseDoNoting(string: String)(implicit context: ParseEngineContext): Option[DoNoting.type] =
-    if (CommandPattern.noting == string) Some(DoNoting) else None
+    if (string.contains(CommandPattern.noting)) Some(DoNoting) else None
 
   /**
    * 解析全体禁言指令
@@ -282,7 +283,7 @@ object CommandParser extends Parser {
    * @return 解析结果
    */
   private def parseGroupWholeBan(string: String)(implicit context: ParseEngineContext): Option[GroupWholeBan] =
-    if (CommandPattern.groupWholeBan == string) Some(GroupWholeBan(true)) else None
+    if (string.contains(CommandPattern.groupWholeBan)) Some(GroupWholeBan(true)) else None
 
   /**
    * 解析解除全体禁言指令
@@ -292,7 +293,7 @@ object CommandParser extends Parser {
    * @return 解析结果
    */
   private def parseGroupWholeUnBan(string: String)(implicit context: ParseEngineContext): Option[GroupWholeBan] =
-    if (CommandPattern.groupWholeUnBan == string) Some(GroupWholeBan(false)) else None
+    if (string.contains(CommandPattern.groupWholeUnBan)) Some(GroupWholeBan(false)) else None
 
   /**
    * 解析发送色图指令
@@ -301,8 +302,12 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseFetchAndSendPic(string: String)(implicit context: ParseEngineContext): Option[NewFetchAndSendPic] =
-    if (CommandPattern.fetchAndSendPic == string) Some(NewFetchAndSendPic()) else None
+  private def parseFetchAndSendPic(string: String)(implicit context: ParseEngineContext): Option[FetchAndSendPic] = {
+    CommandPattern.fetchAndSendPic.findFirstMatchIn(string).map(result => {
+      val amount = Try(result.group("amount").toInt).getOrElse(throw ParseFailException("张数格式不正确，请使用阿拉伯数字"))
+      FetchAndSendPic(amount)
+    })
+  }
 
   /**
    * 解析设置图片获取模式指令
@@ -330,12 +335,12 @@ object CommandParser extends Parser {
    */
   private def parseSetPicRating(string: String)(implicit context: ParseEngineContext): Option[SetPicRating] = {
     CommandPattern.setPicRating.findFirstMatchIn(string).map(result => {
-      val rating = result.group("rating") match {
-        case PatternRating.SAFE => SAFE
-        case PatternRating.QUESTIONABLE => QUESTIONABLE
-        case PatternRating.EXPLICIT => EXPLICIT
+      val enableR18 = result.group("enableR18") match {
+        case "允许" => true
+        case "禁止" => false
+        case other => throw ParseFailException(s"设置项不正确：$other")
       }
-      SetPicRating(rating)
+      SetPicRating(enableR18)
     })
   }
 
