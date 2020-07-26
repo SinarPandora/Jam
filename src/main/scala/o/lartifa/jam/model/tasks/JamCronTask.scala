@@ -2,13 +2,14 @@ package o.lartifa.jam.model.tasks
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
+import cc.moecraft.logger.{HyLogger, LogLevel}
 import cn.hutool.core.date.StopWatch
 import cn.hutool.core.lang.UUID
 import cn.hutool.cron.CronUtil
 import cn.hutool.cron.task.Task
 import o.lartifa.jam.common.exception.ExecutionException
+import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.model.tasks.JamCronTask.logger
 import o.lartifa.jam.pool.JamContext
@@ -39,14 +40,18 @@ abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.N
     if (isRunning.get()) {
       logger.log(s"任务：${name}正在运行，本次触发被跳过")
     } else {
+      isRunning.getAndSet(true)
       val stopWatch = new StopWatch()
       stopWatch.start()
       logger.log(s"任务执行开始：定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id")
       Try(Await.result(run(), Duration.Inf)) match {
         case Failure(exception) =>
           exception match {
-            case e: InterruptedException => logger.error(s"任务执行被打断：定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id", e)
-            case e => logger.error(s"任务执行执行出错：错误信息：${e.getMessage}，定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id", e)
+            case e: InterruptedException => MasterUtil.notifyAndLog(s"任务执行被打断：定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id",
+              LogLevel.ERROR, Some(e))
+            case e =>
+              MasterUtil.notifyAndLog(s"任务执行执行出错：错误信息：${e.getMessage}，定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id",
+                LogLevel.ERROR, Some(e))
           }
         case Success(_) => logger.log(s"任务执行结束：定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id")
       }
@@ -54,6 +59,7 @@ abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.N
       val cost = stopWatch.getTotalTimeSeconds
       if (cost < 1) logger.log(s"${AnsiColor.GREEN}任务 ID：$id 执行耗时：小于1s")
       else logger.log(s"${AnsiColor.GREEN}}任务 ID：$id 执行耗时：${cost}s")
+      postRun()
       isRunning.getAndSet(false)
     }
   }
@@ -66,6 +72,11 @@ abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.N
   def run()(implicit exec: ExecutionContext): Future[Unit]
 
   /**
+   * 完成后执行
+   */
+  def postRun(): Unit = () => {}
+
+  /**
    * 设置并启动定时任务
    *
    * @param cron 定时表达式
@@ -73,7 +84,6 @@ abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.N
   def setUp(cron: String): Unit = if (!isRunning.get()) {
     CronUtil.schedule(idString, cron, this)
     JamContext.cronTaskPool.get().add(this)
-    isRunning.getAndSet(true)
   } else throw ExecutionException(s"该任务已经被初始化过了并正在运行：定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id")
 
   /**
