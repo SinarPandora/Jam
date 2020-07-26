@@ -22,5 +22,8 @@ case class SetPicRating(enableR18: Boolean) extends Command[Unit] {
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
     await(CONFIG_ALLOWED_R18.updateOrElseSet(enableR18.toString))
+    if (enableR18) {
+      await(CONFIG_MODE.updateOrElseSet(ONLY.str))
+    }
   }
 }

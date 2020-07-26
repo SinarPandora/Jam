@@ -44,11 +44,12 @@ object CommandParser extends Parser {
           parseSetPicFetcherMode _,
           parseSetPicRating _,
           parseRunTaskNow _,
+          parseFetchAndSendPic _,
           // 包含类模式放在后边
           parseDoNoting _,
           parseGroupWholeBan _,
           parseGroupWholeUnBan _,
-          parseFetchAndSendPic _,
+          parseShowPicInfo _
         )
           .map(_.apply(string))
           .find(_.isDefined)
@@ -345,6 +346,16 @@ object CommandParser extends Parser {
   }
 
   /**
+   * 解析查看图片信息指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseShowPicInfo(string: String)(implicit context: ParseEngineContext): Option[ShowPicInfo] =
+    if (string.contains(CommandPattern.showPicInfo)) Some(ShowPicInfo()) else None
+
+  /**
    * 解析保存结果指令
    *
    * @param string  待解析字符串
@@ -369,10 +380,10 @@ object CommandParser extends Parser {
   private def parseRunTaskNow(string: String)(implicit context: ParseEngineContext): Option[RunTaskNow] = {
     CommandPattern.runTaskNow.findFirstMatchIn(string).map(result => {
       val name = result.group("task")
-      JamContext.cronTaskPool.get().taskDefinition
+      val taskDef = JamContext.cronTaskPool.get().taskDefinition
         .getOrElse(name, throw ParseFailException(s"没有名为：${name}的定时任务"))
-        .cls.getDeclaredConstructor()
-        .newInstance() |> RunTaskNow.apply
+      val taskInstance = taskDef.cls.getDeclaredConstructor().newInstance()
+      RunTaskNow(taskInstance, taskDef.isSingleton)
     })
   }
 
