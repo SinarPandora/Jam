@@ -69,7 +69,7 @@ class FetchPictureTask extends JamCronTask("更新图片库") {
    * @return 线程池，上下文元祖
    */
   private def startWorkingPool(): (ForkJoinPool, ExecutionContext) = {
-    val pool = new ForkJoinPool(5)
+    val pool = new ForkJoinPool(10)
     (pool, ExecutionContext.fromExecutor(pool))
   }
 

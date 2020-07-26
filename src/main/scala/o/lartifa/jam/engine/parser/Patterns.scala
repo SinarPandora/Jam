@@ -127,6 +127,8 @@ object Patterns {
     val setPicRating: Regex = """设置图片(允许|禁止)R18""".r("enableR18")
     // 设置"色图"模式
     val setPicFetcherMode: Regex = """设置图片模式为(仅当前|范围内)""".r("mode")
+    // 获取图片信息
+    val showPicInfo: String = "显示上一张图片的信息"
     // TODO 注册定时任务
     val registerCronTask: Regex = """注册定时任务\{([0-9]+)}为\{变量(.+?)}""".r("stepId", "value")
     // TODO 取消定时任务
