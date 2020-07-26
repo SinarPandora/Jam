@@ -6,6 +6,7 @@ import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.tasks.JamCronTask.TaskDefinition
 import o.lartifa.jam.model.tasks.{ChangeRespFrequency, GoASleep, JamCronTask, WakeUp}
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
+import o.lartifa.jam.plugins.picbot.FetchPictureTask
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -20,6 +21,7 @@ import scala.concurrent.ExecutionContext
 class CronTaskPool(val taskDefinition: Map[String, TaskDefinition]) {
 
   private val runningTasks: mutable.Map[String, ListBuffer[JamCronTask]] = mutable.Map.empty
+
   /**
    * 添加定时任务到定时任务池
    *
@@ -118,9 +120,10 @@ object CronTaskPool {
 
   def apply(): CronTaskPool = {
     val taskDefinition = Map(
-      "回复频率变更" -> TaskDefinition("", classOf[ChangeRespFrequency], isSingleton = false),
-      "睡眠" -> TaskDefinition("", classOf[GoASleep], isSingleton = true),
-      "起床" -> TaskDefinition("", classOf[WakeUp], isSingleton = true),
+      "回复频率变更" -> TaskDefinition("回复频率变更", classOf[ChangeRespFrequency], isSingleton = false),
+      "睡眠" -> TaskDefinition("睡眠", classOf[GoASleep], isSingleton = true),
+      "起床" -> TaskDefinition("起床", classOf[WakeUp], isSingleton = true),
+      "更新图片库" -> TaskDefinition("更新图片库", classOf[FetchPictureTask], isSingleton = true)
     )
     new CronTaskPool(taskDefinition)
   }
