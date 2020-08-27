@@ -24,6 +24,7 @@ object MasterCommands {
     Executors.newFixedThreadPool(Runtime.getRuntime.availableProcessors()))
 
   val commands: List[IcqCommand] = List(
+    Ping,
     ListVariable,
     ClearVariableInChat,
     SetVariable,
@@ -32,6 +33,20 @@ object MasterCommands {
     SessionInfo,
     Refresh
   )
+
+  private object Ping extends MasterEverywhereCommand("ping", "在吗") {
+    /**
+     * 指令操作
+     *
+     * @param event   消息事件
+     * @param sender  发送者
+     * @param command 指令内容
+     * @param args    参数
+     * @return 输出内容
+     */
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] =
+      Future.successful("我在")
+  }
 
   private object ListVariable extends MasterEverywhereCommand("列出变量") {
     /**

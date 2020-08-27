@@ -17,6 +17,7 @@ libraryDependencies += "com.github.hydevelop" %% "PicqBotX" % "4.15.0.1058"
 // Meta
 libraryDependencies += "com.jayway.jsonpath" % "json-path" % "2.4.0"
 libraryDependencies += "org.codehaus.groovy" % "groovy-all" % "3.0.4" pomOnly()
+libraryDependencies += "org.projectlombok" % "lombok" % "latest.release" % Provided
 
 // Database
 libraryDependencies += "com.typesafe.slick" %% "slick" % "3.3.2"

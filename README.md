@@ -1,9 +1,9 @@
-# 果酱 3
+# 果酱 3（Jam to Mirai，迁移工作进行中）
 
 > QQBot  
 > Based on CoolQQ + CoolQQ HTTP Extension + PicqBotX
 
-原先的果酱 3 因为设计过于复杂已经搁浅，该版本是基于相同的思想，用最简单的方式在一个周末实现的预览版。
+原先的果酱 3 因为设计过于复杂已经搁浅，该版本是基于相同的思想，用最简单地方式在一个周末实现的预览版。
 
 ## Getting Started 使用指南
 
@@ -11,8 +11,17 @@
 
 ## Release History 版本历史
 
+* 3.0.2 字符串模板 + 图片 Bot
+    * 该版本在实现过程中遭遇 CQ 关站，因此在迁移到 Mirai 前暂不发布
 * 3.0.1 生物钟
 * 3.0.0-beta 基础版本
+
+## TODO 计划
+
+* [ ] Mirai Jam
+* [ ] 定时任务的 SSDL
+* [ ] SSDL 2
+* [ ] UI 界面
 
 ## Authors 关于作者
 
