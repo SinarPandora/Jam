@@ -74,8 +74,11 @@ object MessageImageUtil {
     val data = getFlipGifData(image.bytes.getOrElse(return None))
     val writer = new StreamingGifWriter(Duration.ofMillis(data.delay), data.loop)
     val tempFile = File.createTempFile(UUID.randomUUID().toString, ".gif")
+    // 若处理失败也保证在退出时删除
+    tempFile.deleteOnExit()
     val out = writer.prepareStream(tempFile, BufferedImage.TYPE_INT_ARGB)
     try {
+      // TODO 当前图片处理工具要求生成的逆序 Gif 必须保存到硬盘，可能需要性能调优
       data.frames.foreach(out.writeFrame)
     } finally {
       out.close()
