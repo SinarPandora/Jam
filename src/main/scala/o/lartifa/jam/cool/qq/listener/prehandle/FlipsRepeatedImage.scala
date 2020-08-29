@@ -21,11 +21,10 @@ class FlipsRepeatedImage extends PreHandleTask("反向复读图片") {
    */
   override def execute(event: EventMessage)(implicit exec: ExecutionContext): Future[Boolean] = async {
     val isRepeat = await(JamContext.messagePool.isRepeat(event))
-    if (isRepeat && event.getSenderId == 1211402231) {
-      MessageImageUtil.getAndFlipImageFromMessage(event).foreach { it =>
-        Future {
-          it.responseThenDelete()
-        }.onComplete(_ => JamContext.messagePool.recordAPlaceholder(event))
+    if (isRepeat) {
+      await(JamContext.messagePool.recordAPlaceholder(event))
+      Future {
+        MessageImageUtil.getAndFlipImageFromMessage(event).foreach(_.responseThenDelete())
       }
     }
     true
