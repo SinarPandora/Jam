@@ -1,7 +1,7 @@
 package o.lartifa.jam.cool.qq
 
 import cc.moecraft.icq.{PicqBotX, PicqConfig}
-import cc.moecraft.logger.format.AnsiColor.GREEN
+import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.common.config.CoolQConfig.{postPort, postUrl, socketPort}
 import o.lartifa.jam.common.config.JamConfig.name
 import o.lartifa.jam.common.config.SystemConfig
@@ -27,7 +27,7 @@ object CoolQQLoader {
        * 由于 CQHttp 不再维护，使用 mrial 后端时版本号与 CQ 不同，因此此处取消版本检查
        */
       override def startBot(): Unit = {
-        this.getLogger.log(GREEN + "正在启动...")
+        this.getLogger.log(s"${AnsiColor.GREEN}正在启动...")
         this.getHttpServer.start()
       }
     }

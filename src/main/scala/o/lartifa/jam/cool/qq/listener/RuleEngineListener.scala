@@ -15,6 +15,7 @@ import o.lartifa.jam.model.patterns.ContentMatcher
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.pool.{JamContext, MessagePool}
 
+import scala.annotation.tailrec
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.util.{Failure, Success}
 
@@ -96,8 +97,7 @@ object RuleEngineListener extends IcqListener {
    * @param exec     异步执行上下文
    * @return 匹配结果
    */
-  @scala.annotation.tailrec
-  private def findMatchedStep(message: String, matchers: List[ContentMatcher])(implicit context: CommandExecuteContext,
+  @tailrec private def findMatchedStep(message: String, matchers: List[ContentMatcher])(implicit context: CommandExecuteContext,
                               exec: ExecutionContext): Option[ContentMatcher] = {
     matchers match {
       case matcher :: next =>
