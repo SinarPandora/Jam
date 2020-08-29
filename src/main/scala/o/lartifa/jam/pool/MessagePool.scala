@@ -53,6 +53,14 @@ class MessagePool {
   def last(implicit context: CommandExecuteContext): Future[Option[MessageRecord]] = this.last(1)
 
   /**
+   * 获取倒数第一条消息
+   *
+   * @param event 当前消息对象
+   * @return 消息记录（可能不存在）
+   */
+  def last(event: EventMessage): Future[Option[MessageRecord]] = this.last(1, event)
+
+  /**
    * 获取倒数第 n 条消息
    *
    * @param number  倒数第 n
@@ -60,7 +68,18 @@ class MessagePool {
    * @return 消息记录（可能不存在）
    */
   @throws[ExecutionException]
-  def last(number: Int)(implicit context: CommandExecuteContext): Future[Option[MessageRecord]] = lasts(1, number)
+  def last(number: Int)(implicit context: CommandExecuteContext): Future[Option[MessageRecord]] =
+    this.lasts(1, number)
+
+  /**
+   * 获取倒数第 n 条消息
+   *
+   * @param number 倒数第 n
+   * @param event  当前消息对象
+   * @return 消息记录（可能不存在）
+   */
+  @throws[ExecutionException]
+  def last(number: Int, event: EventMessage): Future[Option[MessageRecord]] = this.lasts(1, number, event)
 
   /**
    * 获取倒数 n 条消息
@@ -71,10 +90,35 @@ class MessagePool {
    * @return 消息记录（可能不存在）
    */
   @throws[ExecutionException]
-  def lasts(take: Int, from: Int = 1)(implicit context: CommandExecuteContext): Future[Option[MessageRecord]] = {
+  def lasts(take: Int, from: Int = 1)(implicit context: CommandExecuteContext): Future[Option[MessageRecord]] =
+    this.lasts(take, from, context.chatInfo)
+
+  /**
+   * 获取倒数 n 条消息
+   *
+   * @param from  从倒数第 n 开始
+   * @param take  取 n 条
+   * @param event 当前消息对象
+   * @return 消息记录（可能不存在）
+   */
+  @throws[ExecutionException]
+  def lasts(take: Int, from: Int = 1, event: EventMessage): Future[Option[MessageRecord]] = {
+    this.lasts(take, from, ChatInfo(event))
+  }
+
+  /**
+   * 获取倒数 n 条消息
+   *
+   * @param from     从倒数第 n 开始
+   * @param take     取 n 条
+   * @param chatInfo 会话状态
+   * @return 消息记录（可能不存在）
+   */
+  @throws[ExecutionException]
+  private def lasts(take: Int, from: Int = 1, chatInfo: ChatInfo): Future[Option[MessageRecord]] = {
     if (from <= 0) throw ExecutionException("倒数条数必须大于零")
     if (take <= 0) throw ExecutionException("获取消息数量必须大于零")
-    val ChatInfo(chatType, chatId) = context.chatInfo
+    val ChatInfo(chatType, chatId) = chatInfo
     db.run {
       (if (MessageType.PRIVATE == chatType) {
         MessageRecords.filter(row => row.messageType === chatType && row.senderId === chatId)
@@ -92,6 +136,16 @@ class MessagePool {
    */
   def isRepeat(implicit context: CommandExecuteContext): Future[Boolean] = {
     this.last.map(_.exists(_.message == context.eventMessage.getMessage))
+  }
+
+  /**
+   * 是否当前处于复读状态
+   *
+   * @param event 当前消息对象
+   * @return 是否复读
+   */
+  def isRepeat(event: EventMessage): Future[Boolean] = {
+    this.last(event).map(_.exists(_.message == event.getMessage))
   }
 
   /**
