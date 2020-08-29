@@ -25,9 +25,12 @@ object PictureUtil {
    * @param exec    异步执行上下文
    * @return 图片列表
    */
-  def getPictureById(id: Int, amount: Int = 1)(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Seq[Tables.WebPicturesRow]] = async {
-    val enableR18 = await(CONFIG_ALLOWED_R18.queryOrElseUpdate("false")).toBoolean
-    val isOnly = await(CONFIG_MODE.queryOrElseUpdate(RANGE.str)) == ONLY.str
+  def getPictureById(id: Int, amount: Int = 1)(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[List[Tables.WebPicturesRow]] = async {
+    val (enableR18, isOnly) = await {
+      CONFIG_ALLOWED_R18.queryOrElseUpdate("false").map(_.toBoolean) zip
+        CONFIG_MODE.queryOrElseUpdate(RANGE.str).map(_ == ONLY.str)
+    }
+
     val result = if (enableR18 && isOnly) {
       await(db.run(WebPictures.filter(_.isR18 === true).drop(id).take(amount).result))
     } else if (enableR18 && !isOnly) {
@@ -35,6 +38,6 @@ object PictureUtil {
     } else {
       await(db.run(WebPictures.filter(_.isR18 === false).drop(id).take(amount).result))
     }
-    result
+    result.toList
   }
 }
