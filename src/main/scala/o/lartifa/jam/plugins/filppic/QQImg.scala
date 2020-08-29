@@ -5,7 +5,7 @@ import java.util.NoSuchElementException
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
 import com.sksamuel.scrimage.nio.{ImageWriter, JpegWriter, PngWriter}
-import o.lartifa.jam.plugins.filppic.QQImg.{ImageType, logger}
+import o.lartifa.jam.plugins.filppic.QQImg.ImageType
 import o.lartifa.jam.pool.JamContext
 
 import scala.util.matching.Regex
@@ -17,20 +17,13 @@ import scala.util.{Failure, Try}
  * Author: sinar
  * 2020/8/29 17:50
  */
-case class QQImg(url: String, imageType: ImageType, filename: String) {
-  // 图片比特数据
-  lazy val bytes: Option[Array[Byte]] =
-    Try(requests.get(url).bytes).recoverWith(err => {
-      logger.error("下载聊天图片失败", err)
-      Failure(err)
-    }).toOption
-
+case class QQImg(url: String, imageType: ImageType, filename: String, bytes: Array[Byte]) {
   lazy val writer: ImageWriter = {
     this.imageType match {
       case QQImg.JPEG => JpegWriter.NoCompression
       case QQImg.PNG => PngWriter.NoCompression
       case QQImg.GIF =>
-        throw new NoSuchElementException("默认的 Writer 只会使用第一张静态帧，请用 com.sksamuel.scrimage.nio.StreamingGifWriter 代替")
+        throw new NoSuchElementException("默认的 Writer 只会使用第一张静态帧，请用 com.sksamuel.scrimage.nio.GifSequenceWriter 代替")
     }
   }
 }
@@ -69,9 +62,12 @@ object QQImg {
   def parseFromMessage(message: String): Option[QQImg] = {
     CQ_IMAGE_PATTERN.findFirstMatchIn(message.replaceAll("""\s""", ""))
       .map { it =>
-        val imageType = requests.get(it.group("url"))
-          .contentType.getOrElse(return None)
-          .stripPrefix("image/")
+        val url = it.group("url")
+        val resp = Try(requests.get(url)).recoverWith(err => {
+          logger.error("下载聊天图片失败", err)
+          Failure(err)
+        }).getOrElse(return None)
+        val imageType = resp.contentType.getOrElse(return None).stripPrefix("image/")
           .toLowerCase match {
           case str if JPEG.exts.contains(str) => JPEG
           case str if PNG.exts.contains(str) => PNG
@@ -80,7 +76,7 @@ object QQImg {
             logger.warning(s"聊天中出现了暂不支持的图片类型：$other")
             return None
         }
-        QQImg(it.group("url"), imageType, it.group("filename"))
+        QQImg(it.group("url"), imageType, it.group("filename"), resp.bytes)
       }
   }
 
@@ -92,8 +88,8 @@ object QQImg {
    * @return 比较结果
    */
   def isPicSame(message: String, other: String): Boolean = {
-    val pic1 = parseFromMessage(message).getOrElse(return false)
-    val pic2 = parseFromMessage(other).getOrElse(return false)
-    pic1.filename == pic2.filename
+    val pic1 = CQ_IMAGE_PATTERN.findFirstMatchIn(message.replaceAll("""\s""", "")).getOrElse(return false)
+    val pic2 = CQ_IMAGE_PATTERN.findFirstMatchIn(other.replaceAll("""\s""", "")).getOrElse(return false)
+    pic1.group("filename") == pic2.group("filename")
   }
 }

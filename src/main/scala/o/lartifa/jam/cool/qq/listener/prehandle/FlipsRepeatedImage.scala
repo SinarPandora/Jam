@@ -24,7 +24,7 @@ class FlipsRepeatedImage extends PreHandleTask("反向复读图片") {
     if (isRepeat) {
       await(JamContext.messagePool.recordAPlaceholder(event))
       Future {
-        MessageImageUtil.getAndFlipImageFromMessage(event).foreach(_.responseThenDelete())
+        MessageImageUtil.getAndFlipImageFromMessage(event).map(_.toString).foreach(event.respond)
       }
     }
     true
