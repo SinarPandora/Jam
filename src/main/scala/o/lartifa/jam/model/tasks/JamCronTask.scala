@@ -74,7 +74,7 @@ abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.N
   /**
    * 完成后执行
    */
-  def postRun(): Unit = () => {}
+  def postRun(): Unit = {}
 
   /**
    * 设置并启动定时任务
