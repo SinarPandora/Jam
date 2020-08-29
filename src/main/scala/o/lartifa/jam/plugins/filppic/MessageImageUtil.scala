@@ -2,12 +2,12 @@ package o.lartifa.jam.plugins.filppic
 
 import java.awt.image.BufferedImage
 import java.io.File
-import java.nio.file.Files
 import java.time.Duration
 import java.util.UUID
 
 import at.dhyan.open_imaging.GifDecoder
 import cc.moecraft.icq.event.events.message.EventMessage
+import cc.moecraft.icq.sender.message.components.ComponentImage
 import cc.moecraft.logger.HyLogger
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.StreamingGifWriter
@@ -26,6 +26,15 @@ object MessageImageUtil {
   private lazy val logger: HyLogger = JamContext.logger.get()
 
   private case class GIFData(frames: Seq[ImmutableImage], delay: Int, loop: Boolean)
+  case class FlipResult(tempFile: File, eventMessage: EventMessage) {
+    /**
+     * 回复并销毁临时文件
+     */
+    def responseThenDelete(): Unit = {
+      eventMessage.respond(new ComponentImage(tempFile.getPath).toString)
+      tempFile.delete()
+    }
+  }
 
   /**
    * 从消息中获取图片并翻转
@@ -33,8 +42,9 @@ object MessageImageUtil {
    * @param event 消息对象
    * @return 图片数据
    */
-  def getAndFlipImageFromMessage(event: EventMessage): Option[ImmutableImage] = Try {
+  def getAndFlipImageFromMessage(event: EventMessage): Option[FlipResult] = Try {
     QQImg.parseFromMessage(event).flatMap(flipImage)
+      .map(file => FlipResult(file, event))
   }.recoverWith { err =>
     logger.error(s"处理图片失败，消息原文：${event.getMessage}", err)
     Failure(err)
@@ -46,7 +56,7 @@ object MessageImageUtil {
    * @param image 聊天图片对象
    * @return 处理后的图片对象
    */
-  private def flipImage(image: QQImg): Option[ImmutableImage] = image.imageType match {
+  private def flipImage(image: QQImg): Option[File] = image.imageType match {
     case QQImg.JPEG | QQImg.PNG => flipStaticImage(image)
     case QQImg.GIF => flipGIFImage(image)
   }
@@ -57,11 +67,14 @@ object MessageImageUtil {
    * @param image 聊天图片对象
    * @return 处理后的图片对象
    */
-  private def flipStaticImage(image: QQImg): Option[ImmutableImage] = Some {
+  private def flipStaticImage(image: QQImg): Option[File] = Some {
+    val tempFile = File.createTempFile(UUID.randomUUID().toString, s".${image.imageType.exts.head}")
+    tempFile.deleteOnExit()
     ImmutableImage.loader()
       .fromBytes(image.bytes.getOrElse(return None))
       .flipX()
       .flipY()
+      .output(image.writer, tempFile)
   }
 
   /**
@@ -70,7 +83,7 @@ object MessageImageUtil {
    * @param image 聊天图片对象
    * @return 翻转后的 GIF 对象
    */
-  private def flipGIFImage(image: QQImg): Option[ImmutableImage] = Some {
+  private def flipGIFImage(image: QQImg): Option[File] = Some {
     val data = getFlipGifData(image.bytes.getOrElse(return None))
     val writer = new StreamingGifWriter(Duration.ofMillis(data.delay), data.loop)
     val tempFile = File.createTempFile(UUID.randomUUID().toString, ".gif")
@@ -78,14 +91,11 @@ object MessageImageUtil {
     tempFile.deleteOnExit()
     val out = writer.prepareStream(tempFile, BufferedImage.TYPE_INT_ARGB)
     try {
-      // TODO 当前图片处理工具要求生成的逆序 Gif 必须保存到硬盘，可能需要性能调优
       data.frames.foreach(out.writeFrame)
     } finally {
       out.close()
     }
-    val gif = ImmutableImage.loader().fromBytes(Files.readAllBytes(tempFile.toPath))
-    tempFile.delete()
-    gif
+    tempFile
   }
 
   /**
@@ -96,7 +106,7 @@ object MessageImageUtil {
    */
   private def getFlipGifData(imgData: Array[Byte]): GIFData = {
     val gif = GifDecoder.read(imgData)
-    val frames = ((gif.getFrameCount - 1) to 0 by -1).map(gif.getFrame)
+    val frames = Range(0, gif.getFrameCount).map(gif.getFrame)
       .map(ImmutableImage.fromAwt).map(_.flipX().flipY())
     GIFData(
       frames = frames,

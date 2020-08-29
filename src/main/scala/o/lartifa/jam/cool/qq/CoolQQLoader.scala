@@ -7,6 +7,7 @@ import o.lartifa.jam.common.config.JamConfig.name
 import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.cool.qq.command.MasterCommands
 import o.lartifa.jam.cool.qq.listener.{RuleEngineListener, SystemEventListener}
+import o.lartifa.jam.pool.JamContext
 
 /**
  * Bot 客户端生成器
@@ -31,8 +32,11 @@ object CoolQQLoader {
         this.getHttpServer.start()
       }
     }
+    JamContext.logger.set(client.getLoggerInstanceManager.getLoggerInstance(name, SystemConfig.debugMode))
     client.addAccount(name, postUrl, postPort)
-    client.getEventManager.registerListeners(RuleEngineListener, SystemEventListener)
+    val listener = RuleEngineListener()
+    JamContext.ruleEngineListener.set(listener)
+    client.getEventManager.registerListeners(listener, SystemEventListener)
     client.enableCommandManager("！", "!")
     client.getCommandManager.registerCommands(MasterCommands.commands: _*)
     client

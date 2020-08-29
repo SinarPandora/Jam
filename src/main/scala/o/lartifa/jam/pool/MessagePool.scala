@@ -1,5 +1,6 @@
 package o.lartifa.jam.pool
 
+import java.util.UUID
 import java.util.concurrent.Executors
 
 import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
@@ -9,6 +10,7 @@ import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.database.temporary.TemporaryMemory.database.db
 import o.lartifa.jam.database.temporary.schema.Tables._
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
+import o.lartifa.jam.plugins.filppic.QQImg
 
 import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
@@ -45,6 +47,21 @@ class MessagePool {
   }
 
   /**
+   * 记录占位符，代表果酱处理过某条消息
+   *
+   * @param message 消息对象
+   * @tparam T 消息类型
+   * @return 变更结果（true：成功，false：失败）
+   */
+  def recordAPlaceholder[T <: EventMessage](message: T): Future[Boolean] = async {
+    val result: Future[Int] = message match {
+      case message: EventPrivateMessage => recordPrivatePlaceholder(message)
+      case message: EventGroupOrDiscussMessage => recordGroupOrDiscussPlaceholder(message)
+    }
+    await(result) == 1
+  }
+
+  /**
    * 获取倒数第一条消息
    *
    * @param context 执行上下文
@@ -58,7 +75,7 @@ class MessagePool {
    * @param event 当前消息对象
    * @return 消息记录（可能不存在）
    */
-  def last(event: EventMessage): Future[Option[MessageRecord]] = this.last(1, event)
+  def last(event: EventMessage): Future[Option[MessageRecord]] = this.last(event, 1)
 
   /**
    * 获取倒数第 n 条消息
@@ -79,32 +96,32 @@ class MessagePool {
    * @return 消息记录（可能不存在）
    */
   @throws[ExecutionException]
-  def last(number: Int, event: EventMessage): Future[Option[MessageRecord]] = this.lasts(1, number, event)
+  def last(event: EventMessage, number: Int): Future[Option[MessageRecord]] =
+    this.lasts(event, 1, number)
 
   /**
    * 获取倒数 n 条消息
    *
-   * @param from    从倒数第 n 开始
    * @param take    取 n 条
+   * @param from    从倒数第 n 开始
    * @param context 执行上下文
    * @return 消息记录（可能不存在）
    */
   @throws[ExecutionException]
-  def lasts(take: Int, from: Int = 1)(implicit context: CommandExecuteContext): Future[Option[MessageRecord]] =
-    this.lasts(take, from, context.chatInfo)
+  def lasts(take: Int, from: Int)(implicit context: CommandExecuteContext): Future[Option[MessageRecord]] =
+    this.lastMessages(take, from, context.chatInfo)
 
   /**
    * 获取倒数 n 条消息
    *
-   * @param from  从倒数第 n 开始
-   * @param take  取 n 条
    * @param event 当前消息对象
+   * @param take  取 n 条
+   * @param from  从倒数第 n 开始
    * @return 消息记录（可能不存在）
    */
   @throws[ExecutionException]
-  def lasts(take: Int, from: Int = 1, event: EventMessage): Future[Option[MessageRecord]] = {
-    this.lasts(take, from, ChatInfo(event))
-  }
+  def lasts(event: EventMessage, take: Int, from: Int): Future[Option[MessageRecord]] =
+    this.lastMessages(take, from, ChatInfo(event))
 
   /**
    * 获取倒数 n 条消息
@@ -115,7 +132,7 @@ class MessagePool {
    * @return 消息记录（可能不存在）
    */
   @throws[ExecutionException]
-  private def lasts(take: Int, from: Int = 1, chatInfo: ChatInfo): Future[Option[MessageRecord]] = {
+  private def lastMessages(take: Int, from: Int, chatInfo: ChatInfo): Future[Option[MessageRecord]] = {
     if (from <= 0) throw ExecutionException("倒数条数必须大于零")
     if (take <= 0) throw ExecutionException("获取消息数量必须大于零")
     val ChatInfo(chatType, chatId) = chatInfo
@@ -124,7 +141,7 @@ class MessagePool {
         MessageRecords.filter(row => row.messageType === chatType && row.senderId === chatId)
       } else {
         MessageRecords.filter(row => row.messageType === chatType && row.groupId === chatId)
-      }).sortBy(_.timestamp.desc).drop(from - 1).take(take).result
+      }).sortBy(_.timestamp.desc).drop(from).take(take).result
     }.map(_.headOption)
   }
 
@@ -135,7 +152,8 @@ class MessagePool {
    * @return 是否复读
    */
   def isRepeat(implicit context: CommandExecuteContext): Future[Boolean] = {
-    this.last.map(_.exists(_.message == context.eventMessage.getMessage))
+    this.last.map(_.exists(x => x.message == context.eventMessage.getMessage
+      || QQImg.isPicSame(x.message, context.eventMessage.getMessage)))
   }
 
   /**
@@ -145,7 +163,8 @@ class MessagePool {
    * @return 是否复读
    */
   def isRepeat(event: EventMessage): Future[Boolean] = {
-    this.last(event).map(_.exists(_.message == event.getMessage))
+    this.last(event).map(_.exists(x => x.message == event.getMessage
+      || QQImg.isPicSame(x.message, event.getMessage)))
   }
 
   /**
@@ -179,6 +198,42 @@ class MessagePool {
             row.rawMessage, row.selfId, row.senderId, row.groupId, row.font, row.timestamp)
         ) += (msg.getMessage, msg.getMessageId, msg.getMessageType, MessageType.SUB_TYPE_NORMAL, msg.getPostType,
         msg.getRawMessage, msg.getSelfId, msg.getSenderId, msg.getGroup.getId, msg.getFont, msg.getTime)
+    }
+  }
+
+  /**
+   * 记录私聊占位符
+   *
+   * @param msg 消息对象
+   * @return 变更结果
+   */
+  private def recordPrivatePlaceholder(msg: EventPrivateMessage): Future[Int] = {
+    val placeholderMessage = UUID.randomUUID().toString
+    db.run {
+      MessageRecords
+        .map(row =>
+          (row.message, row.messageId, row.messageType, row.messageSubType, row.postType,
+            row.rawMessage, row.selfId, row.senderId, row.font, row.timestamp)
+        ) += (placeholderMessage, -1, msg.getMessageType, msg.getSubType, "placeholder",
+        placeholderMessage, msg.getSelfId, msg.getSelfId, msg.getFont, msg.getTime)
+    }
+  }
+
+  /**
+   * 记录群聊 / 讨论组占位符
+   *
+   * @param msg 消息对象
+   * @return 变更结果
+   */
+  private def recordGroupOrDiscussPlaceholder(msg: EventGroupOrDiscussMessage): Future[Int] = {
+    val placeholderMessage = UUID.randomUUID().toString
+    db.run {
+      MessageRecords
+        .map(row =>
+          (row.message, row.messageId, row.messageType, row.messageSubType, row.postType,
+            row.rawMessage, row.selfId, row.senderId, row.groupId, row.font, row.timestamp)
+        ) += (placeholderMessage, -1, msg.getMessageType, MessageType.SUB_TYPE_NORMAL, "placeholder",
+        placeholderMessage, msg.getSelfId, msg.getSelfId, msg.getGroup.getId, msg.getFont, msg.getTime)
     }
   }
 }
