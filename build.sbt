@@ -28,12 +28,16 @@ libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.32.3"
 libraryDependencies += "org.postgresql" % "postgresql" % "42.2.14"
 
 // Tools
+libraryDependencies += "com.apptastic" % "rssreader" % "2.2.3"
+libraryDependencies += "com.chuusai" %% "shapeless" % "2.3.3"
 libraryDependencies += "io.reactivex.rxjava3" % "rxjava" % "3.0.4"
 libraryDependencies += "com.lihaoyi" %% "ammonite-ops" % "2.1.4"
 libraryDependencies += "com.github.pathikrit" %% "better-files" % "3.9.1"
 libraryDependencies += "com.vdurmont" % "emoji-java" % "5.1.1"
 libraryDependencies += "com.lihaoyi" %% "requests" % "0.6.2"
 libraryDependencies += "com.jsoniter" % "jsoniter" % "0.9.23"
+libraryDependencies += "com.sksamuel.scrimage" % "scrimage-core" % "4.0.6" exclude (
+  "ch.qos.logback", "logback-classic")
 libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.30"
 libraryDependencies += "org.scala-lang" % "scala-reflect" % "2.13.3"
 libraryDependencies += "org.reflections" % "reflections" % "0.9.12"
