@@ -1,7 +1,9 @@
 package o.lartifa.jam.model.tasks
 
+import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
+import o.lartifa.jam.model.tasks.ChangeRespFrequency.logger
 import o.lartifa.jam.pool.JamContext
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -18,12 +20,13 @@ class ChangeRespFrequency(val freq: Int) extends JamCronTask(name = "回复频�
     if (SystemConfig.debugMode) {
       MasterUtil.notifyMaster(s"${JamConfig.name}的回复频已变更为：$freq%")
     }
-    JamContext.logger.get().log(s"${JamConfig.name}的回复频率已变更为：$freq%")
+    logger.log(s"${JamConfig.name}的回复频率已变更为：$freq%")
     Future.successful(())
   }
 }
 
 object ChangeRespFrequency {
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(ChangeRespFrequency.getClass)
   /**
    * 构造器
    *

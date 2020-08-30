@@ -20,7 +20,7 @@ import scala.util.{Failure, Try}
  */
 object MessageImageUtil {
 
-  private lazy val logger: HyLogger = JamContext.logger.get()
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(MessageImageUtil.getClass)
 
   private case class GIFData(frames: Seq[ImmutableImage], delay: Int, loop: Boolean)
 

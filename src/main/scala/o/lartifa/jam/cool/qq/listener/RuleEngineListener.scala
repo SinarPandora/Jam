@@ -12,7 +12,7 @@ import cn.hutool.core.date.StopWatch
 import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.config.SystemConfig.RuleEngineConfig.PreHandleTask
 import o.lartifa.jam.common.util.MasterUtil
-import o.lartifa.jam.cool.qq.listener.RuleEngineListener.RuleEngineConfig
+import o.lartifa.jam.cool.qq.listener.RuleEngineListener.{RuleEngineConfig, logger}
 import o.lartifa.jam.cool.qq.listener.prehandle.PreHandleTask
 import o.lartifa.jam.model.patterns.ContentMatcher
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
@@ -33,8 +33,6 @@ import scala.util.{Failure, Success}
 class RuleEngineListener(config: RuleEngineConfig, preHandleTasks: List[PreHandleTask]) extends IcqListener {
 
   private implicit val exec: ExecutionContextExecutor = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
-
-  private lazy val logger: HyLogger = JamContext.logger.get()
 
   private val messageRecorder: MessagePool = JamContext.messagePool
 
@@ -76,7 +74,7 @@ class RuleEngineListener(config: RuleEngineConfig, preHandleTasks: List[PreHandl
     } else {
       preHandleTasks.map(it => Await.result(it.execute(eventMessage), Duration.Inf))
     }
-    result.reduce(_ && _)
+    result.forall(it => it)
   }
 
   /**
@@ -101,7 +99,7 @@ class RuleEngineListener(config: RuleEngineConfig, preHandleTasks: List[PreHandl
       val ssdlTask = JamContext.stepPool.get().goto(stepId).recover(exception => {
         logger.error(exception)
         MasterUtil.notifyMaster(s"步骤${stepId}执行失败！原因：${exception.getMessage}")
-      })
+      }).flatMap(_ => JamContext.messagePool.recordAPlaceholder(eventMessage)).map(_ => ())
       // 输出捕获信息
       matchCost.stop()
       val cost = matchCost.getTotalTimeSeconds
@@ -163,6 +161,8 @@ class RuleEngineListener(config: RuleEngineConfig, preHandleTasks: List[PreHandl
 
 
 object RuleEngineListener {
+
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(RuleEngineListener.getClass)
 
   case class RuleEngineConfig
   (

@@ -6,10 +6,11 @@ import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.TimeUtil
-import o.lartifa.jam.database.temporary.TemporaryMemory.database.db
+import o.lartifa.jam.database.temporary.Memory.database.db
 import o.lartifa.jam.database.temporary.schema.Tables
 import o.lartifa.jam.database.temporary.schema.Tables._
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
+import o.lartifa.jam.pool.DBVarPool.logger
 
 import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
@@ -22,9 +23,7 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
 
-  import o.lartifa.jam.database.temporary.TemporaryMemory.database.profile.api._
-
-  private lazy val logger: HyLogger = JamContext.logger.get()
+  import o.lartifa.jam.database.temporary.Memory.database.profile.api._
 
   /**
    * 更新变量，不存在时报错
@@ -191,6 +190,7 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
 }
 
 object DBVarPool {
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(DBVarPool.getClass)
   private implicit val executionContext: ExecutionContext =
     ExecutionContext.fromExecutor(Executors.newWorkStealingPool(Runtime.getRuntime.availableProcessors() * 2))
 

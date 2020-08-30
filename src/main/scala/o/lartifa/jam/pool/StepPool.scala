@@ -5,6 +5,7 @@ import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext, Step}
+import o.lartifa.jam.pool.StepPool.logger
 
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
@@ -16,8 +17,6 @@ import scala.concurrent.{ExecutionContext, Future}
  * 2020/1/4 01:18
  */
 class StepPool(private val steps: Map[Long, Step], private val names: Map[String, Map[ChatInfo, Long]]) {
-
-  private lazy val logger: HyLogger = JamContext.logger.get()
 
   /**
    * 执行指定步骤
@@ -81,6 +80,8 @@ class StepPool(private val steps: Map[Long, Step], private val names: Map[String
 }
 
 object StepPool {
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(StepPool.getClass)
+
   def apply(steps: Map[Long, (Option[String], ChatInfo, Step)]): StepPool = {
     new StepPool(
       // 步骤映射

@@ -1,6 +1,6 @@
 package o.lartifa.jam.plugins.picbot
 
-import o.lartifa.jam.database.temporary.TemporaryMemory.database.db
+import o.lartifa.jam.database.temporary.Memory.database.db
 import o.lartifa.jam.database.temporary.schema.Tables
 import o.lartifa.jam.database.temporary.schema.Tables._
 import o.lartifa.jam.model.CommandExecuteContext
@@ -14,7 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 object PictureUtil {
 
-  import o.lartifa.jam.database.temporary.TemporaryMemory.database.profile.api._
+  import o.lartifa.jam.database.temporary.Memory.database.profile.api._
 
   /**
    * 从数据库获取图片

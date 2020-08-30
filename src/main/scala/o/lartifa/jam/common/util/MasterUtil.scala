@@ -12,7 +12,7 @@ import o.lartifa.jam.pool.JamContext
  * 2020/1/23 14:31
  */
 object MasterUtil {
-  protected lazy val logger: HyLogger = JamContext.logger.get()
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(MasterUtil.getClass)
   protected lazy val httpApi: IcqHttpApi = JamContext.httpApi.get()()
 
   /**

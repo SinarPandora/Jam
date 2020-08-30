@@ -4,10 +4,9 @@ import java.util.UUID
 import java.util.concurrent.Executors
 
 import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
-import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
-import o.lartifa.jam.database.temporary.TemporaryMemory.database.db
+import o.lartifa.jam.database.temporary.Memory.database.db
 import o.lartifa.jam.database.temporary.schema.Tables._
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.plugins.filppic.QQImg
@@ -23,13 +22,11 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 class MessagePool {
 
-  import o.lartifa.jam.database.temporary.TemporaryMemory.database.profile.api._
+  import o.lartifa.jam.database.temporary.Memory.database.profile.api._
 
   private implicit val exec: ExecutionContext = ExecutionContext.fromExecutor(Executors.newWorkStealingPool(
     Runtime.getRuntime.availableProcessors() * 2
   ))
-
-  private lazy val logger: HyLogger = JamContext.logger.get()
 
   /**
    * 记录聊天消息

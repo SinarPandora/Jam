@@ -1,6 +1,6 @@
 package o.lartifa.jam.database.temporary
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import slick.jdbc.{H2Profile, PostgresProfile}
 
 /**
@@ -8,10 +8,17 @@ import slick.jdbc.{H2Profile, PostgresProfile}
  * 2019/10/13 19:38
  */
 package object schema {
-  val (databaseType, databaseName) =
-    ConfigFactory.load().getString("databases.use") match {
-      case "PGSQL" => (PostgresProfile, "databases.temporary_memory_PGSQL")
-      case "H2" => (H2Profile, "databases.temporary_memory_H2")
+  private val config: Config = ConfigFactory.load().getConfig("databases")
+  val (databaseType, name, url, user, password) =
+    config.getString("use") match {
+      case "PGSQL" =>
+        (PostgresProfile, "databases.PGSQL",
+          config.getString("PGSQL.db.url"),
+          config.getString("PGSQL.db.user"),
+          config.getString("PGSQL.db.password"))
+      case "H2" =>
+        (H2Profile, "databases.H2",
+          config.getString("H2.db.url"), "root", "")
       case other => throw new IllegalArgumentException(s"不支持的数据库类型：$other")
     }
 }

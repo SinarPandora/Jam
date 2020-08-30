@@ -97,7 +97,7 @@ abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.N
 }
 
 object JamCronTask {
-  val logger: HyLogger = JamContext.logger.get()
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(JamCronTask.getClass)
 
   case class TaskDefinition(name: String, cls: Class[_ <: JamCronTask], isSingleton: Boolean)
 

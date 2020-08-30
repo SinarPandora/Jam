@@ -1,7 +1,9 @@
 package o.lartifa.jam.model.tasks
 
+import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
+import o.lartifa.jam.model.tasks.GoASleep.logger
 import o.lartifa.jam.pool.JamContext
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -19,7 +21,11 @@ class GoASleep extends JamCronTask(name = "睡眠") {
     if (SystemConfig.debugMode) {
       MasterUtil.notifyMaster(s"${JamConfig.name} 已经休眠")
     }
-    JamContext.logger.get().log(s"${JamConfig.name} 已经休眠")
+    logger.log(s"${JamConfig.name} 已经休眠")
     Future.successful(())
   }
+}
+
+object GoASleep {
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(GoASleep.getClass)
 }

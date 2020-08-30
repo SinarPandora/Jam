@@ -4,7 +4,7 @@ import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.bionic.BehaviorInitializer
 import o.lartifa.jam.common.config.SystemConfig
-import o.lartifa.jam.database.temporary.TemporaryMemory
+import o.lartifa.jam.database.temporary.Memory
 import o.lartifa.jam.engine.SSDLParseEngine.{ParseFailResult, ParseSuccessResult}
 import o.lartifa.jam.model.patterns.ContentMatcher
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext, Step}
@@ -24,7 +24,7 @@ import scala.concurrent.Future
  */
 object JamLoader {
 
-  private lazy val logger: HyLogger = JamContext.logger.get()
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(JamLoader.getClass)
 
   /**
    * 加载 SSDL
@@ -32,7 +32,7 @@ object JamLoader {
    * @return 异步结果
    */
   def init(): Future[Unit] = async {
-    await(TemporaryMemory.init())
+    Memory.init()
     await(BehaviorInitializer.init())
     await(loadSSDL()).foreach(errorMessages => logger.error(errorMessages.mkString("\n")))
   }

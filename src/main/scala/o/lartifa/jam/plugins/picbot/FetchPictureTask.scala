@@ -8,9 +8,10 @@ import ammonite.ops.PipeableImplicit
 import cc.moecraft.logger.HyLogger
 import com.jsoniter.{JsonIterator, any}
 import o.lartifa.jam.common.util.MasterUtil
-import o.lartifa.jam.database.temporary.TemporaryMemory.database.db
+import o.lartifa.jam.database.temporary.Memory.database.db
 import o.lartifa.jam.database.temporary.schema.Tables._
 import o.lartifa.jam.model.tasks.JamCronTask
+import o.lartifa.jam.plugins.picbot.FetchPictureTask.logger
 import o.lartifa.jam.pool.JamContext
 
 import scala.annotation.tailrec
@@ -27,9 +28,7 @@ import scala.util.{Failure, Success, Try}
  */
 class FetchPictureTask extends JamCronTask("更新图片库") {
 
-  import o.lartifa.jam.database.temporary.TemporaryMemory.database.profile.api._
-
-  protected val logger: HyLogger = JamContext.logger.get()
+  import o.lartifa.jam.database.temporary.Memory.database.profile.api._
 
   val API: String = "https://api.lolicon.app/setu/?apikey=825095135f0c4ec4cfaa84&r18=2&num=10"
 
@@ -140,4 +139,8 @@ class FetchPictureTask extends JamCronTask("更新图片库") {
       case Success(value) => logger.debug(s"图片下载完成：$url"); Some(value)
     }
   }
+}
+
+object FetchPictureTask {
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(FetchPictureTask.getClass)
 }

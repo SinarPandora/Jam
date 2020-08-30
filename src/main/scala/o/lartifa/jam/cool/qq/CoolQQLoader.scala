@@ -5,6 +5,7 @@ import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.common.config.CoolQConfig.{postPort, postUrl, socketPort}
 import o.lartifa.jam.common.config.JamConfig.name
 import o.lartifa.jam.common.config.SystemConfig
+import o.lartifa.jam.common.util.LoggerFactory
 import o.lartifa.jam.cool.qq.command.MasterCommands
 import o.lartifa.jam.cool.qq.listener.{RuleEngineListener, SystemEventListener}
 import o.lartifa.jam.pool.JamContext
@@ -32,7 +33,7 @@ object CoolQQLoader {
         this.getHttpServer.start()
       }
     }
-    JamContext.logger.set(client.getLoggerInstanceManager.getLoggerInstance(name, SystemConfig.debugMode))
+    JamContext.loggerFactory.set(new LoggerFactory(client.getLoggerInstanceManager))
     client.addAccount(name, postUrl, postPort)
     val listener = RuleEngineListener()
     JamContext.ruleEngineListener.set(listener)

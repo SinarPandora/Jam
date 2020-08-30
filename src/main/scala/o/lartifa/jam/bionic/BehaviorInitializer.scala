@@ -16,7 +16,7 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 object BehaviorInitializer {
 
-  private val logger: HyLogger = JamContext.logger.get()
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(BehaviorInitializer.getClass)
 
   /**
    * 初始化

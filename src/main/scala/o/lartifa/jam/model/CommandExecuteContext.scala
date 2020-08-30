@@ -4,7 +4,6 @@ import java.sql.Timestamp
 import java.time.Instant
 
 import cc.moecraft.icq.event.events.message.EventMessage
-import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.pool._
 
 import scala.concurrent.ExecutionContext
@@ -21,9 +20,6 @@ case class CommandExecuteContext(eventMessage: EventMessage, vars: DBVarPool,
                                  var lastResult: Option[String] = None) {
   // 懒加载的临时变量池
   lazy val tempVars: TempVarPool = new TempVarPool(eventMessage, startTime)(executionContext)
-
-  // 日志输出器
-  def logger: HyLogger = JamContext.logger.get()
 
   /**
    * 当前聊天会话的信息

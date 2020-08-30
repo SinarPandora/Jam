@@ -17,7 +17,7 @@ import scala.jdk.CollectionConverters._
  * 2020/8/29 21:38
  */
 object PreHandleTaskInitializer {
-  private lazy val logger: HyLogger = JamContext.logger.get()
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(PreHandleTaskInitializer.getClass)
 
   /**
    * 获取当前启用的全部前置任务

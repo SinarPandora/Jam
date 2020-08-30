@@ -30,7 +30,7 @@ case class QQImg(url: String, imageType: ImageType, filename: String, bytes: Arr
 
 
 object QQImg {
-  private lazy val logger: HyLogger = JamContext.logger.get()
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(QQImg.getClass)
 
   sealed abstract class ImageType(val exts: List[String])
 

@@ -20,7 +20,7 @@ import scala.util.{Failure, Try}
  */
 object BiochronometerParser extends Parser {
   private val config: Config = JamConfig.config.getConfig("biochronometer")
-  private val logger: HyLogger = JamContext.logger.get()
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(BiochronometerParser.getClass)
 
   /**
    * 解析
