@@ -1,7 +1,7 @@
 # 果酱 3（Jam to Mirai，迁移工作进行中）
 
 > QQBot  
-> Based on CoolQQ + CoolQQ HTTP Extension + PicqBotX
+> Based on Mirai Console + Mirai CQHTTP Plugin + PicqBotX
 
 原先的果酱 3 因为设计过于复杂已经搁浅，该版本是基于相同的思想，用最简单地方式在一个周末实现的预览版。
 
