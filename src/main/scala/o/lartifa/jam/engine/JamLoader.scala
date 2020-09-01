@@ -123,11 +123,11 @@ object JamLoader {
   private def sortMatchers(matchers: ListBuffer[ContentMatcher]): List[ContentMatcher] = {
     val matcherMap = matchers.groupBy(_.`type`)
     List() ++
-      matcherMap.getOrElse(ContentMatcher.EQUALS, List.empty) ++
-      matcherMap.getOrElse(ContentMatcher.REGEX, List.empty) ++
-      matcherMap.getOrElse(ContentMatcher.STARTS_WITH, List.empty) ++
-      matcherMap.getOrElse(ContentMatcher.ENDS_WITH, List.empty) ++
-      matcherMap.getOrElse(ContentMatcher.CONTAINS, List.empty)
+      matcherMap.getOrElse(ContentMatcher.EQUALS, List.empty).sortBy(_.stepId) ++
+      matcherMap.getOrElse(ContentMatcher.REGEX, List.empty).sortBy(_.stepId) ++
+      matcherMap.getOrElse(ContentMatcher.STARTS_WITH, List.empty).sortBy(_.stepId) ++
+      matcherMap.getOrElse(ContentMatcher.ENDS_WITH, List.empty).sortBy(_.stepId) ++
+      matcherMap.getOrElse(ContentMatcher.CONTAINS, List.empty).sortBy(_.stepId)
   }
 
   /**
