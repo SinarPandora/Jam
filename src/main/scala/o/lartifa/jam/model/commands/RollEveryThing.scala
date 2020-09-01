@@ -2,6 +2,7 @@ package o.lartifa.jam.model.commands
 
 import java.security.SecureRandom
 
+import o.lartifa.jam.common.config.Character.RandomAIReply
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.RollEveryThing.Mode
 
@@ -97,18 +98,13 @@ case class RollEveryThing(mode: Mode, random: Random) extends Command[Int] {
   private def randomAIReply()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Int] = async {
     val result = random.nextInt(100) + 1
     val message = result match {
-      case 1 => "这 是 真 理"
-      case 100 => "異議あり！！"
-      // 2 - 20
-      case i if i > 1 && i <= 20 => "有一说一，非常赞同"
-      // 21 - 40
-      case i if i >= 21 && i <= 40 => "我觉得可以"
-      // 41 - 60
-      case i if i >= 41 && i <= 60 => "一般.jpg"
-      // 61 - 80
-      case i if i >= 61 && i <= 80 => "不太行"
-      // 81 - 99
-      case i if i >= 81 && i < 100 => "反对"
+      case 1 => RandomAIReply.replayWhen1
+      case 100 => RandomAIReply.replyWhen100
+      case i if i > 1 && i <= 20 => RandomAIReply.replyFrom2to20
+      case i if i >= 21 && i <= 40 => RandomAIReply.replyFrom21to40
+      case i if i >= 41 && i <= 60 => RandomAIReply.replyFrom41to60
+      case i if i >= 61 && i <= 80 => RandomAIReply.replyFrom61to80
+      case i if i >= 81 && i < 100 => RandomAIReply.replyFrom81to99
       // 不可能的情况
       case _ => "我混乱了。。。"
     }
