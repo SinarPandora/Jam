@@ -53,11 +53,11 @@ object PatternParser extends Parser {
         case Constant.STARTS_WITH => ContentMatcher.STARTS_WITH
         case s if s.startsWith(Constant.REGEX) => ContentMatcher.REGEX
       }
-      val template = result.group("template")
+      val template = context.getTemplate(result.group("template"))
       if (`type` == ContentMatcher.REGEX) {
-        Try(template.r).getOrElse(throw ParseFailException("提供的正则表达式不正确"))
+        Try(template.template.r.matches("TEST")).getOrElse(throw ParseFailException("提供的正则表达式不正确"))
       }
-      (ContentMatcher(stepId, `type`, context.getTemplate(template)), result.group("command"))
+      (ContentMatcher(stepId, `type`, template), result.group("command"))
     })
   }
 

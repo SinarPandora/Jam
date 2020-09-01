@@ -45,6 +45,7 @@ object CommandParser extends Parser {
           parseSetPicRating _,
           parseRunTaskNow _,
           parseFetchAndSendPic _,
+          parseRollEveryThing _,
           // 包含类模式放在后边
           parseDoNoting _,
           parseGroupWholeBan _,
@@ -354,6 +355,26 @@ object CommandParser extends Parser {
    */
   private def parseShowPicInfo(string: String)(implicit context: ParseEngineContext): Option[ShowPicInfo] =
     if (string.contains(CommandPattern.showPicInfo)) Some(ShowPicInfo()) else None
+
+  /**
+   * 解析高级随机指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseRollEveryThing(string: String)(implicit context: ParseEngineContext): Option[RollEveryThing] = {
+    CommandPattern.rollEveryThing.findFirstMatchIn(string).map(result => {
+      val mode = result.group("mode") match {
+        case RollEveryThing.TRPG.name => RollEveryThing.TRPG
+        case RollEveryThing.Simple1To100.name => RollEveryThing.Simple1To100
+        case RollEveryThing.MakeADecision.name => RollEveryThing.MakeADecision
+        case RollEveryThing.RandomAI.name => RollEveryThing.RandomAI
+        case other => throw ParseFailException(s"设置项不正确：$other")
+      }
+      RollEveryThing(mode)
+    })
+  }
 
   /**
    * 解析保存结果指令
