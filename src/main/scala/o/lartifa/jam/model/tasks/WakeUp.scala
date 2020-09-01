@@ -1,7 +1,7 @@
 package o.lartifa.jam.model.tasks
 
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
+import o.lartifa.jam.common.config.{JamCharacter, JamConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.model.tasks.WakeUp.logger
 import o.lartifa.jam.pool.JamContext
@@ -18,9 +18,7 @@ class WakeUp extends JamCronTask(name = "起床") {
   override def run()(implicit exec: ExecutionContext): Future[Unit] = {
     JamContext.clientConfig.get().setEventPaused(false)
     JamContext.clientConfig.get().setHttpPaused(false)
-    if (SystemConfig.debugMode) {
-      MasterUtil.notifyMaster(s"${JamConfig.name} 已苏醒")
-    }
+    MasterUtil.notifyMaster(JamCharacter.ForMaster.goodMorning)
     logger.log(s"${JamConfig.name} 已苏醒")
     Future.successful(())
   }

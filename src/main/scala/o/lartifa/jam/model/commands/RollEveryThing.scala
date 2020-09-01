@@ -2,7 +2,7 @@ package o.lartifa.jam.model.commands
 
 import java.security.SecureRandom
 
-import o.lartifa.jam.common.config.Character.RandomAIReply
+import o.lartifa.jam.common.config.JamCharacter.RandomAIReply
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.RollEveryThing.Mode
 

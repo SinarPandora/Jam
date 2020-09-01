@@ -50,9 +50,9 @@ class RuleEngineListener(config: RuleEngineConfig, preHandleTasks: List[PreHandl
     messageRecorder.recordMessage(eventMessage).onComplete {
       case Failure(exception) =>
         logger.error(exception)
-        MasterUtil.notifyMaster(s"发生严重错误：${eventMessage.message}")
+        MasterUtil.notifyMaster(s"%s，我的记忆出现了问题，无法记录消息历史，消息内容为：${eventMessage.message}")
       case Success(isRecordSuccess) =>
-        if (!isRecordSuccess) MasterUtil.notifyMaster(s"消息记录失败，消息内容为：${eventMessage.getMessage}")
+        if (!isRecordSuccess) MasterUtil.notifyMaster(s"%s，我的记忆出现了问题，无法记录消息历史，消息内容为：${eventMessage.getMessage}")
         if (willResponse.get().apply()) responseMessage(eventMessage).onComplete {
           case Failure(exception) =>
             logger.error("前置任务执行出错，将直接执行 SSDL", exception)
@@ -98,7 +98,7 @@ class RuleEngineListener(config: RuleEngineConfig, preHandleTasks: List[PreHandl
       // 执行任务
       val ssdlTask = JamContext.stepPool.get().goto(stepId).recover(exception => {
         logger.error(exception)
-        MasterUtil.notifyMaster(s"步骤${stepId}执行失败！原因：${exception.getMessage}")
+        MasterUtil.notifyMaster(s"%s，步骤${stepId}执行失败了，原因是：${exception.getMessage}")
       }).flatMap(_ => JamContext.messagePool.recordAPlaceholder(eventMessage)).map(_ => ())
       // 输出捕获信息
       matchCost.stop()

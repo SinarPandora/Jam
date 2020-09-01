@@ -8,8 +8,15 @@ import com.typesafe.config.{Config, ConfigFactory}
  * Author: sinar
  * 2020/9/1 19:52
  */
-object Character {
+object JamCharacter {
   val config: Config = ConfigFactory.load().getConfig("character")
+
+  object ForMaster {
+    private val master: Config = config.getConfig("for_master")
+    val name: String = master.getString("name")
+    val goodMorning: String = master.getString("good_morning")
+    val goodNight: String = master.getString("good_night")
+  }
 
   object RandomAIReply {
     private val reply: Config = config.getConfig("random_ai")
