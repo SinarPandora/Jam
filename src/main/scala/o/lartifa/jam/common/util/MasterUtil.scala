@@ -31,7 +31,7 @@ object MasterUtil {
    * @param logLevel log 等级
    * @param error    错误内容（）
    */
-  def notifyAndLog(message: String, logLevel: LogLevel, error: Option[Throwable] = None): Unit = {
+  def notifyAndLog(message: String, logLevel: LogLevel = LogLevel.LOG, error: Option[Throwable] = None): Unit = {
     httpApi.sendPrivateMsg(JamConfig.masterQID, message)
     if (logLevel == LogLevel.ERROR) {
       error match {
