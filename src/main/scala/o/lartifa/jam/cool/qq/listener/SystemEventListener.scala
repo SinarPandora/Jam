@@ -1,7 +1,10 @@
 package o.lartifa.jam.cool.qq.listener
 
-import cc.moecraft.icq.event.events.request.{EventFriendRequest, EventGroupAddRequest}
+import java.util.concurrent.TimeUnit
+
+import cc.moecraft.icq.event.events.request.{EventFriendRequest, EventGroupAddRequest, EventRequest}
 import cc.moecraft.icq.event.{EventHandler, IcqListener}
+import io.reactivex.rxjava3.core.Observable
 import o.lartifa.jam.common.config.JamConfig
 
 /**
@@ -22,7 +25,7 @@ object SystemEventListener extends IcqListener {
     if (JamConfig.autoAcceptGroupRequest) {
       event.accept()
     }
-    event.getBot.getAccountManager.refreshCache()
+    lazyRefresh(event)
   }
 
   /**
@@ -35,6 +38,17 @@ object SystemEventListener extends IcqListener {
     if (JamConfig.autoAcceptFriendRequest) {
       event.accept()
     }
-    event.getBot.getAccountManager.refreshCache()
+    lazyRefresh(event)
+  }
+
+  /**
+   * 五秒后刷新基本信息
+   *
+   * @param event 事件对象
+   */
+  private def lazyRefresh(event: EventRequest): Unit = {
+    Observable.empty().delay(5, TimeUnit.SECONDS).doOnComplete{ () =>
+      event.getBot.getAccountManager.refreshCache()
+    }.subscribe()
   }
 }

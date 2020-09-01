@@ -1,4 +1,5 @@
 package o.lartifa.jam.cool.qq.listener.prehandle
+
 import cc.moecraft.icq.event.events.message.EventMessage
 import o.lartifa.jam.pool.JamContext
 
@@ -17,6 +18,7 @@ class FuckOffMiniApp extends PreHandleTask("替换小程序跳转") {
   private val RICH_MESSAGE_REGEX_DOC: Regex = """\[CQ:rich,data=\{"app".+?"qqdocurl":"(.+?)".+]""".r("url")
   private val RICH_MESSAGE_REGEX_JUMP: Regex = """\[CQ:rich,data=\{"app".+?"jumpUrl":"(.+?)".+]""".r("url")
   private val RICH_MESSAGE_REGEX_XML: Regex = """\[CQ:rich,data=<\?xml.+?url="(.+?)".+]""".r("url")
+
   /**
    * 执行前置任务
    *
@@ -25,14 +27,17 @@ class FuckOffMiniApp extends PreHandleTask("替换小程序跳转") {
    * @return 如果返回 false，将打断后续的 SSDL 执行
    */
   override def execute(event: EventMessage)(implicit exec: ExecutionContext): Future[Boolean] = async {
-    val regex = if (event.message.contains("qqdocurl")) RICH_MESSAGE_REGEX_DOC
-    else if (event.message.contains("<?xml")) RICH_MESSAGE_REGEX_XML
-    else RICH_MESSAGE_REGEX_JUMP
-    val found = regex.findFirstMatchIn(event.message).map(result => {
-      val url = result.group("url").replaceAll("""\\/""", "\\")
-      event.respond(s"小程序地址为：$url")
-    }).isDefined
-    if (found) await(JamContext.messagePool.recordAPlaceholder(event))
-    true
+    if (event.message.contains("聊天记录")) false
+    else {
+      val regex = if (event.message.contains("qqdocurl")) RICH_MESSAGE_REGEX_DOC
+      else if (event.message.contains("<?xml")) RICH_MESSAGE_REGEX_XML
+      else RICH_MESSAGE_REGEX_JUMP
+      val found = regex.findFirstMatchIn(event.message).map(result => {
+        val url = result.group("url").replaceAll("""\\/""", "\\")
+        event.respond(s"小程序地址为：$url")
+      }).isDefined
+      if (found) await(JamContext.messagePool.recordAPlaceholder(event))
+      true
+    }
   }
 }
