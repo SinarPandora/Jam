@@ -1,6 +1,6 @@
 name := "Jam"
 
-version := "3.0.1"
+version := "3.0.5"
 
 scalaVersion := "2.13.3"
 
