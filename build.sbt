@@ -28,6 +28,7 @@ libraryDependencies += "org.postgresql" % "postgresql" % "42.2.14"
 libraryDependencies += "org.flywaydb" % "flyway-core" % "6.5.5"
 
 // Tools
+libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.3.0"
 libraryDependencies += "com.apptastic" % "rssreader" % "2.2.3"
 libraryDependencies += "com.chuusai" %% "shapeless" % "2.3.3"
 libraryDependencies += "io.reactivex.rxjava3" % "rxjava" % "3.0.4"

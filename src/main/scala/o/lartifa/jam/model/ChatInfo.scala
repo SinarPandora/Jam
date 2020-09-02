@@ -11,9 +11,16 @@ import o.lartifa.jam.common.util.GlobalConstant.MessageType
  */
 case class ChatInfo(chatType: String, chatId: Long) {
   override def toString: String = s"聊天类型：$chatType，会话 ID：$chatId"
+  def serialize: String = s"${chatType}_$chatId"
 }
 
 object ChatInfo {
+
+  def apply(serializeStr: String): ChatInfo = {
+    val Array(chatType, chatId) = serializeStr.split("_")
+    new ChatInfo(chatType, chatId.toLong)
+  }
+
   def apply(chatType: String, chatId: Long): ChatInfo = new ChatInfo(chatType, chatId)
 
   def apply(eventMessage: EventMessage): ChatInfo =
