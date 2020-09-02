@@ -3,7 +3,6 @@ package o.lartifa.jam.plugins.rss
 import java.util.stream.Collectors
 
 import cc.moecraft.logger.HyLogger
-import com.apptastic.rssreader.Item
 import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.database.temporary.Memory.database.db
@@ -203,19 +202,25 @@ object SubscriptionPool extends ReplyToUser {
     }
     Try(rss.read(source).limit(1).collect(Collectors.toList())) match {
       case Failure(exception) =>
-        logger.error(s"获取源数据时失败，该源可能不属于 RSSHUB：$source", exception)
+        logger.error(s"获取源数据时失败，该源可能不属于 RSSHUB，源名称：$source", exception)
         context.eventMessage.respond("订阅失败，请检查源是否属于 RSSHUB")
         None
-      case Success(item: Item) =>
-        val subscription = RSSSubscription(source, sourceCategory)
-        await {
-          db.run {
-            RssSubscription
-              .map(row => (row.source, row.channel, row.sourceCategory, row.subscribers)) += (
-              source, item.getChannel.getTitle, sourceCategory, "")
+      case Success(items) =>
+        if (items.isEmpty) {
+          logger.warning(s"源没有返回任何内容，源名称：$source")
+          context.eventMessage.respond("源没有响应，稍后再试试？")
+          None
+        } else {
+          val subscription = RSSSubscription(source, sourceCategory)
+          await {
+            db.run {
+              RssSubscription
+                .map(row => (row.source, row.channel, row.sourceCategory, row.subscribers)) += (
+                source, items.get(0).getChannel.getTitle, sourceCategory, "")
+            }
           }
+          Some(subscription)
         }
-        Some(subscription)
     }
   }
 
