@@ -59,7 +59,7 @@ object SubscriptionPool extends ReplyToUser {
    */
   def subscribeAndReply(source: String, chatInfo: ChatInfo, isForce: Boolean)(implicit context: CommandExecuteContext,
                                                                               exec: ExecutionContext): Future[Unit] = async {
-    val _source = source.trim
+    val _source = source.trim.stripSuffix("/")
     if (sourceIsOk(_source, isForce)) {
       synchronized {
         rssSubscriptions.get(_source) match {
@@ -84,7 +84,7 @@ object SubscriptionPool extends ReplyToUser {
   def unSubscribeAndReply(source: String, chatInfo: ChatInfo)(implicit context: CommandExecuteContext,
                                                               exec: ExecutionContext): Unit = {
     synchronized {
-      val _source = source.trim
+      val _source = source.trim.stripSuffix("/")
       val subscription = rssSubscriptions.getOrElse(_source, return)
       val subscribers = subscription.removeSubscriber(chatInfo)
       if (subscribers.isEmpty) {

@@ -159,7 +159,8 @@ object RSSSubscription {
    * @return 源地址
    */
   private def getSourceUrl(source: String): String = if (RSSConfig.selfDeployedUrl.nonEmpty) {
-    s"${RSSConfig.selfDeployedUrl}$source"
+    if (RSSConfig.selfDeployedUrl.endsWith("/")) s"${RSSConfig.selfDeployedUrl}$source"
+    else s"${RSSConfig.selfDeployedUrl}/$source"
   } else s"https://rsshub.app/$source"
 
   def apply(source: String, sourceCategory: String, subscribers: Set[ChatInfo] = Set.empty): RSSSubscription = {
