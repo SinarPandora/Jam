@@ -180,6 +180,7 @@ object SubscriptionPool extends ReplyToUser {
    * @return 检查结果
    */
   private def sourceIsOk(source: String, isForce: Boolean)(implicit context: CommandExecuteContext): Boolean = {
+    if (source.isEmpty) return false
     if (source.toLowerCase.startsWith("http")) {
       context.eventMessage.respond("暂时不支持 RSSHUB 之外的源，请使用支持的源，比如：weibo/user/12345")
       false
