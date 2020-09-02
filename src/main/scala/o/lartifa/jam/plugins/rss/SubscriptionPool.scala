@@ -7,7 +7,7 @@ import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.database.temporary.Memory.database.db
 import o.lartifa.jam.database.temporary.schema.Tables._
-import o.lartifa.jam.model.behaviors.ReplyToUser
+import o.lartifa.jam.model.behaviors.ReplyToFriend
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.pool.JamContext
 
@@ -23,7 +23,7 @@ import scala.util.{Failure, Success, Try}
  * Author: sinar
  * 2020/8/30 13:11
  */
-object SubscriptionPool extends ReplyToUser {
+object SubscriptionPool extends ReplyToFriend {
 
   import o.lartifa.jam.database.temporary.Memory.database.profile.api._
 

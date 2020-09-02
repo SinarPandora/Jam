@@ -8,10 +8,12 @@ import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
+ * 行为：回复给朋友
+ *
  * Author: sinar
  * 2020/9/2 00:56
  */
-trait ReplyToUser {
+trait ReplyToFriend {
   /**
    * 消息中对方的昵称
    * 群：尝试获取群昵称，不存在/失败则使用 QQ 昵称
