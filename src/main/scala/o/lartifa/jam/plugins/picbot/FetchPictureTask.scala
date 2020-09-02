@@ -30,7 +30,7 @@ class FetchPictureTask extends JamCronTask("更新图片库") {
 
   import o.lartifa.jam.database.temporary.Memory.database.profile.api._
 
-  val API: String = "https://api.lolicon.app/setu/?apikey=825095135f0c4ec4cfaa84&r18=2&num=10"
+  val API: String = s"https://api.lolicon.app/setu/?${apiKey}r18=2&num=10"
 
   private val encoder: Base64.Encoder = Base64.getEncoder
 

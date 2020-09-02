@@ -1,12 +1,21 @@
 package o.lartifa.jam.plugins
 
+import com.typesafe.config.ConfigFactory
 import o.lartifa.jam.model.VarKey
 
 /**
+ * 图片 Bot 相关
+ *
  * Author: sinar
  * 2020/7/12 15:03
  */
 package object picbot {
+
+  val apiKey: String = {
+    val key = ConfigFactory.load().getString("plugin.picbot.apikey")
+    if (key.nonEmpty) s"apikey=$key&"
+    else ""
+  }
 
   object PatternMode {
     val ONLY: String = "仅当前"
