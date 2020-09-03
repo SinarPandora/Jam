@@ -22,7 +22,7 @@ object MasterUtil {
    * @param message 信息
    */
   def notifyMaster(message: String): Unit = {
-    httpApi.sendPrivateMsg(JamConfig.masterQID, "message".format(JamCharacter.ForMaster.name))
+    httpApi.sendPrivateMsg(JamConfig.masterQID, message.format(JamCharacter.ForMaster.name))
   }
 
   /**
@@ -34,7 +34,7 @@ object MasterUtil {
    * @param error    错误内容
    */
   def notifyAndLog(message: String, logLevel: LogLevel = LogLevel.LOG, error: Option[Throwable] = None): Unit = {
-    httpApi.sendPrivateMsg(JamConfig.masterQID, "message".format(JamCharacter.ForMaster.name))
+    httpApi.sendPrivateMsg(JamConfig.masterQID, message.format(JamCharacter.ForMaster.name))
     if (logLevel == LogLevel.ERROR) {
       error match {
         case Some(e) => logger.error(message, e)

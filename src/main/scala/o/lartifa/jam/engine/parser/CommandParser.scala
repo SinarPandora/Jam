@@ -4,6 +4,7 @@ import ammonite.ops.PipeableImplicit
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.model.commands._
 import o.lartifa.jam.plugins.picbot._
+import o.lartifa.jam.plugins.rss.{RSSShowAll, RSSSubscribe, RSSUnSubscribe}
 import o.lartifa.jam.pool.JamContext
 
 import scala.util.Try
@@ -50,7 +51,10 @@ object CommandParser extends Parser {
           parseDoNoting _,
           parseGroupWholeBan _,
           parseGroupWholeUnBan _,
-          parseShowPicInfo _
+          parseShowPicInfo _,
+          parseRSSSubscribe _,
+          parseRSSUnSubscribe _,
+          parseRSSShowAll _
         )
           .map(_.apply(string))
           .find(_.isDefined)
@@ -407,5 +411,35 @@ object CommandParser extends Parser {
       RunTaskNow(taskInstance, taskDef.isSingleton)
     })
   }
+
+  /**
+   * 解析源订阅指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseRSSSubscribe(string: String)(implicit context: ParseEngineContext): Option[RSSSubscribe.type] =
+    if (string.contains(CommandPattern.rssSubscribe)) Some(RSSSubscribe) else None
+
+  /**
+   * 解析源退订指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseRSSUnSubscribe(string: String)(implicit context: ParseEngineContext): Option[RSSUnSubscribe.type] =
+    if (string.contains(CommandPattern.rssUnSubscribe)) Some(RSSUnSubscribe) else None
+
+  /**
+   * 解析列出当前会话订阅源指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseRSSShowAll(string: String)(implicit context: ParseEngineContext): Option[RSSShowAll.type] =
+    if (string.contains(CommandPattern.rssShowAll)) Some(RSSShowAll) else None
 
 }

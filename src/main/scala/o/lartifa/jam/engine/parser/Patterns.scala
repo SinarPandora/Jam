@@ -7,7 +7,7 @@ import scala.util.matching.Regex
  *
  * FIXME
  *  1. 因为变量会被预处理替换掉，所以下面出现的一切变量和模板，都应该只捕获大括号里面的内容
- *  2. 因为预处理的缘故，下文中出现的数组应该换用中括号【】和 []
+ *     2. 因为预处理的缘故，下文中出现的数组应该换用中括号【】和 []
  *
  * Author: sinar
  * 2020/1/2 23:44
@@ -137,5 +137,12 @@ object Patterns {
     val deregisterCronTask: Regex = """取消定时任务\{变量(.+?)}""".r("value")
     // 立即执行任务
     val runTaskNow: Regex = """立即执行任务\{([0-9A-Za-z一-龥,，]+)}""".r("task")
+    // 源订阅
+    val rssSubscribe: String = "订阅消息中的源"
+    // 源退订
+    val rssUnSubscribe: String = "退订消息中的源"
+    // 源列出
+    val rssShowAll: String = "列出当前会话订阅的源"
   }
+
 }

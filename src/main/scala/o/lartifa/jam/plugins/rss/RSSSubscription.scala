@@ -52,8 +52,9 @@ class RSSSubscription(val source: String, private var _channelName: String, val 
           .map(_ => tryReadNext())
           .flatMap(Observable.fromOptional(_))
           .distinct(_.key)
-          .skipWhile(_.key != lastKey)
+          .skipWhile(_.key == lastKey)
           .subscribe { (item: Item) =>
+            logger.debug(s"源${source}更新，正在推送消息")
             _channelName = item.getChannel.getTitle
             val message = prettyRSSPrinter(item)
             val output = JamContext.httpApi.get()()
@@ -65,6 +66,7 @@ class RSSSubscription(val source: String, private var _channelName: String, val 
                 case _ => logger.warning(s"未知的聊天类型：$chatType")
               }
             }
+            logger.debug(s"源${source}推送完成")
             recordHistory(item.key)
           }
       subscription = Some(disposable)
@@ -161,7 +163,7 @@ object RSSSubscription {
    * @param source 源名称
    * @return 源地址
    */
-  private def getSourceUrl(source: String): String = if (RSSConfig.selfDeployedUrl.nonEmpty) {
+  private[rss] def getSourceUrl(source: String): String = if (RSSConfig.selfDeployedUrl.nonEmpty) {
     if (RSSConfig.selfDeployedUrl.endsWith("/")) s"${RSSConfig.selfDeployedUrl}$source"
     else s"${RSSConfig.selfDeployedUrl}/$source"
   } else s"https://rsshub.app/$source"

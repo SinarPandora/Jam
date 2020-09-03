@@ -4,6 +4,7 @@ import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.common.config.JamConfig._
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.engine.JamLoader
+import o.lartifa.jam.plugins.rss.SubscriptionPool
 import o.lartifa.jam.pool.JamContext
 
 import scala.concurrent.Await
@@ -22,6 +23,7 @@ object Bootloader {
     JamContext.clientConfig.getAndSet(client.getConfig)
     JamContext.httpApi.getAndSet(() => client.getAccountManager.getNonAccountSpecifiedApi)
     client.startBot()
+    SubscriptionPool.init()
     JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}${name}已苏醒")
   }
 }

@@ -4,6 +4,7 @@ import java.util.stream.Collectors
 
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.SystemConfig
+import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.database.temporary.Memory.database.db
 import o.lartifa.jam.database.temporary.schema.Tables._
@@ -53,17 +54,19 @@ object SubscriptionPool extends ReplyToFriend {
    *
    * @param source   订阅源
    * @param chatInfo 会话信息
-   * @param isForce  是否为强制模式
    * @param context  指令上下文
    * @param exec     异步上下文
    */
-  def subscribeAndReply(source: String, chatInfo: ChatInfo, isForce: Boolean)(implicit context: CommandExecuteContext,
-                                                                              exec: ExecutionContext): Future[Unit] = async {
-    val _source = source.trim.stripSuffix("/")
-    if (sourceIsOk(_source, isForce)) {
+  def subscribeAndReply(source: String, chatInfo: ChatInfo)(implicit context: CommandExecuteContext,
+                                                            exec: ExecutionContext): Future[Unit] = async {
+    val _source = source.trim.stripPrefix("/")
+    if (sourceIsOk(_source)) {
       synchronized {
         rssSubscriptions.get(_source) match {
-          case Some(subscription) => onUpdateCallback(subscription, chatInfo)
+          case Some(subscription) =>
+            if (subscription.subscribers.contains(chatInfo)) {
+              context.eventMessage.respond("已经订阅过啦")
+            } else onUpdateCallback(subscription, chatInfo)
           case None => await(createSubscription(_source)).foreach(it => {
             rssSubscriptions += _source -> it
             onUpdateCallback(it, chatInfo)
@@ -82,19 +85,19 @@ object SubscriptionPool extends ReplyToFriend {
    * @param exec     异步上下文
    */
   def unSubscribeAndReply(source: String, chatInfo: ChatInfo)(implicit context: CommandExecuteContext,
-                                                              exec: ExecutionContext): Unit = {
+                                                              exec: ExecutionContext): Future[Unit] = {
     synchronized {
-      val _source = source.trim.stripSuffix("/")
-      val subscription = rssSubscriptions.getOrElse(_source, return)
+      val _source = source.trim.stripPrefix("/")
+      val subscription = rssSubscriptions.getOrElse(_source, return Future.successful(()))
       val subscribers = subscription.removeSubscriber(chatInfo)
       if (subscribers.isEmpty) {
         if (!subscription.unsubscribeNow().getOrElse(true)) {
           logger.warning("退订了一个没有被激活的订阅源")
         }
         rssSubscriptions -= _source
-        removeSubscription(_source).onComplete(onDeleteCallback(_source, subscription.channel))
+        onDeleteCallback(_source, subscription.channel).apply(removeSubscription(_source))
       }
-      else recordSubscription(_source, subscribers).onComplete(onDeleteCallback(_source, subscription.channel))
+      else onDeleteCallback(_source, subscription.channel).apply(recordSubscription(_source, subscribers))
     }
   }
 
@@ -103,27 +106,26 @@ object SubscriptionPool extends ReplyToFriend {
    *
    * @param chatInfo 会话信息
    */
-  def listSubscriptionsAndReply(chatInfo: ChatInfo)(implicit context: CommandExecuteContext, exec: ExecutionContext): Unit = {
+  def listSubscriptionsAndReply(chatInfo: ChatInfo)(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = {
     db.run {
       RssSubscription.filter(_.subscribers like s"%${chatInfo.chatId}%")
         .map(row => (row.channel, row.source, row.lastUpdate)).result
-    }.onComplete {
-      case Failure(exception) =>
-        logger.error("查询订阅时发生错误", exception)
-        context.eventMessage.respond("没查出来。。。")
-      case Success(list) =>
-        if (list.isEmpty) context.eventMessage.respond("当前会话没有订阅任何 RSS 源")
-        else {
-          context.eventMessage.respond("当前会话订阅内容如下：")
-          list.zipWithIndex.map {
-            case ((channel, source, lastUpdate), idx) =>
-              s"${idx + 1}：$channel，更新于${lastUpdate.formatted("yyyy-MM-dd HH:mm:ss")}，源名称：$source"
-          }
-            .sliding(5, 5)
-            .map(_.mkString(",\n"))
-            .foreach(context.eventMessage.respond)
+    }.map(list => {
+      if (list.isEmpty) context.eventMessage.respond("当前会话没有订阅任何 RSS 源")
+      else {
+        context.eventMessage.respond("当前会话订阅内容如下：")
+        list.zipWithIndex.map {
+          case ((channel, source, lastUpdate), idx) =>
+            s"${idx + 1}：$channel，更新于$lastUpdate，源名称：$source"
         }
-    }
+          .sliding(5, 5)
+          .map(_.mkString(",\n"))
+          .foreach(context.eventMessage.respond)
+      }
+    }).recover(exception => {
+      logger.error("查询订阅时发生错误", exception)
+      context.eventMessage.respond("没查出来。。。")
+    }).map(_ => ())
   }
 
   /**
@@ -135,17 +137,21 @@ object SubscriptionPool extends ReplyToFriend {
    * @param exec         执行上下文
    */
   private def onUpdateCallback(subscription: RSSSubscription, chatInfo: ChatInfo)
-                              (implicit context: CommandExecuteContext, exec: ExecutionContext): Unit = {
+                              (implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = {
     val subscribers = subscription.addSubscriber(chatInfo)
-    recordSubscription(subscription.source, subscribers).onComplete {
-      case Failure(exception) =>
-        logger.error(exception)
-        context.eventMessage.respond("订阅失败，一会再试试看？")
-        MasterUtil.notifyMaster(s"%s，源订阅失败，请查看日志，源名称：${subscription.source}，$chatInfo")
-      case Success(_) =>
+    recordSubscription(subscription.source, subscribers).map(count => {
+      if (count == 1) {
         context.eventMessage.respond(s"$atSender ${subscription.channel}订阅成功！")
         subscription.subscribeNow()
-    }
+      } else {
+        context.eventMessage.respond(s"${subscription.channel}订阅失败，一会再试试看？")
+        throw ExecutionException(s"更新订阅记录时失败，疑似记忆出现问题，请检查数据库连接是否正常，源名称：${subscription.source}")
+      }
+    }).recover { exception =>
+      logger.error(exception)
+      context.eventMessage.respond("订阅失败，一会再试试看？")
+      MasterUtil.notifyMaster(s"%s，源订阅失败，请查看日志，源名称：${subscription.source}，$chatInfo")
+    }.map(_ => ())
   }
 
   /**
@@ -154,14 +160,12 @@ object SubscriptionPool extends ReplyToFriend {
    * @param source  订阅源
    * @param channel 频道名称
    * @param context 指令上下文
+   * @param exec    执行上下文
    * @return 回调函数
    */
-  private def onDeleteCallback(source: String, channel: String)(implicit context: CommandExecuteContext): PartialFunction[Try[Int], Any] = {
-    case Failure(exception) =>
-      logger.error(exception)
-      context.eventMessage.respond("退订失败，一会再试试看？")
-      MasterUtil.notifyMaster(s"%s，源退订失败，请查看日志，源名称：$source，${context.chatInfo}")
-    case Success(count) =>
+  private def onDeleteCallback(source: String, channel: String)
+                              (implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Int] => Future[Unit] = it => {
+    it.map(count => {
       if (count == 1) {
         context.eventMessage.respond(s"$atSender ${channel}已退订")
       } else {
@@ -169,17 +173,21 @@ object SubscriptionPool extends ReplyToFriend {
         context.eventMessage.respond("退订失败，一会再试试看？")
         MasterUtil.notifyMaster(s"%s，源退订失败，请查看日志，源名称：$source，${context.chatInfo}")
       }
+    }).recover(exception => {
+      logger.error(exception)
+      context.eventMessage.respond("退订失败，一会再试试看？")
+      MasterUtil.notifyMaster(s"%s，源退订失败，请查看日志，源名称：$source，${context.chatInfo}")
+    }).map(_ => ())
   }
 
   /**
    * 检查源是否可订阅
    *
    * @param source  订阅源
-   * @param isForce 是否为强制订阅模式（在源没有返回任何内容时，非'强制订阅模式'将不会订阅该源
    * @param context 指令上下文
    * @return 检查结果
    */
-  private def sourceIsOk(source: String, isForce: Boolean)(implicit context: CommandExecuteContext): Boolean = {
+  private def sourceIsOk(source: String)(implicit context: CommandExecuteContext): Boolean = {
     if (source.isEmpty) return false
     if (source.toLowerCase.startsWith("http")) {
       context.eventMessage.respond("暂时不支持 RSSHUB 之外的源，请使用支持的源，比如：weibo/user/12345")
@@ -201,7 +209,7 @@ object SubscriptionPool extends ReplyToFriend {
       if (prefix.isEmpty) content
       else prefix
     }
-    Try(rss.read(source).limit(1).collect(Collectors.toList())) match {
+    Try(rss.read(RSSSubscription.getSourceUrl(source)).limit(1).collect(Collectors.toList())) match {
       case Failure(exception) =>
         logger.error(s"获取源数据时失败，该源可能不属于 RSSHUB，源名称：$source", exception)
         context.eventMessage.respond("订阅失败，请检查源是否属于 RSSHUB")

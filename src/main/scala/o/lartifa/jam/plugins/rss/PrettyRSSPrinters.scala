@@ -23,7 +23,8 @@ object PrettyRSSPrinters {
     s"""${it.getChannel.getTitle}：
        |摘要：${it.getTitle.orElse("无标题")}
        |${pics.take(3).map(new ComponentImage(_).toString).mkString("\n")}${if (pics.sizeIs > 3) "\n为防止刷屏，此处只显示三张" else ""}
-       |链接：${it.getLink.orElse("无连接")}""".stripMargin
+       |链接：${it.getLink.orElse("无连接")}
+       |${it.getPubDate.orElse("发布时间未知")}""".stripMargin
   }
 
   val TitleAndLink: PrettyRSSPrinter = it => {
