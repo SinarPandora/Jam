@@ -92,9 +92,9 @@ object SubscriptionPool extends ReplyToFriend {
           logger.warning("退订了一个没有被激活的订阅源")
         }
         rssSubscriptions -= _source
-        removeSubscription(_source).onComplete(onDeleteCallback(_source))
+        removeSubscription(_source).onComplete(onDeleteCallback(_source, subscription.channel))
       }
-      else recordSubscription(_source, subscribers).onComplete(onDeleteCallback(_source))
+      else recordSubscription(_source, subscribers).onComplete(onDeleteCallback(_source, subscription.channel))
     }
   }
 
@@ -143,7 +143,7 @@ object SubscriptionPool extends ReplyToFriend {
         context.eventMessage.respond("订阅失败，一会再试试看？")
         MasterUtil.notifyMaster(s"%s，源订阅失败，请查看日志，源名称：${subscription.source}，$chatInfo")
       case Success(_) =>
-        context.eventMessage.respond(s"$atSender 订阅成功！")
+        context.eventMessage.respond(s"$atSender ${subscription.channel}订阅成功！")
         subscription.subscribeNow()
     }
   }
@@ -152,17 +152,18 @@ object SubscriptionPool extends ReplyToFriend {
    * 组合删除订阅回调
    *
    * @param source  订阅源
+   * @param channel 频道名称
    * @param context 指令上下文
    * @return 回调函数
    */
-  private def onDeleteCallback(source: String)(implicit context: CommandExecuteContext): PartialFunction[Try[Int], Any] = {
+  private def onDeleteCallback(source: String, channel: String)(implicit context: CommandExecuteContext): PartialFunction[Try[Int], Any] = {
     case Failure(exception) =>
       logger.error(exception)
       context.eventMessage.respond("退订失败，一会再试试看？")
       MasterUtil.notifyMaster(s"%s，源退订失败，请查看日志，源名称：$source，${context.chatInfo}")
     case Success(count) =>
       if (count == 1) {
-        context.eventMessage.respond(s"$atSender 已退订")
+        context.eventMessage.respond(s"$atSender ${channel}已退订")
       } else {
         logger.warning("订阅记录更新/删除失败")
         context.eventMessage.respond("退订失败，一会再试试看？")
@@ -211,12 +212,13 @@ object SubscriptionPool extends ReplyToFriend {
           context.eventMessage.respond("源没有响应，稍后再试试？")
           None
         } else {
-          val subscription = RSSSubscription(source, sourceCategory)
+          val channelName = items.get(0).getChannel.getTitle
+          val subscription = RSSSubscription(source, channelName, sourceCategory)
           await {
             db.run {
               RssSubscription
                 .map(row => (row.source, row.channel, row.sourceCategory, row.subscribers)) += (
-                source, items.get(0).getChannel.getTitle, sourceCategory, "")
+                source, channelName, sourceCategory, "")
             }
           }
           Some(subscription)

@@ -28,7 +28,7 @@ import scala.util.Try
  * Author: sinar
  * 2020/8/26 21:06
  */
-class RSSSubscription(val source: String, val sourceCategory: String, prettyRSSPrinter: PrettyRSSPrinter,
+class RSSSubscription(val source: String, private var _channelName: String, val sourceCategory: String, prettyRSSPrinter: PrettyRSSPrinter,
                       private var _subscribers: Set[ChatInfo]) {
 
   import o.lartifa.jam.database.temporary.Memory.database.profile.api._
@@ -36,6 +36,8 @@ class RSSSubscription(val source: String, val sourceCategory: String, prettyRSSP
   private val errorTimes: AtomicInteger = new AtomicInteger(0)
   private var subscription: Option[Disposable] = None
   private val sourceUrl: String = getSourceUrl(source)
+
+  def channel: String = _channelName
 
   /**
    * 创建并立刻订阅
@@ -52,6 +54,7 @@ class RSSSubscription(val source: String, val sourceCategory: String, prettyRSSP
           .distinct(_.key)
           .skipWhile(_.key != lastKey)
           .subscribe { (item: Item) =>
+            _channelName = item.getChannel.getTitle
             val message = prettyRSSPrinter(item)
             val output = JamContext.httpApi.get()()
             _subscribers.foreach { case ChatInfo(chatType, id) =>
@@ -163,8 +166,8 @@ object RSSSubscription {
     else s"${RSSConfig.selfDeployedUrl}/$source"
   } else s"https://rsshub.app/$source"
 
-  def apply(source: String, sourceCategory: String, subscribers: Set[ChatInfo] = Set.empty): RSSSubscription = {
-    new RSSSubscription(source, sourceCategory, PrettyRSSPrinters.getByCategory(sourceCategory), subscribers)
+  def apply(source: String, channel: String, sourceCategory: String, subscribers: Set[ChatInfo] = Set.empty): RSSSubscription = {
+    new RSSSubscription(source, channel, sourceCategory, PrettyRSSPrinters.getByCategory(sourceCategory), subscribers)
   }
 
   /**
@@ -174,8 +177,9 @@ object RSSSubscription {
    * @return 订阅结果对
    */
   def applyAndStart(record: RssSubscriptionRow): (String, RSSSubscription) = {
-    record.source -> new RSSSubscription(record.source,
+    val subscription = new RSSSubscription(record.source, record.channel,
       record.sourceCategory, PrettyRSSPrinters.getByCategory(record.sourceCategory),
       record.subscribers.split(",").map(ChatInfo.apply).toSet).subscribeNow(record.lastKey)
+    record.source -> subscription
   }
 }
