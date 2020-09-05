@@ -1,10 +1,15 @@
 package o.lartifa.jam.plugins.rss
 
+import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZoneId}
+import java.util.Locale
 import java.util.regex.Pattern
 
 import cc.moecraft.icq.sender.message.components.ComponentImage
 import com.apptastic.rssreader.Item
 import o.lartifa.jam.common.util.MasterUtil
+
+import scala.util.Try
 
 /**
  * RSS 消息格式化输出
@@ -15,6 +20,10 @@ import o.lartifa.jam.common.util.MasterUtil
 
 object PrettyRSSPrinters {
   type PrettyRSSPrinter = Item => String
+
+  private val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss，yyyy年MMMdd日，EEEE", Locale.CHINA)
+
+  private val parser: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
 
   private val imageRegex: Pattern = Pattern.compile("""https?://[^'"]*?\.(?:png|jpg|gif|jpeg)""",
     Pattern.CASE_INSENSITIVE)
@@ -27,7 +36,7 @@ object PrettyRSSPrinters {
        |摘要：${it.getTitle.orElse("无标题")}
        |$picData
        |链接：${it.getLink.orElse("无连接")}
-       |${it.getPubDate.orElse("近期发布")}""".stripMargin
+       |${timeFormat(it)}""".stripMargin
   }
 
   val TitleAndLink: PrettyRSSPrinter = it => {
@@ -71,4 +80,18 @@ object PrettyRSSPrinters {
     val matcher = imageRegex.matcher(str)
     LazyList.from(1).takeWhile(_ => matcher.find()).map(_ => matcher.group(0))
   }
+
+  /**
+   * 转换时间格式
+   *
+   * @param item RSS 消息
+   * @return 格式化后的时间
+   */
+  private def timeFormat(item: Item): String = Try {
+    Option(item.getPubDate.orElse(null))
+      .map(it => parser.parse(it))
+      .map(Instant.from(_).atZone(ZoneId.systemDefault()))
+      .map(it => formatter.format(it))
+      .getOrElse("近期更新")
+  }.getOrElse("近期更新")
 }
