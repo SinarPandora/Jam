@@ -141,7 +141,7 @@ object SubscriptionPool extends ReplyToFriend {
     val subscribers = subscription.addSubscriber(chatInfo)
     recordSubscription(subscription.source, subscribers).map(count => {
       if (count == 1) {
-        context.eventMessage.respond(s"$atSender ${subscription.channel}订阅成功！")
+        context.eventMessage.respond(s"$atSender ${subscription.channel}订阅成功，最近的消息将在一分钟内送到~")
         subscription.subscribeNow()
       } else {
         context.eventMessage.respond(s"${subscription.channel}订阅失败，一会再试试看？")
