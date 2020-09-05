@@ -47,32 +47,33 @@ class MessagePool {
    * 记录占位符，代表果酱处理过某条消息
    *
    * @param message 消息对象
+   * @param content 消息类型
    * @tparam T 消息类型
    * @return 变更结果（true：成功，false：失败）
    */
-  def recordAPlaceholder[T <: EventMessage](message: T): Future[Boolean] = async {
+  def recordAPlaceholder[T <: EventMessage](message: T, content: String): Future[Boolean] = async {
     val result: Future[Int] = message match {
-      case message: EventPrivateMessage => recordPrivatePlaceholder(message)
-      case message: EventGroupOrDiscussMessage => recordGroupOrDiscussPlaceholder(message)
+      case message: EventPrivateMessage => recordPrivatePlaceholder(message, content)
+      case message: EventGroupOrDiscussMessage => recordGroupOrDiscussPlaceholder(message, content)
     }
     await(result) == 1
   }
 
   /**
-   * 获取倒数第一条消息
+   * 获取前一条（倒数第二条消息）
    *
    * @param context 执行上下文
    * @return 消息记录（可能不存在）
    */
-  def last(implicit context: CommandExecuteContext): Future[Option[MessageRecord]] = this.last(1)
+  def previousMessage(implicit context: CommandExecuteContext): Future[Option[MessageRecord]] = this.last(2)
 
   /**
-   * 获取倒数第一条消息
+   * 获取前一条（倒数第二条消息）
    *
    * @param event 当前消息对象
    * @return 消息记录（可能不存在）
    */
-  def last(event: EventMessage): Future[Option[MessageRecord]] = this.last(event, 1)
+  def previousMessage(event: EventMessage): Future[Option[MessageRecord]] = this.last(event, 2)
 
   /**
    * 获取倒数第 n 条消息
@@ -83,7 +84,7 @@ class MessagePool {
    */
   @throws[ExecutionException]
   def last(number: Int)(implicit context: CommandExecuteContext): Future[Option[MessageRecord]] =
-    this.lasts(1, number)
+    this.lasts(1, number).map(_.headOption)
 
   /**
    * 获取倒数第 n 条消息
@@ -94,7 +95,7 @@ class MessagePool {
    */
   @throws[ExecutionException]
   def last(event: EventMessage, number: Int): Future[Option[MessageRecord]] =
-    this.lasts(event, 1, number)
+    this.lasts(event, 1, number).map(_.headOption)
 
   /**
    * 获取倒数 n 条消息
@@ -105,7 +106,7 @@ class MessagePool {
    * @return 消息记录（可能不存在）
    */
   @throws[ExecutionException]
-  def lasts(take: Int, from: Int)(implicit context: CommandExecuteContext): Future[Option[MessageRecord]] =
+  def lasts(take: Int, from: Int)(implicit context: CommandExecuteContext): Future[Seq[MessageRecord]] =
     this.lastMessages(take, from, context.chatInfo)
 
   /**
@@ -117,7 +118,7 @@ class MessagePool {
    * @return 消息记录（可能不存在）
    */
   @throws[ExecutionException]
-  def lasts(event: EventMessage, take: Int, from: Int): Future[Option[MessageRecord]] =
+  def lasts(event: EventMessage, take: Int, from: Int): Future[Seq[MessageRecord]] =
     this.lastMessages(take, from, ChatInfo(event))
 
   /**
@@ -129,17 +130,17 @@ class MessagePool {
    * @return 消息记录（可能不存在）
    */
   @throws[ExecutionException]
-  private def lastMessages(take: Int, from: Int, chatInfo: ChatInfo): Future[Option[MessageRecord]] = {
-    if (from <= 0) throw ExecutionException("倒数条数必须大于零")
-    if (take <= 0) throw ExecutionException("获取消息数量必须大于零")
+  private def lastMessages(take: Int, from: Int, chatInfo: ChatInfo): Future[Seq[MessageRecord]] = {
+    if (from < 1) throw ExecutionException("倒数条数必须大于或等于1")
+    if (take <= 0) throw ExecutionException("获取消息数量必须大于或等于零")
     val ChatInfo(chatType, chatId) = chatInfo
     db.run {
       (if (MessageType.PRIVATE == chatType) {
         MessageRecords.filter(row => row.messageType === chatType && row.senderId === chatId)
       } else {
         MessageRecords.filter(row => row.messageType === chatType && row.groupId === chatId)
-      }).sortBy(_.timestamp.desc).drop(from).take(take).result
-    }.map(_.headOption)
+      }).sortBy(_.id.desc).drop(from - 1).take(take).result
+    }
   }
 
   /**
@@ -149,8 +150,11 @@ class MessagePool {
    * @return 是否复读
    */
   def isRepeat(implicit context: CommandExecuteContext): Future[Boolean] = {
-    this.last.map(_.exists(x => x.message == context.eventMessage.getMessage
-      || QQImg.isPicSame(x.message, context.eventMessage.getMessage)))
+    this.lasts(2, 1).map { it =>
+      it.sizeIs == 2 &&
+        (it.head.message == it.last.message
+          || QQImg.isPicSame(it.head.message, it.last.message))
+    }
   }
 
   /**
@@ -160,8 +164,11 @@ class MessagePool {
    * @return 是否复读
    */
   def isRepeat(event: EventMessage): Future[Boolean] = {
-    this.last(event).map(_.exists(x => x.message == event.getMessage
-      || QQImg.isPicSame(x.message, event.getMessage)))
+    this.lasts(event, 2, 1).map { it =>
+      it.sizeIs == 2 &&
+        (it.head.message == it.last.message
+          || QQImg.isPicSame(it.head.message, it.last.message))
+    }
   }
 
   /**
@@ -201,11 +208,12 @@ class MessagePool {
   /**
    * 记录私聊占位符
    *
-   * @param msg 消息对象
+   * @param msg     消息对象
+   * @param content 消息类型
    * @return 变更结果
    */
-  private def recordPrivatePlaceholder(msg: EventPrivateMessage): Future[Int] = {
-    val placeholderMessage = UUID.randomUUID().toString
+  private def recordPrivatePlaceholder(msg: EventPrivateMessage, content: String): Future[Int] = {
+    val placeholderMessage = s"$content ${UUID.randomUUID().toString}"
     db.run {
       MessageRecords
         .map(row =>
@@ -219,11 +227,12 @@ class MessagePool {
   /**
    * 记录群聊 / 讨论组占位符
    *
-   * @param msg 消息对象
+   * @param msg     消息对象
+   * @param content 消息类型
    * @return 变更结果
    */
-  private def recordGroupOrDiscussPlaceholder(msg: EventGroupOrDiscussMessage): Future[Int] = {
-    val placeholderMessage = UUID.randomUUID().toString
+  private def recordGroupOrDiscussPlaceholder(msg: EventGroupOrDiscussMessage, content: String): Future[Int] = {
+    val placeholderMessage = s"$content ${UUID.randomUUID().toString}"
     db.run {
       MessageRecords
         .map(row =>

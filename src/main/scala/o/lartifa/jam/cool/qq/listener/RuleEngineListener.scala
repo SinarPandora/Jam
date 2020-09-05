@@ -99,7 +99,7 @@ class RuleEngineListener(config: RuleEngineConfig, preHandleTasks: List[PreHandl
       val ssdlTask = JamContext.stepPool.get().goto(stepId).recover(exception => {
         logger.error(exception)
         MasterUtil.notifyMaster(s"%s，步骤${stepId}执行失败了，原因是：${exception.getMessage}")
-      }).flatMap(_ => JamContext.messagePool.recordAPlaceholder(eventMessage)).map(_ => ())
+      }).flatMap(_ => JamContext.messagePool.recordAPlaceholder(eventMessage, "已捕获并执行一次SSDL")).map(_ => ())
       // 输出捕获信息
       matchCost.stop()
       val cost = matchCost.getTotalTimeSeconds

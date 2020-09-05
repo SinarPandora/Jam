@@ -36,7 +36,7 @@ class FuckOffMiniApp extends PreHandleTask("替换小程序跳转") {
         val url = result.group("url").replaceAll("""\\/""", "\\")
         event.respond(s"小程序地址为：$url")
       }).isDefined
-      if (found) await(JamContext.messagePool.recordAPlaceholder(event))
+      if (found) await(JamContext.messagePool.recordAPlaceholder(event, "小程序地址解析并发送"))
       true
     }
   }

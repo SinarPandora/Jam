@@ -90,6 +90,7 @@ object QQImg {
   def isPicSame(message: String, other: String): Boolean = {
     val pic1 = CQ_IMAGE_PATTERN.findFirstMatchIn(message.replaceAll("""\s""", "")).getOrElse(return false)
     val pic2 = CQ_IMAGE_PATTERN.findFirstMatchIn(other.replaceAll("""\s""", "")).getOrElse(return false)
-    pic1.group("filename") == pic2.group("filename")
+    pic1.group("filename") == pic2.group("filename") &&
+      message.replace(pic1.group(0), "") == other.replace(pic2.group(0), "")
   }
 }
