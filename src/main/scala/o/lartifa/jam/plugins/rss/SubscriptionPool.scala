@@ -43,7 +43,7 @@ object SubscriptionPool extends ReplyToFriend {
       case Failure(exception) =>
         logger.error("从数据库恢复源时出错", exception)
         MasterUtil.notifyMaster("%s，自动恢复订阅失败，目前订阅功能无法使用，请检查数据源是否正常")
-      case Success(_) => if (SystemConfig.debugMode) {
+      case Success(_) => if (SystemConfig.debugMode && rssSubscriptions.nonEmpty) {
         MasterUtil.notifyMaster(s"%s，RSS订阅已恢复，已导入${rssSubscriptions.size}个源")
       }
     }
