@@ -1,7 +1,5 @@
 package o.lartifa.jam.plugins.rss
 
-import java.sql.Timestamp
-import java.time.Instant
 import java.util.Optional
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.{Executors, TimeUnit}
@@ -12,7 +10,7 @@ import io.reactivex.rxjava3.core.{Observable, Scheduler}
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
-import o.lartifa.jam.common.util.MasterUtil
+import o.lartifa.jam.common.util.{MasterUtil, TimeUtil}
 import o.lartifa.jam.database.temporary.Memory.database.db
 import o.lartifa.jam.database.temporary.schema.Tables._
 import o.lartifa.jam.model.ChatInfo
@@ -148,7 +146,7 @@ class RSSSubscription(val source: String, private var _channelName: String, val 
       RssSubscription
         .filter(_.source === source)
         .map(row => (row.lastKey, row.lastUpdate))
-        .update(key, Timestamp.from(Instant.now()))
+        .update(key, TimeUtil.currentTimeStamp)
     }
   }
 }
