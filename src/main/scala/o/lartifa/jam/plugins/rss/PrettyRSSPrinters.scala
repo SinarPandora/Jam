@@ -21,7 +21,7 @@ import scala.util.Try
 object PrettyRSSPrinters {
   type PrettyRSSPrinter = Item => String
 
-  private val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss，yyyy年MMMdd日，EEEE", Locale.CHINA)
+  private val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss yyyy年MMMdd日（EEEE）", Locale.CHINA)
 
   private val parser: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
 
