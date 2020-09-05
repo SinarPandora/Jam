@@ -26,10 +26,11 @@ object Memory {
    *
    * @return 初始化结果
    */
-  def init()(implicit exec: ExecutionContext): Unit = {
+  def init(repair: Boolean)(implicit exec: ExecutionContext): Unit = {
     logger.log(s"${AnsiColor.YELLOW}正在构建${JamConfig.name}的记忆...")
     val flyway = Flyway.configure().dataSource(url, user, password).load()
     logger.log(s"${AnsiColor.YELLOW}记忆恢复中...")
+    if (repair) flyway.repair()
     flyway.migrate()
     logger.log(s"${AnsiColor.GREEN}记忆构建完成")
   }

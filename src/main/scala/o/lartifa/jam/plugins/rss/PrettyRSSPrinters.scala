@@ -1,10 +1,10 @@
 package o.lartifa.jam.plugins.rss
 
+import java.util.regex.Pattern
+
 import cc.moecraft.icq.sender.message.components.ComponentImage
 import com.apptastic.rssreader.Item
 import o.lartifa.jam.common.util.MasterUtil
-
-import scala.util.matching.Regex
 
 /**
  * RSS 消息格式化输出
@@ -16,15 +16,18 @@ import scala.util.matching.Regex
 object PrettyRSSPrinters {
   type PrettyRSSPrinter = Item => String
 
-  private val imageRegex: Regex = """https?://[^'"]*?\.(?:png|jpg|gif|jpeg)""".r
+  private val imageRegex: Pattern = Pattern.compile("""https?://[^'"]*?\.(?:png|jpg|gif|jpeg)""",
+    Pattern.CASE_INSENSITIVE)
 
   val RichText: PrettyRSSPrinter = it => {
     val pics = extractImages(it.getDescription.orElse(""))
+    val picData = pics.take(3).map(new ComponentImage(_).toString).mkString("\n") +
+      (if (pics.sizeIs > 3) "\n为防止刷屏，此处只显示三张" else "")
     s"""${it.getChannel.getTitle}：
        |摘要：${it.getTitle.orElse("无标题")}
-       |${pics.take(3).map(new ComponentImage(_).toString).mkString("\n")}${if (pics.sizeIs > 3) "\n为防止刷屏，此处只显示三张" else ""}
+       |$picData
        |链接：${it.getLink.orElse("无连接")}
-       |${it.getPubDate.orElse("发布时间未知")}""".stripMargin
+       |${it.getPubDate.orElse("近期发布")}""".stripMargin
   }
 
   val TitleAndLink: PrettyRSSPrinter = it => {
@@ -53,7 +56,7 @@ object PrettyRSSPrinters {
     printers.get(name) match {
       case Some(value) => value
       case None =>
-        MasterUtil.notifyMaster("%s，RSS 默认样式配置的不正确，已经替换为图文混排了")
+        MasterUtil.notifyMaster("%s，RSS 样式配置不正确，已经替换为图文混排")
         RichText
     }
   }
@@ -64,5 +67,8 @@ object PrettyRSSPrinters {
    * @param str 待解析字符串
    * @return 图片列表
    */
-  private def extractImages(str: String): Seq[String] = imageRegex.findAllIn(str.toLowerCase).toList
+  private def extractImages(str: String): Seq[String] = {
+    val matcher = imageRegex.matcher(str)
+    LazyList.from(1).takeWhile(_ => matcher.find()).map(_ => matcher.group(0))
+  }
 }

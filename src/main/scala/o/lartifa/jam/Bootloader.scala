@@ -18,12 +18,27 @@ import scala.concurrent.duration.Duration
  */
 object Bootloader {
   def main(args: Array[String]): Unit = {
+    if (args.contains("--help")) help()
     val client = CoolQQLoader.createCoolQQClient()
-    Await.result(JamLoader.init(), Duration.Inf)
+    Await.result(JamLoader.init(args), Duration.Inf)
     JamContext.clientConfig.getAndSet(client.getConfig)
     JamContext.httpApi.getAndSet(() => client.getAccountManager.getNonAccountSpecifiedApi)
     client.startBot()
     SubscriptionPool.init()
     JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}${name}已苏醒")
+  }
+
+  def help(): Unit = {
+    println(
+      """果酱命令行启动器
+        |使用方式:
+        |windows: jam.bat
+        |*nix: ./jam
+        |
+        |可选参数：
+        |--flyway_repair  执行数据迁移修复
+        |--help           输出该提示
+        |""".stripMargin)
+    sys.exit(0)
   }
 }

@@ -31,8 +31,8 @@ object JamLoader {
    *
    * @return 异步结果
    */
-  def init(): Future[Unit] = async {
-    Memory.init()
+  def init(args: Array[String]): Future[Unit] = async {
+    Memory.init(args.contains("--flyway_repair"))
     await(BehaviorInitializer.init())
     await(loadSSDL()).foreach(errorMessages => logger.error(errorMessages.mkString("\n")))
   }
