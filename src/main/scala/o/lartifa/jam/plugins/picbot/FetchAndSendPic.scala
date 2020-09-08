@@ -1,6 +1,7 @@
 package o.lartifa.jam.plugins.picbot
 
 import cc.moecraft.icq.sender.message.components.ComponentImageBase64
+import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.database.temporary.schema.Tables
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.Command
@@ -29,7 +30,10 @@ case class FetchAndSendPic(amount: Int) extends Command[Unit] {
     val result = await(PictureUtil.getPictureById(lastId, amount))
 
     result match {
-      case Nil => context.eventMessage.respond("色图用光光啦~")
+      case Nil =>
+        context.eventMessage.respond("色图用光光啦~")
+        val name = await(context.tempVars.get("群昵称")).getOrElse("我也不知道是谁")
+        MasterUtil.notifyMaster(s"%s，${name}已经把色图用光了，太强了。。")
       case head :: Nil =>
         await(CONFIG_ID.update((lastId + 1).toString))
         sendPic(head)
