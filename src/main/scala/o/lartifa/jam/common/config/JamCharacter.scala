@@ -2,6 +2,8 @@ package o.lartifa.jam.common.config
 
 import com.typesafe.config.{Config, ConfigFactory}
 
+import scala.jdk.CollectionConverters._
+
 /**
  * 性格配置
  *
@@ -10,6 +12,9 @@ import com.typesafe.config.{Config, ConfigFactory}
  */
 object JamCharacter {
   val config: Config = ConfigFactory.load().getConfig("character")
+
+  // 梦话
+  val balderdash: List[String] = config.getStringList("balderdash").asScala.toList
 
   object ForMaster {
     private val master: Config = config.getConfig("for_master")

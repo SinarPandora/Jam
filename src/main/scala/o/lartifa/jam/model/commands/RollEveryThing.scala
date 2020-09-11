@@ -125,12 +125,11 @@ object RollEveryThing {
 
   case object RandomAI extends Mode("伪随机聊天")
 
-  private lazy val simpleRandom: Random = new Random(System.currentTimeMillis())
   private lazy val secureRandom: Random = new SecureRandom()
 
   def apply(mode: Mode): RollEveryThing = {
     val random = mode match {
-      case RandomAI => simpleRandom
+      case RandomAI => Random
       case _ => secureRandom
     }
     new RollEveryThing(mode, random)

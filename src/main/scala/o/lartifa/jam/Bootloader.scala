@@ -24,6 +24,7 @@ object Bootloader {
     JamContext.clientConfig.getAndSet(client.getConfig)
     JamContext.httpApi.getAndSet(() => client.getAccountManager.getNonAccountSpecifiedApi)
     client.startBot()
+    JamContext.bot.set(client)
     SubscriptionPool.init()
     JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}${name}已苏醒")
   }

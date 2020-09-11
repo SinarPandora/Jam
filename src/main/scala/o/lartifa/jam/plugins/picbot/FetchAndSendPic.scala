@@ -33,7 +33,7 @@ case class FetchAndSendPic(amount: Int) extends Command[Unit] {
       case Nil =>
         context.eventMessage.respond("色图用光光啦~")
         val name = await(context.tempVars.get("群昵称")).getOrElse("我也不知道是谁")
-        MasterUtil.notifyMaster(s"%s，${name}已经把色图用光了，太强了。。")
+        MasterUtil.notifyMaster(s"%s，${name}已经把色图用光了，太强了。。（${context.eventMessage.getSenderId}）")
       case head :: Nil =>
         await(CONFIG_ID.update((lastId + 1).toString))
         sendPic(head)

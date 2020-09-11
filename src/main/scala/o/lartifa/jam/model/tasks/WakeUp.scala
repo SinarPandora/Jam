@@ -18,6 +18,7 @@ class WakeUp extends JamCronTask(name = "起床") {
   override def run()(implicit exec: ExecutionContext): Future[Unit] = {
     JamContext.clientConfig.get().setEventPaused(false)
     JamContext.clientConfig.get().setHttpPaused(false)
+    JamContext.jamIsSleeping.getAndSet(false)
     MasterUtil.notifyMaster(JamCharacter.ForMaster.goodMorning)
     logger.log(s"${JamConfig.name} 已苏醒")
     Future.successful(())

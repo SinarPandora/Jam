@@ -18,6 +18,7 @@ class GoASleep extends JamCronTask(name = "睡眠") {
   override def run()(implicit exec: ExecutionContext): Future[Unit] = {
     JamContext.clientConfig.get().setHttpPaused(true)
     JamContext.clientConfig.get().setEventPaused(true)
+    JamContext.jamIsSleeping.getAndSet(true)
     MasterUtil.notifyMaster(JamCharacter.ForMaster.goodNight)
     logger.log(s"${JamConfig.name} 已经休眠")
     Future.successful(())

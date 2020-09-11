@@ -2,7 +2,6 @@ package o.lartifa.jam.cool.qq.listener.prehandle
 
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.cool.qq.listener.prehandle.FlipsRepeatedImage.logger
 import o.lartifa.jam.plugins.filppic.MessageImageUtil
 import o.lartifa.jam.pool.JamContext
 
@@ -13,7 +12,8 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2020/8/29 22:00
  */
-class FlipsRepeatedImage extends PreHandleTask("反向复读图片") {
+object FlipsRepeatedImage extends PreHandleTask("反向复读图片") {
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(FlipsRepeatedImage.getClass)
   /**
    * 执行前置任务
    *
@@ -33,8 +33,4 @@ class FlipsRepeatedImage extends PreHandleTask("反向复读图片") {
     }
     true
   }
-}
-
-object FlipsRepeatedImage {
-   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(FlipsRepeatedImage.getClass)
 }

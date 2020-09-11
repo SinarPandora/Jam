@@ -2,19 +2,22 @@ package o.lartifa.jam.pool
 
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 
-import cc.moecraft.icq.PicqConfig
 import cc.moecraft.icq.sender.IcqHttpApi
+import cc.moecraft.icq.{PicqBotX, PicqConfig}
 import o.lartifa.jam.common.util.LoggerFactory
 import o.lartifa.jam.cool.qq.listener.RuleEngineListener
 import o.lartifa.jam.model.patterns.ContentMatcher
 
 /**
  * 果酱（系统）上下文
+ * TODO: 更优雅的状态管理
  *
  * Author: sinar
  * 2020/1/4 23:52
  */
 object JamContext {
+  val bot: AtomicReference[PicqBotX] = new AtomicReference[PicqBotX]()
+  val jamIsSleeping: AtomicBoolean = new AtomicBoolean(false)
   val editLock: AtomicBoolean = new AtomicBoolean(false)
   val stepPool: AtomicReference[StepPool] = new AtomicReference[StepPool]()
   val cronTaskPool: AtomicReference[CronTaskPool] = new AtomicReference[CronTaskPool]()
