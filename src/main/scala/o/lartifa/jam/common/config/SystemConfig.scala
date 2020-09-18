@@ -20,8 +20,8 @@ object SystemConfig {
   // Debug 模式开启标识
   val debugMode: Boolean = config.getBoolean("debugMode")
 
-  object RuleEngineConfig {
-    private val ruleEngineConfig: Config = config.getConfig("rule_engine")
+  object MessageListenerConfig {
+    private val ruleEngineConfig: Config = config.getConfig("message_listener")
     object PreHandleTask {
       private val preHandleTaskConfig: Config = ruleEngineConfig.getConfig("pre_handle")
       // 允许异步执行前置任务

@@ -2,7 +2,7 @@ package o.lartifa.jam.cool.qq.listener
 
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
-import o.lartifa.jam.common.config.SystemConfig.RuleEngineConfig.PreHandleTask
+import o.lartifa.jam.common.config.SystemConfig.MessageListenerConfig.PreHandleTask
 import o.lartifa.jam.cool.qq.listener.prehandle.{FlipsRepeatedImage, FuckOffMiniApp, JamIsSleeping, PreHandleTask}
 import o.lartifa.jam.pool.JamContext
 

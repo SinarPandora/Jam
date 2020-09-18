@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 import cc.moecraft.icq.sender.IcqHttpApi
 import cc.moecraft.icq.{PicqBotX, PicqConfig}
 import o.lartifa.jam.common.util.LoggerFactory
-import o.lartifa.jam.cool.qq.listener.RuleEngineListener
 import o.lartifa.jam.model.patterns.ContentMatcher
 
 /**
@@ -28,5 +27,4 @@ object JamContext {
   val messagePool: MessagePool = new MessagePool()
   val clientConfig: AtomicReference[PicqConfig] = new AtomicReference[PicqConfig]()
   val httpApi: AtomicReference[() => IcqHttpApi] = new AtomicReference()
-  val ruleEngineListener: AtomicReference[RuleEngineListener] = new AtomicReference[RuleEngineListener]()
 }

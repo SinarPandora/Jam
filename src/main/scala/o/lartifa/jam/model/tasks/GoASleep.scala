@@ -16,9 +16,14 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 class GoASleep extends JamCronTask(name = "睡眠") {
   override def run()(implicit exec: ExecutionContext): Future[Unit] = {
+    JamContext.bot.get().getEventManager.getRegisteredListeners.clear()
     JamContext.clientConfig.get().setHttpPaused(true)
     JamContext.clientConfig.get().setEventPaused(true)
     JamContext.jamIsSleeping.getAndSet(true)
+    if (JamCharacter.balderdash.nonEmpty) {
+      // TODO register balderdash listener
+      JamContext.bot.get().getEventManager.getRegisteredMethods
+    }
     MasterUtil.notifyMaster(JamCharacter.ForMaster.goodNight)
     logger.log(s"${JamConfig.name} 已经休眠")
     Future.successful(())
