@@ -34,7 +34,8 @@ case class ShowPicInfo() extends Command[String] {
             |图片地址：${picture.url}
             |P站ID：${picture.pid}
             |作者ID：${picture.uid}
-            |尺寸：${picture.width}x${picture.height}""".stripMargin
+            |尺寸：${picture.width}x${picture.height}
+            |由于 QQ 限制，只能查看最近一张图片的信息""".stripMargin
         )
         picture.pid.toString
       case None =>

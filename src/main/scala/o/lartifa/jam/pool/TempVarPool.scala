@@ -157,16 +157,15 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    */
   private def getVar(name: String): Option[String] = Some {
     name match {
-      case "昵称" => eventMessage.getBotAccount.getName
+      case "Bot昵称" | "自己的昵称" => getGroupNickName(true)
       case "群号" => toGroupMessage(eventMessage).getGroupId.toString
       case "群名" => toGroupMessage(eventMessage).getGroup.refreshInfo().getGroupName
-      case "群昵称" => getGroupNickName(false)
-      case "发送者昵称" | "对方昵称" => getNickName(true)
-      case "发送者QQ" | "对方QQ" => eventMessage.getSender.refreshInfo(true).getUserId.toString
+      case "发送者昵称" | "对方昵称" | "发送者群昵称" | "对方群昵称" => getGroupNickName(false)
+      case "发送者QQ昵称" | "对方QQ昵称" => getNickName(true)
+      case "发送者QQ" | "对方QQ" | "QQ号" => eventMessage.getSender.refreshInfo(true).getUserId.toString
       case "发送者年龄" | "对方年龄" => eventMessage.getSender.refreshInfo(true).getAge.toString
       case "发送者性别" | "对方性别" => eventMessage.getSender.refreshInfo(true).getSex
       case "会话类型" => ChatInfo(eventMessage).chatType
-      case "发送者群昵称" | "对方群昵称" => getGroupNickName(true)
       case "是否为好友" => if (toGroupMessage(eventMessage).getGroupSender.getInfo.getUnfriendly) "是" else "否"
       case other => return CommandScopeParameters.get(other)
     }
