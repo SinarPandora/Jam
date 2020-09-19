@@ -31,6 +31,6 @@ object WakeUp {
    */
   def wakeUp(): Unit = {
     JamContext.bot.get().switchToWakeUpMode()
-    logger.log(s"${JamConfig.name} 已苏醒")
+    logger.log(s"${JamConfig.name}已苏醒")
   }
 }

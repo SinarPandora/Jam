@@ -43,6 +43,7 @@ object JamLoader {
    * @return 错误信息
    */
   private def loadSSDL(): Future[Option[List[String]]] = {
+    logger.log(s"${AnsiColor.GREEN}SSDL脚本解析开始")
     SSDLParseEngine.load().map(result => {
       val success: Option[Seq[Either[ParseFailResult, ParseSuccessResult]]] = result.get(true)
       val fails: Option[Seq[Either[ParseFailResult, SSDLParseEngine.ParseSuccessResult]]] = result.get(false)
@@ -108,8 +109,9 @@ object JamLoader {
         }.toMap
       }
       JamContext.stepPool.getAndSet(StepPool(steps.toMap))
-      logger.log(s"${AnsiColor.GREEN}共加载${JamContext.globalMatchers.get().length}条捕获信息")
-      logger.log(s"${AnsiColor.GREEN}共加载${steps.size}条步骤")
+      logger.log(s"${AnsiColor.GREEN}共加载${JamContext.globalMatchers.get().length}条SSDL捕获规则")
+      logger.log(s"${AnsiColor.GREEN}共加载${steps.size}条SSDL步骤")
+      logger.log(s"${AnsiColor.GREEN}SSDL脚本解析结束")
       None
     }
   }

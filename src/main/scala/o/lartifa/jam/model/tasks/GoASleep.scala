@@ -31,6 +31,6 @@ object GoASleep {
    */
   def goASleep(): Unit = {
     JamContext.bot.get().switchToSleepMode()
-    logger.log(s"${JamConfig.name} 已经休眠")
+    logger.log(s"${JamConfig.name}已经休眠")
   }
 }
