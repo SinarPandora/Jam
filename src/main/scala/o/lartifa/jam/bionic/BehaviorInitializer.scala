@@ -24,11 +24,7 @@ object BehaviorInitializer {
   def init()(implicit exec: ExecutionContext): Future[Unit] = async {
     logger.log(s"${AnsiColor.YELLOW}正在调整生物钟")
     JamContext.cronTaskPool.getAndSet(CronTaskPool())
-    await {
-      Future.sequence(Seq(
-        Future(BiochronometerParser.parse())
-      ))
-    }
+    BiochronometerParser.parse()
     CronUtil.start()
     logger.log(s"${AnsiColor.YELLOW}生物钟调整完毕")
   }

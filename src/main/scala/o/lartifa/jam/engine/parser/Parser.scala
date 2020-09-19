@@ -14,7 +14,7 @@ trait Parser extends StringToVarKey {
    * 检查参数是否满足条件
    *
    * @param require 条件
-   * @param message 错误提示信息
+   * @param elsePrint 错误提示信息
    */
-  protected def need(require: Boolean, message: String): Unit = if (!require) throw ParseFailException(message)
+  protected def need(require: Boolean, elsePrint: String): Unit = if (!require) throw ParseFailException(elsePrint)
 }

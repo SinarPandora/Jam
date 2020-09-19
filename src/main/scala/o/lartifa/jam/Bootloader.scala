@@ -20,13 +20,13 @@ object Bootloader {
   def main(args: Array[String]): Unit = {
     if (args.contains("--help")) help()
     val client = CoolQQLoader.createCoolQQClient()
-    Await.result(JamLoader.init(args), Duration.Inf)
-    JamContext.clientConfig.getAndSet(client.getConfig)
-    JamContext.httpApi.getAndSet(() => client.getAccountManager.getNonAccountSpecifiedApi)
-    client.startBot()
     JamContext.bot.set(client)
+    JamContext.httpApi.getAndSet(() => client.getAccountManager.getNonAccountSpecifiedApi)
+    JamContext.clientConfig.getAndSet(client.getConfig)
+    Await.result(JamLoader.init(args), Duration.Inf)
+    client.startBot()
     SubscriptionPool.init()
-    JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}${name}已苏醒")
+    JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}${name}已恢复生命体征")
   }
 
   def help(): Unit = {

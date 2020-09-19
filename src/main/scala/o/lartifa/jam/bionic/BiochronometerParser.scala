@@ -1,10 +1,13 @@
 package o.lartifa.jam.bionic
 
+import java.time.LocalTime
+
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import com.typesafe.config.Config
 import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.exception.ParseFailException
+import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.engine.parser.Parser
 import o.lartifa.jam.model.tasks.{ChangeRespFrequency, GoASleep, WakeUp}
 import o.lartifa.jam.pool.JamContext
@@ -30,8 +33,19 @@ object BiochronometerParser extends Parser {
     val isAllTimeMode = Try(config.getBoolean("all_time_at_your_service"))
       .getOrElse(throw ParseFailException("'全天候模式'需设置为 true 或者 false（没有引号）"))
     if (!isAllTimeMode) {
-      parseWakeUp()
-      parseGoASleep()
+      val now = LocalTime.now().getHour
+      val wakeAt = parseWakeUp()
+      val sleepAt = parseGoASleep()
+      need(wakeAt != sleepAt, s"起床时间不能和就寝时间相同，${JamConfig.name}的行为可能不正常，建议立刻修改并重新启动")
+      // 如果在睡眠期间被重新唤醒，会继续睡
+      val continueSleep = if (wakeAt < sleepAt && (wakeAt > now || now >= sleepAt)) true
+      else if (sleepAt == 0 && (wakeAt > now || now == 0)) true
+      else if (now >= sleepAt && now < wakeAt) true
+      else false
+      if (continueSleep) {
+        MasterUtil.notifyMaster("啊。。这个点我得睡觉了，晚安%s")
+        GoASleep.goASleep()
+      }
     }
     parseActiveTimes()
   }
@@ -39,23 +53,25 @@ object BiochronometerParser extends Parser {
   /**
    * 解析起床时间
    */
-  private def parseWakeUp(): Unit = {
+  private def parseWakeUp(): Int = {
     val wakeUpTime = Try(config.getInt("wake_up_time"))
       .getOrElse(throw ParseFailException("起床时间必须设置为数字"))
     need(wakeUpTime >= 0 && wakeUpTime <= 23, "起床时间范围需要为 0 - 23")
     new WakeUp().setUp(s"0 0 $wakeUpTime * * ? ")
     logger.log(s"${AnsiColor.GREEN}起床时间设置为每日${wakeUpTime}时")
+    wakeUpTime
   }
 
   /**
    * 解析睡眠时间
    */
-  private def parseGoASleep(): Unit = {
+  private def parseGoASleep(): Int = {
     val goASleepTime = Try(config.getInt("go_asleep_time"))
       .getOrElse(throw ParseFailException("就寝时间必须设置为数字"))
     need(goASleepTime >= 0 && goASleepTime <= 23, "就寝时间范围应为 0 - 23")
     new GoASleep().setUp(s"0 0 $goASleepTime * * ? ")
     logger.log(s"${AnsiColor.GREEN}睡眠时间设置为每日${goASleepTime}时")
+    goASleepTime
   }
 
   /**
@@ -63,7 +79,7 @@ object BiochronometerParser extends Parser {
    */
   private def parseActiveTimes(): Unit = {
     val activeTimes = Try(config.getStringList("active_times").asScala)
-    .getOrElse(throw ParseFailException("'活跃时间模式'设置有误，如需设置为不使用，请填写为 [\"None\"]（包括所有符号）"))
+      .getOrElse(throw ParseFailException("'活跃时间模式'设置有误，如需设置为不使用，请填写为 [\"None\"]（包括所有符号）"))
     need(activeTimes.lengthIs > 0, "'活跃时间模式'设置有误，如需设置为不使用，请填写为 [\"None\"]（包括所有符号）")
     if (activeTimes.lengthIs == 1 && activeTimes.head == "None") return
     activeTimes.foreach(pair => logger.log(s"${AnsiColor.GREEN}活跃时间段添加：${parseActiveTime(pair).recover(throw _).get}时"))
