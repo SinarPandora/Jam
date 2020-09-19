@@ -4,7 +4,7 @@ import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMe
 import o.lartifa.jam.common.exception.ExecutionException
 
 import scala.concurrent.Future
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, _}
 
 /**
  * 问答者对象
@@ -29,11 +29,11 @@ sealed case class Answerer(qID: Option[Long], groupID: Option[Long]) {
    *
    * @param options  期待回答（默认表示接受一切回应）
    * @param times    询问次数（与期待回答结合使用，表示当答案没命中预期时，再进行几次提问）
-   * @param timeout  回答超时（过期自动取消提问）
+   * @param timeout  回答超时（过期自动取消提问，默认两分钟）
    * @param callback 回调（当命中期待回答时执行），当回调返回 false 时，
    */
   def ?(options: Set[String] = Set.empty, times: Int = 1,
-        timeout: Option[Duration] = None)
+        timeout: Option[Duration] = Some(2.minutes))
        (callback: (Answerer, EventMessage, Question) => Future[Result]): Unit =
     Questioner.ask(this, options, times, timeout)(callback)
 

@@ -44,7 +44,7 @@ case class Question(hit: (EventMessage, Answerer) => Boolean, answerer: Answerer
       logger.error(err)
       MasterUtil.notifyMaster(s"%，在处理回答时出现问题，消息内容为：${eventMessage.message}")
       Result.Complete
-    }).andThen(result => {
+    }).andThen(_ => {
       task.foreach(_.cancel(false))
     })
   }

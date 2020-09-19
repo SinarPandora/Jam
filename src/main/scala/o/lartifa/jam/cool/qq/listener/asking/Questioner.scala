@@ -3,14 +3,12 @@ package o.lartifa.jam.cool.qq.listener.asking
 import java.util.concurrent.atomic.AtomicInteger
 
 import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
-import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.cool.qq.listener.listenerCommonPool
-import o.lartifa.jam.pool.JamContext
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, _}
 
 /**
  * 消息询问者
@@ -19,8 +17,6 @@ import scala.concurrent.duration.Duration
  * 2020/9/18 19:48
  */
 object Questioner {
-  private val logger: HyLogger = JamContext.loggerFactory.get().getLogger(Questioner.getClass)
-
   /**
    * 待解决问题队列
    * 为了内存安全，此处在设置了队列后，即使队列在回答后被清空也不会删除它
@@ -69,11 +65,11 @@ object Questioner {
    * @param options  期待回答（默认表示接受一切回应）
    * @param times    询问次数（与期待回答结合使用，表示当答案没命中预期时，再进行几次提问）
    * @param answerer 只聆听此人（默认接受一切回复者）
-   * @param timeout  回答超时（过期自动取消提问）
+   * @param timeout  回答超时（过期自动取消提问，默认两分钟）
    * @param callback 回调（当命中期待回答时执行）
    */
   def ask(answerer: Answerer, options: Set[String] = Set.empty, times: Int = 1,
-          timeout: Option[Duration] = None)
+          timeout: Option[Duration] = Some(2.minutes))
          (callback: (Answerer, EventMessage, Question) => Future[Result]): Unit = {
     val hit = answerer match {
       case Answerer(Some(_), Some(_)) =>
@@ -117,11 +113,11 @@ object Questioner {
    * @param options  期待回答（默认表示接受一切回应）
    * @param times    询问次数（与期待回答结合使用，表示当答案没命中预期时，再进行几次提问）
    * @param answerer 只聆听此人（默认接受一切回复者）
-   * @param timeout  回答超时（过期自动取消提问）
+   * @param timeout  回答超时（过期自动取消提问，默认两分钟）
    * @param callback 回调（当命中期待回答时执行）
    */
   def ?(answerer: Answerer, options: Set[String] = Set.empty, times: Int = 1,
-        timeout: Option[Duration] = None)
+        timeout: Option[Duration] = Some(2.minutes))
        (callback: (Answerer, EventMessage, Question) => Future[Result]): Unit =
     this.ask(answerer, options, times, timeout)(callback)
 
