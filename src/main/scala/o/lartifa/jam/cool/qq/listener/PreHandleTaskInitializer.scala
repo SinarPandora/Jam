@@ -3,7 +3,7 @@ package o.lartifa.jam.cool.qq.listener
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.common.config.SystemConfig.MessageListenerConfig.PreHandleTask
-import o.lartifa.jam.cool.qq.listener.prehandle.{FlipsRepeatedImage, FuckOffMiniApp, JamIsSleeping, PreHandleTask}
+import o.lartifa.jam.cool.qq.listener.prehandle.{FlipsRepeatedImage, FuckOffMiniApp, PreHandleTask}
 import o.lartifa.jam.pool.JamContext
 
 /**
@@ -25,8 +25,7 @@ object PreHandleTaskInitializer {
     // TODO auto scan
     val allTasks = Map(
       "反向复读图片" -> FlipsRepeatedImage,
-      "替换小程序跳转" -> FuckOffMiniApp,
-      "梦呓" -> JamIsSleeping
+      "替换小程序跳转" -> FuckOffMiniApp
     )
     val tasks = PreHandleTask.enabledTasks.flatMap(allTasks.get)
     if (PreHandleTask.enabledTasks.sizeIs == tasks.size) {

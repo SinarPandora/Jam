@@ -3,6 +3,7 @@ package o.lartifa.jam.model.tasks
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.{JamCharacter, JamConfig}
 import o.lartifa.jam.common.util.MasterUtil
+import o.lartifa.jam.common.util.PicqBotUtil.Helper
 import o.lartifa.jam.model.tasks.GoASleep.logger
 import o.lartifa.jam.pool.JamContext
 
@@ -16,14 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 class GoASleep extends JamCronTask(name = "睡眠") {
   override def run()(implicit exec: ExecutionContext): Future[Unit] = {
-    JamContext.bot.get().getEventManager.getRegisteredListeners.clear()
-    JamContext.clientConfig.get().setHttpPaused(true)
-    JamContext.clientConfig.get().setEventPaused(true)
-    JamContext.jamIsSleeping.getAndSet(true)
-    if (JamCharacter.balderdash.nonEmpty) {
-      // TODO register balderdash listener
-      JamContext.bot.get().getEventManager.getRegisteredMethods
-    }
+    JamContext.bot.get().switchToSleepMode()
     MasterUtil.notifyMaster(JamCharacter.ForMaster.goodNight)
     logger.log(s"${JamConfig.name} 已经休眠")
     Future.successful(())
