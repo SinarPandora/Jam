@@ -22,7 +22,7 @@ object FlipsRepeatedImage extends PreHandleTask("反向复读图片") {
    * @return 如果返回 false，将打断后续的 SSDL 执行
    */
   override def execute(event: EventMessage)(implicit exec: ExecutionContext): Future[Boolean] = async {
-    val isRepeat = await(JamContext.messagePool.isRepeat(event))
+    val isRepeat = await(JamContext.messagePool.isPictureRepeat(event))
     if (isRepeat) {
       await(JamContext.messagePool.recordAPlaceholder(event, "捕获并翻转复读的图片"))
       Future {

@@ -149,13 +149,15 @@ class MessagePool {
    * @param context 执行上下文
    * @return 是否复读
    */
-  def isRepeat(implicit context: CommandExecuteContext): Future[Boolean] = {
-    this.lasts(2, 1).map { it =>
-      it.sizeIs == 2 &&
-        (it.head.message == it.last.message
-          || QQImg.isPicSame(it.head.message, it.last.message))
-    }
-  }
+  def isRepeat(implicit context: CommandExecuteContext): Future[Boolean] = this.isRepeat(context.eventMessage)
+
+  /**
+   * 是否复读一张图片
+   *
+   * @param context 执行上下文
+   * @return 是否复读
+   */
+  def isPictureRepeat(implicit context: CommandExecuteContext): Future[Boolean] = this.isPictureRepeat(context.eventMessage)
 
   /**
    * 是否当前处于复读状态
@@ -165,9 +167,19 @@ class MessagePool {
    */
   def isRepeat(event: EventMessage): Future[Boolean] = {
     this.lasts(event, 2, 1).map { it =>
-      it.sizeIs == 2 &&
-        (it.head.message == it.last.message
-          || QQImg.isPicSame(it.head.message, it.last.message))
+      it.sizeIs == 2 && it.head.message == it.last.message
+    }
+  }
+
+  /**
+   * 是否复读一张图片
+   *
+   * @param event 当前消息对象
+   * @return 是否复读
+   */
+  def isPictureRepeat(event: EventMessage): Future[Boolean] = {
+    this.lasts(event, 2, 1).map { it =>
+      it.sizeIs == 2 && QQImg.isPicSame(it.head.message, it.last.message)
     }
   }
 
