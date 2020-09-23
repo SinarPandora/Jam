@@ -1,7 +1,9 @@
 plugins {
+    id "idea"
     id "java"
     id "scala"
     id "distribution"
+    id "application"
 }
 
 group = "lartifa.o"
@@ -12,6 +14,11 @@ configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+}
+
+application {
+    mainClass = 'o.lartifa.jam.Bootloader'
+    applicationDefaultJvmArgs = ['-Dgreeting.language=en']
 }
 
 sourceSets {
