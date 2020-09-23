@@ -43,7 +43,7 @@ object Bootloader {
         |可选参数：
         |--flyway_repair  执行数据迁移修复
         |--help           输出该提示
-        |--config_path=   手动指定配置文件目录位置
+        |--config=xxx     手动指定配置文件目录位置
         |""".stripMargin)
     sys.exit(0)
   }
@@ -55,9 +55,9 @@ object Bootloader {
    */
   def setUpJVMParameters(args: Array[String]): Unit = {
     val configPath = args
-      .find(_.startsWith("--config_path="))
-      .map(_.stripPrefix("--config_path="))
-      .getOrElse("../conf")
-    System.setProperty("config.file", s"$configPath/bot.conf")
+      .find(_.startsWith("--config="))
+      .map(_.stripPrefix("--config="))
+      .getOrElse("../conf/bot.conf")
+    System.setProperty("config.file", configPath)
   }
 }
