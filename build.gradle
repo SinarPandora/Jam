@@ -18,7 +18,7 @@ configurations {
 
 application {
     mainClass = 'o.lartifa.jam.Bootloader'
-    applicationDefaultJvmArgs = ['-Dgreeting.language=en']
+    applicationDefaultJvmArgs = ["-Xmx2g", "-Xms512m", "-ea", "-server"]
 }
 
 sourceSets {
