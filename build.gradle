@@ -83,3 +83,16 @@ dependencies {
     testImplementation("org.scalatest:scalatest_2.13:$scala_test_version")
     testImplementation("org.scalamock:scalamock_2.13:4.4.0")
 }
+
+distributions {
+    main {
+        distributionBaseName = "jam_body"
+        contents {
+            into("conf") {
+                from "conf/."
+                exclude "*test*"
+                exclude "*local*"
+            }
+        }
+    }
+}
