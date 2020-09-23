@@ -18,6 +18,7 @@ import scala.concurrent.duration.Duration
  */
 object Bootloader {
   def main(args: Array[String]): Unit = {
+    setUpJVMParameters(args)
     if (args.contains("--help")) help()
     val client = CoolQQLoader.createCoolQQClient()
     JamContext.bot.set(client)
@@ -29,6 +30,9 @@ object Bootloader {
     JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}${name}已恢复生命体征")
   }
 
+  /**
+   * 输出帮助信息
+   */
   def help(): Unit = {
     println(
       """果酱命令行启动器
@@ -39,7 +43,21 @@ object Bootloader {
         |可选参数：
         |--flyway_repair  执行数据迁移修复
         |--help           输出该提示
+        |--config_path=   手动指定配置文件目录位置
         |""".stripMargin)
     sys.exit(0)
+  }
+
+  /**
+   * 运行时配置JVM参数
+   *
+   * @param args 命令行参数
+   */
+  def setUpJVMParameters(args: Array[String]): Unit = {
+    val configPath = args
+      .find(_.startsWith("--config_path="))
+      .map(_.stripPrefix("--config_path="))
+      .getOrElse("../conf")
+    System.setProperty("config.file", s"$configPath/bot.conf")
   }
 }
