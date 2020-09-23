@@ -59,6 +59,7 @@ class RSSSubscription(val source: String, private var _channelName: String, val 
             logger.debug(s"推送信息预览：$message")
             val output = JamContext.httpApi.get()()
             _subscribers.foreach { case ChatInfo(chatType, id) =>
+              // TODO 发送失败时重试
               chatType match {
                 case MessageType.PRIVATE => output.sendPrivateMsg(id, message)
                 case MessageType.GROUP => output.sendGroupMsg(id, message)

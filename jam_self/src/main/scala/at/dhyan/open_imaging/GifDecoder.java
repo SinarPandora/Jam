@@ -1,15 +1,14 @@
 package at.dhyan.open_imaging;
 
-import static java.lang.System.arraycopy;
-
-import java.awt.Color;
-import java.awt.Graphics2D;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.lang.System.arraycopy;
 
 /*
  * Copyright 2014 Dhyan Blum
