@@ -3,5 +3,7 @@ plugins {
     id "scala"
 }
 
-group = "lartifa.o"
-version = "3.0.5"
+allprojects {
+    group = "lartifa.o"
+    version = "3.0.5"
+}

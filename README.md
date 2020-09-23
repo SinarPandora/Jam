@@ -11,6 +11,8 @@
 
 ## Release History 版本历史
 
+* （计划中）3.0.6 Jam x Ink
+* 3.0.5 RSS 订阅（预览版）+ 询问模式
 * 3.0.2 字符串模板 + 图片 Bot
     * 该版本在实现过程中遭遇 CQ 关站，因此在迁移到 Mirai 前暂不发布
 * 3.0.1 生物钟
@@ -18,10 +20,11 @@
 
 ## TODO 计划
 
-* [ ] Mirai Jam
+* [-] Mirai Jam
 * [ ] 定时任务的 SSDL
 * [ ] SSDL 2
 * [ ] UI 界面
+* [ ] Ink 语法支持
 
 ## Authors 关于作者
 
