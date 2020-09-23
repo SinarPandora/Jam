@@ -1,9 +1,9 @@
 package o.lartifa.jam.database.temporary.schema
 // AUTO-GENERATED Slick data model
 /** Stand-alone Slick data model for immediate use */
-object Tables extends {
+object Tables extends Tables {
   val profile = slick.jdbc.PostgresProfile
-} with Tables
+}
 
 /** Slick data model trait for extension, choice of backend or usage in the cake pattern. (Make sure to initialize this late.)
     Each generated XXXXTable trait is mixed in this trait hence allowing access to all the TableQuery lazy vals.
