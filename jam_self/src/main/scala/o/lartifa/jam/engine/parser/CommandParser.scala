@@ -2,11 +2,13 @@ package o.lartifa.jam.engine.parser
 
 import ammonite.ops.PipeableImplicit
 import o.lartifa.jam.common.exception.ParseFailException
+import o.lartifa.jam.model.commands.Ask.{AnyGroupFriends, CurrentSender}
 import o.lartifa.jam.model.commands._
 import o.lartifa.jam.plugins.picbot._
 import o.lartifa.jam.plugins.rss.{RSSShowAll, RSSSubscribe, RSSUnSubscribe}
 import o.lartifa.jam.pool.JamContext
 
+import scala.collection.parallel.CollectionConverters._
 import scala.util.Try
 
 /**
@@ -32,6 +34,7 @@ object CommandParser extends Parser {
         Some(executableCommand)
       case None =>
         LazyList(
+          parseAsk _,
           parseCatchParameters _,
           parseMessageSend _,
           parseGoto _,
@@ -441,5 +444,35 @@ object CommandParser extends Parser {
    */
   private def parseRSSShowAll(string: String)(implicit context: ParseEngineContext): Option[RSSShowAll.type] =
     if (string.contains(CommandPattern.rssShowAll)) Some(RSSShowAll) else None
+
+  /**
+   * 解析询问指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseAsk(string: String)(implicit context: ParseEngineContext): Option[Ask] = {
+    CommandPattern.ask.findFirstMatchIn(string).map(result => {
+      val answererType = result.group("questioner") match {
+        case CurrentSender.name => CurrentSender
+        case AnyGroupFriends.name => AnyGroupFriends
+        case _ => throw ParseFailException("应答者类型有误，应在：发送者 和 任意群友 中选择")
+      }
+      val matchers = CommandPattern.answerMatcher.findAllMatchIn(result.group("answerMatchers")).toList.par
+        .map { it =>
+          val command = parseCommand(it.group("command")).getOrElse(throw ParseFailException("答案对应的指令不正确"))
+          val answer = it.group("answer")
+          if (answer == "其他答案") None -> command
+          else Some(answer.stripPrefix("若答案为{").stripSuffix("}")) -> command
+        }.seq.toMap
+      val defaultCallback = matchers.get(None)
+      val answerMatcher = (matchers - None).map {
+        case (Some(key), value) => key -> value
+        case _ => throw ParseFailException("解析答案过程中出现错误")
+      }
+      Ask(context.getTemplate(result.group("question")), answererType, answerMatcher, defaultCallback)
+    })
+  }
 
 }

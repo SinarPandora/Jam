@@ -7,6 +7,7 @@ import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.listener.asking.Question.{logger, questionTimer}
+import o.lartifa.jam.cool.qq.listener.asking.Questioner.QuestionContext
 import o.lartifa.jam.cool.qq.listener.listenerCommonPool
 import o.lartifa.jam.pool.JamContext
 
@@ -23,7 +24,7 @@ import scala.concurrent.duration.Duration
 case class Question(hit: (EventMessage, Answerer) => Boolean, answerer: Answerer,
                     times: AtomicInteger = new AtomicInteger(1),
                     timeout: Option[Duration],
-                    private val callback: (Answerer, EventMessage, Question) => Future[Result],
+                    private val callback: QuestionContext => Future[Result],
                     private val targetQueue: ListBuffer[Question]) {
   val task: Option[ScheduledFuture[Runnable]] = timeout.map(duration => {
     questionTimer.schedule(() => {
@@ -40,7 +41,7 @@ case class Question(hit: (EventMessage, Answerer) => Boolean, answerer: Answerer
    * @param answerer     回答者
    */
   def answerBy(eventMessage: EventMessage, answerer: Answerer): Future[Result] = {
-    callback(answerer, eventMessage, this).recover(err => {
+    callback(QuestionContext(answerer, eventMessage, this)).recover(err => {
       logger.error(err)
       MasterUtil.notifyMaster(s"%，在处理回答时出现问题，消息内容为：${eventMessage.message}")
       Result.Complete

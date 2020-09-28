@@ -2,6 +2,8 @@ package o.lartifa.jam.cool.qq.listener.asking
 
 import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
 import o.lartifa.jam.common.exception.ExecutionException
+import o.lartifa.jam.cool.qq.listener.asking.Questioner.QuestionContext
+import o.lartifa.jam.model.CommandExecuteContext
 
 import scala.concurrent.Future
 import scala.concurrent.duration.{Duration, _}
@@ -34,7 +36,7 @@ sealed case class Answerer(qID: Option[Long], groupID: Option[Long]) {
    */
   def ?(options: Set[String] = Set.empty, times: Int = 1,
         timeout: Option[Duration] = Some(2.minutes))
-       (callback: (Answerer, EventMessage, Question) => Future[Result]): Unit =
+       (callback: QuestionContext => Future[Result]): Unit =
     Questioner.ask(this, options, times, timeout)(callback)
 
   /**
@@ -42,7 +44,7 @@ sealed case class Answerer(qID: Option[Long], groupID: Option[Long]) {
    *
    * @param callback 回调（当命中期待回答时执行）
    */
-  def ?(callback: (Answerer, EventMessage, Question) => Future[Result]): Unit =
+  def ?(callback: QuestionContext => Future[Result]): Unit =
     Questioner.ask(this)(callback)
 }
 
@@ -63,6 +65,15 @@ object Answerer {
   }
 
   /**
+   * 询问会话中的任何人
+   *
+   * @param context 执行上下文
+   * @return 回答者
+   */
+  def anyInThisSession(implicit context: CommandExecuteContext): Answerer =
+    anyInThisSession(context.eventMessage)
+
+  /**
    * 询问（或获取）当前的发言人
    *
    * @param eventMessage 消息对象
@@ -76,6 +87,15 @@ object Answerer {
         new Answerer(Some(message.getSenderId), None)
     }
   }
+
+  /**
+   * 询问（或获取）当前的发言人
+   *
+   * @param context 执行上下文
+   * @return 回答者
+   */
+  def sender(implicit context: CommandExecuteContext): Answerer =
+    sender(context.eventMessage)
 
   def apply(qID: Option[Long], groupID: Option[Long]): Answerer = {
     if (qID.isEmpty && groupID.isEmpty) {

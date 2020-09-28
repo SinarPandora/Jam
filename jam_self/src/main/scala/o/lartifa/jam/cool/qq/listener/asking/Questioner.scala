@@ -17,6 +17,9 @@ import scala.concurrent.duration.{Duration, _}
  * 2020/9/18 19:48
  */
 object Questioner {
+
+  case class QuestionContext(answerer: Answerer, event: EventMessage, question: Question)
+
   /**
    * 待解决问题队列
    * 为了内存安全，此处在设置了队列后，即使队列在回答后被清空也不会删除它
@@ -70,7 +73,7 @@ object Questioner {
    */
   def ask(answerer: Answerer, options: Set[String] = Set.empty, times: Int = 1,
           timeout: Option[Duration] = Some(2.minutes))
-         (callback: (Answerer, EventMessage, Question) => Future[Result]): Unit = {
+         (callback: QuestionContext => Future[Result]): Unit = {
     val hit = answerer match {
       case Answerer(Some(_), Some(_)) =>
         (event: EventMessage, _answerer: Answerer) => {
@@ -118,7 +121,7 @@ object Questioner {
    */
   def ?(answerer: Answerer, options: Set[String] = Set.empty, times: Int = 1,
         timeout: Option[Duration] = Some(2.minutes))
-       (callback: (Answerer, EventMessage, Question) => Future[Result]): Unit =
+       (callback: QuestionContext => Future[Result]): Unit =
     this.ask(answerer, options, times, timeout)(callback)
 
 
