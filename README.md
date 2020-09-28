@@ -20,11 +20,17 @@
 
 ## TODO 计划
 
-* [-] Mirai Jam
+* [ ] Mirai Jam
 * [ ] 定时任务的 SSDL
 * [ ] SSDL 2
 * [ ] UI 界面
 * [ ] Ink 语法支持
+* [x] PostgreSQL + Flyway
+* [x] RSS
+* [x] 翻转图片
+* [x] 小程序解析地址
+* [x] 早安晚安
+* [x] 询问系统
 
 ## Authors 关于作者
 
