@@ -35,7 +35,15 @@ object Questioner {
    */
   def tryAnswerer(eventMessage: EventMessage): Future[Boolean] = {
     val currentAnswer = Answerer.sender(eventMessage)
-    val questInSession = questionWaitingQueue.getOrElse(currentAnswer, return Future.successful(true))
+    if (questionWaitingQueue.isEmpty) return Future.successful(true)
+    val questInSession = eventMessage match {
+      case _: EventGroupOrDiscussMessage =>
+        questionWaitingQueue.get(currentAnswer)
+          .orElse(questionWaitingQueue.get(currentAnswer.copy(qID = None)))
+          .getOrElse(return Future.successful(true))
+      case _: EventPrivateMessage =>
+        questionWaitingQueue.getOrElse(currentAnswer, return Future.successful(true))
+    }
     questInSession.synchronized {
       if (questInSession.isEmpty) return Future.successful(true)
       val question = questInSession.find(q => q.hit(eventMessage, currentAnswer)).getOrElse(return Future.successful(true))

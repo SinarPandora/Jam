@@ -27,13 +27,12 @@ case class Ask(question: RenderStrTemplate, answererType: AnswererType, askMatch
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
     import context.eventMessage._
     await(question.execute()) |> respond
-    answerer.?(askMatchers.keySet) { ctx =>
-      askMatchers.get(ctx.event.message).orElse(defaultCallback) match {
-        case Some(command) =>
-          command.execute()
-          Future.successful(Result.Complete)
-        case None =>
-          Future.successful(Result.KeepCountAndContinueAsking)
+    answerer ? { ctx =>
+      askMatchers.get(ctx.event.message.trim) match {
+        case Some(command) => command.execute().map(_ => Result.Complete)
+        case None => defaultCallback.map(it => {
+          it.execute().map(_ => Result.Complete)
+        }).getOrElse(Future.successful(Result.KeepCountAndContinueAsking))
       }
     }
   }
@@ -48,7 +47,7 @@ case class Ask(question: RenderStrTemplate, answererType: AnswererType, askMatch
     answererType match {
       case Ask.CurrentSender =>
         Answerer.sender
-      case Ask.AnyGroupFriends =>
+      case Ask.AnyBody =>
         context.eventMessage match {
           case _: EventGroupOrDiscussMessage =>
             Answerer.anyInThisSession
@@ -65,6 +64,6 @@ object Ask {
 
   case object CurrentSender extends AnswererType("发送者")
 
-  case object AnyGroupFriends extends AnswererType("任意群友")
+  case object AnyBody extends AnswererType("任何人")
 
 }

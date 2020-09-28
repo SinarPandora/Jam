@@ -2,7 +2,7 @@ package o.lartifa.jam.engine.parser
 
 import ammonite.ops.PipeableImplicit
 import o.lartifa.jam.common.exception.ParseFailException
-import o.lartifa.jam.model.commands.Ask.{AnyGroupFriends, CurrentSender}
+import o.lartifa.jam.model.commands.Ask.{AnyBody, CurrentSender}
 import o.lartifa.jam.model.commands._
 import o.lartifa.jam.plugins.picbot._
 import o.lartifa.jam.plugins.rss.{RSSShowAll, RSSSubscribe, RSSUnSubscribe}
@@ -456,8 +456,8 @@ object CommandParser extends Parser {
     CommandPattern.ask.findFirstMatchIn(string).map(result => {
       val answererType = result.group("questioner") match {
         case CurrentSender.name => CurrentSender
-        case AnyGroupFriends.name => AnyGroupFriends
-        case _ => throw ParseFailException("应答者类型有误，应在：发送者 和 任意群友 中选择")
+        case AnyBody.name => AnyBody
+        case _ => throw ParseFailException("应答者类型有误，应在：发送者 和 任何人 中选择")
       }
       val matchers = CommandPattern.answerMatcher.findAllMatchIn(result.group("answerMatchers")).toList.par
         .map { it =>
