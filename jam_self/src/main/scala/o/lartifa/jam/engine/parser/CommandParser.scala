@@ -467,7 +467,7 @@ object CommandParser extends Parser {
           else Some(answer.stripPrefix("若答案为{").stripSuffix("}")) -> command
         }.seq.toMap
       val defaultCallback = matchers.get(None)
-      val answerMatcher = (matchers - None).map {
+      val answerMatcher: Map[String, Command[_]] = (matchers - None).map {
         case (Some(key), value) => key -> value
         case _ => throw ParseFailException("解析答案过程中出现错误")
       }
