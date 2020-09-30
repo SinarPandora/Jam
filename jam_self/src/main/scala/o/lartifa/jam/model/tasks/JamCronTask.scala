@@ -24,7 +24,8 @@ import scala.util.{Failure, Success, Try}
  * Author: sinar
  * 2020/1/25 13:45
  */
-abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.None, val id: UUID = UUID.randomUUID()) extends Task {
+abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.None, val id: UUID = UUID.randomUUID(),
+                           val onlyOnce: Boolean = false) extends Task {
 
   import o.lartifa.jam.pool.CronTaskPool.cronTaskWaitingPool
 
@@ -73,8 +74,9 @@ abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.N
 
   /**
    * 完成后执行
+   * 默认判断任务若只需执行一次，则在执行后自动取消任务
    */
-  def postRun(): Unit = {}
+  def postRun(): Unit = if (onlyOnce) this.cancel()
 
   /**
    * 设置并启动定时任务
