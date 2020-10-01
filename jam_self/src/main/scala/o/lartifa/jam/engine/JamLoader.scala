@@ -8,6 +8,7 @@ import o.lartifa.jam.database.temporary.Memory
 import o.lartifa.jam.engine.SSDLParseEngine.{ParseFailResult, ParseSuccessResult}
 import o.lartifa.jam.model.patterns.ContentMatcher
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext, Step}
+import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.pool.{JamContext, StepPool}
 
 import scala.async.Async._
@@ -33,6 +34,7 @@ object JamLoader {
    */
   def init(args: Array[String]): Future[Unit] = async {
     Memory.init(args.contains("--flyway_repair"))
+    await(JamPluginLoader.initJamPluginSystems())
     await(BehaviorInitializer.init())
     await(loadSSDL()).foreach(errorMessages => logger.error(errorMessages.mkString("\n")))
   }
