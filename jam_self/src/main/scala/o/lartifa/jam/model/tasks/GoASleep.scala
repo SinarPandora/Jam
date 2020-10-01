@@ -5,8 +5,10 @@ import o.lartifa.jam.common.config.{JamCharacter, JamConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.common.util.PicqBotUtil.Helper
 import o.lartifa.jam.model.tasks.GoASleep.goASleep
+import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.pool.JamContext
 
+import scala.collection.parallel.CollectionConverters._
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -19,6 +21,10 @@ class GoASleep extends JamCronTask(name = "睡眠") {
   override def run()(implicit exec: ExecutionContext): Future[Unit] = {
     MasterUtil.notifyMaster(JamCharacter.ForMaster.goodNight)
     goASleep()
+    Future {
+      // 乱序执行睡后任务
+      JamPluginLoader.loadedComponents.afterSleepTasks.par.foreach(_.apply())
+    }
     Future.successful(())
   }
 }

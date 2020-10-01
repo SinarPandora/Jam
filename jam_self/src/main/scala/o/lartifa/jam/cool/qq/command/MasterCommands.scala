@@ -9,6 +9,7 @@ import cc.moecraft.icq.user.User
 import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
 import o.lartifa.jam.engine.JamLoader
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
+import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.pool.JamContext
 
 import scala.async.Async._
@@ -23,7 +24,7 @@ object MasterCommands {
   private implicit val exec: ExecutionContextExecutor = ExecutionContext.fromExecutor(
     Executors.newFixedThreadPool(Runtime.getRuntime.availableProcessors()))
 
-  val commands: List[IcqCommand] = List(
+  def commands: List[IcqCommand] = List(
     Ping,
     ListVariable,
     ClearVariableInChat,
@@ -31,8 +32,8 @@ object MasterCommands {
     RemoveVariable,
     ReloadSSDL,
     SessionInfo,
-    Refresh
-  )
+    Refresh,
+  ) ++ JamPluginLoader.loadedComponents.masterCommands
 
   private object Ping extends MasterEverywhereCommand("ping", "在吗") {
     /**

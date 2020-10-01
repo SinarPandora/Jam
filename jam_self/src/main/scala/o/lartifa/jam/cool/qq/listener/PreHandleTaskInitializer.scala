@@ -4,6 +4,7 @@ import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.common.config.SystemConfig.MessageListenerConfig.PreHandleTask
 import o.lartifa.jam.cool.qq.listener.prehandle.{FlipsRepeatedImage, FuckOffMiniApp, PreHandleTask}
+import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.pool.JamContext
 
 /**
@@ -22,11 +23,10 @@ object PreHandleTaskInitializer {
    * @return 当前启用的全部前置任务
    */
   def tasks: List[PreHandleTask] = {
-    // TODO auto scan
     val allTasks = Map(
       "反向复读图片" -> FlipsRepeatedImage,
       "替换小程序跳转" -> FuckOffMiniApp
-    )
+    ) ++ JamPluginLoader.loadedComponents.preHandleTasks.map(it => it.name -> it)
     val tasks = PreHandleTask.enabledTasks.flatMap(allTasks.get)
     if (PreHandleTask.enabledTasks.sizeIs == tasks.size) {
       logger.log(s"${AnsiColor.GREEN}已启动如下前置任务：${PreHandleTask.enabledTasks.mkString(", ")}")

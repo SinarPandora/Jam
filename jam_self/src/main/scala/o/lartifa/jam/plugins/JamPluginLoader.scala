@@ -1,7 +1,5 @@
 package o.lartifa.jam.plugins
 
-import java.util.concurrent.atomic.AtomicReference
-
 import cc.moecraft.logger.{HyLogger, LogLevel}
 import cn.hutool.core.util.StrUtil
 import o.lartifa.jam.common.config.JamConfig
@@ -11,8 +9,10 @@ import o.lartifa.jam.cool.qq.listener.prehandle.PreHandleTask
 import o.lartifa.jam.database.temporary.Memory.database.db
 import o.lartifa.jam.database.temporary.schema.Tables
 import o.lartifa.jam.database.temporary.schema.Tables._
+import o.lartifa.jam.engine.JamLoader
 import o.lartifa.jam.engine.parser.SSDLCommandParser
 import o.lartifa.jam.engine.parser.SSDLCommandParser._
+import o.lartifa.jam.model.commands.Command
 import o.lartifa.jam.model.tasks.{JamCronTask, LifeCycleTask}
 import o.lartifa.jam.plugins.api.JamPluginInstaller
 import o.lartifa.jam.pool.JamContext
@@ -41,19 +41,26 @@ object JamPluginLoader {
     bootTasks: List[LifeCycleTask] = Nil,
     shutdownTasks: List[LifeCycleTask] = Nil,
     preHandleTasks: List[PreHandleTask] = Nil,
-    containsModeCommandParsers: List[SSDLCommandParser[_]] = Nil,
-    regexModeCommandParsers: List[SSDLCommandParser[_]] = Nil,
-    highOrderModeCommandParsers: List[SSDLCommandParser[_]] = Nil,
+    containsModeCommandParsers: List[SSDLCommandParser[_, Command[_]]] = Nil,
+    regexModeCommandParsers: List[SSDLCommandParser[_, Command[_]]] = Nil,
+    highOrderModeCommandParsers: List[SSDLCommandParser[_, Command[_]]] = Nil,
     cronTasks: List[JamCronTask] = Nil,
     masterCommands: List[MasterEverywhereCommand] = Nil,
-    afterSleepTasks: List[JamCronTask] = Nil
+    afterSleepTasks: List[LifeCycleTask] = Nil
   )
 
   /**
    * 装载好的加载器实例们
    * 系统读取加载器时不再需要重新创建，而是直接从这里获取
    */
-  val loadedInitializers: AtomicReference[LoadedComponents] = new AtomicReference(LoadedComponents())
+  private var _loadedComponents: LoadedComponents = LoadedComponents()
+
+  def loadedComponents: LoadedComponents = this._loadedComponents
+
+  /**
+   * 插件类路径 -> 插件实例映射
+   */
+  lazy val installers: Map[String, JamPluginInstaller] = scanPlugins()
 
   /**
    * 加载果酱的插件系统
@@ -61,8 +68,6 @@ object JamPluginLoader {
    * @param exec 异步执行上下文
    */
   def initJamPluginSystems()(implicit exec: ExecutionContext): Future[Unit] = async {
-    // 反射搜索 JamPluginInstaller
-    val installers: Map[String, JamPluginInstaller] = scanPlugins()
     // 对比存在的插件和数据库表
     val installedPlugins: Map[String, Tables.PluginsRow] = await(db.run(Plugins.result)).map(it => it.`package` -> it).toMap
     if (installers.nonEmpty || installedPlugins.nonEmpty) {
@@ -72,7 +77,7 @@ object JamPluginLoader {
       }.mkString("\n")
       if (missingPlugins.nonEmpty) {
         logger.warning(s"以下插件丢失：$missingPlugins")
-        MasterUtil.notifyMaster(s"以下插件丢失（他们已经无法找到并没有被正确卸载）：")
+        MasterUtil.notifyMaster(s"[警告⚠️] 以下插件丢失（他们已经无法找到并没有被正确卸载）：")
         MasterUtil.notifyMaster(missingPlugins)
       }
 
@@ -86,8 +91,8 @@ object JamPluginLoader {
       }
       val installResult = installation.groupMap(_._2.isSuccess)(_._1)
       val needInsert = (installers -- installResult.getOrElse(true, Nil))
-        .map {
-          case (packageName, it) => (it.pluginName, it.keywords.mkString(","), it.author, packageName, JamConfig.autoEnablePlugins)
+        .map { case (packageName, it) =>
+          (it.pluginName, it.keywords.mkString(","), it.author, packageName, JamConfig.autoEnablePlugins)
         }.toList
 
       val insertSuccess = needInsert.sizeIs == await {
@@ -97,12 +102,16 @@ object JamPluginLoader {
       }.getOrElse(0)
 
       if (!insertSuccess) {
-        logger.warning(s"插件安装数量与预期不符，这很可能是一个 bug，若${JamConfig.name}无法正常运作，请联系作者")
-        MasterUtil.notifyMaster(s"插件安装数量与预期不符，这很可能是一个 bug，若${JamConfig.name}无法正常运作，请联系作者")
+        MasterUtil.notifyAndLog(s"插件安装数量与预期不符，这很可能是一个 bug，若${JamConfig.name}无法正常运作，请联系作者",
+          LogLevel.WARNING)
       }
 
       // 将挂载点注入到各个组件
-      this.loadedInitializers.getAndSet(mountPlugins((installers -- installResult.getOrElse(false, Nil)).values))
+      val needLoad = installedPlugins.values.groupBy(_.isEnabled).getOrElse(true, Nil).map(_.`package`) ++ {
+        if (JamConfig.autoEnablePlugins) installResult.getOrElse(true, Nil)
+        else Nil
+      }
+      this._loadedComponents = mountPlugins((installers -- needLoad).values)
     }
   }
 
@@ -116,12 +125,12 @@ object JamPluginLoader {
     val bootTasks: ListBuffer[LifeCycleTask] = ListBuffer.empty
     val shutdownTasks: ListBuffer[LifeCycleTask] = ListBuffer.empty
     val preHandleTasks: ListBuffer[PreHandleTask] = ListBuffer.empty
-    val containsModeCommandParsers: ListBuffer[SSDLCommandParser[_]] = ListBuffer.empty
-    val regexModeCommandParsers: ListBuffer[SSDLCommandParser[_]] = ListBuffer.empty
-    val highOrderModeCommandParsers: ListBuffer[SSDLCommandParser[_]] = ListBuffer.empty
+    val containsModeCommandParsers: ListBuffer[SSDLCommandParser[_, Command[_]]] = ListBuffer.empty
+    val regexModeCommandParsers: ListBuffer[SSDLCommandParser[_, Command[_]]] = ListBuffer.empty
+    val highOrderModeCommandParsers: ListBuffer[SSDLCommandParser[_, Command[_]]] = ListBuffer.empty
     val cronTasks: ListBuffer[JamCronTask] = ListBuffer.empty
     val masterCommands: ListBuffer[MasterEverywhereCommand] = ListBuffer.empty
-    val afterSleepTasks: ListBuffer[JamCronTask] = ListBuffer.empty
+    val afterSleepTasks: ListBuffer[LifeCycleTask] = ListBuffer.empty
     installers.flatMap(_.mountPoint).foreach { it =>
       bootTasks ++= it.bootTasks
       shutdownTasks ++= it.bootTasks
@@ -163,11 +172,11 @@ object JamPluginLoader {
    */
   private def tryInstallPlugin(packageName: String, installer: JamPluginInstaller)(implicit exec: ExecutionContext): Future[(String, Try[Unit])] = {
     installer.install().recoverWith(err => {
-      MasterUtil.notifyAndLog(s"[${installer.pluginName}]安装插件出错，正在自动尝试卸载...",
+      MasterUtil.notifyAndLog(s"[${installer.pluginName}] 安装插件出错，正在自动尝试卸载...",
         LogLevel.ERROR, Some(err))
       MasterUtil.notifyMaster(s"插件包名为：$packageName")
       installer.uninstall().recover(err => {
-        MasterUtil.notifyAndLog(s"[${installer.pluginName}]安装卸载失败，请删除该插件并可以尝试联系插件作者",
+        MasterUtil.notifyAndLog(s"[${installer.pluginName}] 插件卸载失败，请删除该插件并可以尝试联系插件作者",
           LogLevel.ERROR, Some(err))
         MasterUtil.notifyMaster(s"插件包名为：$packageName")
         Failure(err)
@@ -178,24 +187,59 @@ object JamPluginLoader {
   /**
    * 启用插件
    *
-   * @param id 插件 ID
-   * @return 启用是否成功
+   * @param id        插件 ID
+   * @param reloadNow 是否立刻重新加载果酱
+   * @param exec      异步执行上下文
    */
-  def enablePlugin(id: Int): Future[Boolean] = ???
+  def enablePlugin(id: Long, reloadNow: Boolean = true)(implicit exec: ExecutionContext): Future[Unit] =
+    updatePluginStatus(id, isEnabled = true, reloadNow = reloadNow)
 
   /**
    * 禁用插件
    *
-   * @param id 插件 ID
-   * @return 禁用是否成功
+   * @param id        插件 ID
+   * @param reloadNow 是否立刻重新加载果酱
+   * @param exec      异步执行上下文
    */
-  def disablePlugin(id: Int): Future[Boolean] = ???
+  def disablePlugin(id: Long, reloadNow: Boolean = true)(implicit exec: ExecutionContext): Future[Unit] =
+    updatePluginStatus(id, isEnabled = false, reloadNow = reloadNow)
+
+  /**
+   * 更新插件状态
+   *
+   * @param id        插件 ID
+   * @param isEnabled 启用 or 禁用
+   * @param reloadNow 是否立刻重新加载果酱
+   * @param exec      异步执行上下文
+   */
+  private def updatePluginStatus(id: Long, isEnabled: Boolean, reloadNow: Boolean)(implicit exec: ExecutionContext): Future[Unit] = async {
+    val plugin = await(db.run(Plugins.filter(_.id === id).result.headOption))
+      .flatMap(it => installers.get(it.`package`).map(_ -> it.isEnabled))
+    if (plugin.isDefined) {
+      if (isEnabled == plugin.get._2) {
+        MasterUtil.notifyMaster(s"插件已经${if (isEnabled) "启用" else "禁用"}")
+      } else {
+        val result = await(db.run(Plugins.filter(_.id === id).map(_.isEnabled).update(isEnabled)))
+        if (result != 1) {
+          MasterUtil.notifyAndLog("更新插件状态失败！", LogLevel.ERROR)
+        } else {
+          MasterUtil.notifyMaster(s"插件已成功${if (isEnabled) "启用" else "禁用"}")
+          if (reloadNow) JamLoader.reload()
+        }
+      }
+    } else {
+      MasterUtil.notifyAndLog(s"指定编号的插件不存在！", LogLevel.WARNING)
+    }
+  }
+
 
   /**
    * 卸载插件
    *
-   * @param id 插件 ID
+   * @param id        插件 ID
+   * @param reloadNow 是否立刻重新加载果酱
+   * @param exec      异步执行上下文
    * @return 卸载是否成功
    */
-  def uninstallPlugin(id: Int): Future[Boolean] = ???
+  def uninstallPlugin(id: Long, reloadNow: Boolean = true)(implicit exec: ExecutionContext): Future[Boolean] = ???
 }

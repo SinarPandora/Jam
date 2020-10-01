@@ -4,6 +4,7 @@ import ammonite.ops.PipeableImplicit
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.model.commands.Ask.{AnyBody, CurrentSender}
 import o.lartifa.jam.model.commands._
+import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.plugins.picbot._
 import o.lartifa.jam.plugins.rss.{RSSShowAll, RSSSubscribe, RSSUnSubscribe}
 import o.lartifa.jam.pool.JamContext
@@ -19,7 +20,39 @@ import scala.util.Try
  */
 object CommandParser extends Parser {
 
+  type LineParser = (String, ParseEngineContext) => Option[Command[_]]
+
   import Patterns.CommandPattern
+
+  private var _parsers: List[LineParser] = Nil
+
+  /**
+   * 准备指令解析器
+   */
+  def prepareParsers(): Unit = {
+    _parsers = createParserList
+  }
+
+  /**
+   * 获构建指令解析器列表
+   *
+   * @return 解析器列表
+   */
+  private def createParserList: List[LineParser] = {
+    val components = JamPluginLoader.loadedComponents
+    val contains = components.containsModeCommandParsers.map(it => it.parse _)
+    val regex = components.regexModeCommandParsers.map(it => it.parse _)
+    val highOrder = components.highOrderModeCommandParsers.map(it => it.parse _)
+    List(parseAsk _) ++ highOrder ++ List(
+      parseCatchParameters _, parseMessageSend _, parseGoto _, parseOneByOne _, parseParamOpt _,
+      parseRandomNumber _, parseRandomGoto _, parseLoopGoto _, parseParamDel _, parseWaiting _,
+      parseSetPicFetcherMode _, parseSetPicRating _, parseRunTaskNow _, parseFetchAndSendPic _,
+      parseRollEveryThing _) ++ regex ++ List(
+      // 包含类模式放在后边
+      parseDoNoting _, parseGroupWholeBan _, parseGroupWholeUnBan _, parseShowPicInfo _,
+      parseRSSSubscribe _, parseRSSUnSubscribe _, parseRSSShowAll _
+    ) ++ contains
+  }
 
   /**
    * 解析指令
@@ -28,42 +61,17 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 指令对象（Optional）
    */
-  def parseCommand(string: String)(implicit context: ParseEngineContext): Option[Command[_]] = {
-    parseExecuteCommand(string) match {
+  def parseCommand(string: String, context: ParseEngineContext): Option[Command[_]] = {
+    parseExecuteCommand(string, context) match {
       case Some(executableCommand) =>
         Some(executableCommand)
       case None =>
-        LazyList(
-          parseAsk _,
-          parseCatchParameters _,
-          parseMessageSend _,
-          parseGoto _,
-          parseOneByOne _,
-          parseParamOpt _,
-          parseRandomNumber _,
-          parseRandomGoto _,
-          parseLoopGoto _,
-          parseParamDel _,
-          parseWaiting _,
-          parseSetPicFetcherMode _,
-          parseSetPicRating _,
-          parseRunTaskNow _,
-          parseFetchAndSendPic _,
-          parseRollEveryThing _,
-          // 包含类模式放在后边
-          parseDoNoting _,
-          parseGroupWholeBan _,
-          parseGroupWholeUnBan _,
-          parseShowPicInfo _,
-          parseRSSSubscribe _,
-          parseRSSUnSubscribe _,
-          parseRSSShowAll _
-        )
-          .map(_.apply(string))
+        _parsers
+          .map(_.apply(string, context))
           .find(_.isDefined)
           .flatten
           .map(command =>
-            parseThenSaveTo(string, command)
+            parseThenSaveTo(string, command, context)
               .getOrElse(command)
           )
     }
@@ -76,7 +84,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseExecuteCommand(string: String)(implicit context: ParseEngineContext): Option[ExecutableCommand] = {
+  private def parseExecuteCommand(string: String, context: ParseEngineContext): Option[ExecutableCommand] = {
     import ExecutableCommand.Constant
     CommandPattern.frequencyPattern.findFirstMatchIn(string).map(result => {
       val frequency = result.group("frequency") match {
@@ -85,7 +93,8 @@ object CommandParser extends Parser {
         case Constant.SOMETIME => ExecutableCommand.SOMETIME
         case Constant.VERY_RARELY => ExecutableCommand.VERY_RARELY
       }
-      ExecutableCommand(frequency, parseCommand(result.group("command")).getOrElse(throw ParseFailException("解析失败！没有找到指令内容")))
+      ExecutableCommand(frequency, parseCommand(result.group("command"), context)
+        .getOrElse(throw ParseFailException("解析失败！没有找到指令内容")))
     })
   }
 
@@ -96,7 +105,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseCatchParameters(string: String)(implicit context: ParseEngineContext): Option[CatchParameters] = {
+  private def parseCatchParameters(string: String, context: ParseEngineContext): Option[CatchParameters] = {
     CommandPattern.catchParameters.findFirstMatchIn(string).map(result => {
       val regex = Try(result.group("regex").r).getOrElse(throw ParseFailException("正则表达式不合法"))
       val names = result.group("names").split("[,，]").toSeq
@@ -114,7 +123,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseMessageSend(string: String)(implicit context: ParseEngineContext): Option[SendMessage] = {
+  private def parseMessageSend(string: String, context: ParseEngineContext): Option[SendMessage] = {
     import SendMessage.Constant
     CommandPattern.messageSend.findFirstMatchIn(string).map(result => {
       val `type` = result.group("type") match {
@@ -133,7 +142,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseRandomNumber(string: String)(implicit context: ParseEngineContext): Option[RandomNumber] = {
+  private def parseRandomNumber(string: String, context: ParseEngineContext): Option[RandomNumber] = {
     CommandPattern.randomNumber.findFirstMatchIn(string).map(result => {
       val down = Try(result.group("down").toInt).getOrElse(throw ParseFailException("随机数下界必须为整数"))
       val up = result.group("up") match {
@@ -152,7 +161,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseParamDel(string: String)(implicit context: ParseEngineContext): Option[VarDel] = {
+  private def parseParamDel(string: String, context: ParseEngineContext): Option[VarDel] = {
     CommandPattern.paramDel.findFirstMatchIn(string).map(result => {
       VarDel(context.getVar(result.group("name")))
     })
@@ -165,7 +174,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseParamOpt(string: String)(implicit context: ParseEngineContext): Option[VarOpt] = {
+  private def parseParamOpt(string: String, context: ParseEngineContext): Option[VarOpt] = {
     import VarOpt.Constant
     CommandPattern.paramOpt.findFirstMatchIn(string).map(result => {
       val varKey = context.getVar(result.group("name"))
@@ -189,7 +198,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseGoto(string: String)(implicit context: ParseEngineContext): Option[GoTo] = {
+  private def parseGoto(string: String, context: ParseEngineContext): Option[GoTo] = {
     CommandPattern.goto.findFirstMatchIn(string).map(result =>
       GoTo(
         Try(result.group("stepId").toLong).getOrElse(throw ParseFailException("步骤 ID 必须为整数"))
@@ -204,7 +213,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseOneByOne(string: String)(implicit context: ParseEngineContext): Option[OneByOne] = {
+  private def parseOneByOne(string: String, context: ParseEngineContext): Option[OneByOne] = {
     CommandPattern.oneByOne.findFirstMatchIn(string).map(result => {
       val stepIds = Try(
         result
@@ -223,7 +232,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseRandomGoto(string: String)(implicit context: ParseEngineContext): Option[RandomGoto] = {
+  private def parseRandomGoto(string: String, context: ParseEngineContext): Option[RandomGoto] = {
     CommandPattern.randomGoto.findFirstMatchIn(string).map(result => {
       val stepIds = Try(
         result
@@ -243,7 +252,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseLoopGoto(string: String)(implicit context: ParseEngineContext): Option[LoopGoto] = {
+  private def parseLoopGoto(string: String, context: ParseEngineContext): Option[LoopGoto] = {
     import LoopGoto._
     CommandPattern.loopGoto.findFirstMatchIn(string).map(result => {
       val stepIds = Try(
@@ -268,7 +277,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseWaiting(string: String)(implicit context: ParseEngineContext): Option[Waiting] = {
+  private def parseWaiting(string: String, context: ParseEngineContext): Option[Waiting] = {
     CommandPattern.waiting.findFirstMatchIn(string).map(result => {
       Waiting(Try(result.group("sec").toInt).getOrElse(throw ParseFailException("等待时间设置过大")))
     })
@@ -281,7 +290,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseDoNoting(string: String)(implicit context: ParseEngineContext): Option[DoNoting.type] =
+  private def parseDoNoting(string: String, context: ParseEngineContext): Option[DoNoting.type] =
     if (string.contains(CommandPattern.noting)) Some(DoNoting) else None
 
   /**
@@ -291,7 +300,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseGroupWholeBan(string: String)(implicit context: ParseEngineContext): Option[GroupWholeBan] =
+  private def parseGroupWholeBan(string: String, context: ParseEngineContext): Option[GroupWholeBan] =
     if (string.contains(CommandPattern.groupWholeBan)) Some(GroupWholeBan(true)) else None
 
   /**
@@ -301,7 +310,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseGroupWholeUnBan(string: String)(implicit context: ParseEngineContext): Option[GroupWholeBan] =
+  private def parseGroupWholeUnBan(string: String, context: ParseEngineContext): Option[GroupWholeBan] =
     if (string.contains(CommandPattern.groupWholeUnBan)) Some(GroupWholeBan(false)) else None
 
   /**
@@ -311,7 +320,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseFetchAndSendPic(string: String)(implicit context: ParseEngineContext): Option[FetchAndSendPic] = {
+  private def parseFetchAndSendPic(string: String, context: ParseEngineContext): Option[FetchAndSendPic] = {
     CommandPattern.fetchAndSendPic.findFirstMatchIn(string).map(result => {
       val amount = Try(result.group("amount").toInt).getOrElse(throw ParseFailException("张数格式不正确，请使用阿拉伯数字"))
       FetchAndSendPic(amount)
@@ -325,7 +334,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseSetPicFetcherMode(string: String)(implicit context: ParseEngineContext): Option[SetPicFetcherMode] = {
+  private def parseSetPicFetcherMode(string: String, context: ParseEngineContext): Option[SetPicFetcherMode] = {
     CommandPattern.setPicFetcherMode.findFirstMatchIn(string).map(result => {
       val mode = result.group("mode") match {
         case PatternMode.ONLY => ONLY
@@ -342,7 +351,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseSetPicRating(string: String)(implicit context: ParseEngineContext): Option[SetPicRating] = {
+  private def parseSetPicRating(string: String, context: ParseEngineContext): Option[SetPicRating] = {
     CommandPattern.setPicRating.findFirstMatchIn(string).map(result => {
       val enableR18 = result.group("enableR18") match {
         case "允许" => true
@@ -360,7 +369,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseShowPicInfo(string: String)(implicit context: ParseEngineContext): Option[ShowPicInfo] =
+  private def parseShowPicInfo(string: String, context: ParseEngineContext): Option[ShowPicInfo] =
     if (string.contains(CommandPattern.showPicInfo)) Some(ShowPicInfo()) else None
 
   /**
@@ -370,7 +379,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseRollEveryThing(string: String)(implicit context: ParseEngineContext): Option[RollEveryThing] = {
+  private def parseRollEveryThing(string: String, context: ParseEngineContext): Option[RollEveryThing] = {
     CommandPattern.rollEveryThing.findFirstMatchIn(string).map(result => {
       val mode = result.group("mode") match {
         case RollEveryThing.TRPG.name => RollEveryThing.TRPG
@@ -391,7 +400,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseThenSaveTo(string: String, command: Command[_])(implicit context: ParseEngineContext): Option[ThenSaveTo] = {
+  private def parseThenSaveTo(string: String, command: Command[_], context: ParseEngineContext): Option[ThenSaveTo] = {
     Patterns.thenSaveTo.findFirstMatchIn(string).map(result => {
       val varKey = result.group("name") |> context.getVar
       ThenSaveTo(command, varKey)
@@ -405,7 +414,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseRunTaskNow(string: String)(implicit context: ParseEngineContext): Option[RunTaskNow] = {
+  private def parseRunTaskNow(string: String, context: ParseEngineContext): Option[RunTaskNow] = {
     CommandPattern.runTaskNow.findFirstMatchIn(string).map(result => {
       val name = result.group("task")
       val taskDef = JamContext.cronTaskPool.get().taskDefinition
@@ -422,7 +431,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseRSSSubscribe(string: String)(implicit context: ParseEngineContext): Option[RSSSubscribe.type] =
+  private def parseRSSSubscribe(string: String, context: ParseEngineContext): Option[RSSSubscribe.type] =
     if (string.contains(CommandPattern.rssSubscribe)) Some(RSSSubscribe) else None
 
   /**
@@ -432,7 +441,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseRSSUnSubscribe(string: String)(implicit context: ParseEngineContext): Option[RSSUnSubscribe.type] =
+  private def parseRSSUnSubscribe(string: String, context: ParseEngineContext): Option[RSSUnSubscribe.type] =
     if (string.contains(CommandPattern.rssUnSubscribe)) Some(RSSUnSubscribe) else None
 
   /**
@@ -442,7 +451,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseRSSShowAll(string: String)(implicit context: ParseEngineContext): Option[RSSShowAll.type] =
+  private def parseRSSShowAll(string: String, context: ParseEngineContext): Option[RSSShowAll.type] =
     if (string.contains(CommandPattern.rssShowAll)) Some(RSSShowAll) else None
 
   /**
@@ -452,7 +461,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseAsk(string: String)(implicit context: ParseEngineContext): Option[Ask] = {
+  private def parseAsk(string: String, context: ParseEngineContext): Option[Ask] = {
     CommandPattern.ask.findFirstMatchIn(string).map(result => {
       val answererType = result.group("questioner") match {
         case CurrentSender.name => CurrentSender
@@ -461,7 +470,7 @@ object CommandParser extends Parser {
       }
       val matchers = CommandPattern.answerMatcher.findAllMatchIn(result.group("answerMatchers")).toList.par
         .map { it =>
-          val command = parseCommand(it.group("command")).getOrElse(throw ParseFailException("答案对应的指令不正确"))
+          val command = parseCommand(it.group("command"), context).getOrElse(throw ParseFailException("答案对应的指令不正确"))
           val answer = it.group("answer")
           if (answer == "其他答案") None -> command
           else Some(answer.stripPrefix("若答案为{").stripSuffix("}")) -> command

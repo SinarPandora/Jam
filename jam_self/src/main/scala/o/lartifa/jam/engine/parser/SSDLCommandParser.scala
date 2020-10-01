@@ -1,6 +1,7 @@
 package o.lartifa.jam.engine.parser
 
 import o.lartifa.jam.engine.parser.SSDLCommandParser.CommandMatchType
+import o.lartifa.jam.model.commands.Command
 
 /**
  * SSDL 指令解析器
@@ -8,7 +9,7 @@ import o.lartifa.jam.engine.parser.SSDLCommandParser.CommandMatchType
  * Author: sinar
  * 2020/10/1 00:41
  */
-abstract class SSDLCommandParser[T](val commandMatchType: CommandMatchType) extends Parser {
+abstract class SSDLCommandParser[U, T <: Command[U]](val commandMatchType: CommandMatchType) extends Parser {
   /**
    * 解析指令
    *
@@ -16,7 +17,7 @@ abstract class SSDLCommandParser[T](val commandMatchType: CommandMatchType) exte
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  def parse(string: String)(implicit context: ParseEngineContext): Option[T]
+  def parse(string: String, context: ParseEngineContext): Option[T]
 }
 
 object SSDLCommandParser {

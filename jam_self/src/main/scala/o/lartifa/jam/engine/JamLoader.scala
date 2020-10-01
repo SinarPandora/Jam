@@ -1,9 +1,12 @@
 package o.lartifa.jam.engine
 
-import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
+import cc.moecraft.logger.{HyLogger, LogLevel}
 import o.lartifa.jam.bionic.BehaviorInitializer
-import o.lartifa.jam.common.config.SystemConfig
+import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
+import o.lartifa.jam.common.util.MasterUtil
+import o.lartifa.jam.cool.qq.CoolQQLoader
+import o.lartifa.jam.cool.qq.listener.EventMessageListener
 import o.lartifa.jam.database.temporary.Memory
 import o.lartifa.jam.engine.SSDLParseEngine.{ParseFailResult, ParseSuccessResult}
 import o.lartifa.jam.model.patterns.ContentMatcher
@@ -28,7 +31,7 @@ object JamLoader {
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(JamLoader.getClass)
 
   /**
-   * 加载 SSDL
+   * 加载果酱各组件
    *
    * @return 异步结果
    */
@@ -36,7 +39,26 @@ object JamLoader {
     Memory.init(args.contains("--flyway_repair"))
     await(JamPluginLoader.initJamPluginSystems())
     await(BehaviorInitializer.init())
-    await(loadSSDL()).foreach(errorMessages => logger.error(errorMessages.mkString("\n")))
+    await(loadSSDL()).foreach(errorMessages =>
+      MasterUtil.notifyAndLog(errorMessages.mkString("\n"), LogLevel.ERROR))
+  }
+
+  /**
+   * 重新加载
+   *
+   * @return 异步结果
+   */
+  def reload(): Future[Unit] = async {
+    if (!JamContext.initLock.get()) {
+      MasterUtil.notifyAndLog(s"开始重新加载${JamConfig.name}的各个组件")
+      EventMessageListener.reloadPreHandleTasks()
+      CoolQQLoader.reloadMasterCommands()
+      await(loadSSDL()).foreach(errorMessages =>
+        MasterUtil.notifyAndLog(errorMessages.mkString("\n"), LogLevel.ERROR))
+      MasterUtil.notifyAndLog("加载完毕！")
+    } else {
+      MasterUtil.notifyMaster("重新加载进行中...")
+    }
   }
 
   /**
@@ -141,8 +163,8 @@ object JamLoader {
    * @return 异步结果
    */
   def reloadSSDL()(implicit context: CommandExecuteContext): Future[Unit] = async {
-    if (!JamContext.editLock.get()) {
-      JamContext.editLock.set(true)
+    if (!JamContext.initLock.get()) {
+      JamContext.initLock.set(true)
       context.eventMessage.respond("正在重新解析 SSDL（简易步骤定义语言） 脚本")
       await(loadSSDL()) match {
         case Some(messages) =>
@@ -154,7 +176,7 @@ object JamLoader {
           context.eventMessage.respond(s"共加载${JamContext.stepPool.get().size}条步骤")
       }
 
-      JamContext.editLock.set(false)
+      JamContext.initLock.set(false)
     } else {
       context.eventMessage.respond("重新解析正在进行中，请等待")
     }

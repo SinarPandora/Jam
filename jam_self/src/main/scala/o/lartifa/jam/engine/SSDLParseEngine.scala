@@ -5,7 +5,7 @@ import java.nio.charset.Charset
 import better.files.File
 import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.common.exception.ParseFailException
-import o.lartifa.jam.engine.parser.{Parser, PatternParser}
+import o.lartifa.jam.engine.parser.{CommandParser, Parser, PatternParser}
 import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.model.patterns.ParseResult
 
@@ -35,6 +35,7 @@ object SSDLParseEngine extends Parser {
    */
   @throws[ParseFailException]
   def load()(implicit exec: ExecutionContext): Future[Map[Boolean, Seq[Either[ParseFailResult, ParseSuccessResult]]]] = Future {
+    CommandParser.prepareParsers()
     loadFiles().flatMap {
       case (ssdlFiles, chatInfo) => parseFiles(ssdlFiles, chatInfo)
     }.groupBy(_.isRight)

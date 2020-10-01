@@ -27,7 +27,7 @@ object SSDLRuleRunner {
    * @param eventMessage 消息对象
    * @param exec         异步执行上下文
    */
-  def executeIfFound(eventMessage: EventMessage)(implicit exec: ExecutionContext): Future[Unit] = if (!JamContext.editLock.get()) {
+  def executeIfFound(eventMessage: EventMessage)(implicit exec: ExecutionContext): Future[Unit] = if (!JamContext.initLock.get()) {
     // 启动计时器
     val matchCost = new StopWatch()
     matchCost.start()

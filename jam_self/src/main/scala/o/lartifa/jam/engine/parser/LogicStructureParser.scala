@@ -92,18 +92,18 @@ object LogicStructureParser extends Parser {
     } else if (resultAnd.nonEmpty || resultOr.nonEmpty) {
       if (resultAnd.nonEmpty) {
         // 与逻辑
-        val firstCommand = CommandParser.parseCommand(string.splitAt(string.indexOf(resultAnd.head))._1)
+        val firstCommand = CommandParser.parseCommand(string.splitAt(string.indexOf(resultAnd.head))._1, context)
           .getOrElse(throw ParseFailException("与或逻辑前没有一条可执行的指令"))
         Some(And(firstCommand +: parseCommands(resultAnd)))
       } else {
         // 与逻辑
-        val firstCommand = CommandParser.parseCommand(string.splitAt(string.indexOf(resultOr.head))._1)
+        val firstCommand = CommandParser.parseCommand(string.splitAt(string.indexOf(resultOr.head))._1, context)
           .getOrElse(throw ParseFailException("与或逻辑前没有一条可执行的指令"))
         Some(RandomOr(firstCommand +: parseCommands(resultOr)))
       }
     } else {
       // 不存在与或逻辑对
-      CommandParser.parseCommand(string)
+      CommandParser.parseCommand(string, context)
     }
   }
 
@@ -116,7 +116,7 @@ object LogicStructureParser extends Parser {
    */
   private def parseCommands(results: List[String])(implicit context: ParseEngineContext): List[Command[_]] = {
     results
-      .map(CommandParser.parseCommand)
+      .map(CommandParser.parseCommand(_, context))
       .tapEach(opt => if (opt.isEmpty) throw ParseFailException("'且并或'子语句中包含有无法识别的指令内容"))
       .map(_.get)
   }

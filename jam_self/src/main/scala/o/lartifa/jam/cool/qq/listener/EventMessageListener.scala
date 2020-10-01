@@ -1,7 +1,6 @@
 package o.lartifa.jam.cool.qq.listener
 
 import java.security.SecureRandom
-import java.util.concurrent.atomic.AtomicReference
 
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.icq.event.{EventHandler, IcqListener}
@@ -28,12 +27,10 @@ object EventMessageListener extends IcqListener {
   private val logger: HyLogger = JamContext.loggerFactory.get().getLogger(EventMessageListener.getClass)
 
   private val messageRecorder: MessagePool = JamContext.messagePool
-  private val preHandleTasks: List[PreHandleTask] = PreHandleTaskInitializer.tasks
+  private var preHandleTasks: List[PreHandleTask] = PreHandleTaskInitializer.tasks
 
   // 决定是否响应前置任务和 SSDL 规则
-  private val willResponse: AtomicReference[() => Boolean] = new AtomicReference[() => Boolean](
-    createFrequencyFunc(JamConfig.responseFrequency)
-  )
+  private var willResponse: () => Boolean = createFrequencyFunc(JamConfig.responseFrequency)
 
   /**
    * 监听消息
@@ -42,10 +39,12 @@ object EventMessageListener extends IcqListener {
    */
   @EventHandler
   def listen(eventMessage: EventMessage): Unit = {
-    recordMessage(eventMessage) // 记录消息
-      .flatMap(it => if (it) Questioner.tryAnswerer(eventMessage) else Future.successful(false)) // 处理存在的询问
-      .flatMap(it => if (it && willResponse.get().apply()) preHandleMessage(eventMessage) else Future.successful(false)) // 处理前置任务
-      .foreach(it => if (it) SSDLRuleRunner.executeIfFound(eventMessage)) // 执行 SSDL 规则解析
+    if (!JamContext.initLock.get()) { // 在当前没有锁的情况下
+      recordMessage(eventMessage) // 记录消息
+        .flatMap(it => if (it) Questioner.tryAnswerer(eventMessage) else Future.successful(false)) // 处理存在的询问
+        .flatMap(it => if (it && willResponse()) preHandleMessage(eventMessage) else Future.successful(false)) // 处理前置任务
+        .foreach(it => if (it) SSDLRuleRunner.executeIfFound(eventMessage)) // 执行 SSDL 规则解析
+    }
   }
 
   /**
@@ -94,7 +93,14 @@ object EventMessageListener extends IcqListener {
    * @param frequency 回复频率
    */
   def adjustFrequency(frequency: Int): Unit = {
-    this.willResponse.getAndSet(createFrequencyFunc(frequency))
+    this.willResponse = createFrequencyFunc(frequency)
+  }
+
+  /**
+   * 重新加载前置任务
+   */
+  def reloadPreHandleTasks(): Unit = {
+    this.preHandleTasks = PreHandleTaskInitializer.tasks
   }
 
   /**

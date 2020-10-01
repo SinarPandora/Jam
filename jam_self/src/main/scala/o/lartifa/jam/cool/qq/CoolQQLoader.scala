@@ -40,4 +40,14 @@ object CoolQQLoader {
     client.getCommandManager.registerCommands(MasterCommands.commands: _*)
     client
   }
+
+  /**
+   * 重载监护人指令
+   */
+  def reloadMasterCommands(): Unit = {
+    Option(JamContext.bot.get()).foreach(bot => {
+      bot.getCommandManager.getCommands.clear()
+      bot.getCommandManager.registerCommands(MasterCommands.commands: _*)
+    })
+  }
 }

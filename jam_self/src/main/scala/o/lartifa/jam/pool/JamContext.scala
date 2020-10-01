@@ -16,7 +16,7 @@ import o.lartifa.jam.model.patterns.ContentMatcher
  */
 object JamContext {
   val bot: AtomicReference[PicqBotX] = new AtomicReference[PicqBotX]()
-  val editLock: AtomicBoolean = new AtomicBoolean(false)
+  val initLock: AtomicBoolean = new AtomicBoolean(false)
   val stepPool: AtomicReference[StepPool] = new AtomicReference[StepPool]()
   val cronTaskPool: AtomicReference[CronTaskPool] = new AtomicReference[CronTaskPool]()
   val variablePool: DBVarPool = DBVarPool()

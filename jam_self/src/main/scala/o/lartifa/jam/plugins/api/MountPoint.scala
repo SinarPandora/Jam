@@ -3,6 +3,7 @@ package o.lartifa.jam.plugins.api
 import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
 import o.lartifa.jam.cool.qq.listener.prehandle.PreHandleTask
 import o.lartifa.jam.engine.parser.SSDLCommandParser
+import o.lartifa.jam.model.commands.Command
 import o.lartifa.jam.model.tasks.{JamCronTask, LifeCycleTask}
 
 /**
@@ -31,7 +32,7 @@ case class MountPoint
   /**
    * （挂载点）SSDL 指令解析器
    */
-  commandParsers: List[SSDLCommandParser[_]] = Nil,
+  commandParsers: List[SSDLCommandParser[_, Command[_]]] = Nil,
 
   /**
    * （挂载点）定时任务
@@ -46,5 +47,5 @@ case class MountPoint
   /**
    * （挂载点）睡眠后任务
    */
-  afterSleepTasks: List[JamCronTask] = Nil
+  afterSleepTasks: List[LifeCycleTask] = Nil
 )
