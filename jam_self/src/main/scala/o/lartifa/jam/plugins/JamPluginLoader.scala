@@ -23,7 +23,7 @@ import scala.async.Async.{async, await}
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
-import scala.util.{Failure, Try}
+import scala.util.{Failure, Success, Try}
 
 /**
  * Jam 插件加载器
@@ -214,22 +214,29 @@ object JamPluginLoader {
    * @param exec      异步执行上下文
    */
   private def updatePluginStatus(id: Long, isEnabled: Boolean, reloadNow: Boolean)(implicit exec: ExecutionContext): Future[Unit] = async {
-    val plugin = await(db.run(Plugins.filter(_.id === id).result.headOption))
-      .flatMap(it => installers.get(it.`package`).map(_ -> it.isEnabled))
+    val plugin = await(getPluginById(id))
     if (plugin.isDefined) {
-      if (isEnabled == plugin.get._2) {
-        MasterUtil.notifyMaster(s"插件已经${if (isEnabled) "启用" else "禁用"}")
+      if (isEnabled == plugin.get._1.isEnabled) {
+        MasterUtil.notifyMaster(s"%s，插件已经${if (isEnabled) "启用" else "禁用"}了")
       } else {
         val result = await(db.run(Plugins.filter(_.id === id).map(_.isEnabled).update(isEnabled)))
         if (result != 1) {
-          MasterUtil.notifyAndLog("更新插件状态失败！", LogLevel.ERROR)
+          MasterUtil.notifyAndLog("%s，更新插件状态失败！", LogLevel.ERROR)
         } else {
-          MasterUtil.notifyMaster(s"插件已成功${if (isEnabled) "启用" else "禁用"}")
-          if (reloadNow) JamLoader.reload()
+          MasterUtil.notifyMaster(s"%s，插件已成功${if (isEnabled) "启用" else "禁用"}")
+          if (reloadNow) {
+            await {
+              JamLoader.reload().recover(err => {
+                MasterUtil.notifyAndLog(s"重新加载过程中出现错误！请检查${JamConfig.name}的日志",
+                  LogLevel.ERROR, Some(err))
+                err
+              })
+            }
+          }
         }
       }
     } else {
-      MasterUtil.notifyAndLog(s"指定编号的插件不存在！", LogLevel.WARNING)
+      MasterUtil.notifyAndLog(s"%s，指定编号的插件不存在！", LogLevel.WARNING)
     }
   }
 
@@ -237,10 +244,35 @@ object JamPluginLoader {
   /**
    * 卸载插件
    *
-   * @param id        插件 ID
-   * @param reloadNow 是否立刻重新加载果酱
-   * @param exec      异步执行上下文
-   * @return 卸载是否成功
+   * @param id   插件 ID
+   * @param exec 异步执行上下文
    */
-  def uninstallPlugin(id: Long, reloadNow: Boolean = true)(implicit exec: ExecutionContext): Future[Boolean] = ???
+  def uninstallPlugin(id: Long)(implicit exec: ExecutionContext): Future[Unit] = async {
+    val plugin = await(getPluginById(id))
+    plugin match {
+      case Some((_, installer)) =>
+        disablePlugin(id)
+        await(installer.uninstall()) match {
+          case Failure(exception) =>
+            MasterUtil.notifyAndLog(s"%s，未能成功卸载，请联系插件的作者：${installer.author}",
+              LogLevel.ERROR, Some(exception))
+          case Success(_) =>
+            MasterUtil.notifyMaster("%s，插件卸载成功！")
+        }
+      case None =>
+        MasterUtil.notifyMaster("%s，指定编号的插件不存在")
+    }
+  }
+
+  /**
+   * 通过 id 获取插件数据以及安装器
+   *
+   * @param id   插件 id
+   * @param exec 异步执行上下文
+   * @return 查询结果
+   */
+  private def getPluginById(id: Long)(implicit exec: ExecutionContext): Future[Option[(PluginsRow, JamPluginInstaller)]] = async {
+    await(db.run(Plugins.filter(_.id === id).result.headOption))
+      .flatMap(it => installers.get(it.`package`).map(it -> _))
+  }
 }

@@ -71,6 +71,7 @@ object JamLoader {
       await(BehaviorInitializer.init())
       await(initSSDL())
       runBootTasks()
+      JamContext.initLock.getAndSet(false)
       MasterUtil.notifyAndLog("加载完毕！")
     } else {
       MasterUtil.notifyMaster("重新加载进行中...")
