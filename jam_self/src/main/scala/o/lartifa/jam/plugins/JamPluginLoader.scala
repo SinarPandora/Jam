@@ -221,7 +221,7 @@ object JamPluginLoader {
       } else {
         val result = await(db.run(Plugins.filter(_.id === id).map(_.isEnabled).update(isEnabled)))
         if (result != 1) {
-          MasterUtil.notifyAndLog("%s，更新插件状态失败！", LogLevel.ERROR)
+          MasterUtil.notifyAndLog("更新插件状态失败，请检查数据库连接！", LogLevel.ERROR)
         } else {
           MasterUtil.notifyMaster(s"%s，插件已成功${if (isEnabled) "启用" else "禁用"}")
           if (reloadNow) {
@@ -236,7 +236,7 @@ object JamPluginLoader {
         }
       }
     } else {
-      MasterUtil.notifyAndLog(s"%s，指定编号的插件不存在！", LogLevel.WARNING)
+      MasterUtil.notifyAndLog(s"指定编号的插件不存在！", LogLevel.WARNING)
     }
   }
 
@@ -254,10 +254,15 @@ object JamPluginLoader {
         disablePlugin(id)
         await(installer.uninstall()) match {
           case Failure(exception) =>
-            MasterUtil.notifyAndLog(s"%s，未能成功卸载，请联系插件的作者：${installer.author}",
+            MasterUtil.notifyAndLog(s"未能成功卸载，请联系插件的作者：${installer.author}",
               LogLevel.ERROR, Some(exception))
           case Success(_) =>
-            MasterUtil.notifyMaster("%s，插件卸载成功！")
+            val result = await(db.run(Plugins.filter(_.id === id).delete))
+            if (result != 1) {
+              MasterUtil.notifyAndLog("插件记录删除失败，请检查数据库连接！", LogLevel.ERROR)
+            } else {
+              MasterUtil.notifyMaster("%s，插件卸载成功！")
+            }
         }
       case None =>
         MasterUtil.notifyMaster("%s，指定编号的插件不存在")

@@ -51,7 +51,7 @@ abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.N
             case e: InterruptedException => MasterUtil.notifyAndLog(s"%s，任务执行被打断：定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id",
               LogLevel.ERROR, Some(e))
             case e =>
-              MasterUtil.notifyAndLog(s"%s，任务执行执行出错：错误信息：${e.getMessage}，定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id",
+              MasterUtil.notifyAndLog(s"任务执行执行出错：错误信息：${e.getMessage}，定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id",
                 LogLevel.ERROR, Some(e))
           }
         case Success(_) => logger.log(s"任务执行结束：定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id")
