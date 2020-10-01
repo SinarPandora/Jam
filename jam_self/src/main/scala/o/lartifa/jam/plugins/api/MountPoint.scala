@@ -16,35 +16,35 @@ case class MountPoint
   /**
    * （挂载点）启动任务
    */
-  bootTasks: List[LifeCycleTask] = List.empty,
+  bootTasks: List[LifeCycleTask] = Nil,
 
   /**
    * （挂载点）停止前任务
    */
-  shutdownTasks: List[LifeCycleTask] = List.empty,
+  shutdownTasks: List[LifeCycleTask] = Nil,
 
   /**
    * （挂载点）预处理任务
    */
-  preHandleTasks: List[PreHandleTask] = List.empty,
+  preHandleTasks: List[PreHandleTask] = Nil,
 
   /**
    * （挂载点）SSDL 指令解析器
    */
-  commandParsers: List[SSDLCommandParser[_]] = List.empty,
+  commandParsers: List[SSDLCommandParser[_]] = Nil,
 
   /**
    * （挂载点）定时任务
    */
-  cronTasks: List[JamCronTask] = List.empty,
+  cronTasks: List[JamCronTask] = Nil,
 
   /**
    * （挂载点）监护人指令
    */
-  masterCommands: List[MasterEverywhereCommand] = List.empty,
+  masterCommands: List[MasterEverywhereCommand] = Nil,
 
   /**
    * （挂载点）睡眠后任务
    */
-  afterSleepTasks: List[JamCronTask] = List.empty
+  afterSleepTasks: List[JamCronTask] = Nil
 )

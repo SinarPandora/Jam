@@ -6,13 +6,20 @@ import cc.moecraft.logger.{HyLogger, LogLevel}
 import cn.hutool.core.util.StrUtil
 import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.util.MasterUtil
+import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
+import o.lartifa.jam.cool.qq.listener.prehandle.PreHandleTask
 import o.lartifa.jam.database.temporary.Memory.database.db
+import o.lartifa.jam.database.temporary.schema.Tables
 import o.lartifa.jam.database.temporary.schema.Tables._
+import o.lartifa.jam.engine.parser.SSDLCommandParser
+import o.lartifa.jam.engine.parser.SSDLCommandParser._
+import o.lartifa.jam.model.tasks.{JamCronTask, LifeCycleTask}
 import o.lartifa.jam.plugins.api.JamPluginInstaller
 import o.lartifa.jam.pool.JamContext
 import org.reflections.Reflections
 
 import scala.async.Async.{async, await}
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Try}
@@ -29,16 +36,24 @@ object JamPluginLoader {
 
   import o.lartifa.jam.database.temporary.Memory.database.profile.api._
 
-  case class LoadedInitializers
+  case class LoadedComponents
   (
-    // TODO
+    bootTasks: List[LifeCycleTask] = Nil,
+    shutdownTasks: List[LifeCycleTask] = Nil,
+    preHandleTasks: List[PreHandleTask] = Nil,
+    containsModeCommandParsers: List[SSDLCommandParser[_]] = Nil,
+    regexModeCommandParsers: List[SSDLCommandParser[_]] = Nil,
+    highOrderModeCommandParsers: List[SSDLCommandParser[_]] = Nil,
+    cronTasks: List[JamCronTask] = Nil,
+    masterCommands: List[MasterEverywhereCommand] = Nil,
+    afterSleepTasks: List[JamCronTask] = Nil
   )
 
   /**
    * 装载好的加载器实例们
    * 系统读取加载器时不再需要重新创建，而是直接从这里获取
    */
-  val loadedInitializers: AtomicReference[LoadedInitializers] = new AtomicReference()
+  val loadedInitializers: AtomicReference[LoadedComponents] = new AtomicReference(LoadedComponents())
 
   /**
    * 加载果酱的插件系统
@@ -47,38 +62,83 @@ object JamPluginLoader {
    */
   def initJamPluginSystems()(implicit exec: ExecutionContext): Future[Unit] = async {
     // 反射搜索 JamPluginInstaller
-    val installers = scanPlugins()
+    val installers: Map[String, JamPluginInstaller] = scanPlugins()
     // 对比存在的插件和数据库表
-    val installedPlugins = await(db.run(Plugins.result)).map(it => it.`package` -> it).toMap
-    val installation = await {
-      Future.sequence {
-        installers
-          .filterNot(it => installedPlugins.keySet.contains(it._1)) // 若表中不存在，执行 install
-          .map { case (packageName, installer) => tryInstallPlugin(packageName, installer) }
+    val installedPlugins: Map[String, Tables.PluginsRow] = await(db.run(Plugins.result)).map(it => it.`package` -> it).toMap
+    if (installers.nonEmpty || installedPlugins.nonEmpty) {
+      // 若表中存在而插件未找到，提示警告
+      val missingPlugins = (installedPlugins -- installers.keySet).map {
+        case (packageName, record) => s"名称：${record.name}，作者：${record.author}，包名：$packageName"
+      }.mkString("\n")
+      if (missingPlugins.nonEmpty) {
+        logger.warning(s"以下插件丢失：$missingPlugins")
+        MasterUtil.notifyMaster(s"以下插件丢失（他们已经无法找到并没有被正确卸载）：")
+        MasterUtil.notifyMaster(missingPlugins)
       }
-    }
-    val successInstallation = installation.filter(_._2.isSuccess).map(_._1)
-    val needInsert = (installers -- successInstallation)
-      .map {
-        case (packageName, it) => (it.pluginName, it.keywords.mkString(","), it.author, packageName, JamConfig.autoEnablePlugins)
-      }.toList
 
-    val insertSuccess = needInsert.sizeIs == await {
-      db.run {
-        Plugins.map(row => (row.name, row.keywords, row.author, row.`package`, row.isEnabled)) ++= needInsert
+      // 自动安装需要表中不存在的插件
+      val installation = await {
+        Future.sequence {
+          installers
+            .filterNot(it => installedPlugins.keySet.contains(it._1)) // 若表中不存在，执行 install
+            .map { case (packageName, installer) => tryInstallPlugin(packageName, installer) }
+        }
       }
-    }.getOrElse(0)
+      val installResult = installation.groupMap(_._2.isSuccess)(_._1)
+      val needInsert = (installers -- installResult.getOrElse(true, Nil))
+        .map {
+          case (packageName, it) => (it.pluginName, it.keywords.mkString(","), it.author, packageName, JamConfig.autoEnablePlugins)
+        }.toList
 
-    if (!insertSuccess) {
-      logger.warning(s"插件安装数量与预期不符，这很可能是一个 bug，若${JamConfig.name}无法正常运作，请联系作者")
-      MasterUtil.notifyMaster(s"插件安装数量与预期不符，这很可能是一个 bug，若${JamConfig.name}无法正常运作，请联系作者")
+      val insertSuccess = needInsert.sizeIs == await {
+        db.run {
+          Plugins.map(row => (row.name, row.keywords, row.author, row.`package`, row.isEnabled)) ++= needInsert
+        }
+      }.getOrElse(0)
+
+      if (!insertSuccess) {
+        logger.warning(s"插件安装数量与预期不符，这很可能是一个 bug，若${JamConfig.name}无法正常运作，请联系作者")
+        MasterUtil.notifyMaster(s"插件安装数量与预期不符，这很可能是一个 bug，若${JamConfig.name}无法正常运作，请联系作者")
+      }
+
+      // 将挂载点注入到各个组件
+      this.loadedInitializers.getAndSet(mountPlugins((installers -- installResult.getOrElse(false, Nil)).values))
     }
+  }
 
-    // 若表中存在而插件未找到，提示警告
-
-    // 将挂载点注入到各个组件
-
-
+  /**
+   * 挂载全部挂载点
+   *
+   * @param installers 安装器列表
+   * @return 挂载组件对象
+   */
+  private def mountPlugins(installers: Iterable[JamPluginInstaller]): LoadedComponents = {
+    val bootTasks: ListBuffer[LifeCycleTask] = ListBuffer.empty
+    val shutdownTasks: ListBuffer[LifeCycleTask] = ListBuffer.empty
+    val preHandleTasks: ListBuffer[PreHandleTask] = ListBuffer.empty
+    val containsModeCommandParsers: ListBuffer[SSDLCommandParser[_]] = ListBuffer.empty
+    val regexModeCommandParsers: ListBuffer[SSDLCommandParser[_]] = ListBuffer.empty
+    val highOrderModeCommandParsers: ListBuffer[SSDLCommandParser[_]] = ListBuffer.empty
+    val cronTasks: ListBuffer[JamCronTask] = ListBuffer.empty
+    val masterCommands: ListBuffer[MasterEverywhereCommand] = ListBuffer.empty
+    val afterSleepTasks: ListBuffer[JamCronTask] = ListBuffer.empty
+    installers.flatMap(_.mountPoint).foreach { it =>
+      bootTasks ++= it.bootTasks
+      shutdownTasks ++= it.bootTasks
+      preHandleTasks ++= it.preHandleTasks
+      cronTasks ++= it.cronTasks
+      masterCommands ++= it.masterCommands
+      afterSleepTasks ++= it.afterSleepTasks
+      val parsers = it.commandParsers.groupBy(_.commandMatchType)
+      parsers.get(Contains).foreach(containsModeCommandParsers ++= _)
+      parsers.get(Regex).foreach(regexModeCommandParsers ++= _)
+      parsers.get(HighOrder).foreach(highOrderModeCommandParsers ++= _)
+    }
+    LoadedComponents(
+      bootTasks.result(), shutdownTasks.result(), preHandleTasks.result(), containsModeCommandParsers.result(),
+      regexModeCommandParsers.result(), highOrderModeCommandParsers.result(), cronTasks.result(),
+      masterCommands.result(), afterSleepTasks.result()
+    )
   }
 
   /**
