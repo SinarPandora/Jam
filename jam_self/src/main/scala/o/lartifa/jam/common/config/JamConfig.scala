@@ -28,7 +28,4 @@ object JamConfig {
 
   // 自动接收群申请
   val autoAcceptGroupRequest: Boolean = config.getBoolean("auto_accept_group_request")
-
-  // 是否自动启用插件
-  val autoEnablePlugins: Boolean = config.getBoolean("plugin.auto_enable")
 }

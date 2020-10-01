@@ -4,7 +4,8 @@ import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
 import o.lartifa.jam.cool.qq.listener.prehandle.PreHandleTask
 import o.lartifa.jam.engine.parser.SSDLCommandParser
 import o.lartifa.jam.model.commands.Command
-import o.lartifa.jam.model.tasks.{JamCronTask, LifeCycleTask}
+import o.lartifa.jam.model.tasks.JamCronTask.TaskDefinition
+import o.lartifa.jam.model.tasks.LifeCycleTask
 
 /**
  * 挂载点对象
@@ -35,9 +36,9 @@ case class MountPoint
   commandParsers: List[SSDLCommandParser[_, Command[_]]] = Nil,
 
   /**
-   * （挂载点）定时任务
+   * （挂载点）定时任务定义
    */
-  cronTasks: List[JamCronTask] = Nil,
+  cronTaskDefinitions: List[TaskDefinition] = Nil,
 
   /**
    * （挂载点）监护人指令

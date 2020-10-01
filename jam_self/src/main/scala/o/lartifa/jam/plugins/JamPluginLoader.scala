@@ -2,7 +2,7 @@ package o.lartifa.jam.plugins
 
 import cc.moecraft.logger.{HyLogger, LogLevel}
 import cn.hutool.core.util.StrUtil
-import o.lartifa.jam.common.config.JamConfig
+import o.lartifa.jam.common.config.{JamConfig, JamPluginConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
 import o.lartifa.jam.cool.qq.listener.prehandle.PreHandleTask
@@ -13,7 +13,8 @@ import o.lartifa.jam.engine.JamLoader
 import o.lartifa.jam.engine.parser.SSDLCommandParser
 import o.lartifa.jam.engine.parser.SSDLCommandParser._
 import o.lartifa.jam.model.commands.Command
-import o.lartifa.jam.model.tasks.{JamCronTask, LifeCycleTask}
+import o.lartifa.jam.model.tasks.JamCronTask.TaskDefinition
+import o.lartifa.jam.model.tasks.LifeCycleTask
 import o.lartifa.jam.plugins.api.JamPluginInstaller
 import o.lartifa.jam.pool.JamContext
 import org.reflections.Reflections
@@ -44,7 +45,7 @@ object JamPluginLoader {
     containsModeCommandParsers: List[SSDLCommandParser[_, Command[_]]] = Nil,
     regexModeCommandParsers: List[SSDLCommandParser[_, Command[_]]] = Nil,
     highOrderModeCommandParsers: List[SSDLCommandParser[_, Command[_]]] = Nil,
-    cronTasks: List[JamCronTask] = Nil,
+    cronTaskDefinitions: List[TaskDefinition] = Nil,
     masterCommands: List[MasterEverywhereCommand] = Nil,
     afterSleepTasks: List[LifeCycleTask] = Nil
   )
@@ -92,7 +93,7 @@ object JamPluginLoader {
       val installResult = installation.groupMap(_._2.isSuccess)(_._1)
       val needInsert = (installers -- installResult.getOrElse(true, Nil))
         .map { case (packageName, it) =>
-          (it.pluginName, it.keywords.mkString(","), it.author, packageName, JamConfig.autoEnablePlugins)
+          (it.pluginName, it.keywords.mkString(","), it.author, packageName, JamPluginConfig.autoEnablePlugins)
         }.toList
 
       val insertSuccess = needInsert.sizeIs == await {
@@ -108,7 +109,7 @@ object JamPluginLoader {
 
       // 将挂载点注入到各个组件
       val needLoad = installedPlugins.values.groupBy(_.isEnabled).getOrElse(true, Nil).map(_.`package`) ++ {
-        if (JamConfig.autoEnablePlugins) installResult.getOrElse(true, Nil)
+        if (JamPluginConfig.autoEnablePlugins) installResult.getOrElse(true, Nil)
         else Nil
       }
       this._loadedComponents = mountPlugins((installers -- needLoad).values)
@@ -128,14 +129,14 @@ object JamPluginLoader {
     val containsModeCommandParsers: ListBuffer[SSDLCommandParser[_, Command[_]]] = ListBuffer.empty
     val regexModeCommandParsers: ListBuffer[SSDLCommandParser[_, Command[_]]] = ListBuffer.empty
     val highOrderModeCommandParsers: ListBuffer[SSDLCommandParser[_, Command[_]]] = ListBuffer.empty
-    val cronTasks: ListBuffer[JamCronTask] = ListBuffer.empty
+    val cronTaskDefinitions: ListBuffer[TaskDefinition] = ListBuffer.empty
     val masterCommands: ListBuffer[MasterEverywhereCommand] = ListBuffer.empty
     val afterSleepTasks: ListBuffer[LifeCycleTask] = ListBuffer.empty
     installers.flatMap(_.mountPoint).foreach { it =>
       bootTasks ++= it.bootTasks
       shutdownTasks ++= it.bootTasks
       preHandleTasks ++= it.preHandleTasks
-      cronTasks ++= it.cronTasks
+      cronTaskDefinitions ++= it.cronTaskDefinitions
       masterCommands ++= it.masterCommands
       afterSleepTasks ++= it.afterSleepTasks
       val parsers = it.commandParsers.groupBy(_.commandMatchType)
@@ -145,7 +146,7 @@ object JamPluginLoader {
     }
     LoadedComponents(
       bootTasks.result(), shutdownTasks.result(), preHandleTasks.result(), containsModeCommandParsers.result(),
-      regexModeCommandParsers.result(), highOrderModeCommandParsers.result(), cronTasks.result(),
+      regexModeCommandParsers.result(), highOrderModeCommandParsers.result(), cronTaskDefinitions.result(),
       masterCommands.result(), afterSleepTasks.result()
     )
   }

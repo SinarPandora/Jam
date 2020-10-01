@@ -12,13 +12,15 @@ import o.lartifa.jam.engine.SSDLParseEngine.{ParseFailResult, ParseSuccessResult
 import o.lartifa.jam.model.patterns.ContentMatcher
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext, Step}
 import o.lartifa.jam.plugins.JamPluginLoader
-import o.lartifa.jam.pool.{JamContext, StepPool}
+import o.lartifa.jam.pool.{CronTaskPool, JamContext, StepPool}
 
 import scala.async.Async._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.collection.parallel.CollectionConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Try
 
 /**
  * 应用加载器
@@ -29,6 +31,16 @@ import scala.concurrent.Future
 object JamLoader {
 
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(JamLoader.getClass)
+  private val shutdownHookThread: Thread = new Thread(() => {
+    val tasks = JamPluginLoader.loadedComponents.shutdownTasks
+    if (tasks.nonEmpty) {
+      logger.log(s"[ShutdownTasks] 检测到${JamConfig.name}关闭，正在执行关闭任务...")
+      tasks.par.map(it => Try(it()).recover(error =>
+        logger.error("[ShutdownTasks] 执行关闭任务时出现错误：", error)
+      )).seq
+      logger.log(s"[ShutdownTasks] ${JamConfig.name}正在终止")
+    }
+  })
 
   /**
    * 加载果酱各组件
@@ -38,9 +50,11 @@ object JamLoader {
   def init(args: Array[String]): Future[Unit] = async {
     Memory.init(args.contains("--flyway_repair"))
     await(JamPluginLoader.initJamPluginSystems())
+    JamContext.cronTaskPool.getAndSet(CronTaskPool().autoRefreshTaskDefinition())
     await(BehaviorInitializer.init())
-    await(loadSSDL()).foreach(errorMessages =>
-      MasterUtil.notifyAndLog(errorMessages.mkString("\n"), LogLevel.ERROR))
+    await(initSSDL())
+    runBootTasks()
+    Runtime.getRuntime.addShutdownHook(shutdownHookThread)
   }
 
   /**
@@ -53,12 +67,37 @@ object JamLoader {
       MasterUtil.notifyAndLog(s"开始重新加载${JamConfig.name}的各个组件")
       EventMessageListener.reloadPreHandleTasks()
       CoolQQLoader.reloadMasterCommands()
-      await(loadSSDL()).foreach(errorMessages =>
-        MasterUtil.notifyAndLog(errorMessages.mkString("\n"), LogLevel.ERROR))
+      JamContext.cronTaskPool.get().autoRefreshTaskDefinition()
+      await(BehaviorInitializer.init())
+      await(initSSDL())
+      runBootTasks()
       MasterUtil.notifyAndLog("加载完毕！")
     } else {
       MasterUtil.notifyMaster("重新加载进行中...")
     }
+  }
+
+  /**
+   * 执行启动任务
+   */
+  private def runBootTasks(): Unit = {
+    val tasks = JamPluginLoader.loadedComponents.bootTasks
+    if (tasks.nonEmpty) {
+      logger.log("[BootTasks] 正在依次执行启动任务")
+      tasks.par.map(it => Try(it()).recover(error =>
+        logger.error(s"[BootTasks] 执行启动任务时出现错误，${JamConfig.name}可能无法正常运作，" +
+          "请查看错误信息并尝试禁用相关插件", error)
+      )).seq
+      logger.log("[BootTasks] 启动任务执行完成")
+    }
+  }
+
+  /**
+   * 初始化并解析 SSDL
+   */
+  private def initSSDL(): Future[Unit] = async {
+    await(loadSSDL()).foreach(errorMessages =>
+      MasterUtil.notifyAndLog(errorMessages.mkString("\n"), LogLevel.ERROR))
   }
 
   /**

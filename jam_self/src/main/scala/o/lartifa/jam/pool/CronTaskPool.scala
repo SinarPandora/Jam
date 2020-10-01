@@ -2,11 +2,15 @@ package o.lartifa.jam.pool
 
 import java.util.concurrent.Executors
 
+import cc.moecraft.logger.HyLogger
+import cn.hutool.cron.CronUtil
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.tasks.JamCronTask.TaskDefinition
 import o.lartifa.jam.model.tasks.{ChangeRespFrequency, GoASleep, JamCronTask, WakeUp}
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
+import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.plugins.picbot.FetchPictureTask
+import o.lartifa.jam.pool.CronTaskPool.logger
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -18,9 +22,37 @@ import scala.concurrent.ExecutionContext
  * Author: sinar
  * 2020/1/25 13:32
  */
-class CronTaskPool(val taskDefinition: Map[String, TaskDefinition]) {
+class CronTaskPool() {
 
+  private var _taskDefinition: Map[String, TaskDefinition] = Map.empty
   private val runningTasks: mutable.Map[String, ListBuffer[JamCronTask]] = mutable.Map.empty
+
+  /**
+   * 获取任务定义
+   *
+   * @return 任务定义
+   */
+  def taskDefinition: Map[String, TaskDefinition] = _taskDefinition
+
+  /**
+   * 自动刷新任务定义
+   * 该操作会强制停止当前全部任务（等待任务完成）
+   */
+  def autoRefreshTaskDefinition(): CronTaskPool = {
+    logger.log("正在刷新定时任务定义，运行中的全部任务将被取消")
+    this.removeAll()
+    if (CronUtil.getScheduler.isStarted) CronUtil.stop()
+    this._taskDefinition = Map(
+      "回复频率变更" -> TaskDefinition("回复频率变更", classOf[ChangeRespFrequency], isSingleton = false),
+      "睡眠" -> TaskDefinition("睡眠", classOf[GoASleep], isSingleton = true),
+      "起床" -> TaskDefinition("起床", classOf[WakeUp], isSingleton = true),
+      "更新图片库" -> TaskDefinition("更新图片库", classOf[FetchPictureTask], isSingleton = true)
+    ) ++ JamPluginLoader.loadedComponents.cronTaskDefinitions.map(it => it.name -> it)
+    CronUtil.start()
+    this._taskDefinition.values.foreach(_.startRequireTasks())
+    logger.log("定时任务定义刷新完成")
+    this
+  }
 
   /**
    * 添加定时任务到定时任务池
@@ -90,6 +122,14 @@ class CronTaskPool(val taskDefinition: Map[String, TaskDefinition]) {
   }
 
   /**
+   * 删除全部定时任务
+   */
+  def removeAll(): Unit = {
+    runningTasks.flatMap(_._2).foreach(_.cancel(false))
+    runningTasks.clear()
+  }
+
+  /**
    * 通过任务名获取唯一的定时任务
    *
    * @param name    任务名
@@ -115,16 +155,12 @@ class CronTaskPool(val taskDefinition: Map[String, TaskDefinition]) {
 }
 
 object CronTaskPool {
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(CronTaskPool.getClass)
+
   // 用于定时任务的转换操作
   implicit val cronTaskWaitingPool: ExecutionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
   def apply(): CronTaskPool = {
-    val taskDefinition = Map(
-      "回复频率变更" -> TaskDefinition("回复频率变更", classOf[ChangeRespFrequency], isSingleton = false),
-      "睡眠" -> TaskDefinition("睡眠", classOf[GoASleep], isSingleton = true),
-      "起床" -> TaskDefinition("起床", classOf[WakeUp], isSingleton = true),
-      "更新图片库" -> TaskDefinition("更新图片库", classOf[FetchPictureTask], isSingleton = true)
-    )
-    new CronTaskPool(taskDefinition)
+    new CronTaskPool()
   }
 }
