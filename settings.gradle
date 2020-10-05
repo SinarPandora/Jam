@@ -1,2 +1,3 @@
 rootProject.name = 'Jam'
 include 'jam_self'
+include 'jam_wizard'

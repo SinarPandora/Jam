@@ -1,9 +1,14 @@
 plugins {
     id "idea"
-    id "scala"
 }
 
 allprojects {
+    repositories {
+        maven { url "https://jitpack.io" }
+        jcenter()
+        mavenCentral()
+    }
+
     group = "lartifa.o"
     version = "3.0.5"
 }

@@ -4,6 +4,7 @@ plugins {
     id "scala"
     id "distribution"
     id "application"
+    id "java-library"
 }
 
 sourceCompatibility = "11"
@@ -44,42 +45,42 @@ repositories {
 
 dependencies {
     // Scala
-    implementation("org.scala-lang:scala-library:$scala_version")
+    api("org.scala-lang:scala-library:$scala_version")
 
     // Language extensions
     compileOnly("org.projectlombok:lombok:1.18.12")
-    implementation("com.chuusai:shapeless_2.13:2.3.3")
-    implementation("org.scala-lang:scala-reflect:$scala_version")
-    implementation("org.scala-lang.modules:scala-async_2.13:0.10.0")
-    implementation("org.scala-lang.modules:scala-parallel-collections_2.13:0.2.0")
+    api("com.chuusai:shapeless_2.13:2.3.3")
+    api("org.scala-lang:scala-reflect:$scala_version")
+    api("org.scala-lang.modules:scala-async_2.13:0.10.0")
+    api("org.scala-lang.modules:scala-parallel-collections_2.13:0.2.0")
 
     // Core
-    implementation("com.github.hydevelop:PicqBotX:$bot_version")
+    api("com.github.hydevelop:PicqBotX:$bot_version")
 
     // Meta
-    implementation("com.jayway.jsonpath:json-path:2.4.0")
-    implementation("org.codehaus.groovy:groovy-all:$groovy_version")
+    api("com.jayway.jsonpath:json-path:2.4.0")
+    api("org.codehaus.groovy:groovy-all:$groovy_version")
 
     // Database
-    implementation("com.typesafe.slick:slick_2.13:$slick_version")
-    implementation("com.typesafe.slick:slick-codegen_2.13:$slick_version")
-    implementation("com.typesafe.slick:slick-hikaricp_2.13:$slick_version")
-    implementation("com.h2database:h2:1.4.200")
-    implementation("org.postgresql:postgresql:42.2.14")
-    implementation("org.flywaydb:flyway-core:6.5.5")
+    api("com.typesafe.slick:slick_2.13:$slick_version")
+    api("com.typesafe.slick:slick-codegen_2.13:$slick_version")
+    api("com.typesafe.slick:slick-hikaricp_2.13:$slick_version")
+    api("com.h2database:h2:1.4.200")
+    api("org.postgresql:postgresql:42.2.14")
+    api("org.flywaydb:flyway-core:6.5.5")
 
     // Tools
-    implementation("com.apptastic:rssreader:2.2.3")
-    implementation("org.reflections:reflections:0.9.12")
-    implementation("io.reactivex.rxjava3:rxjava:$rx_extension_version")
-    implementation("com.lihaoyi:ammonite-ops_2.13:2.1.4")
-    implementation("com.github.pathikrit:better-files_2.13:3.9.1")
-    implementation("com.lihaoyi:requests_2.13:0.6.2")
-    implementation("com.jsoniter:jsoniter:0.9.23")
-    implementation("com.sksamuel.scrimage:scrimage-core:4.0.6") {
+    api("com.apptastic:rssreader:2.2.3")
+    api("org.reflections:reflections:0.9.12")
+    api("io.reactivex.rxjava3:rxjava:$rx_extension_version")
+    api("com.lihaoyi:ammonite-ops_2.13:2.1.4")
+    api("com.github.pathikrit:better-files_2.13:3.9.1")
+    api("com.lihaoyi:requests_2.13:0.6.2")
+    api("com.jsoniter:jsoniter:0.9.23")
+    api("com.sksamuel.scrimage:scrimage-core:4.0.6") {
         exclude group: "ch.qos.logback", module: "logback-classic"
     }
-    implementation("org.slf4j:slf4j-simple:1.7.30")
+    api("org.slf4j:slf4j-simple:1.7.30")
 
     // Test
     testImplementation("org.scalactic:scalactic_2.13:$scala_test_version")
