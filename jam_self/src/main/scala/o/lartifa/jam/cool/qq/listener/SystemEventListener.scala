@@ -2,7 +2,7 @@ package o.lartifa.jam.cool.qq.listener
 
 import java.util.concurrent.TimeUnit
 
-import cc.moecraft.icq.event.events.request.{EventFriendRequest, EventGroupAddRequest, EventRequest}
+import cc.moecraft.icq.event.events.request.{EventFriendRequest, EventGroupAddRequest, EventGroupInviteRequest, EventRequest}
 import cc.moecraft.icq.event.{EventHandler, IcqListener}
 import io.reactivex.rxjava3.core.Observable
 import o.lartifa.jam.common.config.JamConfig
@@ -22,6 +22,19 @@ object SystemEventListener extends IcqListener {
    */
   @EventHandler
   def autoAddGroup(event: EventGroupAddRequest): Unit = {
+    if (JamConfig.autoAcceptGroupRequest) {
+      event.accept()
+    }
+    lazyRefresh(event)
+  }
+
+  /**
+   * 自动加群
+   *
+   * @param event 加群事件
+   */
+  @EventHandler
+  def autoAddGroupAlt(event: EventGroupInviteRequest): Unit = {
     if (JamConfig.autoAcceptGroupRequest) {
       event.accept()
     }
