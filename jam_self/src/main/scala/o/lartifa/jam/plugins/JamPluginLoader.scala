@@ -1,5 +1,6 @@
 package o.lartifa.jam.plugins
 
+import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.{HyLogger, LogLevel}
 import cn.hutool.core.util.StrUtil
 import o.lartifa.jam.common.config.{JamConfig, JamPluginConfig}
@@ -186,49 +187,62 @@ object JamPluginLoader {
   }
 
   /**
+   * 列出全部插件
+   *
+   * @param exec 异步执行上下文
+   * @return 全部插件记录
+   */
+  def listPlugin()(implicit exec: ExecutionContext): Future[Seq[PluginsRow]] =
+    db.run(Plugins.sortBy(_.id.asc).result)
+
+  /**
    * 启用插件
    *
+   * @param event     消息对象
    * @param id        插件 ID
    * @param reloadNow 是否立刻重新加载果酱
    * @param exec      异步执行上下文
    */
-  def enablePlugin(id: Long, reloadNow: Boolean = true)(implicit exec: ExecutionContext): Future[Unit] =
-    updatePluginStatus(id, isEnabled = true, reloadNow = reloadNow)
+  def enablePlugin(event: EventMessage, id: Long, reloadNow: Boolean = true)(implicit exec: ExecutionContext): Future[Unit] =
+    updatePluginStatus(event, id, isEnabled = true, reloadNow = reloadNow)
 
   /**
    * 禁用插件
    *
+   * @param event     消息对象
    * @param id        插件 ID
    * @param reloadNow 是否立刻重新加载果酱
    * @param exec      异步执行上下文
    */
-  def disablePlugin(id: Long, reloadNow: Boolean = true)(implicit exec: ExecutionContext): Future[Unit] =
-    updatePluginStatus(id, isEnabled = false, reloadNow = reloadNow)
+  def disablePlugin(event: EventMessage, id: Long, reloadNow: Boolean = true)(implicit exec: ExecutionContext): Future[Unit] =
+    updatePluginStatus(event, id, isEnabled = false, reloadNow = reloadNow)
 
   /**
    * 更新插件状态
    *
+   * @param event     消息对象
    * @param id        插件 ID
    * @param isEnabled 启用 or 禁用
    * @param reloadNow 是否立刻重新加载果酱
    * @param exec      异步执行上下文
    */
-  private def updatePluginStatus(id: Long, isEnabled: Boolean, reloadNow: Boolean)(implicit exec: ExecutionContext): Future[Unit] = async {
+  private def updatePluginStatus(event: EventMessage, id: Long, isEnabled: Boolean, reloadNow: Boolean)(implicit exec: ExecutionContext): Future[Unit] = async {
     val plugin = await(getPluginById(id))
     if (plugin.isDefined) {
       if (isEnabled == plugin.get._1.isEnabled) {
-        MasterUtil.notifyMaster(s"%s，插件已经${if (isEnabled) "启用" else "禁用"}了")
+        event.respond(s"插件已经${if (isEnabled) "启用" else "禁用"}了")
       } else {
         val result = await(db.run(Plugins.filter(_.id === id).map(_.isEnabled).update(isEnabled)))
         if (result != 1) {
-          MasterUtil.notifyAndLog("更新插件状态失败，请检查数据库连接！", LogLevel.ERROR)
+          logger.error("更新插件状态失败，请检查数据库连接！")
+          event.respond("更新插件状态失败，请检查数据库连接！")
         } else {
-          MasterUtil.notifyMaster(s"%s，插件已成功${if (isEnabled) "启用" else "禁用"}")
+          event.respond(s"插件已成功${if (isEnabled) "启用" else "禁用"}")
           if (reloadNow) {
             await {
               JamLoader.reload().recover(err => {
-                MasterUtil.notifyAndLog(s"重新加载过程中出现错误！请检查${JamConfig.name}的日志",
-                  LogLevel.ERROR, Some(err))
+                logger.error(s"重新加载过程中出现错误！", err)
+                event.respond(s"重新加载过程中出现错误！请检查${JamConfig.name}的日志")
                 err
               })
             }
@@ -236,7 +250,7 @@ object JamPluginLoader {
         }
       }
     } else {
-      MasterUtil.notifyAndLog(s"指定编号的插件不存在！", LogLevel.WARNING)
+      event.respond("指定编号的插件不存在！")
     }
   }
 
@@ -244,28 +258,29 @@ object JamPluginLoader {
   /**
    * 卸载插件
    *
-   * @param id   插件 ID
-   * @param exec 异步执行上下文
+   * @param event 消息对象
+   * @param id    插件 ID
+   * @param exec  异步执行上下文
    */
-  def uninstallPlugin(id: Long)(implicit exec: ExecutionContext): Future[Unit] = async {
+  def uninstallPlugin(event: EventMessage, id: Long)(implicit exec: ExecutionContext): Future[Unit] = async {
     val plugin = await(getPluginById(id))
     plugin match {
       case Some((_, installer)) =>
-        disablePlugin(id)
+        disablePlugin(event, id)
         await(installer.uninstall()) match {
           case Failure(exception) =>
-            MasterUtil.notifyAndLog(s"未能成功卸载，请联系插件的作者：${installer.author}",
-              LogLevel.ERROR, Some(exception))
+            logger.error(s"未能成功卸载，请联系插件的作者：${installer.author}", exception)
+            event.respond(s"未能成功卸载，请联系插件的作者：${installer.author}")
           case Success(_) =>
             val result = await(db.run(Plugins.filter(_.id === id).delete))
             if (result != 1) {
-              MasterUtil.notifyAndLog("插件记录删除失败，请检查数据库连接！", LogLevel.ERROR)
+              logger.error("插件记录删除失败，请检查数据库连接！")
+              event.respond("插件记录删除失败，请检查数据库连接！")
             } else {
-              MasterUtil.notifyMaster("%s，插件卸载成功！")
+              event.respond("插件卸载成功！")
             }
         }
-      case None =>
-        MasterUtil.notifyMaster("%s，指定编号的插件不存在")
+      case None => event.respond("指定编号的插件不存在")
     }
   }
 
