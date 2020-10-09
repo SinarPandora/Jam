@@ -1,3 +1,4 @@
 rootProject.name = 'Jam'
 include 'jam_self'
 include 'jam_wizard'
+include 'jam_wizard:wizard_ui'
