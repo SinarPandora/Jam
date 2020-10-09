@@ -1,9 +1,10 @@
 plugins {
     id "idea"
-    id "java"
     id "scala"
     id "distribution"
     id "application"
+    id "org.springframework.boot" version "2.3.3.RELEASE"
+    id "io.spring.dependency-management" version "1.0.8.RELEASE"
 }
 
 sourceCompatibility = "11"
@@ -14,10 +15,24 @@ scala {
 
 application {
     mainClass = 'o.lartifa.jam.Bootloader'
-    applicationDefaultJvmArgs = ["-Xmx256m", "-Xms64m", "-ea", "-server"]
+    applicationDefaultJvmArgs = ["-Xmx128m", "-Xms64m", "-ea", "-server"]
 }
 
 dependencies {
-    implementation(project(":jam_self"))
+    implementation(project(":jam_self")) {
+        exclude group: "org.slf4j", module: "slf4j-simple"
+    }
 
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude group: "org.junit.vintage", module: "junit-vintage-engine"
+    }
+
+    testImplementation("io.projectreactor:reactor-test")
+
+}
+
+test {
+    useJUnitPlatform()
 }

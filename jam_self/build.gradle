@@ -80,7 +80,7 @@ dependencies {
     api("com.sksamuel.scrimage:scrimage-core:4.0.6") {
         exclude group: "ch.qos.logback", module: "logback-classic"
     }
-    api("org.slf4j:slf4j-simple:1.7.30")
+    implementation("org.slf4j:slf4j-simple:1.7.30")
 
     // Test
     testImplementation("org.scalactic:scalactic_2.13:$scala_test_version")
