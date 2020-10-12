@@ -13,4 +13,7 @@ object JamPluginConfig {
 
   // 是否自动启用插件
   val autoEnablePlugins: Boolean = config.getBoolean("auto_enable")
+
+  // 插件路径
+  val path: String = config.getString("plugin_path")
 }

@@ -1,9 +1,10 @@
 package o.lartifa.jam.engine
 
+import better.files.StringExtensions
 import cc.moecraft.logger.format.AnsiColor
 import cc.moecraft.logger.{HyLogger, LogLevel}
 import o.lartifa.jam.bionic.BehaviorInitializer
-import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
+import o.lartifa.jam.common.config.{JamConfig, JamPluginConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.cool.qq.listener.EventMessageListener
@@ -48,6 +49,7 @@ object JamLoader {
    * @return 异步结果
    */
   def init(args: Array[String]): Future[Unit] = async {
+    makeSureDirsExist()
     Memory.init(args.contains("--flyway_repair"))
     await(JamPluginLoader.initJamPluginSystems())
     JamContext.cronTaskPool.getAndSet(CronTaskPool().autoRefreshTaskDefinition())
@@ -64,6 +66,7 @@ object JamLoader {
    */
   def reload(): Future[Unit] = async {
     if (!JamContext.initLock.get()) {
+      makeSureDirsExist()
       MasterUtil.notifyAndLog(s"开始重新加载${JamConfig.name}的各个组件")
       EventMessageListener.reloadPreHandleTasks()
       CoolQQLoader.reloadMasterCommands()
@@ -76,6 +79,17 @@ object JamLoader {
     } else {
       MasterUtil.notifyMaster("重新加载进行中...")
     }
+  }
+
+  /**
+   * 初始化文件目录结构
+   * 确保需要的文件夹存在
+   */
+  private def makeSureDirsExist(): Unit = {
+    // SSDL 文件夹
+    SystemConfig.ssdlPath.toFile.createDirectoryIfNotExists(createParents = true)
+    // 插件文件夹
+    JamPluginConfig.path.toFile.createDirectoryIfNotExists(createParents = true)
   }
 
   /**
