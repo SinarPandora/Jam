@@ -1,0 +1,14 @@
+plugins {
+    id "distribution"
+    id "de.undercouch.download" version "4.1.1"
+}
+
+group 'lartifa.o'
+version '3.0.5'
+
+String mirai_version = "0.2.3"
+
+task downloadBackend(type: Download) {
+    src "https://github.com/yyuueexxiinngg/cqhttp-mirai/releases/download/$mirai_version/cqhttp-mirai-$mirai_version-embedded-all.jar"
+    dest "mirai_console"
+}
