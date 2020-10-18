@@ -36,6 +36,10 @@ application {
     applicationDefaultJvmArgs = ["-Xmx2g", "-Xms512m", "-ea", "-server"]
 }
 
+startScripts {
+    classpath = files('../lib/*')
+}
+
 repositories {
     maven { url "https://jitpack.io" }
     jcenter()

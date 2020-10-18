@@ -43,7 +43,7 @@ object Bootloader {
         |可选参数：
         |--flyway_repair  执行数据迁移修复
         |--help           输出该提示
-        |--config=xxx     手动指定配置文件目录位置
+        |--config=xxx     手动指定配置文件位置
         |""".stripMargin)
     sys.exit(0)
   }
