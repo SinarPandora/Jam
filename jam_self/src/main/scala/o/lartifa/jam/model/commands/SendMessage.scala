@@ -31,7 +31,7 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
    * @return 异步结果
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[ReturnData[RMessageReturnData]] = {
-    (`type`: @unchecked) match {
+    `type` match {
       case SendMessage.SEND_TEXT => sendTextMessage()
       case SendMessage.SEND_PIC => sendPic()
       case SendMessage.SEND_AUDIO => sendPic()
@@ -96,7 +96,7 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
 
 object SendMessage {
 
-  sealed class Type
+  sealed abstract class Type
 
   case object SEND_TEXT extends Type
 
