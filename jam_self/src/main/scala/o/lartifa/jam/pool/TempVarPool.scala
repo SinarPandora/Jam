@@ -166,7 +166,7 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
       case "发送者QQ" | "对方QQ" | "QQ号" => eventMessage.getSender.refreshInfo(true).getUserId.toString
       case "发送者年龄" | "对方年龄" => eventMessage.getSender.refreshInfo(true).getAge.toString
       case "发送者性别" | "对方性别" => eventMessage.getSender.refreshInfo(true).getSex
-      case "会话类型" => ChatInfo(eventMessage).chatType
+      case "会话类型" => eventMessage.chatInfo.chatType
       case "是否为好友" => if (eventMessage.toGroupMessage.getGroupSender.getInfo.getUnfriendly) "是" else "否"
       case other => return CommandScopeParameters.get(other)
     }
