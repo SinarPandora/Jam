@@ -2,14 +2,14 @@ package o.lartifa.jam.pool
 
 import java.sql.Timestamp
 
-import cc.moecraft.icq.event.events.message.{EventGroupMessage, EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
+import cc.moecraft.icq.event.events.message.EventMessage
 import o.lartifa.jam.common.exception.{ExecutionException, VarNotFoundException}
+import o.lartifa.jam.common.util.EventMessageHelper._
 import o.lartifa.jam.database.temporary.schema.Tables
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
 /**
  * 临时变量（指令参数）工具
@@ -81,7 +81,7 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    * @return 变量值（Optional）
    */
   override def get(name: String)(implicit context: CommandExecuteContext): Future[Option[String]] = Future {
-    getVar(name, context.eventMessage)
+    getVar(name)
   }
 
   /**
@@ -93,7 +93,7 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    * @return 变量值
    */
   override def getOrElseUpdate(name: String, orElse: String)(implicit context: CommandExecuteContext): Future[String] = Future {
-    getVar(name, context.eventMessage).getOrElse {
+    getVar(name).getOrElse {
       CommandScopeParameters += name -> orElse
       orElse
     }
@@ -152,62 +152,24 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
   /**
    * 获取临时变量
    *
-   * @param name  参数名
-   * @param event 消息对象
+   * @param name 参数名
    * @return 函数
    */
-  private def getVar(name: String, event: EventMessage): Option[String] = Some {
+  private def getVar(name: String): Option[String] = Some {
     name match {
-      case "Bot昵称" | "自己的昵称" => getNickname(isSelf = true, event)
-      case "群号" => toGroupMessage(eventMessage).getGroupId.toString
-      case "群名" => toGroupMessage(eventMessage).getGroup.refreshInfo().getGroupName
-      case "发送者昵称" | "对方昵称" | "发送者群昵称" | "对方群昵称" => getNickname(isSelf = false, event)
-      case "发送者QQ昵称" | "对方QQ昵称" => getQQNickName(true)
+      case "Bot昵称" | "自己的昵称" => eventMessage.selfNickname
+      case "BotQQ昵称" | "自己的QQ昵称" => eventMessage.selfQQName
+      case "群号" => eventMessage.toGroupMessage.getGroupId.toString
+      case "群名" => eventMessage.toGroupMessage.getGroup.refreshInfo().getGroupName
+      case "发送者昵称" | "对方昵称" | "发送者群昵称" | "对方群昵称" => eventMessage.senderNickName
+      case "发送者QQ昵称" | "对方QQ昵称" => eventMessage.senderQQName
       case "发送者QQ" | "对方QQ" | "QQ号" => eventMessage.getSender.refreshInfo(true).getUserId.toString
       case "发送者年龄" | "对方年龄" => eventMessage.getSender.refreshInfo(true).getAge.toString
       case "发送者性别" | "对方性别" => eventMessage.getSender.refreshInfo(true).getSex
       case "会话类型" => ChatInfo(eventMessage).chatType
-      case "是否为好友" => if (toGroupMessage(eventMessage).getGroupSender.getInfo.getUnfriendly) "是" else "否"
+      case "是否为好友" => if (eventMessage.toGroupMessage.getGroupSender.getInfo.getUnfriendly) "是" else "否"
       case other => return CommandScopeParameters.get(other)
     }
-  }
-
-  /**
-   * 获取昵称（通用）
-   *
-   * @param isSelf 是否为发送者
-   * @param event  消息对象
-   * @return 昵称
-   */
-  private def getNickname(isSelf: Boolean, event: EventMessage): String = {
-    event match {
-      case _: EventGroupOrDiscussMessage => getGroupNickName(isSelf)
-      case _: EventPrivateMessage => getQQNickName(isSelf)
-    }
-  }
-
-  /**
-   * 获取昵称
-   *
-   * @param isSelf 是否为发送者
-   * @return 昵称
-   */
-  private def getQQNickName(isSelf: Boolean): String = {
-    if (isSelf) eventMessage.getBotAccount.getName
-    else eventMessage.getSender.refreshInfo(true).getNickname
-  }
-
-  /**
-   * 获取群昵称，当未设置时，获取昵称
-   *
-   * @param isSelf 是否为发送者
-   * @return 群昵称
-   */
-  private def getGroupNickName(isSelf: Boolean): String = {
-    val qid = if (isSelf) eventMessage.getSelfId else eventMessage.getSenderId
-    val groupNickName = toGroupMessage(eventMessage).getGroupUser(qid).refreshInfo.getCard
-    if (groupNickName.isEmpty) getQQNickName(isSelf)
-    else groupNickName
   }
 
   /**
@@ -217,15 +179,4 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    * @return 是否可以覆盖
    */
   private def checkOverridable(name: String): Boolean = !PREDEF_VARIABLES.contains(name)
-
-  /**
-   * 尝试将消息转换成群消息
-   *
-   * @param eventMessage 消息事件
-   * @return 群消息
-   */
-  @throws[ExecutionException]
-  private def toGroupMessage(eventMessage: EventMessage): EventGroupMessage =
-    Try(eventMessage.asInstanceOf[EventGroupMessage])
-      .getOrElse(throw ExecutionException("不能从非群聊获取群昵称"))
 }
