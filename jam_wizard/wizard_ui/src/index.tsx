@@ -1,12 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
+import './index.less';
 import * as serviceWorker from './serviceWorker';
+import Skeleton from "./components/layout/Skeleton";
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <Skeleton />
   </React.StrictMode>,
   document.getElementById('root')
 );
