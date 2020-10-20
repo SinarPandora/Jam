@@ -4,7 +4,7 @@ import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.{HyLogger, LogLevel}
 import cn.hutool.core.util.StrUtil
 import o.lartifa.jam.common.config.{JamConfig, JamPluginConfig}
-import o.lartifa.jam.common.util.MasterUtil
+import o.lartifa.jam.common.util.{MasterUtil, TimeUtil}
 import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
 import o.lartifa.jam.cool.qq.listener.prehandle.PreHandleTask
 import o.lartifa.jam.database.temporary.Memory.database.db
@@ -83,30 +83,10 @@ object JamPluginLoader {
         MasterUtil.notifyMaster(missingPlugins)
       }
 
-      // 自动安装需要表中不存在的插件
-      val installation = await {
-        Future.sequence {
-          installers
-            .filterNot(it => installedPlugins.keySet.contains(it._1)) // 若表中不存在，执行 install
-            .map { case (packageName, installer) => tryInstallPlugin(packageName, installer) }
-        }
-      }
-      val installResult = installation.groupMap(_._2.isSuccess)(_._1)
-      val needInsert = (installers -- installResult.getOrElse(true, Nil))
-        .map { case (packageName, it) =>
-          (it.pluginName, it.keywords.mkString(","), it.author, packageName, JamPluginConfig.autoEnablePlugins)
-        }.toList
-
-      val insertSuccess = needInsert.sizeIs == await {
-        db.run {
-          Plugins.map(row => (row.name, row.keywords, row.author, row.`package`, row.isEnabled)) ++= needInsert
-        }
-      }.getOrElse(0)
-
-      if (!insertSuccess) {
-        MasterUtil.notifyAndLog(s"插件安装数量与预期不符，这很可能是一个 bug，若${JamConfig.name}无法正常运作，请联系作者",
-          LogLevel.WARNING)
-      }
+      // 自动安装插件
+      val installResult = await(autoInstall(installedPlugins.keySet))
+      // 自动升级插件
+      await(autoUpgrade(installedPlugins))
 
       // 将挂载点注入到各个组件
       val needLoad = installedPlugins.values.groupBy(_.isEnabled).getOrElse(true, Nil).map(_.`package`) ++ {
@@ -114,6 +94,77 @@ object JamPluginLoader {
         else Nil
       }
       this._loadedComponents = mountPlugins((installers -- needLoad).values)
+    }
+  }
+
+  /**
+   * 自动安装表中不存在的插件
+   *
+   * @param installedPluginNames 已安装的插件名称
+   * @param exec                 异步执行上下文
+   * @return 安装结果
+   */
+  private def autoInstall(installedPluginNames: Set[String])(implicit exec: ExecutionContext): Future[Map[Boolean, Iterable[String]]] = async {
+    val installation = await {
+      Future.sequence {
+        installers
+          .filterNot(it => installedPluginNames.contains(it._1)) // 若表中不存在，执行 install
+          .map { case (packageName, installer) => tryInstallPlugin(packageName, installer) }
+      }
+    }
+    val installResult = installation.groupMap(_._2.isSuccess)(_._1)
+    val needInsert = (installers -- installResult.getOrElse(true, Nil))
+      .map { case (packageName, it) =>
+        (it.pluginName, it.keywords.mkString(","), it.author, packageName, JamPluginConfig.autoEnablePlugins)
+      }.toList
+
+    val insertSuccess = needInsert.sizeIs == await {
+      db.run {
+        Plugins.map(row => (row.name, row.keywords, row.author, row.`package`, row.isEnabled)) ++= needInsert
+      }
+    }.getOrElse(0)
+
+    if (!insertSuccess) {
+      MasterUtil.notifyAndLog(s"插件安装数量与预期不符，这很可能是一个 bug，若${JamConfig.name}无法正常运作，请联系作者",
+        LogLevel.WARNING)
+    }
+
+    installResult
+  }
+
+  /**
+   * 自动升级旧插件
+   * （当插件版本比数据库版本大时，执行 upgrade 方法）
+   *
+   * @param installedPlugins 已安装的插件记录
+   * @param exec             异步执行上下文
+   * @return 安装结果
+   */
+  private def autoUpgrade(installedPlugins: Map[String, Tables.PluginsRow])(implicit exec: ExecutionContext): Future[Unit] = async {
+    val upgrade = await {
+      Future.sequence {
+        installedPlugins.flatMap {
+          case (packageName, record) =>
+            // 若存在的版本高于数据库，则升级
+            installers.get(packageName).filter(installer => installer.version > record.version)
+              .map(installer => (packageName, record.version, installer))
+        }.map { case (packageName, oldVersion, installer) => tryUpgradePlugin(packageName, oldVersion, installer) }
+      }
+    }
+
+    val upgradeResult = upgrade.filter(_._2.isSuccess).map(it => it._1 -> it._2.get)
+
+    await {
+      db.run {
+        DBIO.sequence(
+          upgradeResult.map {
+            case (packageName, plugin) =>
+              Plugins.filter(_.`package` === packageName)
+                .map(row => (row.name, row.author, row.keywords, row.version, row.installDate))
+                .update(plugin.pluginName, plugin.author, plugin.keywords.mkString(","), plugin.version, TimeUtil.currentTimeStamp)
+          }
+        )
+      }
     }
   }
 
@@ -173,17 +224,40 @@ object JamPluginLoader {
    * @return 安装结果
    */
   private def tryInstallPlugin(packageName: String, installer: JamPluginInstaller)(implicit exec: ExecutionContext): Future[(String, Try[Unit])] = {
+    logger.log(s"正在安装插件：${installer.pluginName}，作者：${installer.author}，包名：$packageName")
     installer.install().recoverWith(err => {
-      MasterUtil.notifyAndLog(s"[${installer.pluginName}] 安装插件出错，正在自动尝试卸载...",
+      MasterUtil.notifyAndLog(s"[${installer.pluginName}] 安装插件出错，正在自动尝试卸载...（包名为：$packageName）",
         LogLevel.ERROR, Some(err))
-      MasterUtil.notifyMaster(s"插件包名为：$packageName")
       installer.uninstall().recover(err => {
-        MasterUtil.notifyAndLog(s"[${installer.pluginName}] 插件卸载失败，请删除该插件并可以尝试联系插件作者",
+        MasterUtil.notifyAndLog(s"[${installer.pluginName}] 插件卸载失败，请删除该插件并可以尝试联系插件作者：${installer.author}，包名为：$packageName",
           LogLevel.ERROR, Some(err))
-        MasterUtil.notifyMaster(s"插件包名为：$packageName")
         Failure(err)
       })
-    }).map(it => packageName -> it)
+    }).map(it => {
+      logger.log(s"插件${installer.pluginName}安装结束！")
+      packageName -> it
+    })
+  }
+
+  /**
+   * 尝试升级插件
+   *
+   * @param packageName 包名
+   * @param oldVersion  旧版本号
+   * @param installer   安装器
+   * @param exec        异步上下文
+   * @return 安装结果
+   */
+  private def tryUpgradePlugin(packageName: String, oldVersion: BigDecimal, installer: JamPluginInstaller)(implicit exec: ExecutionContext): Future[(String, Try[JamPluginInstaller])] = {
+    logger.log(s"正在升级插件：${installer.pluginName}，版本：$oldVersion -> ${installer.version}，包名：$packageName")
+    installer.upgrade(oldVersion).recover(err => {
+      MasterUtil.notifyAndLog(s"[${installer.pluginName}] 插件升级失败，可以尝试联系插件作者：${installer.author}，包名为：$packageName",
+        LogLevel.ERROR, Some(err))
+      Failure(err)
+    }).map(it => {
+      logger.log(s"插件${installer.pluginName}升级结束！")
+      packageName -> it
+    })
   }
 
   /**
