@@ -3,7 +3,6 @@ package o.lartifa.jam.plugins.api
 import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
 import o.lartifa.jam.cool.qq.listener.prehandle.PreHandleTask
 import o.lartifa.jam.engine.parser.SSDLCommandParser
-import o.lartifa.jam.model.commands.Command
 import o.lartifa.jam.model.tasks.JamCronTask.TaskDefinition
 import o.lartifa.jam.model.tasks.LifeCycleTask
 
@@ -33,7 +32,7 @@ case class MountPoint
   /**
    * （挂载点）SSDL 指令解析器
    */
-  commandParsers: List[SSDLCommandParser[_, Command[_]]] = Nil,
+  commandParsers: List[SSDLCommandParser.Parser] = Nil,
 
   /**
    * （挂载点）定时任务定义

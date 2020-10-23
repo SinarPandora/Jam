@@ -9,7 +9,7 @@ import o.lartifa.jam.model.commands.Command
  * Author: sinar
  * 2020/10/1 00:41
  */
-abstract class SSDLCommandParser[U, T <: Command[U]](val commandMatchType: CommandMatchType) extends Parser {
+abstract class SSDLCommandParser[T <: Command[_]](val commandMatchType: CommandMatchType) extends Parser {
   /**
    * 解析指令
    *
@@ -22,10 +22,12 @@ abstract class SSDLCommandParser[U, T <: Command[U]](val commandMatchType: Comma
 
 object SSDLCommandParser {
 
+  type Parser = SSDLCommandParser[_ <: Command[_]]
+
   sealed trait CommandMatchType
 
   /**
-   * 包含模式：
+   * 包含模式（出现指令内容则匹配）：
    * 例如：全局禁言指令
    */
   case object Contains extends CommandMatchType

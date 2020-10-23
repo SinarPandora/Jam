@@ -13,7 +13,6 @@ import o.lartifa.jam.database.temporary.schema.Tables._
 import o.lartifa.jam.engine.JamLoader
 import o.lartifa.jam.engine.parser.SSDLCommandParser
 import o.lartifa.jam.engine.parser.SSDLCommandParser._
-import o.lartifa.jam.model.commands.Command
 import o.lartifa.jam.model.tasks.JamCronTask.TaskDefinition
 import o.lartifa.jam.model.tasks.LifeCycleTask
 import o.lartifa.jam.plugins.api.JamPluginInstaller
@@ -43,9 +42,9 @@ object JamPluginLoader {
     bootTasks: List[LifeCycleTask] = Nil,
     shutdownTasks: List[LifeCycleTask] = Nil,
     preHandleTasks: List[PreHandleTask] = Nil,
-    containsModeCommandParsers: List[SSDLCommandParser[_, Command[_]]] = Nil,
-    regexModeCommandParsers: List[SSDLCommandParser[_, Command[_]]] = Nil,
-    highOrderModeCommandParsers: List[SSDLCommandParser[_, Command[_]]] = Nil,
+    containsModeCommandParsers: List[SSDLCommandParser.Parser] = Nil,
+    regexModeCommandParsers: List[SSDLCommandParser.Parser] = Nil,
+    highOrderModeCommandParsers: List[SSDLCommandParser.Parser] = Nil,
     cronTaskDefinitions: List[TaskDefinition] = Nil,
     masterCommands: List[MasterEverywhereCommand] = Nil,
     afterSleepTasks: List[LifeCycleTask] = Nil
@@ -178,9 +177,9 @@ object JamPluginLoader {
     val bootTasks: ListBuffer[LifeCycleTask] = ListBuffer.empty
     val shutdownTasks: ListBuffer[LifeCycleTask] = ListBuffer.empty
     val preHandleTasks: ListBuffer[PreHandleTask] = ListBuffer.empty
-    val containsModeCommandParsers: ListBuffer[SSDLCommandParser[_, Command[_]]] = ListBuffer.empty
-    val regexModeCommandParsers: ListBuffer[SSDLCommandParser[_, Command[_]]] = ListBuffer.empty
-    val highOrderModeCommandParsers: ListBuffer[SSDLCommandParser[_, Command[_]]] = ListBuffer.empty
+    val containsModeCommandParsers: ListBuffer[SSDLCommandParser.Parser] = ListBuffer.empty
+    val regexModeCommandParsers: ListBuffer[SSDLCommandParser.Parser] = ListBuffer.empty
+    val highOrderModeCommandParsers: ListBuffer[SSDLCommandParser.Parser] = ListBuffer.empty
     val cronTaskDefinitions: ListBuffer[TaskDefinition] = ListBuffer.empty
     val masterCommands: ListBuffer[MasterEverywhereCommand] = ListBuffer.empty
     val afterSleepTasks: ListBuffer[LifeCycleTask] = ListBuffer.empty
