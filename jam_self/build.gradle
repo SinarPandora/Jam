@@ -38,7 +38,7 @@ application {
 }
 
 startScripts {
-    classpath = files('../lib/*')
+    classpath = files('../lib/*', '../plugins/*')
 }
 
 repositories {
