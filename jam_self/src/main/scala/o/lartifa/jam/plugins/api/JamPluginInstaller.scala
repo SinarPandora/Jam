@@ -1,6 +1,6 @@
 package o.lartifa.jam.plugins.api
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 /**
@@ -45,24 +45,27 @@ abstract class JamPluginInstaller {
    * 该安装操作插件第一次加载到系统时执行
    * 只执行一次
    *
+   * @param exec 异步上下文
    * @return 安装结果
    */
-  def install(): Future[Try[Unit]]
+  def install()(implicit exec: ExecutionContext): Future[Try[Unit]]
 
   /**
    * 卸载
    * 卸载将在挂载内容卸载后执行
    *
+   * @param exec 异步上下文
    * @return 卸载结果
    */
-  def uninstall(): Future[Try[Unit]]
+  def uninstall()(implicit exec: ExecutionContext): Future[Try[Unit]]
 
   /**
    * 更新
    * 更新将在版本号变更（增大）时进行
    *
+   * @param exec 异步上下文
    * @param oldVersion 旧版本号
    * @return 安装器本身
    */
-  def upgrade(oldVersion: BigDecimal): Future[Try[JamPluginInstaller]]
+  def upgrade(oldVersion: BigDecimal)(implicit exec: ExecutionContext): Future[Try[JamPluginInstaller]]
 }
