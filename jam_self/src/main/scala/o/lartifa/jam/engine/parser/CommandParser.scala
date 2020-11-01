@@ -1,5 +1,7 @@
 package o.lartifa.jam.engine.parser
 
+import java.util.concurrent.TimeUnit
+
 import ammonite.ops.PipeableImplicit
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.model.commands.Ask.{AnyBody, CurrentSender}
@@ -47,7 +49,7 @@ object CommandParser extends Parser {
       parseCatchParameters _, parseMessageSend _, parseGoto _, parseOneByOne _, parseParamOpt _,
       parseRandomNumber _, parseRandomGoto _, parseLoopGoto _, parseParamDel _, parseWaiting _,
       parseSetPicFetcherMode _, parseSetPicRating _, parseRunTaskNow _, parseFetchAndSendPic _,
-      parseRollEveryThing _) ++ regex ++ List(
+      parseRollEveryThing _, parseBanSomeOneInGroup _) ++ regex ++ List(
       // 包含类模式放在后边
       parseDoNoting _, parseGroupWholeBan _, parseGroupWholeUnBan _, parseShowPicInfo _,
       parseRSSSubscribe _, parseRSSUnSubscribe _, parseRSSShowAll _
@@ -70,10 +72,8 @@ object CommandParser extends Parser {
           .map(_.apply(string, context))
           .find(_.isDefined)
           .flatten
-          .map(command =>
-            parseThenSaveTo(string, command, context)
-              .getOrElse(command)
-          )
+          .map(command => parseIgnoreError(string, command).getOrElse(command))
+          .map(command => parseThenSaveTo(string, command, context).getOrElse(command))
     }
   }
 
@@ -408,6 +408,16 @@ object CommandParser extends Parser {
   }
 
   /**
+   * 解析忽略错误指令
+   *
+   * @param string  待解析字符串
+   * @param command 目标指令
+   * @return 解析结果
+   */
+  private def parseIgnoreError(string: String, command: Command[_]): Option[IgnoreError] =
+    Patterns.ignoreError.findFirstMatchIn(string).map(_ => IgnoreError(command))
+
+  /**
    * 解析立即运行任务指令
    *
    * @param string  待解析字符串
@@ -484,4 +494,24 @@ object CommandParser extends Parser {
     })
   }
 
+  /**
+   * 解析禁言某人指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseBanSomeOneInGroup(string: String, context: ParseEngineContext): Option[BanSomeOneInGroup] = {
+    CommandPattern.banSomeOneInGroup.findFirstMatchIn(string).map(result => {
+      val qId = result.group("qId") |> context.getTemplate
+      val time = result.group("time") |> context.getTemplate
+      val unit: TimeUnit = result.group("unit") match {
+        case "分钟" => TimeUnit.MINUTES
+        case "小时" => TimeUnit.HOURS
+        case "天" => TimeUnit.DAYS
+        case _ => throw ParseFailException("不支持的时间单位")
+      }
+      BanSomeOneInGroup(qId, time, unit)
+    })
+  }
 }

@@ -89,6 +89,10 @@ object Patterns {
    * 保存解析到的指令的执行结果
    */
   val thenSaveTo: Regex = """(.+?)之后将结果保存到\{(.+?)}""".r("command", "name")
+  /**
+   * 忽略错误
+   */
+  val ignoreError: Regex = """(.+?)忽略错误""".r("command")
 
   // 7
   object CommandPattern {
@@ -147,6 +151,8 @@ object Patterns {
     val ask: Regex = """询问(发送者|任何人)[:：]%\{(.+?)}%[，,]((若答案为\{.+?}|其他答案)则(.+)[;；]?)+""".r("questioner", "question", "answerMatchers")
     // 答案匹配器
     val answerMatcher: Regex = """(若答案为\{.+?}|其他答案)则([^;；]+)[;；]?""".r("answer", "command")
+    // 禁言某人
+    val banSomeOneInGroup: Regex = """禁言%\{(.+?)}%时长%\{(.+?)}%(分钟|小时|天)""".r("qId", "time", "unit")
   }
 
 }
