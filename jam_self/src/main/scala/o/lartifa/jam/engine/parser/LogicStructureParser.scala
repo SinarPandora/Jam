@@ -96,7 +96,7 @@ object LogicStructureParser extends Parser {
           .getOrElse(throw ParseFailException("与或逻辑前没有一条可执行的指令"))
         Some(And(firstCommand +: parseCommands(resultAnd)))
       } else {
-        // 与逻辑
+        // 或逻辑
         val firstCommand = CommandParser.parseCommand(string.splitAt(string.indexOf(resultOr.head))._1, context)
           .getOrElse(throw ParseFailException("与或逻辑前没有一条可执行的指令"))
         Some(RandomOr(firstCommand +: parseCommands(resultOr)))

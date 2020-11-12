@@ -69,15 +69,15 @@ object PatternParser extends Parser {
    * @return 解析引擎上下文
    */
   private def preprocessStatement(string: String, stepId: Long): ParseEngineContext = {
-    // 1. 找到全部模板，替换为 %{1}%
-    val templates = VarParser.parseTemplates(string).getOrElse(Nil).zipWithIndex
+    // 1. 找到全部模板，替换为 %{_1}%
+    val templates = VarParser.parseTemplates(string).getOrElse(Nil).zipWithIndex.map { case (it, idx) => it -> s"_$idx" }
     val str1 = templates.foldLeft(string) { case (str, (it, idx)) => str.replace(it.source, s"%{$idx}%") }
-    // 2. 找到剩余的全部变量，替换掉 {1}
-    val varKeys = VarParser.parseVars(str1).getOrElse(Nil).zipWithIndex
+    // 2. 找到剩余的全部变量，替换掉 {_1}
+    val varKeys = VarParser.parseVars(str1).getOrElse(Nil).zipWithIndex.map { case (it, idx) => it -> s"_$idx" }
     val processedStr = varKeys.foldLeft(str1) { case (str, (it, idx)) => str.replace(it.source, s"{$idx}") }
     // 3. 组装解析上下文
-    val templateMap = templates.map(it => it._2.toString -> it._1.command).toMap
-    val varKeysMap = varKeys.map(it => it._2.toString -> it._1.varKey).toMap
+    val templateMap = templates.map(it => it._2 -> it._1.command).toMap
+    val varKeysMap = varKeys.map(it => it._2 -> it._1.varKey).toMap
     ParseEngineContext(stepId, varKeysMap, templateMap, string, processedStr)
   }
 }

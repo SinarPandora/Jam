@@ -19,8 +19,9 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(implicit exec: ExecutionContext) extends VariablePool {
 
-  private val PREDEF_VARIABLES: Set[String] = Set("昵称", "群号", "群名", "群昵称", "发送者昵称", "对方昵称", "发送者QQ",
-    "对方QQ", "发送者年龄", "对方年龄", "发送者性别", "对方性别", "会话类型", "发送者群昵称", "对方群昵称", "是否为好友")
+  private val PREDEF_VARIABLES: Set[String] = Set("Bot昵称","自己的昵称","BotQQ昵称","自己的QQ昵称","群号","群名",
+    "发送者昵称","对方昵称","发送者群昵称","对方群昵称","发送者QQ昵称","对方QQ昵称","发送者QQ","对方QQ","QQ号",
+    "发送者年龄","对方年龄","发送者性别","对方性别","会话类型","是否为好友")
 
   private val CommandScopeParameters: mutable.Map[String, String] = mutable.Map.empty
 
@@ -163,7 +164,7 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
       case "群名" => eventMessage.toGroupMessage.getGroup.refreshInfo().getGroupName
       case "发送者昵称" | "对方昵称" | "发送者群昵称" | "对方群昵称" => eventMessage.senderNickName
       case "发送者QQ昵称" | "对方QQ昵称" => eventMessage.senderQQName
-      case "发送者QQ" | "对方QQ" | "QQ号" => eventMessage.getSender.refreshInfo(true).getUserId.toString
+      case "发送者QQ" | "对方QQ" | "QQ号" => eventMessage.getSenderId.toString
       case "发送者年龄" | "对方年龄" => eventMessage.getSender.refreshInfo(true).getAge.toString
       case "发送者性别" | "对方性别" => eventMessage.getSender.refreshInfo(true).getSex
       case "会话类型" => eventMessage.chatInfo.chatType

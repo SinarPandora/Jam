@@ -6,7 +6,6 @@ import o.lartifa.jam.model.commands.IgnoreError.logger
 import o.lartifa.jam.model.{CommandExecuteContext, Executable}
 import o.lartifa.jam.pool.JamContext
 
-import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -24,13 +23,12 @@ case class IgnoreError(command: Executable[_]) extends Command[Any] {
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Any] = async {
-    try {
-      await(command.execute())
-    } catch {
-      case e: ExecutionException => logger.error(e)
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Any] = {
+    command.execute().recover {
+      case e: ExecutionException =>
+        logger.error(e)
         "出现错误"
-      case e => throw e
+      case e: Throwable => throw e
     }
   }
 }

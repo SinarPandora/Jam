@@ -30,8 +30,7 @@ case class BanSomeOneInGroup(qIdTemplate: RenderStrTemplate, timeTemplate: Rende
     val qId = await(qIdTemplate.execute())
     val time = await(timeTemplate.execute())
     context.eventMessage.getHttpApi.setGroupBan(
-      context.eventMessage.asInstanceOf[EventGroupOrDiscussMessage].getGroup.getId,
-      qId.toLong, unit.toMillis(time.toLong)
+      context.eventMessage.asInstanceOf[EventGroupOrDiscussMessage].getGroup.getId, qId.toLong, unit.toSeconds(time.toLong)
     )
   }
 }

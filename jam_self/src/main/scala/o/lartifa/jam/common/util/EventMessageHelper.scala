@@ -75,7 +75,8 @@ object EventMessageHelper {
      */
     private def getQQNickName(isSelf: Boolean): String = {
       if (isSelf) event.getBotAccount.getName
-      else event.getSender.refreshInfo(true).getNickname
+      else Try(event.getSender.refreshInfo(true).getNickname)
+        .getOrElse(event.getSenderId.toString)
     }
 
     /**
