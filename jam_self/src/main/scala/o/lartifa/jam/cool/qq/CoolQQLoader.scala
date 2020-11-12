@@ -2,8 +2,7 @@ package o.lartifa.jam.cool.qq
 
 import cc.moecraft.icq.{PicqBotX, PicqConfig}
 import cc.moecraft.logger.format.AnsiColor
-import o.lartifa.jam.common.config.CoolQConfig.{postPort, postUrl, socketPort}
-import o.lartifa.jam.common.config.JamConfig.name
+import o.lartifa.jam.common.config.CoolQConfig.socketPort
 import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.common.util.LoggerFactory
 import o.lartifa.jam.cool.qq.command.MasterCommands
@@ -35,7 +34,6 @@ object CoolQQLoader {
       }
     }
     JamContext.loggerFactory.set(new LoggerFactory(client.getLoggerInstanceManager))
-    client.addAccount(name, postUrl, postPort)
     client.getEventManager.registerListeners(EventMessageListener, SystemEventListener)
     client.enableCommandManager("！", "!")
     client.getCommandManager.registerCommands(MasterCommands.commands: _*)

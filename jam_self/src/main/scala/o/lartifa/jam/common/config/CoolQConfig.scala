@@ -17,4 +17,13 @@ object CoolQConfig {
   val postPort: Int = config.getInt("port.post")
   // 消息接收窗口
   val socketPort: Int = config.getInt("port.socket")
+
+  object Backend {
+    private val config: Config = CoolQConfig.config.getConfig("backend")
+    object Mirai {
+      private val config: Config = Backend.config.getConfig("mirai")
+      // Mirai 后端路径
+      val path: String = config.getString("path")
+    }
+  }
 }

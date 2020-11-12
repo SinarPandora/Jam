@@ -17,6 +17,9 @@ object JamConfig {
   // Bot QQ
   val qID: Long = config.getLong("jam_qq")
 
+  // Bot password
+  val password: String = config.getString("password")
+
   // Master 用户
   val masterQID: Long = config.getLong("master_qq")
 
