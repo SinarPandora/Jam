@@ -14,7 +14,6 @@ import o.lartifa.jam.pool.JamContext
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.sys.process._
-import scala.util.Try
 
 /**
  * 唤醒果酱
@@ -31,10 +30,11 @@ object Bootloader {
     JamContext.httpApi.getAndSet(() => client.getAccountManager.getNonAccountSpecifiedApi)
     JamContext.clientConfig.getAndSet(client.getConfig)
     Await.result(JamLoader.init(args), Duration.Inf)
-    client.startBot()
-    Try(client.addAccount(name, postUrl, postPort))
+    client.getHttpServer.start()
     startMiraiBackEnd(() => {
-      client.getAccountManager.refreshCache()
+      JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}已连接 Mirai 后端，正在刷新数据...")
+      client.addAccount(name, postUrl, postPort)
+      JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}数据刷新成功！开始接收消息")
     })
     SubscriptionPool.init()
     JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}${name}已恢复生命体征")
@@ -81,14 +81,27 @@ object Bootloader {
     val process = (s"""echo "login $qID $password""""
       #| Process(s"""java -jar ./backend.jar""", new File(CoolQConfig.Backend.Mirai.path)))
 
+    sys addShutdownHook {
+      JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}检测到程序关闭，正在停止 Miari 后端...")
+      "jcmd -l".!!.lines()
+        .filter(it => it.contains("./backend.jar"))
+        .map(it => it.split(" ").head)
+        .findAny().stream().forEach { pid =>
+          val os = System.getProperty("os.name").toLowerCase
+          if (os.contains("win")) {
+            // Is windows
+            s"taskkill /PID $pid".!
+          } else {
+            s"kill -15 $pid".!
+          }
+        }
+      JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}Miari 后端成功关闭")
+    }
+
     process.lazyLines
       .tapEach(println)
-      .filter(line => line.contains(s"[BOT $qID] Login successful"))
+      .filter(line => line.contains(s"[NETWORK] ConfigPushSvc.PushReq: Success"))
       .take(1)
       .foreach(_ => afterBooted())
-
-    sys addShutdownHook {
-      println("echo TODO 自动关闭 backend".!!)
-    }
   }
 }
