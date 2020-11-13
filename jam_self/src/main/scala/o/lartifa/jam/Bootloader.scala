@@ -98,6 +98,7 @@ object Bootloader {
       JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}Miari 后端成功关闭")
     }
 
+    JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}正在尝试启动并连接 Miari 后端...")
     process.lazyLines
       .tapEach(println)
       .filter(line => line.contains(s"[NETWORK] ConfigPushSvc.PushReq: Success"))

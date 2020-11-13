@@ -28,9 +28,14 @@ distributions {
                 exclude "*test*"
                 exclude "*local*"
             }
+            into("backend") {
+                from "../jam_mirai_backend/mirai_console/backend.jar"
+            }
         }
     }
 }
+
+[distZip, distTar]*.dependsOn tasks.findByPath(':jam_mirai_backend:downloadBackend')
 
 application {
     mainClass = 'o.lartifa.jam.Bootloader'
