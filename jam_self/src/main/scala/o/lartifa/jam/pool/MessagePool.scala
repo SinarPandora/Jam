@@ -184,6 +184,16 @@ class MessagePool {
   }
 
   /**
+   * 清理超过 N 天的消息记录
+   *
+   * @param days 天数
+   * @return 删除的消息数量
+   */
+  def cleanUpMessage(days: Int): Future[Int] = {
+    db.run(sqlu"""delete from message_records where timestamp <= date_trunc('day', (current_timestamp - interval '#$days' day));""")
+  }
+
+  /**
    * 记录私聊消息
    *
    * @param msg 消息对象
@@ -194,9 +204,9 @@ class MessagePool {
       MessageRecords
         .map(row =>
           (row.message, row.messageId, row.messageType, row.messageSubType, row.postType,
-            row.rawMessage, row.selfId, row.senderId, row.font, row.timestamp)
+            row.rawMessage, row.selfId, row.senderId, row.font)
         ) += (msg.getMessage, msg.getMessageId, msg.getMessageType, msg.getSubType, msg.getPostType,
-        msg.getRawMessage, msg.getSelfId, msg.getSenderId, msg.getFont, msg.getTime)
+        msg.getRawMessage, msg.getSelfId, msg.getSenderId, msg.getFont)
     }
   }
 
@@ -211,9 +221,9 @@ class MessagePool {
       MessageRecords
         .map(row =>
           (row.message, row.messageId, row.messageType, row.messageSubType, row.postType,
-            row.rawMessage, row.selfId, row.senderId, row.groupId, row.font, row.timestamp)
+            row.rawMessage, row.selfId, row.senderId, row.groupId, row.font)
         ) += (msg.getMessage, msg.getMessageId, msg.getMessageType, MessageType.SUB_TYPE_NORMAL, msg.getPostType,
-        msg.getRawMessage, msg.getSelfId, msg.getSenderId, msg.getGroup.getId, msg.getFont, msg.getTime)
+        msg.getRawMessage, msg.getSelfId, msg.getSenderId, msg.getGroup.getId, msg.getFont)
     }
   }
 
@@ -230,9 +240,9 @@ class MessagePool {
       MessageRecords
         .map(row =>
           (row.message, row.messageId, row.messageType, row.messageSubType, row.postType,
-            row.rawMessage, row.selfId, row.senderId, row.font, row.timestamp)
+            row.rawMessage, row.selfId, row.senderId, row.font)
         ) += (placeholderMessage, -1, msg.getMessageType, msg.getSubType, "placeholder",
-        placeholderMessage, msg.getSelfId, msg.getSelfId, msg.getFont, msg.getTime)
+        placeholderMessage, msg.getSelfId, msg.getSelfId, msg.getFont)
     }
   }
 
@@ -249,9 +259,9 @@ class MessagePool {
       MessageRecords
         .map(row =>
           (row.message, row.messageId, row.messageType, row.messageSubType, row.postType,
-            row.rawMessage, row.selfId, row.senderId, row.groupId, row.font, row.timestamp)
+            row.rawMessage, row.selfId, row.senderId, row.groupId, row.font)
         ) += (placeholderMessage, -1, msg.getMessageType, MessageType.SUB_TYPE_NORMAL, "placeholder",
-        placeholderMessage, msg.getSelfId, msg.getSelfId, msg.getGroup.getId, msg.getFont, msg.getTime)
+        placeholderMessage, msg.getSelfId, msg.getSelfId, msg.getGroup.getId, msg.getFont)
     }
   }
 }

@@ -5,7 +5,7 @@ import java.time.LocalTime
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import com.typesafe.config.Config
-import o.lartifa.jam.common.config.JamConfig
+import o.lartifa.jam.common.config.{JamCharacter, JamConfig}
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.engine.parser.Parser
@@ -43,7 +43,7 @@ object BiochronometerParser extends Parser {
       else if (now >= sleepAt && now < wakeAt) true
       else false
       if (continueSleep) {
-        MasterUtil.notifyMaster("啊。。这个点我得睡觉了，晚安%s")
+        MasterUtil.notifyMaster(JamCharacter.ForMaster.goodNight)
         GoASleep.goASleep()
       }
     }

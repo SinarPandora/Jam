@@ -13,6 +13,7 @@ import o.lartifa.jam.engine.SSDLParseEngine.{ParseFailResult, ParseSuccessResult
 import o.lartifa.jam.model.patterns.ContentMatcher
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext, Step}
 import o.lartifa.jam.plugins.JamPluginLoader
+import o.lartifa.jam.plugins.rss.SubscriptionPool
 import o.lartifa.jam.pool.{CronTaskPool, JamContext, StepPool}
 
 import scala.async.Async._
@@ -57,6 +58,7 @@ object JamLoader {
     await(initSSDL())
     runBootTasks()
     Runtime.getRuntime.addShutdownHook(shutdownHookThread)
+    SubscriptionPool.init()
   }
 
   /**

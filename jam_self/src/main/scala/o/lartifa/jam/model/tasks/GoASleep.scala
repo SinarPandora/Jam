@@ -1,10 +1,10 @@
 package o.lartifa.jam.model.tasks
 
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.common.config.{JamCharacter, JamConfig}
+import o.lartifa.jam.common.config.{JamCharacter, JamConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.common.util.PicqBotUtil.Helper
-import o.lartifa.jam.model.tasks.GoASleep.goASleep
+import o.lartifa.jam.model.tasks.GoASleep.{goASleep, logger}
 import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.pool.JamContext
 
@@ -21,6 +21,14 @@ class GoASleep extends JamCronTask(name = "睡眠") {
   override def run()(implicit exec: ExecutionContext): Future[Unit] = {
     MasterUtil.notifyMaster(JamCharacter.ForMaster.goodNight)
     goASleep()
+    // 清理消息记录
+    val period = SystemConfig.cleanUpMessagePeriod
+    if (period != -1) {
+      logger.log(s"正在清理超过${period}天的消息记录...")
+      JamContext.messagePool.cleanUpMessage(period).map(count => {
+        logger.log(s"${count}条消息记录已清理")
+      })
+    }
     Future {
       // 乱序执行睡后任务
       JamPluginLoader.loadedComponents.afterSleepTasks.par.foreach(_.apply())

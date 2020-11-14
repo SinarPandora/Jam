@@ -8,7 +8,6 @@ import o.lartifa.jam.common.config.CoolQConfig.{postPort, postUrl}
 import o.lartifa.jam.common.config.JamConfig._
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.engine.JamLoader
-import o.lartifa.jam.plugins.rss.SubscriptionPool
 import o.lartifa.jam.pool.JamContext
 
 import scala.concurrent.Await
@@ -29,14 +28,13 @@ object Bootloader {
     JamContext.bot.set(client)
     JamContext.httpApi.getAndSet(() => client.getAccountManager.getNonAccountSpecifiedApi)
     JamContext.clientConfig.getAndSet(client.getConfig)
-    Await.result(JamLoader.init(args), Duration.Inf)
     client.getHttpServer.start()
     startMiraiBackEnd(() => {
       JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}已连接 Mirai 后端，正在刷新数据...")
       client.addAccount(name, postUrl, postPort)
+      Await.result(JamLoader.init(args), Duration.Inf)
       JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}数据刷新成功！开始接收消息")
     })
-    SubscriptionPool.init()
     JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}${name}已恢复生命体征")
   }
 

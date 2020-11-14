@@ -2,7 +2,6 @@ package o.lartifa.jam.plugins.picbot
 
 import java.util.Base64
 import java.util.concurrent.ForkJoinPool
-import java.util.concurrent.atomic.AtomicReference
 
 import ammonite.ops.PipeableImplicit
 import cc.moecraft.logger.HyLogger
@@ -34,7 +33,7 @@ class FetchPictureTask extends JamCronTask("更新图片库") {
 
   private val encoder: Base64.Encoder = Base64.getEncoder
 
-  protected val currentPool: AtomicReference[ForkJoinPool] = new AtomicReference[ForkJoinPool]()
+  protected var currentPool: Option[ForkJoinPool] = None
 
   /**
    * 执行定时任务内容
@@ -44,7 +43,7 @@ class FetchPictureTask extends JamCronTask("更新图片库") {
   override def run()(implicit exec: ExecutionContext): Future[Unit] = async {
     MasterUtil.notifyMaster("图片更新任务开始")
     val (pool, content) = startWorkingPool()
-    currentPool.set(pool)
+    currentPool = Some(pool)
     // 每次更新（下载） 200 张图片
     val result = await(Future.sequence((1 to 20)
       .map(_ => Try(doDownload()(content)).getOrElse(Future.successful(0)))))
@@ -59,7 +58,7 @@ class FetchPictureTask extends JamCronTask("更新图片库") {
    * 完成后执行
    */
   override def postRun(): Unit = {
-    Option(currentPool.get()).getOrElse(return).shutdown()
+    currentPool.getOrElse(return).shutdown()
   }
 
   /**
