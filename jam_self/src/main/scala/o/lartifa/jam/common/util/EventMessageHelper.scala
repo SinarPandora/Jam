@@ -101,6 +101,20 @@ object EventMessageHelper {
     def toGroupMessage: EventGroupMessage =
       Try(event.asInstanceOf[EventGroupMessage])
         .getOrElse(throw ExecutionException("该消息非群聊消息"))
+
+    /**
+     * 是否发言者是管理员
+     *
+     * @return 是否为管理员
+     */
+    def isSenderManager: Boolean = {
+      event match {
+        case message: EventGroupOrDiscussMessage =>
+          message.getGroup.refreshInfo()
+          message.getGroupSender.isAdmin
+        case _ => false
+      }
+    }
   }
 
 }

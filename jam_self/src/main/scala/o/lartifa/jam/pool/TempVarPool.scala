@@ -19,9 +19,9 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(implicit exec: ExecutionContext) extends VariablePool {
 
-  private val PREDEF_VARIABLES: Set[String] = Set("Bot昵称","自己的昵称","BotQQ昵称","自己的QQ昵称","群号","群名",
-    "发送者昵称","对方昵称","发送者群昵称","对方群昵称","发送者QQ昵称","对方QQ昵称","发送者QQ","对方QQ","QQ号",
-    "发送者年龄","对方年龄","发送者性别","对方性别","会话类型","是否为好友")
+  private val PREDEF_VARIABLES: Set[String] = Set("Bot昵称", "自己的昵称", "BotQQ昵称", "自己的QQ昵称", "群号", "群名",
+    "发送者昵称", "对方昵称", "发送者群昵称", "对方群昵称", "发送者QQ昵称", "对方QQ昵称", "发送者QQ", "对方QQ", "QQ号",
+    "发送者年龄", "对方年龄", "发送者性别", "对方性别", "会话类型", "是否为好友", "对方管理状态")
 
   private val CommandScopeParameters: mutable.Map[String, String] = mutable.Map.empty
 
@@ -167,8 +167,9 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
       case "发送者QQ" | "对方QQ" | "QQ号" => eventMessage.getSenderId.toString
       case "发送者年龄" | "对方年龄" => eventMessage.getSender.refreshInfo(true).getAge.toString
       case "发送者性别" | "对方性别" => eventMessage.getSender.refreshInfo(true).getSex
-      case "会话类型" => eventMessage.chatInfo.chatType
+      case "会话类型" => if (eventMessage.chatInfo.chatType == "private") "私聊" else "群聊"
       case "是否为好友" => if (eventMessage.toGroupMessage.getGroupSender.getInfo.getUnfriendly) "是" else "否"
+      case "对方管理状态" => if (eventMessage.isSenderManager) "是" else "否"
       case other => return CommandScopeParameters.get(other)
     }
   }
