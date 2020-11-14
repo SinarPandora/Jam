@@ -72,7 +72,8 @@ object LogicStructureParser extends Parser {
    */
   private def parseIf(result: Match)(implicit context: ParseEngineContext): If = {
     val condition = ConditionParser.parseCondition(result.group("condition")).getOrElse(throw ParseFailException("缺失条件内容或条件内容不正确"))
-    val command = parseAndOr(result.group("command")).getOrElse(throw ParseFailException("缺失执行指令或执行指令格式不正确"))
+    val command = parseAndOr(result.group("command").split("否则").head)
+      .getOrElse(throw ParseFailException("缺失执行指令或执行指令格式不正确"))
     If(condition, command)
   }
 
