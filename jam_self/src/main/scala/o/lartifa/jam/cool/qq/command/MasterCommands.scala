@@ -6,8 +6,10 @@ import java.util.concurrent.Executors
 import cc.moecraft.icq.command.interfaces.IcqCommand
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.icq.user.User
+import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
 import o.lartifa.jam.engine.JamLoader
+import o.lartifa.jam.model.tasks.{GoASleep, WakeUp}
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.pool.JamContext
@@ -29,7 +31,8 @@ object MasterCommands {
   def commands: List[IcqCommand] = List(
     Ping, SessionInfo, Refresh, ReloadSSDL,
     ListVariable, ClearVariableInChat, SetVariable, RemoveVariable,
-    ListPlugins, EnablePlugin, DisablePlugin, UninstallPlugin
+    ListPlugins, EnablePlugin, DisablePlugin, UninstallPlugin,
+    WakeUpNow, GoASleepNow
   ) ++ JamPluginLoader.loadedComponents.masterCommands
 
   private object Ping extends MasterEverywhereCommand("ping", "在吗") {
@@ -257,6 +260,39 @@ object MasterCommands {
             .map(id => JamPluginLoader.uninstallPlugin(event, id))
         }.map(_ => NO_RESPONSE)
       }
+    }
+  }
+
+
+  private object WakeUpNow extends MasterEverywhereCommand("唤醒", "嗅盐治晕倒") {
+    /**
+     * 指令操作
+     *
+     * @param event   消息事件
+     * @param sender  发送者
+     * @param command 指令内容
+     * @param args    参数
+     * @return 输出内容
+     */
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = {
+      WakeUp.wakeUp()
+      Future.successful(s"${JamConfig.name}已苏醒")
+    }
+  }
+
+  private object GoASleepNow extends MasterEverywhereCommand("休眠", "昏睡红茶") {
+    /**
+     * 指令操作
+     *
+     * @param event   消息事件
+     * @param sender  发送者
+     * @param command 指令内容
+     * @param args    参数
+     * @return 输出内容
+     */
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = {
+      GoASleep.goASleep()
+      Future.successful(s"${JamConfig.name}已休眠")
     }
   }
 
