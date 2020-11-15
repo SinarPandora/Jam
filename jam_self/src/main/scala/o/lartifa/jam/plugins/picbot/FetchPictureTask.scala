@@ -46,7 +46,8 @@ class FetchPictureTask extends JamCronTask("更新图片库") {
     currentPool = Some(pool)
     // 每次更新（下载） 200 张图片
     val result = await(Future.sequence((1 to 20)
-      .map(_ => Try(doDownload()(content)).getOrElse(Future.successful(0)))))
+      .map(_ => doDownload()(content)
+        .recover { case _ => logger.warning("本次API调用失败"); 0 })))
       .sum
     logger.log(s"已添加：${result}张图片")
     MasterUtil.notifyMaster(s"图片更新任务结束，已添加：${result}张图片")
@@ -80,8 +81,7 @@ class FetchPictureTask extends JamCronTask("更新图片库") {
    * @return 影响行数
    */
   private def doDownload()(implicit exec: ExecutionContext): Future[Int] = async {
-    // readTimeout：10s, connectTimeout：5s
-    val response = requests.get(API, check = false, readTimeout = 10000, connectTimeout = 5000)
+    val response = requests.get(API, check = false)
     if (response.statusCode == 429) {
       logger.warning("API请求次数已达上限")
       0

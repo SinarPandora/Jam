@@ -77,8 +77,8 @@ object Patterns {
     // 3
     val `if`: Regex = """^(如果|若|当)(.+?)时[，,](.+)""".r("ignored", "condition", "command")
     // 2
-    val or: Regex = """([，,]或([^或]+)[，,]?)|(^或([^或]+))""".r("command")
-    val and: Regex = """([，,][且并]([^且并]+)[，,]?)|(^[且并]([^且并]+))""".r("command")
+    val or: Regex = """([，,]或([^或]+)[，,]?)|(或([^或]+))""".r("command")
+    val and: Regex = """([，,][且并]([^且并]+)[，,]?)|([且并]([^且并]+))""".r("command")
     // 1
     val `else`: Regex = """[，,]否则(.+)""".r("command")
     val loopPattern: Regex = """循环\{(.+?)}([0-9]+)次""".r("command", "times")
