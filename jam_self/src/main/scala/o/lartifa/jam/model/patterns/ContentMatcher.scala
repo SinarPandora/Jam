@@ -1,11 +1,12 @@
 package o.lartifa.jam.model.patterns
 
+import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.RenderStrTemplate
-import o.lartifa.jam.model.patterns.ContentMatcher.Type
+import o.lartifa.jam.model.patterns.ContentMatcher._
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 /**
  * 内容捕获器模式
@@ -27,6 +28,26 @@ case class ContentMatcher(stepId: Long, template: RenderStrTemplate, `type`: Typ
     val keywords = if (template.isPlainString) template.template
     else Await.result(template.execute(), 3.seconds)
     matcher(string, keywords)
+  }
+
+  /**
+   * 触发方式提示
+   *
+   * @param context 指令执行上下文
+   * @param exec    异步执行上下文
+   * @return 提示文本
+   */
+  def intro(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[String] = {
+    template.execute().map { pattern =>
+      `type` match {
+        case ContentMatcher.EQUALS => s"说“$pattern”"
+        case ContentMatcher.CONTAINS => s"说包含“$pattern”的话"
+        case ContentMatcher.ENDS_WITH => s"说以“$pattern”结尾的话"
+        case ContentMatcher.STARTS_WITH => s"说以“$pattern”开头的话"
+        case ContentMatcher.REGEX => s"说匹配“$pattern”的话"
+        case other => throw ExecutionException(s"该匹配类型不支持转换为提示：$other")
+      }
+    }
   }
 }
 

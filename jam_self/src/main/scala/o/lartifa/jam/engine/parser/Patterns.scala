@@ -153,6 +153,8 @@ object Patterns {
     val answerMatcher: Regex = """(若答案为\{.+?}|其他答案)则([^;；]+)[;；]?""".r("answer", "command")
     // 禁言某人
     val banSomeOneInGroup: Regex = """禁言%\{(.+?)}%时长%\{(.+?)}%(分钟|小时|天)""".r("qId", "time", "unit")
+    // 展示果酱可以做什么
+    val whatICanDo: String = "展示一条可用的触发词"
   }
 
 }

@@ -52,7 +52,7 @@ object CommandParser extends Parser {
       parseRollEveryThing _, parseBanSomeOneInGroup _) ++ regex ++ List(
       // 包含类模式放在后边
       parseDoNoting _, parseGroupWholeBan _, parseGroupWholeUnBan _, parseShowPicInfo _,
-      parseRSSSubscribe _, parseRSSUnSubscribe _, parseRSSShowAll _
+      parseRSSSubscribe _, parseRSSUnSubscribe _, parseRSSShowAll _, parseWhatICanDo _
     ) ++ contains
   }
 
@@ -514,4 +514,14 @@ object CommandParser extends Parser {
       BanSomeOneInGroup(qId, time, unit)
     })
   }
+
+  /**
+   * 解析 "展示果酱可以做什么" 指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseWhatICanDo(string: String, context: ParseEngineContext): Option[WhatICanDo.type] =
+    if (string.contains(CommandPattern.whatICanDo)) Some(WhatICanDo) else None
 }
