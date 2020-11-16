@@ -57,14 +57,14 @@ object JamLoader {
     makeSureDirsExist()
     Memory.init(args.contains("--flyway_repair"))
     await(JamPluginLoader.initJamPluginSystems())
-    JamContext.cronTaskPool.getAndSet(CronTaskPool().autoRefreshTaskDefinition())
-    await(BehaviorInitializer.init())
     await(initSSDL())
-    runBootTasks()
-    Runtime.getRuntime.addShutdownHook(shutdownHookThread)
-    SubscriptionPool.init()
     client.getEventManager.registerListeners(EventMessageListener, SystemEventListener)
     client.getCommandManager.registerCommands(MasterCommands.commands: _*)
+    JamContext.cronTaskPool.getAndSet(CronTaskPool().autoRefreshTaskDefinition())
+    Runtime.getRuntime.addShutdownHook(shutdownHookThread)
+    SubscriptionPool.init()
+    runBootTasks()
+    await(BehaviorInitializer.init())
   }
 
   /**
