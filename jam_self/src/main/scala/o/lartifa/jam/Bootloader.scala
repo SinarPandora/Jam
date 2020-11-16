@@ -32,7 +32,7 @@ object Bootloader {
     startMiraiBackEnd(() => {
       JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}已连接 Mirai 后端，正在刷新数据...")
       client.addAccount(name, postUrl, postPort)
-      Await.result(JamLoader.init(args), Duration.Inf)
+      Await.result(JamLoader.init(client, args), Duration.Inf)
       JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}数据刷新成功！开始接收消息")
     })
     JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}${name}已恢复生命体征")
@@ -85,14 +85,14 @@ object Bootloader {
         .filter(it => it.contains("./backend.jar"))
         .map(it => it.split(" ").head)
         .findAny().stream().forEach { pid =>
-          val os = System.getProperty("os.name").toLowerCase
-          if (os.contains("win")) {
-            // Is windows
-            s"taskkill /PID $pid".!
-          } else {
-            s"kill -15 $pid".!
-          }
+        val os = System.getProperty("os.name").toLowerCase
+        if (os.contains("win")) {
+          // Is windows
+          s"taskkill /PID $pid".!
+        } else {
+          s"kill -15 $pid".!
         }
+      }
       JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}Miari 后端成功关闭")
     }
 

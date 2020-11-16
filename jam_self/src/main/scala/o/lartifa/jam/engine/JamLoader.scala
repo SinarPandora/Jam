@@ -1,13 +1,15 @@
 package o.lartifa.jam.engine
 
 import better.files.StringExtensions
+import cc.moecraft.icq.PicqBotX
 import cc.moecraft.logger.format.AnsiColor
 import cc.moecraft.logger.{HyLogger, LogLevel}
 import o.lartifa.jam.bionic.BehaviorInitializer
 import o.lartifa.jam.common.config.{JamConfig, JamPluginConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.CoolQQLoader
-import o.lartifa.jam.cool.qq.listener.EventMessageListener
+import o.lartifa.jam.cool.qq.command.MasterCommands
+import o.lartifa.jam.cool.qq.listener.{EventMessageListener, SystemEventListener}
 import o.lartifa.jam.database.temporary.Memory
 import o.lartifa.jam.engine.SSDLParseEngine.{ParseFailResult, ParseSuccessResult}
 import o.lartifa.jam.model.patterns.ContentMatcher
@@ -47,9 +49,11 @@ object JamLoader {
   /**
    * 加载果酱各组件
    *
+   * @param client PicqBotX client
+   * @param args   命令行参数
    * @return 异步结果
    */
-  def init(args: Array[String]): Future[Unit] = async {
+  def init(client: PicqBotX, args: Array[String]): Future[Unit] = async {
     makeSureDirsExist()
     Memory.init(args.contains("--flyway_repair"))
     await(JamPluginLoader.initJamPluginSystems())
@@ -59,6 +63,8 @@ object JamLoader {
     runBootTasks()
     Runtime.getRuntime.addShutdownHook(shutdownHookThread)
     SubscriptionPool.init()
+    client.getEventManager.registerListeners(EventMessageListener, SystemEventListener)
+    client.getCommandManager.registerCommands(MasterCommands.commands: _*)
   }
 
   /**

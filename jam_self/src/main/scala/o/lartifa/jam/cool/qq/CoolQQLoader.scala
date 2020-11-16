@@ -6,7 +6,6 @@ import o.lartifa.jam.common.config.CoolQConfig.socketPort
 import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.common.util.LoggerFactory
 import o.lartifa.jam.cool.qq.command.MasterCommands
-import o.lartifa.jam.cool.qq.listener.{EventMessageListener, SystemEventListener}
 import o.lartifa.jam.pool.JamContext
 
 /**
@@ -34,9 +33,7 @@ object CoolQQLoader {
       }
     }
     JamContext.loggerFactory.set(new LoggerFactory(client.getLoggerInstanceManager))
-    client.getEventManager.registerListeners(EventMessageListener, SystemEventListener)
     client.enableCommandManager("！", "!")
-    client.getCommandManager.registerCommands(MasterCommands.commands: _*)
     client
   }
 
