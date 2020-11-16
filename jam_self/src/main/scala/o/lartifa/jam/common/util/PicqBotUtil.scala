@@ -1,8 +1,12 @@
 package o.lartifa.jam.common.util
 
 import cc.moecraft.icq.PicqBotX
+import cc.moecraft.icq.accounts.AccountManagerListener
+import cc.moecraft.icq.event.IcqListener
+import cc.moecraft.icq.listeners.HyExpressionListener
 import o.lartifa.jam.common.config.JamCharacter
 import o.lartifa.jam.cool.qq.listener.{EventMessageListener, SleepingStateListener, SystemEventListener}
+import o.lartifa.jam.pool.JamContext
 
 /**
  * PicqBotX Bot 辅助工具
@@ -26,6 +30,7 @@ object PicqBotUtil {
      */
     def switchToSleepMode(): Unit = {
       this.deregisterAllListeners()
+      bot.getEventManager.registerListeners(recreateSystemListeners(): _*)
       bot.getEventManager.registerListener(SystemEventListener)
       if (JamCharacter.balderdash.nonEmpty) {
         bot.getEventManager.registerListener(SleepingStateListener)
@@ -37,8 +42,18 @@ object PicqBotUtil {
      */
     def switchToWakeUpMode(): Unit = {
       this.deregisterAllListeners()
+      bot.getEventManager.registerListeners(recreateSystemListeners(): _*)
       bot.getEventManager.registerListeners(SystemEventListener, EventMessageListener)
     }
   }
 
+  /**
+   * 重建系统监听器
+   *
+   * @return 系统监听器
+   */
+  private def recreateSystemListeners(): List[IcqListener] = {
+    val accountManager = JamContext.bot.get().getAccountManager
+    List(new AccountManagerListener(accountManager), new HyExpressionListener())
+  }
 }

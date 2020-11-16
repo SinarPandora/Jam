@@ -1,11 +1,13 @@
 package o.lartifa.jam.cool.qq.listener
 
-import java.util.concurrent.TimeUnit
-
-import cc.moecraft.icq.event.events.request.{EventFriendRequest, EventGroupAddRequest, EventGroupInviteRequest, EventRequest}
+import cc.moecraft.icq.event.events.meta.EventMetaHeartbeat
+import cc.moecraft.icq.event.events.request.{EventFriendRequest, EventGroupAddRequest, EventGroupInviteRequest}
 import cc.moecraft.icq.event.{EventHandler, IcqListener}
-import io.reactivex.rxjava3.core.Observable
+import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.JamConfig
+import o.lartifa.jam.pool.JamContext
+
+import scala.util.Try
 
 /**
  * 系统事件监听器
@@ -14,6 +16,7 @@ import o.lartifa.jam.common.config.JamConfig
  * 2020/1/18 02:59
  */
 object SystemEventListener extends IcqListener {
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(SystemEventListener.getClass)
 
   /**
    * 自动加群
@@ -25,7 +28,7 @@ object SystemEventListener extends IcqListener {
     if (JamConfig.autoAcceptGroupRequest) {
       event.accept()
     }
-    lazyRefresh(event)
+    event.getBot.getAccountManager.refreshCache()
   }
 
   /**
@@ -38,7 +41,7 @@ object SystemEventListener extends IcqListener {
     if (JamConfig.autoAcceptGroupRequest) {
       event.accept()
     }
-    lazyRefresh(event)
+    event.getBot.getAccountManager.refreshCache()
   }
 
   /**
@@ -51,17 +54,19 @@ object SystemEventListener extends IcqListener {
     if (JamConfig.autoAcceptFriendRequest) {
       event.accept()
     }
-    lazyRefresh(event)
+    event.getBot.getAccountManager.refreshCache()
   }
 
   /**
-   * 五秒后刷新基本信息
+   * 心跳事件刷新缓存
    *
-   * @param event 事件对象
+   * @param event 心跳事件
    */
-  private def lazyRefresh(event: EventRequest): Unit = {
-    Observable.empty().delay(5, TimeUnit.SECONDS).doOnComplete{ () =>
-      event.getBot.getAccountManager.refreshCache()
-    }.subscribe()
+  @EventHandler
+  def autoRefresh(event: EventMetaHeartbeat): Unit = {
+    logger.debug("正在刷新账号缓存")
+    Try(event.getBot.getAccountManager.refreshCache()).foreach(_ => {
+      logger.debug("缓存刷新成功")
+    })
   }
 }
