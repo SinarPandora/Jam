@@ -51,8 +51,6 @@ object MiraiBackend extends Backend {
   /**
    * 设置程序结束时自动关闭 Mirai 后端
    */
-  //noinspection ScalaUnusedSymbol
-  @SuppressWarnings(Array("unused"))
   private def setUpAutoShutdownBackend(): Unit = {
     sys addShutdownHook {
       JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}检测到程序关闭，正在停止 Miari 后端...")
