@@ -88,7 +88,7 @@ object Bootloader {
         val os = System.getProperty("os.name").toLowerCase
         if (os.contains("win")) {
           // Is windows
-          s"taskkill /PID $pid".!
+          s"taskkill /F /PID $pid".!
         } else {
           s"kill -15 $pid".!
         }
