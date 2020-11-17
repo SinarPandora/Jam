@@ -86,7 +86,7 @@ object MiraiBackend extends Backend {
         if (line == null) Thread.sleep(500)
         else if (line.contains("[NETWORK] ConfigPushSvc.PushReq: Success")) {
           break()
-        } else print(line)
+        } else println(line)
       }
     }
     JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}Miari 后端已启动")
