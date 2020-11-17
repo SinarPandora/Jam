@@ -87,6 +87,8 @@ object MiraiBackend extends Backend {
         } else println(line)
       }
     }
+    reader.close()
+
     JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}Miari 后端已启动")
   }
 }
