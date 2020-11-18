@@ -427,10 +427,12 @@ object CommandParser extends Parser {
   private def parseRunTaskNow(string: String, context: ParseEngineContext): Option[RunTaskNow] = {
     CommandPattern.runTaskNow.findFirstMatchIn(string).map(result => {
       val name = result.group("task")
-      val taskDef = JamContext.cronTaskPool.get().taskDefinition
-        .getOrElse(name, throw ParseFailException(s"没有名为：${name}的定时任务"))
-      val taskInstance = taskDef.cls.getDeclaredConstructor().newInstance()
-      RunTaskNow(taskInstance, taskDef.isSingleton)
+      val pool = JamContext.cronTaskPool.get()
+      val task = pool.getActiveTasks(name) match {
+        case Left(singletonTask) => Left(singletonTask)
+        case Right(_) => Right(pool.taskDefinition(name))
+      }
+      RunTaskNow(task)
     })
   }
 

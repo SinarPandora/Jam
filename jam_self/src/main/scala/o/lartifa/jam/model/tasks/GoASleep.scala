@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2020/1/23 14:10
  */
-class GoASleep extends JamCronTask(name = "睡眠") {
+class GoASleep(name: String) extends JamCronTask(name) {
   override def run()(implicit exec: ExecutionContext): Future[Unit] = {
     MasterUtil.notifyMaster(JamCharacter.ForMaster.goodNight)
     goASleep()

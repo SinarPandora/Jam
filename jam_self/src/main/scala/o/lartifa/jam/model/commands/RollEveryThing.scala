@@ -108,7 +108,7 @@ case class RollEveryThing(mode: Mode, random: Random) extends Command[Int] {
       // 不可能的情况
       case _ => "我混乱了。。。"
     }
-    context.eventMessage.respond(s"$atSender $message（$result）")
+    context.eventMessage.respond(s"$atSender $message（$result，随机结果，仅供参考）")
     result
   }
 }
