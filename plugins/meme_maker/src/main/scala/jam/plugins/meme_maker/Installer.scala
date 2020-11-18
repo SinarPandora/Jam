@@ -50,7 +50,7 @@ class Installer extends JamPluginInstaller {
    * @return 安装结果
    */
   override def install()(implicit exec: ExecutionContext): Future[Try[Unit]] =
-    Future.successful(Success())
+    Future.successful(Success(()))
 
   /**
    * 卸载
@@ -60,7 +60,7 @@ class Installer extends JamPluginInstaller {
    * @return 卸载结果
    */
   override def uninstall()(implicit exec: ExecutionContext): Future[Try[Unit]] =
-    Future.successful(Success())
+    Future.successful(Success(()))
 
   /**
    * 更新
