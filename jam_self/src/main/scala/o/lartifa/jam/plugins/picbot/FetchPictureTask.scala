@@ -5,18 +5,18 @@ import java.util.concurrent.ForkJoinPool
 
 import ammonite.ops.PipeableImplicit
 import cc.moecraft.logger.HyLogger
-import com.jsoniter.{JsonIterator, any}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.database.temporary.Memory.database.db
 import o.lartifa.jam.database.temporary.schema.Tables._
 import o.lartifa.jam.model.tasks.JamCronTask
+import o.lartifa.jam.plugins.picbot.APIResponse._
 import o.lartifa.jam.plugins.picbot.FetchPictureTask.logger
 import o.lartifa.jam.pool.JamContext
+import upickle.default._
 
 import scala.annotation.tailrec
 import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -86,11 +86,7 @@ class FetchPictureTask(name: String) extends JamCronTask(name) {
       logger.warning("API请求次数已达上限")
       0
     } else if (response.statusCode == 200) {
-      val dataList = (response.text()
-        |> JsonIterator.parse
-        |> (_.readAny())
-        |> (_.get("data").asList())
-        |> (_.asScala.toList))
+      val dataList = read[Response](response.text()).data
       val inserts = await(Future.sequence(dataList.map(createSingleInsertTask))).flatten
       // Bulk insert
       await(db.run(DBIO.sequence(inserts))).sum
@@ -107,19 +103,19 @@ class FetchPictureTask(name: String) extends JamCronTask(name) {
    * @param exec 异步执行上下文
    * @return 插入操作
    */
-  private def createSingleInsertTask(data: any.Any)(implicit exec: ExecutionContext) = Future {
-    downloadPicture(data.toString("url")).map(base64Data => {
+  private def createSingleInsertTask(data: PicData)(implicit exec: ExecutionContext) = Future {
+    downloadPicture(data.url).map(base64Data => {
       WebPictures.insertOrUpdate {
         WebPicturesRow(
-          pid = data.toLong("pid"),
-          uid = data.toLong("uid"),
-          title = data.toString("title"),
-          author = data.toString("author"),
-          url = data.toString("url"),
-          isR18 = data.toBoolean("r18"),
-          width = data.toInt("width"),
-          height = data.toInt("height"),
-          tags = data.toString("tags"),
+          pid = data.pid,
+          uid = data.uid,
+          title = data.title,
+          author = data.author,
+          url = data.url,
+          isR18 = data.r18,
+          width = data.width,
+          height = data.height,
+          tags = data.tags.mkString("，"),
           base64Data = Some(base64Data)
         )
       }
