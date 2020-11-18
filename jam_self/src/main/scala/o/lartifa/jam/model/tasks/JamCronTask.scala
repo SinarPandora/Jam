@@ -102,45 +102,4 @@ abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.N
 
 object JamCronTask {
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(JamCronTask.getClass)
-
-  case class CronPair(cron: String)
-
-  case class TaskDefinition
-  (
-    /**
-     * 任务名
-     */
-    name: String,
-
-    /**
-     * 定义类
-     */
-    cls: Class[_ <: JamCronTask],
-
-    /**
-     * 是否是单例任务
-     */
-    isSingleton: Boolean,
-
-    /**
-     * 在初始化后立刻创建按照如下 cron 定义的任务
-     * 注意：定义了该变量的任务必须与聊天会话无关
-     */
-    createTasksAfterInit: List[CronPair] = Nil
-  ) {
-    /**
-     * 根据 { createTasksAfterInit } 初始化对应数量和时间的任务
-     */
-    def startRequireTasks(): Unit = {
-      if (createTasksAfterInit.nonEmpty) {
-        if (isSingleton && createTasksAfterInit.sizeIs > 1) {
-          logger.error("试图为单例定时任务创建多个实例，预定义任务")
-        } else {
-          val constructor = cls.getDeclaredConstructor(classOf[String])
-          createTasksAfterInit.map(_.cron).foreach(constructor.newInstance(name).setUp)
-        }
-      }
-    }
-  }
-
 }

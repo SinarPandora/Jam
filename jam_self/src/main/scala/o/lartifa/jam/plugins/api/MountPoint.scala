@@ -3,8 +3,8 @@ package o.lartifa.jam.plugins.api
 import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
 import o.lartifa.jam.cool.qq.listener.prehandle.PreHandleTask
 import o.lartifa.jam.engine.parser.SSDLCommandParser
-import o.lartifa.jam.model.tasks.JamCronTask.TaskDefinition
 import o.lartifa.jam.model.tasks.LifeCycleTask
+import o.lartifa.jam.pool.CronTaskPool.TaskDefinition
 
 /**
  * 挂载点对象

@@ -13,9 +13,9 @@ import o.lartifa.jam.database.temporary.schema.Tables._
 import o.lartifa.jam.engine.JamLoader
 import o.lartifa.jam.engine.parser.SSDLCommandParser
 import o.lartifa.jam.engine.parser.SSDLCommandParser._
-import o.lartifa.jam.model.tasks.JamCronTask.TaskDefinition
 import o.lartifa.jam.model.tasks.LifeCycleTask
 import o.lartifa.jam.plugins.api.JamPluginInstaller
+import o.lartifa.jam.pool.CronTaskPool.TaskDefinition
 import o.lartifa.jam.pool.JamContext
 import org.reflections.Reflections
 
