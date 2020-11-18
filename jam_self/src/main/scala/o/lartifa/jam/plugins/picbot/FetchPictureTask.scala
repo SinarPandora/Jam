@@ -25,7 +25,7 @@ import scala.util.{Failure, Success, Try}
  * Author: sinar
  * 2020/7/26 00:36
  */
-class FetchPictureTask extends JamCronTask("更新图片库") {
+class FetchPictureTask(name: String) extends JamCronTask(name) {
 
   import o.lartifa.jam.database.temporary.Memory.database.profile.api._
 

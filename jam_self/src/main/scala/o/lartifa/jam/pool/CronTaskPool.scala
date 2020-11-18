@@ -205,7 +205,7 @@ object CronTaskPool {
      * @param pool 任务池
      * @return 实例
      */
-    def init(pool: CronTaskPool): JamCronTask = {
+    def init(pool: CronTaskPool = JamContext.cronTaskPool.get()): JamCronTask = {
       if (!isSingleton || pool.getAll(name).isEmpty) {
         cls.getDeclaredConstructor(classOf[String]).newInstance(name)
       } else throw ExecutionException(s"单例任务 '$name' 不能被初始化多次！")
