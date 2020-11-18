@@ -430,8 +430,7 @@ object CommandParser extends Parser {
       val pool = JamContext.cronTaskPool.get()
       val task = pool.getActiveTasks(name) match {
         case Left(singletonTask) => Left(singletonTask)
-        case Right(_) => Right(pool.taskDefinition
-          .getOrElse(name, throw ParseFailException(s"没有名为：${name}的定时任务")))
+        case Right(_) => Right(pool.taskDefinition(name))
       }
       RunTaskNow(task)
     })
