@@ -18,8 +18,8 @@ import scala.util.{Failure, Try}
  * Author: sinar
  * 2020/11/18 22:31
  */
-object MemeMaker {
-  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(MemeMaker.getClass)
+object MemeMakerAPI {
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(MemeMakerAPI.getClass)
   val domain: String = "https://app.xuty.tk"
   val generateApi: String = s"$domain/memeet/api/v1/template/make"
   val templateInfoApi: String = s"$domain/memeet/api/v1/template/info"
