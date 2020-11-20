@@ -59,6 +59,7 @@ object MemeAPIResponse {
 
   implicit val generateResponseRW: ReadWriter[Response[PicData]] = macroRW[Response[PicData]]
   implicit val infoResponseRW: ReadWriter[Response[TemplateInfo]] = macroRW[Response[TemplateInfo]]
+  implicit val infoListResponseRW: ReadWriter[Response[List[TemplateInfo]]] = macroRW[Response[List[TemplateInfo]]]
   implicit val picDataRW: ReadWriter[PicData] = macroRW[PicData]
   implicit val templateInfoRW: ReadWriter[TemplateInfo] = macroRW[TemplateInfo]
 }

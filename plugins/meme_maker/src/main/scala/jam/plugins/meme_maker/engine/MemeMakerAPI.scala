@@ -64,7 +64,7 @@ object MemeMakerAPI {
    * @return 模板列表
    */
   def allTemplates: Try[List[TemplateInfo]] = Try {
-    read[List[Response[TemplateInfo]]](requests.get(templateListApi).text()).map(_.body)
+    read[Response[List[TemplateInfo]]](requests.get(templateListApi).text()).body
   }.recoverWith(err => {
     logger.error(err)
     Failure(ExecutionException("获取模板列表失败"))
