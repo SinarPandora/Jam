@@ -55,6 +55,8 @@ object MemeAPIResponse {
 
   case class Response[T](ok: Boolean, body: T, msg: String)
 
+  case class Template(id: Int, name: String, cover: String, uploader: String, like: Int)
+
   implicit val generateResponseRW: ReadWriter[Response[PicData]] = macroRW[Response[PicData]]
   implicit val infoResponseRW: ReadWriter[Response[TemplateInfo]] = macroRW[Response[TemplateInfo]]
   implicit val picDataRW: ReadWriter[PicData] = macroRW[PicData]

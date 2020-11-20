@@ -23,6 +23,7 @@ object MemeMakerAPI {
   val domain: String = "https://app.xuty.tk"
   val generateApi: String = s"$domain/memeet/api/v1/template/make"
   val templateInfoApi: String = s"$domain/memeet/api/v1/template/info"
+  val templateListApi: String = s"$domain/memeet/api/v1/trending?offset=0&count=100"
 
   /**
    * 生成 Gif
@@ -55,5 +56,17 @@ object MemeMakerAPI {
   }.recoverWith(err => {
     logger.error(err)
     Failure(ExecutionException(s"无法获取模板信息，id 为：$id"))
+  })
+
+  /**
+   * 获取全部可用模板
+   *
+   * @return 模板列表
+   */
+  def allTemplates: Try[List[TemplateInfo]] = Try {
+    read[List[Response[TemplateInfo]]](requests.get(templateListApi).text()).map(_.body)
+  }.recoverWith(err => {
+    logger.error(err)
+    Failure(ExecutionException("获取模板列表失败"))
   })
 }
