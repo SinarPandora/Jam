@@ -5,6 +5,7 @@ import java.util.Base64
 import cc.moecraft.icq.sender.message.components.ComponentImageBase64
 import cc.moecraft.logger.HyLogger
 import jam.plugins.meme_maker.engine.MemeAPIResponse._
+import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.pool.JamContext
 import upickle.default._
 
@@ -20,7 +21,8 @@ import scala.util.{Failure, Try}
 object MemeMaker {
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(MemeMaker.getClass)
   val domain: String = "https://app.xuty.tk"
-  val api: String = s"$domain/memeet/api/v1/template/make"
+  val generateApi: String = s"$domain/memeet/api/v1/template/make"
+  val templateInfoApi: String = s"$domain/memeet/api/v1/template/info"
 
   /**
    * 生成 Gif
@@ -29,13 +31,29 @@ object MemeMaker {
    * @param sentences 填充句集合
    * @return 生成结果
    */
-  def generate(id: Int, sentences: List[String]): Option[ComponentImageBase64] = Try {
-    val step1Resp = requests.post(api, data = MemeAPIRequest(id, sentences)).text()
-    val picUrl = domain + read[Response](step1Resp).body.url
+  def generate(id: Int, sentences: List[String]): Try[ComponentImageBase64] = Try {
+    val step1Resp = requests.post(generateApi, data = MemeAPIRequest(id, sentences)).text()
+    val picUrl = domain + read[Response[PicData]](step1Resp).body.url
+    logger.log(s"Meme Gif 已生成：$picUrl")
     val base64Data = Base64.getEncoder.encodeToString(requests.get(picUrl, readTimeout = 10000).bytes)
     new ComponentImageBase64(base64Data)
   }.recoverWith(err => {
     logger.error(err)
-    Failure(err)
-  }).toOption
+    Failure(ExecutionException(s"Gif 生成失败，模板 id 为$id"))
+  })
+
+  /**
+   * 通过模板 id 获取模板信息
+   *
+   * @param id 模板 id
+   * @return 模板信息
+   */
+  def getTemplateSteps(id: Int): Try[TemplateInfo] = Try {
+    read[Response[TemplateInfo]] {
+      requests.post(templateInfoApi, data = Map("id" -> id.toString)).text()
+    }.body
+  }.recoverWith(err => {
+    logger.error(err)
+    Failure(ExecutionException(s"无法获取模板信息，id 为：$id"))
+  })
 }

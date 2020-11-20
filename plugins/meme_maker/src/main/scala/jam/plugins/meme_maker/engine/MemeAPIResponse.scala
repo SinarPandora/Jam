@@ -9,9 +9,30 @@ import upickle.default._
  * 2020/11/18 23:32
  */
 object MemeAPIResponse {
-  case class Body(url: String)
-  case class Response(ok: Boolean, body: Body, msg: String)
 
-  implicit val responseRW: ReadWriter[Response] = macroRW[Response]
-  implicit val bodyRW: ReadWriter[Body] = macroRW[Body]
+  case class PicData(url: String)
+
+  case class TemplateInfo
+  (
+    id: Long,
+    name: String,
+    status: String,
+    fillings: String,
+    date_created: String,
+    example_gif: String,
+    cover_img: String,
+    make_count: Int,
+    visit_count: Int,
+    like_count: Int,
+    user: String,
+    is_new: Boolean,
+    is_hot: Boolean,
+  )
+
+  case class Response[T](ok: Boolean, body: T, msg: String)
+
+  implicit val generateResponseRW: ReadWriter[Response[PicData]] = macroRW[Response[PicData]]
+  implicit val infoResponseRW: ReadWriter[Response[TemplateInfo]] = macroRW[Response[TemplateInfo]]
+  implicit val picDataRW: ReadWriter[PicData] = macroRW[PicData]
+  implicit val templateInfoRW: ReadWriter[TemplateInfo] = macroRW[TemplateInfo]
 }
