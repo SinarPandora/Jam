@@ -1,5 +1,7 @@
 package jam.plugins.meme_maker
 
+import jam.plugins.meme_maker.commands.MemeMakerCmdParser
+import jam.plugins.meme_maker.engine.MemeMakerAPI
 import o.lartifa.jam.plugins.api.{JamPluginInstaller, MountPoint}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,7 +39,10 @@ class Installer extends JamPluginInstaller {
    */
   override val mountPoint: Option[MountPoint] = Some(
     MountPoint(
-      commandParsers = List()
+      commandParsers = List(MemeMakerCmdParser),
+      bootTasks = List(() => {
+        MemeMakerAPI.init()
+      })
     )
   )
 
