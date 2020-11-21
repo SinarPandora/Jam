@@ -114,12 +114,12 @@ object JamPluginLoader {
     val packageNames = installResult.getOrElse(true, Nil).toSet
     val needInsert = installers.view.filterKeys(packageNames.contains)
       .map { case (packageName, it) =>
-        (it.pluginName, it.keywords.mkString(","), it.author, packageName, JamPluginConfig.autoEnablePlugins)
+        (it.pluginName, it.keywords.mkString(","), it.author, packageName, JamPluginConfig.autoEnablePlugins, it.version)
       }.toList
 
     val insertSuccess = needInsert.sizeIs == await {
       db.run {
-        Plugins.map(row => (row.name, row.keywords, row.author, row.`package`, row.isEnabled)) ++= needInsert
+        Plugins.map(row => (row.name, row.keywords, row.author, row.`package`, row.isEnabled, row.version)) ++= needInsert
       }
     }.getOrElse(0)
 
@@ -207,12 +207,19 @@ object JamPluginLoader {
    *
    * @return 插件类路径 -> 插件实例映射
    */
-  private def scanPlugins(): Map[String, JamPluginInstaller] = {
+  private def scanPlugins(): Map[String, JamPluginInstaller] = Try {
     new Reflections("jam.plugins")
       .getSubTypesOf(classOf[JamPluginInstaller]).asScala.toList
       .map(it => it.getName -> it.getDeclaredConstructor().newInstance())
       .toMap
-  }
+  }.recoverWith(err => {
+    if (err.getMessage == "Scanner SubTypesScanner was not configured")
+      Success(Map.empty[String, JamPluginInstaller])
+    else {
+      logger.error("插件扫描器初始化失败", err)
+      Failure(err)
+    }
+  }).getOrElse(Map.empty)
 
   /**
    * 尝试安装插件
@@ -339,7 +346,7 @@ object JamPluginLoader {
     val plugin = await(getPluginById(id))
     plugin match {
       case Some((_, installer)) =>
-        disablePlugin(event, id)
+        await(disablePlugin(event, id))
         await(installer.uninstall()) match {
           case Failure(exception) =>
             logger.error(s"未能成功卸载，请联系插件的作者：${installer.author}", exception)

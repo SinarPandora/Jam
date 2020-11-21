@@ -44,10 +44,11 @@ class FetchPictureTask(name: String) extends JamCronTask(name) {
     MasterUtil.notifyMaster("图片更新任务开始")
     val (pool, content) = startWorkingPool()
     currentPool = Some(pool)
-    // 每次更新（下载） 200 张图片
-    val result = await(Future.sequence((1 to 20)
+    // 每次更新（下载） 100 张图片
+    val result = await(Future.sequence((1 to 10)
       .map(_ => doDownload()(content)
         .recover { case _ => logger.warning("本次API调用失败"); 0 })))
+      .tapEach(count => logger.log(s"已添加：${count}张图片"))
       .sum
     logger.log(s"已添加：${result}张图片")
     MasterUtil.notifyMaster(s"图片更新任务结束，已添加：${result}张图片")
