@@ -8,9 +8,11 @@ import cc.moecraft.icq.sender.message.components.ComponentImageBase64
 import cc.moecraft.logger.HyLogger
 import jam.plugins.meme_maker.v1.engine.MemeAPIV1Response._
 import o.lartifa.jam.pool.JamContext
-import upickle.default._
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
+import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -22,41 +24,52 @@ import scala.util.{Failure, Success, Try}
  */
 object MemeMakerAPI {
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(MemeMakerAPI.getClass)
-  val domain: String = "https://app.xuty.tk"
-  val generateApi: String = s"$domain/memeet/api/v1/template/make"
-  val templateInfoApi: String = s"$domain/memeet/api/v1/template/info"
-  val templateListApi: String = s"$domain/memeet/api/v1/trending?offset=0&count=100"
+  val domain: String = "https://sorry.xuty.cc"
+
+  def templateInfoApi(code: String): String = s"https://sorry.xuty.cc/$code/"
+
+  def generateApi(code: String): String = s"$domain/$code/make"
+
+  val templateListPage: String = s"$domain/wangjingze/"
 
   /**
    * 生成 Gif
    *
-   * @param id        模板 ID
+   * @param code      模板 Code
    * @param sentences 填充句集合
    * @return 生成结果
    */
-  def generate(id: Long, sentences: List[String]): Try[ComponentImageBase64] = Try {
-    val step1Resp = requests.post(generateApi, headers = Map("content-type" -> "application/json;charset=UTF-8"), data = MemeAPIV1Request(id, sentences)).text()
-    val picUrl = domain + read[Response[PicData]](step1Resp).body.url
+  def generate(code: String, sentences: List[String]): Try[ComponentImageBase64] = Try {
+    val step1Resp = requests.post(
+      url = generateApi(code),
+      headers = Map("content-type" -> "application/json;charset=UTF-8"),
+      data = MemeAPIV1Request(sentences)
+    ).text()
+    val picUrl = domain + "/" + Jsoup.parse(step1Resp).getElementsByTag("a")
+      .first().attr("href").stripPrefix("/")
     logger.log(s"Meme Gif 已生成：$picUrl")
     val base64Data = Base64.getEncoder.encodeToString(requests.get(picUrl).bytes)
     new ComponentImageBase64(base64Data)
   }.recoverWith(err => {
-    logger.error(s"Gif 生成失败，模板 id 为$id", err)
+    logger.error(s"Gif 生成失败，模板 code 为$code", err)
     Failure(err)
   })
 
   /**
-   * 通过模板 id 获取模板信息
+   * 通过模板 Code 获取模板槽
    *
-   * @param id 模板 id
+   * @param code 模板 Code
    * @return 模板信息
    */
-  def getTemplateSteps(id: Long): Try[TemplateInfo] = Try {
-    read[Response[TemplateInfo]] {
-      requests.post(templateInfoApi, data = Map("id" -> id.toString)).text()
-    }.body
+  def getTemplateSlots(code: String): Try[List[String]] = Try {
+    val document: Document = Jsoup.connect(templateInfoApi(code)).get()
+    document
+      .select("input.w3-input.w3-border")
+      .asScala
+      .map(_.attr("placeholder"))
+      .toList
   }.recoverWith(err => {
-    logger.error(s"无法获取模板信息，id 为：$id", err)
+    logger.error(s"无法获取模板信息，link 为：${templateInfoApi(code)}", err)
     Failure(err)
   })
 
@@ -65,7 +78,7 @@ object MemeMakerAPI {
    *
    * @return 模板列表
    */
-  def allTemplates: List[TemplateInfo] = MemeAPICache.allTemplates
+  def allTemplates: List[TemplatePair] = MemeAPICache.allTemplates
 
   /**
    * 初始化
@@ -77,7 +90,7 @@ object MemeMakerAPI {
 
   private object MemeAPICache {
 
-    private var cache: List[TemplateInfo] = Nil
+    private var cache: List[TemplatePair] = Nil
     private var lastUpdate: LocalDateTime = LocalDateTime.now()
     private var isUpdating: Boolean = false
     private implicit val singlePool: ExecutionContextExecutorService = ExecutionContext.fromExecutorService(
@@ -94,7 +107,7 @@ object MemeMakerAPI {
      *
      * @return 模板列表
      */
-    def allTemplates: List[TemplateInfo] = {
+    def allTemplates: List[TemplatePair] = {
       keepTemplateUpdateToDate()
       cache
     }
@@ -124,8 +137,16 @@ object MemeMakerAPI {
      */
     def refreshTemplates(): Unit = {
       val list = Try {
-        read[Response[List[TemplateInfo]]](requests.get(templateListApi).text())
-          .body.sortBy(_.id)
+        val document = Jsoup.connect(templateListPage).get()
+        document.select("a.w3-bar-item.w3-button")
+          .asScala
+          .filterNot(it => it.attr("href").contains("SORRY")
+            || it.attr("href").contains("wenzhen"))
+          .zipWithIndex
+          .map {
+            case (it, idx) => TemplatePair(idx + 1, it.text(),
+              it.attr("href").stripPrefix("/").stripSuffix("/"))
+          }.toList
       }.recoverWith(err => {
         logger.error("获取模板列表失败", err)
         Success(Nil)
