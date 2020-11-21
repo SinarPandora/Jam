@@ -137,7 +137,7 @@ class CronTaskPool {
   @throws[ExecutionException]
   def getActiveTasks(name: String, inChat: Boolean = false)(implicit context: CommandExecuteContext = null): Either[JamCronTask, List[JamCronTask]] = {
     val define = _taskDefinition.getOrElse(name, throw ExecutionException(s"任务不存在！$name"))
-    val searchPath = this.getAll(name)
+    val searchPath = runningTasks.getOrElse(name, ListBuffer.empty).toList
     if (define.isSingleton) {
       if (searchPath.lengthIs == 1) Left(searchPath.head)
       else if (searchPath.lengthIs == 0) throw ExecutionException(s"单例任务${name}尚未初始化")
