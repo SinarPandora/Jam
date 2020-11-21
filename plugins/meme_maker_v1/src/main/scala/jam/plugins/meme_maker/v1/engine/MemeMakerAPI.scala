@@ -4,10 +4,10 @@ import java.time.LocalDateTime
 import java.util.Base64
 import java.util.concurrent.{SynchronousQueue, ThreadPoolExecutor, TimeUnit}
 
+import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.icq.sender.message.components.ComponentImageBase64
 import cc.moecraft.logger.HyLogger
 import jam.plugins.meme_maker.v1.engine.MemeAPIV1Response._
-import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.pool.JamContext
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -38,10 +38,10 @@ object MemeMakerAPI {
    *
    * @param code      模板 Code
    * @param sentences 填充句集合
-   * @param context   执行上下文
+   * @param event     消息对象
    * @return 生成结果
    */
-  def generate(code: String, sentences: List[String])(implicit context: CommandExecuteContext): Try[ComponentImageBase64] = Try {
+  def generate(code: String, sentences: List[String], event: EventMessage): Try[ComponentImageBase64] = Try {
     val step1Resp = requests.post(
       url = generateApi(code),
       headers = Map("content-type" -> "application/json;charset=UTF-8"),
@@ -49,12 +49,10 @@ object MemeMakerAPI {
     ).text()
     val picUrl = domain + "/" + Jsoup.parse(step1Resp).getElementsByTag("a")
       .first().attr("href").stripPrefix("/")
-    logger.log(s"Meme Gif 已生成：$picUrl")
-    context.eventMessage.respond(
-    s"""Gif 已生成：$picUrl
-         |---------------------
-         |图片下载中...""".stripMargin)
-    val base64Data = Base64.getEncoder.encodeToString(requests.get(picUrl).bytes)
+    logger.log(s"Gif 已生成：$picUrl")
+    event.respond(s"Gif 已生成：$picUrl")
+    val bytes = requests.get(picUrl, readTimeout = 60000).bytes
+    val base64Data = Base64.getEncoder.encodeToString(bytes)
     new ComponentImageBase64(base64Data)
   }.recoverWith(err => {
     logger.error(s"Gif 生成失败，模板 code 为$code", err)

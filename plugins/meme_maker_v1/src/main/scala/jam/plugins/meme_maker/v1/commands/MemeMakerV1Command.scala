@@ -1,5 +1,6 @@
 package jam.plugins.meme_maker.v1.commands
 
+import cc.moecraft.icq.event.events.message.EventMessage
 import jam.plugins.meme_maker.v1.engine.MemeAPIV1Response.TemplatePair
 import jam.plugins.meme_maker.v1.engine.MemeMakerAPI
 import o.lartifa.jam.cool.qq.listener.asking.{Answerer, Result}
@@ -89,7 +90,7 @@ object MemeMakerV1Command extends Command[Unit] {
               Future.successful(Result.KeepCountAndContinueAsking)
             case Success(id) =>
               templates.find(_.id == id) match {
-                case Some(template) => previewTemplate(template.code)
+                case Some(template) => previewTemplate(template.code, ctx.event)
                 case None =>
                   respond("没有该模板！")
                   Future.successful(Result.KeepCountAndContinueAsking)
@@ -103,7 +104,7 @@ object MemeMakerV1Command extends Command[Unit] {
             case Success(id) =>
               templates.find(_.id == id) match {
                 case Some(template) =>
-                  context.eventMessage.respond(
+                  ctx.event.respond(
                     s"""已选择模板${template.name}，
                        |开始填充模板内容
                        |---------------------
@@ -146,14 +147,14 @@ object MemeMakerV1Command extends Command[Unit] {
         case "=退出" =>
           ctx.event.respond("已退出")
           Future.successful(Result.Complete)
-        case "=预览" => previewTemplate(templateInfo.code)
+        case "=预览" => previewTemplate(templateInfo.code, ctx.event)
         case sentence =>
           sentences += sentence
           if (sentences.sizeIs == slots.size) {
             respond("填充完毕！正在生成...")
             Try(respond(
               MemeMakerAPI
-                .generate(templateInfo.code, sentences.toList)
+                .generate(templateInfo.code, sentences.toList, ctx.event)
                 .map(_.toString)
                 .getOrElse("生成失败，请稍后重试")))
             Future.successful(Result.Complete)
@@ -171,12 +172,12 @@ object MemeMakerV1Command extends Command[Unit] {
   /**
    * 预览插件
    *
-   * @param code    插件地址
-   * @param context 执行上下文
+   * @param code  插件地址
+   * @param event 消息对象
    * @return 执行结果
    */
-  private def previewTemplate(code: String)(implicit context: CommandExecuteContext): Future[Result] = {
-    context.eventMessage.respond(s"预览地址：${MemeMakerAPI.domain}/$code")
+  private def previewTemplate(code: String, event: EventMessage): Future[Result] = {
+    event.respond(s"预览地址：${MemeMakerAPI.domain}/$code")
     Future.successful(Result.KeepCountAndContinueAsking)
   }
 }
