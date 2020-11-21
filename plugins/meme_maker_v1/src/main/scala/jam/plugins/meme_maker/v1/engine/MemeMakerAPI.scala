@@ -1,4 +1,4 @@
-package jam.plugins.meme_maker.engine
+package jam.plugins.meme_maker.v1.engine
 
 import java.time.LocalDateTime
 import java.util.Base64
@@ -6,7 +6,7 @@ import java.util.concurrent.{SynchronousQueue, ThreadPoolExecutor, TimeUnit}
 
 import cc.moecraft.icq.sender.message.components.ComponentImageBase64
 import cc.moecraft.logger.HyLogger
-import jam.plugins.meme_maker.engine.MemeAPIResponse._
+import jam.plugins.meme_maker.v1.engine.MemeAPIV1Response._
 import o.lartifa.jam.pool.JamContext
 import upickle.default._
 
@@ -35,7 +35,7 @@ object MemeMakerAPI {
    * @return 生成结果
    */
   def generate(id: Long, sentences: List[String]): Try[ComponentImageBase64] = Try {
-    val step1Resp = requests.post(generateApi, headers = Map("content-type" -> "application/json;charset=UTF-8"), data = MemeAPIRequest(id, sentences)).text()
+    val step1Resp = requests.post(generateApi, headers = Map("content-type" -> "application/json;charset=UTF-8"), data = MemeAPIV1Request(id, sentences)).text()
     val picUrl = domain + read[Response[PicData]](step1Resp).body.url
     logger.log(s"Meme Gif 已生成：$picUrl")
     val base64Data = Base64.getEncoder.encodeToString(requests.get(picUrl).bytes)

@@ -1,4 +1,4 @@
-package jam.plugins.meme_maker.engine
+package jam.plugins.meme_maker.v1.engine
 
 import upickle.default._
 
@@ -8,7 +8,7 @@ import upickle.default._
  * Author: sinar
  * 2020/11/18 23:32
  */
-object MemeAPIResponse {
+object MemeAPIV1Response {
 
   case class PicData(url: String)
 

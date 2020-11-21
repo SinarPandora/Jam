@@ -1,7 +1,7 @@
-package jam.plugins.meme_maker
+package jam.plugins.meme_maker.v1
 
-import jam.plugins.meme_maker.commands.MemeMakerCmdParser
-import jam.plugins.meme_maker.engine.MemeMakerAPI
+import jam.plugins.meme_maker.v1.commands.MemeMakerV1CmdParser
+import jam.plugins.meme_maker.v1.engine.MemeMakerAPI
 import o.lartifa.jam.plugins.api.{JamPluginInstaller, MountPoint}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -17,7 +17,7 @@ class Installer extends JamPluginInstaller {
   /**
    * 插件名
    */
-  override val pluginName: String = "表情生成器"
+  override val pluginName: String = "表情生成器V1"
   /**
    * 作者名
    */
@@ -39,7 +39,7 @@ class Installer extends JamPluginInstaller {
    */
   override val mountPoint: Option[MountPoint] = Some(
     MountPoint(
-      commandParsers = List(MemeMakerCmdParser),
+      commandParsers = List(MemeMakerV1CmdParser),
       bootTasks = List(() => {
         MemeMakerAPI.init()
       })

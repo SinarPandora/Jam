@@ -1,8 +1,8 @@
-package jam.plugins.meme_maker.commands
+package jam.plugins.meme_maker.v1.commands
 
 import cc.moecraft.icq.sender.message.components.ComponentImage
-import jam.plugins.meme_maker.engine.MemeAPIResponse.TemplateInfo
-import jam.plugins.meme_maker.engine.MemeMakerAPI
+import jam.plugins.meme_maker.v1.engine.MemeAPIV1Response.TemplateInfo
+import jam.plugins.meme_maker.v1.engine.MemeMakerAPI
 import o.lartifa.jam.cool.qq.listener.asking.{Answerer, Result}
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.Command
@@ -17,7 +17,7 @@ import scala.util.{Failure, Success, Try}
  * Author: sinar
  * 2020/11/18 22:19
  */
-object MemeMakerCommand extends Command[Unit] {
+object MemeMakerV1Command extends Command[Unit] {
   /**
    * 执行
    *
