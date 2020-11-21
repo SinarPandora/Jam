@@ -82,7 +82,7 @@ object MiraiBackend extends Backend {
       while (true) {
         val line = reader.readLine()
         if (line == null) Thread.sleep(500)
-        else if (line.contains("[NETWORK] ConfigPushSvc.PushReq: Success")) {
+        else if (line.contains(s"($qID) Login successful")) {
           break()
         } else println(line)
       }
