@@ -35,10 +35,10 @@ object MemeMakerAPI {
    * @return 生成结果
    */
   def generate(id: Long, sentences: List[String]): Try[ComponentImageBase64] = Try {
-    val step1Resp = requests.post(generateApi, data = MemeAPIRequest(id, sentences)).text()
+    val step1Resp = requests.post(generateApi, headers = Map("content-type" -> "application/json;charset=UTF-8"), data = MemeAPIRequest(id, sentences)).text()
     val picUrl = domain + read[Response[PicData]](step1Resp).body.url
     logger.log(s"Meme Gif 已生成：$picUrl")
-    val base64Data = Base64.getEncoder.encodeToString(requests.get(picUrl, readTimeout = 10000).bytes)
+    val base64Data = Base64.getEncoder.encodeToString(requests.get(picUrl).bytes)
     new ComponentImageBase64(base64Data)
   }.recoverWith(err => {
     logger.error(s"Gif 生成失败，模板 id 为$id", err)

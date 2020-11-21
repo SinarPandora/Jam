@@ -2,7 +2,6 @@ package o.lartifa.jam.plugins
 
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.{HyLogger, LogLevel}
-import cn.hutool.core.util.StrUtil
 import o.lartifa.jam.common.config.{JamConfig, JamPluginConfig}
 import o.lartifa.jam.common.util.{MasterUtil, TimeUtil}
 import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
@@ -73,7 +72,7 @@ object JamPluginLoader {
     val installedPlugins: Map[String, Tables.PluginsRow] = await(db.run(Plugins.result)).map(it => it.`package` -> it).toMap
     if (installers.nonEmpty || installedPlugins.nonEmpty) {
       // 若表中存在而插件未找到，提示警告
-      val missingPlugins = (installedPlugins -- installers.keySet).map {
+      val missingPlugins = installedPlugins.view.filterKeys(it => !installers.keySet.contains(it)).map {
         case (packageName, record) => s"名称：${record.name}，作者：${record.author}，包名：$packageName"
       }.mkString("\n")
       if (missingPlugins.nonEmpty) {
@@ -88,11 +87,11 @@ object JamPluginLoader {
       await(autoUpgrade(installedPlugins))
 
       // 将挂载点注入到各个组件
-      val needLoad = installedPlugins.values.groupBy(_.isEnabled).getOrElse(true, Nil).map(_.`package`) ++ {
+      val needLoad: Set[String] = installedPlugins.values.groupBy(_.isEnabled).getOrElse(true, Nil).map(_.`package`).toSet ++ {
         if (JamPluginConfig.autoEnablePlugins) installResult.getOrElse(true, Nil)
         else Nil
-      }
-      this._loadedComponents = mountPlugins((installers -- needLoad).values)
+      }.toSet
+      this._loadedComponents = mountPlugins(installers.view.filterKeys(needLoad.contains).values)
     }
   }
 
@@ -112,7 +111,8 @@ object JamPluginLoader {
       }
     }
     val installResult = installation.groupMap(_._2.isSuccess)(_._1)
-    val needInsert = (installers -- installResult.getOrElse(true, Nil))
+    val packageNames = installResult.getOrElse(true, Nil).toSet
+    val needInsert = installers.view.filterKeys(packageNames.contains)
       .map { case (packageName, it) =>
         (it.pluginName, it.keywords.mkString(","), it.author, packageName, JamPluginConfig.autoEnablePlugins)
       }.toList
@@ -208,7 +208,7 @@ object JamPluginLoader {
    * @return 插件类路径 -> 插件实例映射
    */
   private def scanPlugins(): Map[String, JamPluginInstaller] = {
-    new Reflections(StrUtil.EMPTY)
+    new Reflections("jam.plugins")
       .getSubTypesOf(classOf[JamPluginInstaller]).asScala.toList
       .map(it => it.getName -> it.getDeclaredConstructor().newInstance())
       .toMap

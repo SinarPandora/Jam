@@ -36,7 +36,7 @@ object MemeMakerCommand extends Command[Unit] {
           |输入"预览"加上模板编号查看示例
           |输入模板编号开始制作
           |输入"退出"结束制作""".stripMargin)
-      step1SelectTemplate(templates, 1, math.ceil(templates.size / 10).toInt)
+      step1SelectTemplate(templates, 1, math.ceil(templates.size / 5).toInt)
     } else {
       context.eventMessage.respond("模板尚未准备好，请稍后重试")
     }
@@ -53,7 +53,7 @@ object MemeMakerCommand extends Command[Unit] {
    * @param exec      异步上下文
    */
   private def step1SelectTemplate(templates: List[TemplateInfo], page: Int, total: Int)(implicit context: CommandExecuteContext, exec: ExecutionContext): Unit = {
-    val info = templates.slice((page - 1) * 10, (page - 1) * 10 + 10).map { it =>
+    val info = templates.slice((page - 1) * 5, page * 5).map { it =>
       import it._
       s"$id：$name（${like_count}人喜欢）"
     }.mkString("\n")
@@ -151,9 +151,18 @@ object MemeMakerCommand extends Command[Unit] {
           sentences += sentence
           if (sentences.sizeIs == slots.size) {
             respond("填充完毕！正在生成...")
-            Try(respond(MemeMakerAPI.generate(templateInfo.id, sentences.toList).toString))
+            Try(respond(MemeMakerAPI
+              .generate(templateInfo.id, sentences.toList)
+              .map(_.toString)
+              .getOrElse("生成失败，请稍后重试")))
             Future.successful(Result.Complete)
-          } else Future.successful(Result.KeepCountAndContinueAsking)
+          } else {
+            context.eventMessage.respond(
+              s"""请填写第${sentences.size + 1}条句子
+                 |---------------------
+                 |示例：${slots(sentences.size)}""".stripMargin)
+            Future.successful(Result.KeepCountAndContinueAsking)
+          }
       }
     }
   }
