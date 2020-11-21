@@ -34,7 +34,7 @@ object MemeMakerAPI {
    * @param sentences 填充句集合
    * @return 生成结果
    */
-  def generate(id: Int, sentences: List[String]): Try[ComponentImageBase64] = Try {
+  def generate(id: Long, sentences: List[String]): Try[ComponentImageBase64] = Try {
     val step1Resp = requests.post(generateApi, data = MemeAPIRequest(id, sentences)).text()
     val picUrl = domain + read[Response[PicData]](step1Resp).body.url
     logger.log(s"Meme Gif 已生成：$picUrl")
@@ -51,7 +51,7 @@ object MemeMakerAPI {
    * @param id 模板 id
    * @return 模板信息
    */
-  def getTemplateSteps(id: Int): Try[TemplateInfo] = Try {
+  def getTemplateSteps(id: Long): Try[TemplateInfo] = Try {
     read[Response[TemplateInfo]] {
       requests.post(templateInfoApi, data = Map("id" -> id.toString)).text()
     }.body
@@ -124,7 +124,8 @@ object MemeMakerAPI {
      */
     def refreshTemplates(): Unit = {
       val list = Try {
-        read[Response[List[TemplateInfo]]](requests.get(templateListApi).text()).body
+        read[Response[List[TemplateInfo]]](requests.get(templateListApi).text())
+          .body.sortBy(_.id)
       }.recoverWith(err => {
         logger.error("获取模板列表失败", err)
         Success(Nil)
