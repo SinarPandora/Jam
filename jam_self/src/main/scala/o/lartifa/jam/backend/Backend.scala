@@ -10,7 +10,8 @@ trait Backend {
   /**
    * 启动后端
    *
+   * @param args        程序参数
    * @param afterBooted 启动后任务（回调）
    */
-  def startAndConnectToBackEnd(afterBooted: () => Unit): Unit
+  def startAndConnectToBackEnd(args: Array[String])(afterBooted: () => Unit): Unit
 }

@@ -21,9 +21,10 @@ object MiraiBackend extends Backend {
   /**
    * 启动后端
    *
+   * @param args        程序参数
    * @param afterBooted 启动后任务（回调）
    */
-  override def startAndConnectToBackEnd(afterBooted: () => Unit): Unit = {
+  override def startAndConnectToBackEnd(args: Array[String])(afterBooted: () => Unit): Unit = {
     JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}正在尝试启动并连接 Miari 后端...")
     val logFile = Paths.get(CoolQConfig.Backend.Mirai.path, "backend.log").toFile
     cleanUpBackendLogfile(logFile)
@@ -32,7 +33,7 @@ object MiraiBackend extends Backend {
       #> logFile).run()
     setUpAutoShutdownBackend()
     // 阻塞检查
-    checkUntilStarted(logFile)
+    checkUntilStarted(logFile, args)
     afterBooted()
   }
 
@@ -73,18 +74,21 @@ object MiraiBackend extends Backend {
   /**
    * 检查日志文件，直到确定后端成功启动
    *
+   * @param args    程序参数
    * @param logFile 日志文件
    */
-  private def checkUntilStarted(logFile: File): Unit = {
+  private def checkUntilStarted(logFile: File, args: Array[String]): Unit = {
     val reader = new BufferedReader(new FileReader(logFile))
+    val successMessage =
+      if (args.contains("--use_mirai3")) s"($qID) Login successful"
+      else "[NETWORK] ConfigPushSvc.PushReq: Success"
 
     breakable {
       while (true) {
         val line = reader.readLine()
         if (line == null) Thread.sleep(500)
-        else if (line.contains(s"($qID) Login successful")) {
-          break()
-        } else println(line)
+        else if (line.contains(successMessage)) break()
+        else println(line)
       }
     }
     reader.close()

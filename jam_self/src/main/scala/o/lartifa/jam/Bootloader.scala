@@ -26,7 +26,7 @@ object Bootloader {
     JamContext.httpApi.getAndSet(() => client.getAccountManager.getNonAccountSpecifiedApi)
     JamContext.clientConfig.getAndSet(client.getConfig)
     client.getHttpServer.start()
-    MiraiBackend.startAndConnectToBackEnd(() => {
+    MiraiBackend.startAndConnectToBackEnd(args)(() => {
       JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}已连接 Mirai 后端，正在刷新数据...")
       client.addAccount(name, postUrl, postPort)
       Await.result(JamLoader.init(client, args), Duration.Inf)
@@ -49,6 +49,7 @@ object Bootloader {
         |--flyway_repair  执行数据迁移修复
         |--help           输出该提示
         |--config=xxx     手动指定配置文件位置
+        |--use_mirai3     使用 mirai 3 后端（实验性）
         |""".stripMargin)
     sys.exit(0)
   }
