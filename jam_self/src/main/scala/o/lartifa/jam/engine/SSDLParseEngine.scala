@@ -57,7 +57,7 @@ object SSDLParseEngine extends Parser {
         case "global_group" => ChatInfo.Group
         case _ =>
           val split = dirName.split("_")
-          need(split.length == 2, s"文件夹名：${dir.pathAsString}格式不正确（起名格式：global，global_private, global_group，private_xxx, group_xxx，discuss_xxx）")
+          need(split.length == 2, s"文件夹名：${dir.pathAsString}格式不正确（起名格式：global，global_private, global_group，private_xxx, group_xxx）")
           val Array(tp, id) = split.take(2)
           ChatInfo(tp, id.toLong)
       }
