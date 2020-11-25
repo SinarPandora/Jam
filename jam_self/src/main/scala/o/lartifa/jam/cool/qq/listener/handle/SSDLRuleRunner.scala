@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.handle
 
-import cc.moecraft.icq.event.events.message.EventMessage
+import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch
@@ -34,7 +34,10 @@ object SSDLRuleRunner {
     // 获取会话信息
     val ChatInfo(chatType, chatId) = ChatInfo(eventMessage)
     // 组合捕获器列表
-    val scanList = JamContext.customMatchers.get().getOrElse(chatType, Map()).getOrElse(chatId, List()) ++ JamContext.globalMatchers.get()
+    val scanList = JamContext.customMatchers.get().getOrElse(chatType, Map()).getOrElse(chatId, List()) ++ (eventMessage match {
+      case _: EventGroupOrDiscussMessage => JamContext.globalGroupMatchers.get()
+      case _: EventPrivateMessage => JamContext.globalPrivateMatchers.get()
+    }) ++ JamContext.globalMatchers.get()
     // 组建上下文
     implicit val context: CommandExecuteContext = CommandExecuteContext(eventMessage)
     // 查找步骤
