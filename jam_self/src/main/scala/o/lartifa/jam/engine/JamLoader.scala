@@ -202,10 +202,10 @@ object JamLoader {
       }
       JamContext.stepPool.getAndSet(StepPool(steps.toMap))
       logger.log(s"${AnsiColor.GREEN}共加载${
-        globalMatchers.length
-        + globalGroupMatchers.length
-        + globalPrivateMatchers.length
-        + customMatchers.values.map(_.values.size).sum
+        globalMatchers.length +
+          globalGroupMatchers.length +
+          globalPrivateMatchers.length +
+          customMatchers.values.map(_.values.size).sum
       }条SSDL捕获规则")
       logger.log(s"${AnsiColor.GREEN}共加载${steps.size}条SSDL步骤")
       logger.log(s"${AnsiColor.GREEN}SSDL脚本解析结束")
