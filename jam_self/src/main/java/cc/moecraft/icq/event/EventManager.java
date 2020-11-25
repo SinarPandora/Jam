@@ -27,6 +27,8 @@ import cc.moecraft.icq.event.events.request.EventGroupAddRequest;
 import cc.moecraft.icq.event.events.request.EventGroupInviteRequest;
 import cc.moecraft.icq.event.events.request.EventRequest;
 import cc.moecraft.icq.utils.CQUtils;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -46,12 +48,14 @@ import static java.util.Arrays.asList;
  * @author Hykilpikonna
  */
 @SuppressWarnings("unused")
+@Getter
 public class EventManager
 {
     private final PicqBotX bot;
 
     private final EventParser eventParser;
 
+    @Setter
     private CommandListener commandListener;
 
     private final ArrayList<IcqListener> registeredListeners = new ArrayList<>();
@@ -231,29 +235,5 @@ public class EventManager
         {
             call(new EventLocalException(throwable instanceof InvocationTargetException ? throwable.getCause() : throwable, event));
         }
-    }
-
-    public PicqBotX getBot() {
-        return this.bot;
-    }
-
-    public EventParser getEventParser() {
-        return this.eventParser;
-    }
-
-    public CommandListener getCommandListener() {
-        return this.commandListener;
-    }
-
-    public ArrayList<IcqListener> getRegisteredListeners() {
-        return this.registeredListeners;
-    }
-
-    public HashMap<String, ArrayList<RegisteredListenerMethod>> getRegisteredMethods() {
-        return this.registeredMethods;
-    }
-
-    public void setCommandListener(CommandListener commandListener) {
-        this.commandListener = commandListener;
     }
 }
