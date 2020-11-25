@@ -39,7 +39,13 @@ application {
 }
 
 startScripts {
-    classpath = files('../lib/*', '../plugins/*')
+    classpath = files('$APP_HOME/lib/*')
+    doLast {
+        def windowsScriptFile = file getWindowsScript()
+        def unixScriptFile    = file getUnixScript()
+        windowsScriptFile.text = windowsScriptFile.text.replace('set CLASSPATH=%APP_HOME%\\lib\\*', 'set CLASSPATH=%APP_HOME%\\lib\\*;%APP_HOME%\\plugins\\*')
+        unixScriptFile.text  = unixScriptFile.text.replace('CLASSPATH=$APP_HOME/lib/*', 'CLASSPATH=$APP_HOME/lib/*:$APP_HOME/plugins/*')
+    }
 }
 
 repositories {
