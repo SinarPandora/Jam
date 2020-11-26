@@ -41,13 +41,13 @@ object AntiMotivationalQuotes extends AntiMotivationalQuotes {
     val resp = ujson.read(requests.get("https://www.iowen.cn/jitang/api/").text())
     if (resp("status").num != 1) throw ExecutionException("毒鸡汤 API 暂时不可用")
     val amq = resp("data")("content")("content").str
-    respond(amq)
+    reply(amq)
     amq
   }.recover {
     case anyErr =>
       logger.error("毒鸡汤 API 调用失败", anyErr)
       // 回复默认毒鸡汤
-      respond("我虽然不能来一场，说走就走的旅行，但我有一个说胖就胖的体质。")
+      reply("我虽然不能来一场，说走就走的旅行，但我有一个说胖就胖的体质。")
       "毒鸡汤获取失败"
   }
 }

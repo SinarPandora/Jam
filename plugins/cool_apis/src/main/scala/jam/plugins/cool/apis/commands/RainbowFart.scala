@@ -38,13 +38,13 @@ object RainbowFart extends RainbowFart {
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[String] = Future {
     val fart = requests.get("https://chp.shadiao.app/api.php").text()
-    respond(fart)
+    reply(fart)
     fart
   }.recover {
     case anyErr =>
       logger.error("彩虹屁API调用失败", anyErr)
       // 回复默认彩虹屁
-      respond("我不喜欢这世界，我只喜欢你\uD83D\uDC93！")
+      reply("我不喜欢这世界，我只喜欢你\uD83D\uDC93！")
       "彩虹屁API调用失败"
   }
 }

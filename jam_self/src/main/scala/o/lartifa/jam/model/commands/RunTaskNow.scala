@@ -25,13 +25,13 @@ case class RunTaskNow(task: Either[JamCronTask, TaskDefinition]) extends Command
     task match {
       case Left(task) =>
         if (task.isRunning.get()) {
-          respond(s"${task.name}已在运行中...")
+          reply(s"${task.name}已在运行中...")
         } else {
-          respond(s"${task.name}已启动！")
+          reply(s"${task.name}已启动！")
           task.execute()
         }
       case Right(definition) =>
-        respond(s"${definition.name}已启动！")
+        reply(s"${definition.name}已启动！")
         definition.init().execute()
     }
   }

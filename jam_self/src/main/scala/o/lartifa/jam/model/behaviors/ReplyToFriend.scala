@@ -55,6 +55,6 @@ trait ReplyToFriend {
    * @param context 指令上下文
    * @return 操作结果
    */
-  protected def respond(message: String, raw: Boolean = false)(implicit context: CommandExecuteContext): ReturnData[RMessageReturnData] =
+  protected def reply(message: String, raw: Boolean = false)(implicit context: CommandExecuteContext): ReturnData[RMessageReturnData] =
     context.eventMessage.respond(message, raw)
 }

@@ -25,7 +25,7 @@ case class Ask(question: RenderStrTemplate, answererType: AnswererType, askMatch
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
     val result = await(question.execute())
-    respond(result)
+    reply(result)
     answerer ? { ctx =>
       askMatchers.get(ctx.event.message.trim) match {
         case Some(command) => command.execute().map(_ => Result.Complete)

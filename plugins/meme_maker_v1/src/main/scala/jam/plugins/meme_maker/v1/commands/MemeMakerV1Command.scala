@@ -63,11 +63,11 @@ object MemeMakerV1Command extends Command[Unit] {
     Answerer.sender ? { ctx =>
       ctx.event.message match {
         case "退出" =>
-          respond("已退出")
+          reply("已退出")
           Future.successful(Result.Complete)
         case "上一页" =>
           if (page == 1) {
-            respond("已经是第一页啦")
+            reply("已经是第一页啦")
             step1SelectTemplate(templates, 1, total)
             Future.successful(Result.Complete)
           } else {
@@ -76,7 +76,7 @@ object MemeMakerV1Command extends Command[Unit] {
           }
         case "下一页" =>
           if (page == total) {
-            respond("已经是最后一页啦")
+            reply("已经是最后一页啦")
             Future.successful(Result.KeepCountAndContinueAsking)
           } else {
             step1SelectTemplate(templates, page + 1, total)
@@ -85,20 +85,20 @@ object MemeMakerV1Command extends Command[Unit] {
         case msg if msg.startsWith("预览") =>
           Try(msg.stripPrefix("预览").trim.toLong) match {
             case Failure(_) =>
-              respond("请输入正确的序号！")
+              reply("请输入正确的序号！")
               Future.successful(Result.KeepCountAndContinueAsking)
             case Success(id) =>
               templates.find(_.id == id) match {
                 case Some(template) => previewTemplate(template.code, ctx.event)
                 case None =>
-                  respond("没有该模板！")
+                  reply("没有该模板！")
                   Future.successful(Result.KeepCountAndContinueAsking)
               }
           }
         case other =>
           Try(other.toLong) match {
             case Failure(_) =>
-              respond("请输入正确的序号！")
+              reply("请输入正确的序号！")
               Future.successful(Result.KeepCountAndContinueAsking)
             case Success(id) =>
               templates.find(_.id == id) match {
@@ -113,7 +113,7 @@ object MemeMakerV1Command extends Command[Unit] {
                   fillTemplate(template)
                   Future.successful(Result.Complete)
                 case None =>
-                  respond("没有该模板！")
+                  reply("没有该模板！")
                   Future.successful(Result.KeepCountAndContinueAsking)
               }
           }
@@ -131,33 +131,33 @@ object MemeMakerV1Command extends Command[Unit] {
   private def fillTemplate(templateInfo: TemplatePair)(implicit context: CommandExecuteContext, exec: ExecutionContext): Unit = {
     val slots = MemeMakerAPI.getTemplateSlots(templateInfo.code) match {
       case Failure(_) =>
-        respond("获取模板信息失败")
+        reply("获取模板信息失败")
         return
       case Success(value) => value
     }
     val sentences: ListBuffer[String] = ListBuffer.empty
-    respond(
+    reply(
       s"""请填写第${sentences.size + 1}条句子
          |---------------------
          |示例：${slots(sentences.size)}""".stripMargin)
     Answerer.sender ? { ctx =>
       ctx.event.message match {
         case "=退出" =>
-          respond("已退出")
+          reply("已退出")
           Future.successful(Result.Complete)
         case "=预览" => previewTemplate(templateInfo.code, ctx.event)
         case sentence =>
           sentences += sentence
           if (sentences.sizeIs == slots.size) {
-            respond("填充完毕！正在生成...")
-            Try(respond(
+            reply("填充完毕！正在生成...")
+            Try(reply(
               MemeMakerAPI
                 .generate(templateInfo.code, sentences.toList, ctx.event)
                 .map(_.toString)
                 .getOrElse("生成失败，请稍后重试")))
             Future.successful(Result.Complete)
           } else {
-            respond(
+            reply(
               s"""请填写第${sentences.size + 1}条句子
                  |---------------------
                  |示例：${slots(sentences.size)}""".stripMargin)

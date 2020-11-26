@@ -47,7 +47,7 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
    */
   def sendTextMessage()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[ReturnData[RMessageReturnData]] = async {
     val message = await(template.execute())
-    respond(message)
+    reply(message)
   }
 
   /**
@@ -68,7 +68,7 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
         new ComponentImageBase64(Base64.getEncoder.encodeToString(bytes))
       }
     }).toString
-    Try(respond(content)) match {
+    Try(reply(content)) match {
       case Failure(exception) =>
         throw ExecutionException("图片发送可能失败，请检查是否图片较大或地址不正确").initCause(exception)
       case Success(value) => value
@@ -86,7 +86,7 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
   def sendAudio()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[ReturnData[RMessageReturnData]] = async {
     val audioUri = await(template.execute())
     val audioMessage = new MessageBuilder().add(new ComponentRecord(audioUri)).toString
-    Try(respond(audioMessage)) match {
+    Try(reply(audioMessage)) match {
       case Failure(exception) =>
         throw ExecutionException("图片发送可能失败，请检查是否语音文件较大或语音文件没有存放在酷Q /data/record 目录下").initCause(exception)
       case Success(value) => value
