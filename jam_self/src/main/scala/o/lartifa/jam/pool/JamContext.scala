@@ -21,6 +21,8 @@ object JamContext {
   val cronTaskPool: AtomicReference[CronTaskPool] = new AtomicReference[CronTaskPool]()
   val variablePool: DBVarPool = DBVarPool()
   val globalMatchers: AtomicReference[List[ContentMatcher]] = new AtomicReference[List[ContentMatcher]]()
+  val globalGroupMatchers: AtomicReference[List[ContentMatcher]] = new AtomicReference[List[ContentMatcher]]()
+  val globalPrivateMatchers: AtomicReference[List[ContentMatcher]] = new AtomicReference[List[ContentMatcher]]()
   val customMatchers: AtomicReference[Map[String, Map[Long, List[ContentMatcher]]]] = new AtomicReference()
   val loggerFactory: AtomicReference[LoggerFactory] = new AtomicReference[LoggerFactory]()
   val messagePool: MessagePool = new MessagePool()

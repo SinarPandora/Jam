@@ -161,6 +161,8 @@ object JamLoader {
   private def handleParseResult(success: Seq[ParseSuccessResult]): Option[List[String]] = {
     val steps = mutable.Map[Long, (Option[String], ChatInfo, Step)]()
     val globalMatchers = ListBuffer[ContentMatcher]()
+    val globalPrivateMatchers = ListBuffer[ContentMatcher]()
+    val globalGroupMatchers = ListBuffer[ContentMatcher]()
     val customMatchers = mutable.Map[String, mutable.Map[Long, ListBuffer[ContentMatcher]]]()
     val errorMessage = mutable.ListBuffer[String]()
     success.map(result => (result.result, result.chatInfo, result.name)).foreach {
@@ -171,6 +173,8 @@ object JamLoader {
           steps += result.id -> (name, chatInfo, result.toStep)
           chatInfo match {
             case ChatInfo.None => result.matcher.foreach(globalMatchers.addOne)
+            case ChatInfo.Group => result.matcher.foreach(globalGroupMatchers.addOne)
+            case ChatInfo.Private => result.matcher.foreach(globalPrivateMatchers.addOne)
             case ChatInfo(chatType, chatId) =>
               result.matcher.foreach(
                 customMatchers
@@ -186,6 +190,8 @@ object JamLoader {
     } else {
       // 正则 - 开头 - 结尾 - 等于 - 包含
       JamContext.globalMatchers.getAndSet(sortMatchers(globalMatchers))
+      JamContext.globalGroupMatchers.getAndSet(sortMatchers(globalGroupMatchers))
+      JamContext.globalPrivateMatchers.getAndSet(sortMatchers(globalPrivateMatchers))
       JamContext.customMatchers.getAndSet {
         customMatchers.map {
           case (k, v) =>
@@ -195,7 +201,12 @@ object JamLoader {
         }.toMap
       }
       JamContext.stepPool.getAndSet(StepPool(steps.toMap))
-      logger.log(s"${AnsiColor.GREEN}共加载${JamContext.globalMatchers.get().length}条SSDL捕获规则")
+      logger.log(s"${AnsiColor.GREEN}共加载${
+        globalMatchers.length +
+          globalGroupMatchers.length +
+          globalPrivateMatchers.length +
+          customMatchers.values.map(_.values.size).sum
+      }条SSDL捕获规则")
       logger.log(s"${AnsiColor.GREEN}共加载${steps.size}条SSDL步骤")
       logger.log(s"${AnsiColor.GREEN}SSDL脚本解析结束")
       None

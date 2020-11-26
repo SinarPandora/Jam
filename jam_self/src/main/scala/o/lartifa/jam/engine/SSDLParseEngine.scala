@@ -51,14 +51,17 @@ object SSDLParseEngine extends Parser {
     File(ssdlPath).list.filterNot(f => f.isRegularFile || f.pathAsString.contains("modes")).map { dir =>
       // 忽略备注 + 获取会话格式
       val dirName = dir.name.split("[）)]").last
-      if (dirName == "global") {
-        dir.listRecursively.filter(file => ssdlFileExtension.contains(file.extension.getOrElse(""))).toList -> ChatInfo.None
-      } else {
-        val split = dirName.split("_")
-        need(split.length == 2, s"文件夹名：${dir.pathAsString}格式不正确（起名格式：global，private_xxx, group_xxx，discuss_xxx）")
-        val Array(tp, id) = split.take(2)
-        dir.listRecursively.filter(file => ssdlFileExtension.contains(file.extension.getOrElse(""))).toList -> ChatInfo(tp, id.toLong)
+      val chatInfo = dirName match {
+        case "global" => ChatInfo.None
+        case "global_private" => ChatInfo.Private
+        case "global_group" => ChatInfo.Group
+        case _ =>
+          val split = dirName.split("_")
+          need(split.length == 2, s"文件夹名：${dir.pathAsString}格式不正确（起名格式：global，global_private, global_group，private_xxx, group_xxx）")
+          val Array(tp, id) = split.take(2)
+          ChatInfo(tp, id.toLong)
       }
+      dir.listRecursively.filter(file => ssdlFileExtension.contains(file.extension.getOrElse(""))).toList -> chatInfo
     }.toList
   }
 

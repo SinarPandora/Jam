@@ -32,4 +32,6 @@ object ChatInfo {
     }
 
   object None extends ChatInfo("None", -1L)
+  object Group extends ChatInfo(MessageType.GROUP, -1L)
+  object Private extends ChatInfo(MessageType.PRIVATE, -1L)
 }
