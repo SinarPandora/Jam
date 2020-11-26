@@ -20,7 +20,8 @@ object GarbageClassification extends SSDLCommandParser[GarbageClassification.typ
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  override def parse(string: String, context: ParseEngineContext): Option[GarbageClassification.type] = ???
+  override def parse(string: String, context: ParseEngineContext): Option[GarbageClassification.type] =
+    if (string.contains("解析并推断垃圾类型")) Some(this) else None
 
   /**
    * 执行

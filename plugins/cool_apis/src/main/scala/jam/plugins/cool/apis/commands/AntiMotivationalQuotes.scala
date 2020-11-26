@@ -20,7 +20,8 @@ object AntiMotivationalQuotes extends SSDLCommandParser[AntiMotivationalQuotes.t
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  override def parse(string: String, context: ParseEngineContext): Option[AntiMotivationalQuotes.type] = ???
+  override def parse(string: String, context: ParseEngineContext): Option[AntiMotivationalQuotes.type] =
+    if (string.contains("来一锅毒鸡汤")) Some(this) else None
 
   /**
    * 执行

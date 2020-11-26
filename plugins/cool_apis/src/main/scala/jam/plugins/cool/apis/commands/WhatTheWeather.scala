@@ -20,7 +20,8 @@ object WhatTheWeather extends SSDLCommandParser[WhatTheWeather.type](SSDLCommand
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  override def parse(string: String, context: ParseEngineContext): Option[WhatTheWeather.type] = ???
+  override def parse(string: String, context: ParseEngineContext): Option[WhatTheWeather.type] =
+    if (string.contains("解析并播报天气")) Some(this) else None
 
   /**
    * 执行

@@ -20,7 +20,8 @@ object RainbowFart extends SSDLCommandParser[RainbowFart.type](SSDLCommandParser
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  override def parse(string: String, context: ParseEngineContext): Option[RainbowFart.type] = ???
+  override def parse(string: String, context: ParseEngineContext): Option[RainbowFart.type] =
+    if (string.contains("放彩虹屁")) Some(this) else None
 
   /**
    * 执行
