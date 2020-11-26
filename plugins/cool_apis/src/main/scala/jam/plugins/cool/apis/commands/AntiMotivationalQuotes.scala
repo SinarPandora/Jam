@@ -15,7 +15,9 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2020/11/27 00:11
  */
-object AntiMotivationalQuotes extends SSDLCommandParser[AntiMotivationalQuotes.type](SSDLCommandParser.Contains) with Command[String] {
+abstract class AntiMotivationalQuotes extends SSDLCommandParser[AntiMotivationalQuotes](SSDLCommandParser.Contains) with Command[String]
+
+object AntiMotivationalQuotes extends AntiMotivationalQuotes {
   private val logger: HyLogger = JamContext.loggerFactory.get().getLogger(AntiMotivationalQuotes.getClass)
 
   /**
@@ -25,7 +27,7 @@ object AntiMotivationalQuotes extends SSDLCommandParser[AntiMotivationalQuotes.t
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  override def parse(string: String, context: ParseEngineContext): Option[AntiMotivationalQuotes.type] =
+  override def parse(string: String, context: ParseEngineContext): Option[AntiMotivationalQuotes] =
     if (string.contains("来一锅毒鸡汤")) Some(this) else None
 
   /**
@@ -37,14 +39,15 @@ object AntiMotivationalQuotes extends SSDLCommandParser[AntiMotivationalQuotes.t
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[String] = Future {
     val resp = ujson.read(requests.get("https://www.iowen.cn/jitang/api/").text())
-    if (resp("status").num != 1) throw ExecutionException("毒鸡汤 API 调用失败")
+    if (resp("status").num != 1) throw ExecutionException("毒鸡汤 API 暂时不可用")
     val amq = resp("data")("content")("content").str
-    context.eventMessage.respond(amq)
+    respond(amq)
     amq
   }.recover {
     case anyErr =>
-      logger.error(anyErr)
-      context.eventMessage.respond("鸡汤被厨师喝掉了...")
+      logger.error("毒鸡汤 API 调用失败", anyErr)
+      // 回复默认毒鸡汤
+      respond("我虽然不能来一场，说走就走的旅行，但我有一个说胖就胖的体质。")
       "毒鸡汤获取失败"
   }
 }
