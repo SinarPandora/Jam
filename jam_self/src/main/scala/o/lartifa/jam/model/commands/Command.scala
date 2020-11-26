@@ -11,4 +11,4 @@ import scala.languageFeature.implicitConversions
  * Author: sinar
  * 2020/1/3 23:15
  */
-abstract class Command[T] extends Executable[T] with ReplyToFriend
+trait Command[T] extends Executable[T] with ReplyToFriend
