@@ -2,6 +2,8 @@ package o.lartifa.jam.model.behaviors
 
 import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventPrivateMessage}
 import cc.moecraft.icq.sender.message.components.ComponentAt
+import cc.moecraft.icq.sender.returndata.ReturnData
+import cc.moecraft.icq.sender.returndata.returnpojo.send.RMessageReturnData
 import o.lartifa.jam.model.CommandExecuteContext
 
 import scala.async.Async.{async, await}
@@ -44,4 +46,15 @@ trait ReplyToFriend {
    */
   protected def atSender(implicit context: CommandExecuteContext): String =
     new ComponentAt(context.eventMessage.getSenderId).toString
+
+  /**
+   * 快速回复消息
+   *
+   * @param message 消息内容
+   * @param raw     是否不转义（默认自动转义）
+   * @param context 指令上下文
+   * @return 操作结果
+   */
+  protected def respond(message: String, raw: Boolean = false)(implicit context: CommandExecuteContext): ReturnData[RMessageReturnData] =
+    context.eventMessage.respond(message, raw)
 }
