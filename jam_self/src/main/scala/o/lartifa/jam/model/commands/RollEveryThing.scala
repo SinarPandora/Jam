@@ -71,7 +71,7 @@ case class RollEveryThing(mode: Mode, random: Random) extends Command[Int] {
   private def makeDecision()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Int] = async {
     val result = random.nextInt(2)
     val ab = if (result == 1) "正面" else "反面"
-    context.eventMessage.respond(s"$atSender 抛了个硬币，是$ab")
+    respond(s"$atSender 抛了个硬币，是$ab")
     result
   }
 
@@ -84,7 +84,7 @@ case class RollEveryThing(mode: Mode, random: Random) extends Command[Int] {
    */
   private def simple1To100()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Int] = async {
     val result = random.nextInt(100) + 1
-    context.eventMessage.respond(s"$atSender 投掷D100，结果为：$result")
+    respond(s"$atSender 投掷D100，结果为：$result")
     result
   }
 
@@ -108,7 +108,7 @@ case class RollEveryThing(mode: Mode, random: Random) extends Command[Int] {
       // 不可能的情况
       case _ => "我混乱了。。。"
     }
-    context.eventMessage.respond(s"$atSender $message（$result，随机结果，仅供参考）")
+    respond(s"$atSender $message（$result，随机结果，仅供参考）")
     result
   }
 }

@@ -22,7 +22,6 @@ case class RunTaskNow(task: Either[JamCronTask, TaskDefinition]) extends Command
    * @return 异步返回执行结果
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
-    import context.eventMessage._
     task match {
       case Left(task) =>
         if (task.isRunning.get()) {

@@ -22,7 +22,7 @@ object RSSUnSubscribe extends Command[Unit] {
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
     import context.eventMessage._
-    if (!message.contains(" ")) respond(s"$atSender 请在订阅源前面加个空格~")
+    if (!message.contains(" ")) this.respond(s"$atSender 请在订阅源前面加个空格~")
     else {
       val source = message.split(" ").last.trim
       await(SubscriptionPool.unSubscribeAndReply(source, context.chatInfo))

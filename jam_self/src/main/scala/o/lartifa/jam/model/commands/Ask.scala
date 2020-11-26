@@ -1,6 +1,5 @@
 package o.lartifa.jam.model.commands
 
-import ammonite.ops.PipeableImplicit
 import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventPrivateMessage}
 import o.lartifa.jam.cool.qq.listener.asking.{Answerer, Result}
 import o.lartifa.jam.model.CommandExecuteContext
@@ -25,8 +24,8 @@ case class Ask(question: RenderStrTemplate, answererType: AnswererType, askMatch
    * @return 异步返回执行结果
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
-    import context.eventMessage._
-    await(question.execute()) |> respond
+    val result = await(question.execute())
+    respond(result)
     answerer ? { ctx =>
       askMatchers.get(ctx.event.message.trim) match {
         case Some(command) => command.execute().map(_ => Result.Complete)

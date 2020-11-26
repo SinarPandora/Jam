@@ -61,8 +61,7 @@ object MemeMakerCommand extends Command[Unit] {
     context.eventMessage.respond(info)
 
     Answerer.sender ? { ctx =>
-      import ctx.event._
-      message match {
+      ctx.event.message match {
         case "退出" =>
           respond("已退出")
           Future.successful(Result.Complete)
@@ -134,15 +133,14 @@ object MemeMakerCommand extends Command[Unit] {
   private def fillTemplate(templateInfo: TemplateInfo)(implicit context: CommandExecuteContext, exec: ExecutionContext): Unit = {
     val slots = templateInfo.templateSlots
     val sentences: ListBuffer[String] = ListBuffer.empty
-    context.eventMessage.respond(
+    respond(
       s"""请填写第${sentences.size + 1}条句子
          |---------------------
          |示例：${slots(sentences.size)}""".stripMargin)
     Answerer.sender ? { ctx =>
-      import ctx.event._
       ctx.event.message match {
         case "=退出" =>
-          ctx.event.respond("已退出")
+          respond("已退出")
           Future.successful(Result.Complete)
         case "=预览" =>
           respond(new ComponentImage(templateInfo.example_gif).toString)
@@ -157,7 +155,7 @@ object MemeMakerCommand extends Command[Unit] {
               .getOrElse("生成失败，请稍后重试")))
             Future.successful(Result.Complete)
           } else {
-            context.eventMessage.respond(
+            respond(
               s"""请填写第${sentences.size + 1}条句子
                  |---------------------
                  |示例：${slots(sentences.size)}""".stripMargin)

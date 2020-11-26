@@ -32,7 +32,7 @@ object WhatICanDo extends Command[Unit] {
     val idx = Random.nextInt(matchers.size)
     val matcher = matchers(idx)
     val intro = await(matcher.intro)
-    context.eventMessage.respond(
+    respond(
       s"""你可以尝试$intro
          |------------------------
          |注意，某些功能：
