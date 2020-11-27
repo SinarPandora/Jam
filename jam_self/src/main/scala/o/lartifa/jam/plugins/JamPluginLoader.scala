@@ -1,6 +1,7 @@
 package o.lartifa.jam.plugins
 
 import cc.moecraft.icq.event.events.message.EventMessage
+import cc.moecraft.logger.format.AnsiColor
 import cc.moecraft.logger.{HyLogger, LogLevel}
 import o.lartifa.jam.common.config.{JamConfig, JamPluginConfig}
 import o.lartifa.jam.common.util.{MasterUtil, TimeUtil}
@@ -174,6 +175,7 @@ object JamPluginLoader {
    * @return 挂载组件对象
    */
   private def mountPlugins(installers: Iterable[JamPluginInstaller]): LoadedComponents = {
+    logger.log(s"${AnsiColor.YELLOW} 准备挂载已启用的插件：${installers.map(_.pluginName).mkString("，")}")
     val bootTasks: ListBuffer[LifeCycleTask] = ListBuffer.empty
     val shutdownTasks: ListBuffer[LifeCycleTask] = ListBuffer.empty
     val preHandleTasks: ListBuffer[PreHandleTask] = ListBuffer.empty
@@ -195,6 +197,7 @@ object JamPluginLoader {
       parsers.get(Regex).foreach(regexModeCommandParsers ++= _)
       parsers.get(HighOrder).foreach(highOrderModeCommandParsers ++= _)
     }
+    logger.log(s"${AnsiColor.YELLOW} 插件挂载结束！")
     LoadedComponents(
       bootTasks.result(), shutdownTasks.result(), preHandleTasks.result(), containsModeCommandParsers.result(),
       regexModeCommandParsers.result(), highOrderModeCommandParsers.result(), cronTaskDefinitions.result(),
