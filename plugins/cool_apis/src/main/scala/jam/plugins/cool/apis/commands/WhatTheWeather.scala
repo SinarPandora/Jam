@@ -30,7 +30,7 @@ object WhatTheWeather extends WhatTheWeather {
    * @return 解析结果
    */
   override def parse(string: String, context: ParseEngineContext): Option[WhatTheWeather] =
-    if (string.contains("解析并播报天气")) Some(this) else None
+    if (string.contains("运行天气预报小程序")) Some(this) else None
 
   /**
    * 执行
