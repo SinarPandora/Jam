@@ -35,7 +35,7 @@ distributions {
 
 application {
     mainClass = 'o.lartifa.jam.Bootloader'
-    applicationDefaultJvmArgs = ["-Xmx512m", "-Xms256m", "-ea", "-server", "-Dfile.encoding=UTF-8"]
+    applicationDefaultJvmArgs = ["-Xmx1025m", "-Xms512m", "-ea", "-server", "-Dfile.encoding=UTF-8"]
 }
 
 startScripts {
