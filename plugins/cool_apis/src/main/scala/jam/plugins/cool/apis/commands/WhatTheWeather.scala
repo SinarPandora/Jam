@@ -78,7 +78,7 @@ object WhatTheWeather extends WhatTheWeather {
   private def startAsking(json: Value)(implicit context: CommandExecuteContext, exec: ExecutionContext): Unit = {
     Answerer.sender ? { ctx =>
       ctx.event.message match {
-        case "未来几天" =>
+        case "未来几天" | "未来几日" =>
           showForecast(json)
           Future.successful(Result.KeepCountAndContinueAsking)
         case "昨天" | "昨日" =>
@@ -101,7 +101,7 @@ object WhatTheWeather extends WhatTheWeather {
   private def showYesterday(json: Value)(implicit context: CommandExecuteContext): Unit = Try {
     val yesterday = json("yesterday")
     reply {
-      s"""${json("city")}昨日的天气 < ${yesterday("type").str} >
+      s"""${json("city").str}昨日的天气 < ${yesterday("type").str} >
          |最高气温：${yesterday("high").str.stripPrefix("高温").trim}
          |最低气温：${yesterday("low").str.stripPrefix("低温").trim}
          |${yesterday("fx").str}${yesterday("fl").str.stripPrefix("<![CDATA[").stripSuffix("]]>")}
@@ -128,16 +128,18 @@ object WhatTheWeather extends WhatTheWeather {
       reply("没有找到未来几天的天气 :/")
       return
     }
-    val text = forecast.map(day =>
-      s"""${day("date").str} < ${day("type").str} >
-         |${day("low").str.stripPrefix("低温").trim} ~ ${day("high").str.stripPrefix("高温").trim}
-         |${day("fengxiang").str}${day("fengli").str.stripPrefix("<![CDATA[").stripSuffix("]]>")}
-         |------------------""".stripMargin)
-      .mkString("\n")
+    reply(s"${json("city").str}近日天气：")
+    forecast.drop(1).sliding(2, 2).map(days =>
+      days.map(day =>
+        s"""${day("date").str} < ${day("type").str} >
+           |${day("low").str.stripPrefix("低温").trim} ~ ${day("high").str.stripPrefix("高温").trim}
+           |${day("fengxiang").str}${day("fengli").str.stripPrefix("<![CDATA[").stripSuffix("]]>")}
+           |------------------""".stripMargin)
+        .mkString("\n"))
+      .foreach(reply(_))
     reply {
-      s"""$text
-         |可以输入："明天"，"昨天"查看对应的天气
-         |任意其他内容会自动退出""".stripMargin
+      """可以输入："明天"，"昨天"查看对应的天气
+        |任意其他内容会自动退出""".stripMargin
     }
   }.recover {
     case err =>
@@ -158,7 +160,7 @@ object WhatTheWeather extends WhatTheWeather {
       return
     } else forecast(1)
     reply {
-      s"""${json("city")}明日的天气 < ${tomorrow("type").str} >
+      s"""${json("city").str}明日的天气 < ${tomorrow("type").str} >
          |最高气温：${tomorrow("high").str.stripPrefix("高温").trim}
          |最低气温：${tomorrow("low").str.stripPrefix("低温").trim}
          |${tomorrow("fengxiang").str}${tomorrow("fengli").str.stripPrefix("<![CDATA[").stripSuffix("]]>")}
@@ -185,7 +187,7 @@ object WhatTheWeather extends WhatTheWeather {
       return
     }
     reply {
-      s"""${json("city")}今日的天气 < ${today("type").str} >
+      s"""${json("city").str}今日的天气 < ${today("type").str} >
          |最高气温：${today("high").str.stripPrefix("高温").trim}
          |最低气温：${today("low").str.stripPrefix("低温").trim}
          |${today("fengxiang").str}${today("fengli").str.stripPrefix("<![CDATA[").stripSuffix("]]>")}
