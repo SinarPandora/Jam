@@ -210,7 +210,7 @@ object JamPluginLoader {
   private def scanPlugins(): Map[String, JamPluginInstaller] = Try {
     new Reflections("jam.plugins")
       .getSubTypesOf(classOf[JamPluginInstaller]).asScala.toList
-      .map(it => it.getName -> it.getDeclaredConstructor().newInstance())
+      .map(it => it.getPackageName -> it.getDeclaredConstructor().newInstance())
       .toMap
   }.recoverWith(err => {
     if (err.getMessage == "Scanner SubTypesScanner was not configured")
