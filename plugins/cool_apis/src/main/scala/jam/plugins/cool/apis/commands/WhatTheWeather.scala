@@ -46,13 +46,14 @@ object WhatTheWeather extends WhatTheWeather {
         case "退出" => Future.successful(Result.Complete)
         case city =>
           Try {
-            val json = ujson.read {
+            val resp = ujson.read {
               requests.get(s"http://wthrcdn.etouch.cn/weather_mini?city=$city").text()
             }
-            if (json("status").num != 1000) {
+            if (resp("status").num != 1000) {
               reply(s"找不到${city}的天气信息")
               Future.successful(Result.Complete)
             } else {
+              val json = resp("data")
               showToday(json)
               startAsking(json)
               Future.successful(Result.Complete)
@@ -103,7 +104,7 @@ object WhatTheWeather extends WhatTheWeather {
       s"""${json("city")}昨日的天气 < ${yesterday("type").str} >
          |最高气温：${yesterday("high").str.stripPrefix("高温").trim}
          |最低气温：${yesterday("low").str.stripPrefix("低温").trim}
-         |${yesterday("fx").str}${yesterday("fl").str.stripPrefix("<![CDATA[").stripPrefix("]]>")}
+         |${yesterday("fx").str}${yesterday("fl").str.stripPrefix("<![CDATA[").stripSuffix("]]>")}
          |${yesterday("date").str}
          |------------------
          |可以输入："明天"，"未来几天"查看对应的天气
@@ -130,7 +131,7 @@ object WhatTheWeather extends WhatTheWeather {
     val text = forecast.map(day =>
       s"""${day("date").str} < ${day("type").str} >
          |${day("low").str.stripPrefix("低温").trim} ~ ${day("high").str.stripPrefix("高温").trim}
-         |${day("fengxiang").str}${day("fengli").str.stripPrefix("<![CDATA[").stripPrefix("]]>")}
+         |${day("fengxiang").str}${day("fengli").str.stripPrefix("<![CDATA[").stripSuffix("]]>")}
          |------------------""".stripMargin)
       .mkString("\n")
     reply {
@@ -160,7 +161,7 @@ object WhatTheWeather extends WhatTheWeather {
       s"""${json("city")}明日的天气 < ${tomorrow("type").str} >
          |最高气温：${tomorrow("high").str.stripPrefix("高温").trim}
          |最低气温：${tomorrow("low").str.stripPrefix("低温").trim}
-         |${tomorrow("fengxiang").str}${tomorrow("fengli").str.stripPrefix("<![CDATA[").stripPrefix("]]>")}
+         |${tomorrow("fengxiang").str}${tomorrow("fengli").str.stripPrefix("<![CDATA[").stripSuffix("]]>")}
          |${tomorrow("date").str}
          |------------------
          |可以输入："未来几天"，"昨天"查看对应的天气
@@ -187,7 +188,7 @@ object WhatTheWeather extends WhatTheWeather {
       s"""${json("city")}今日的天气 < ${today("type").str} >
          |最高气温：${today("high").str.stripPrefix("高温").trim}
          |最低气温：${today("low").str.stripPrefix("低温").trim}
-         |${today("fengxiang").str}${today("fengli").str.stripPrefix("<![CDATA[").stripPrefix("]]>")}
+         |${today("fengxiang").str}${today("fengli").str.stripPrefix("<![CDATA[").stripSuffix("]]>")}
          |${today("date").str}
          |${json("ganmao").str}
          |------------------
