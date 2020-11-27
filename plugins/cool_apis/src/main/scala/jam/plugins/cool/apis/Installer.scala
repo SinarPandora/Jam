@@ -1,6 +1,6 @@
 package jam.plugins.cool.apis
 
-import jam.plugins.cool.apis.commands.{AntiMotivationalQuotes, GarbageClassification, RainbowFart, WhatTheWeather}
+import jam.plugins.cool.apis.commands.{AntiMotivationalQuotes, RainbowFart, WhatTheWeather}
 import o.lartifa.jam.plugins.api.{JamPluginInstaller, MountPoint}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,7 +37,7 @@ class Installer extends JamPluginInstaller {
    */
   override val mountPoint: Option[MountPoint] = Some(
     MountPoint(
-      commandParsers = List(AntiMotivationalQuotes, GarbageClassification, RainbowFart, WhatTheWeather)
+      commandParsers = List(AntiMotivationalQuotes, RainbowFart, WhatTheWeather)
     )
   )
 
