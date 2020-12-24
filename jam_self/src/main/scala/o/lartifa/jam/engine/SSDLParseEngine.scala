@@ -1,14 +1,14 @@
 package o.lartifa.jam.engine
 
-import java.nio.charset.Charset
-
 import better.files.File
 import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.common.exception.ParseFailException
-import o.lartifa.jam.engine.parser.{CommandParser, Parser, PatternParser}
+import o.lartifa.jam.engine.parser.{CommandParser, Parser, PatternParser, Patterns}
 import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.model.patterns.ParseResult
 
+import java.nio.charset.Charset
+import scala.annotation.tailrec
 import scala.collection.parallel.CollectionConverters._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -26,6 +26,10 @@ object SSDLParseEngine extends Parser {
   sealed case class ParseFailResult(lineId: Long, filepath: String, message: String)
 
   implicit val charset: Charset = Charset.forName("UTF-8")
+
+  type EffectiveLineIdPair = (EffectiveLine, Int)
+
+  type EffectiveLine = (Option[String], String)
 
   /**
    * 加载并解析 SSDL
@@ -73,7 +77,7 @@ object SSDLParseEngine extends Parser {
    * @return 解析结果
    */
   private def parseFiles(ssdlFiles: List[File], chatInfo: ChatInfo): Seq[Either[ParseFailResult, ParseSuccessResult]] = {
-    ssdlFiles.flatMap(parseFileContent(_, chatInfo))
+    ssdlFiles.par.flatMap(parseFileContent(_, chatInfo)).seq
   }
 
   /**
@@ -84,7 +88,7 @@ object SSDLParseEngine extends Parser {
    * @return 解析结果
    */
   private def parseFileContent(file: File, chatInfo: ChatInfo): Iterable[Either[ParseFailResult, ParseSuccessResult]] = {
-    file.lines
+    val lineWithIdxPairs: List[((Option[String], String), Int)] = file.lines
       .map(_.trim)
       .map(line => {
         if (line.startsWith("(") || line.startsWith("（")) {
@@ -93,10 +97,58 @@ object SSDLParseEngine extends Parser {
         } else None -> line
       })
       .zipWithIndex
-      .par
       .filterNot { case ((_, line), _) => line.startsWith("#") || line.isEmpty }
-      .map { case ((name, step), idx) => parseSSDL(step, file.pathAsString, idx + 1, chatInfo, name) }
-      .seq
+      .toList
+
+    // 找到所有有效行并解析
+    findEffectiveLines(file.pathAsString, lineWithIdxPairs)
+      .map {
+        case failResult@Left(_) => failResult.asInstanceOf[Either[ParseFailResult, ParseSuccessResult]]
+        case Right(((name, step), idx)) => parseSSDL(step, file.pathAsString, idx + 1, chatInfo, name)
+      }
+  }
+
+  /**
+   * 寻找所有有效行
+   * 规则：
+   * 1. 如果行前没有 ID，将其与最近的有 ID 行拼接
+   * 2. 如果能与之拼接的行不存在（第一行就没有 ID），则视为解析失败
+   * 3. 如果开头是竖线，保留换行，否则将换行删掉
+   *
+   * @param filepath          文件路径
+   * @param pairs             行，ID 对
+   * @param lastEffectiveLine 最近的一个有效行
+   * @param effectiveLines    找到的全部有效行（递归缓存结果）
+   * @return 全部有效行
+   */
+  @tailrec
+  private def findEffectiveLines(filepath: String, pairs: List[EffectiveLineIdPair], lastEffectiveLine: Option[EffectiveLine] = None,
+                                 effectiveLines: List[Either[ParseFailResult, EffectiveLineIdPair]] = Nil):
+  List[Either[ParseFailResult, EffectiveLineIdPair]] = {
+    pairs match {
+      case ((name, line), lineId) :: next =>
+        Patterns.basePattern.findFirstMatchIn(line) match {
+          // 如果出现下一个带有 ID 的行，就说明上一个行组解析完毕了
+          case Some(_) => lastEffectiveLine match {
+            case Some(lastLine) =>
+              findEffectiveLines(filepath, next, Some((name, line)), effectiveLines :+ Right(lastLine, lineId))
+            case None =>
+              findEffectiveLines(filepath, next, Some((name, line)), effectiveLines)
+          }
+          case None => lastEffectiveLine match {
+            case Some(lastLine) => if (line.startsWith("|")) {
+              // 如果开头是竖线，保留换行
+              findEffectiveLines(filepath, next, Some((name, lastLine + "\n" + line)), effectiveLines)
+            } else {
+              findEffectiveLines(filepath, next, Some((name, lastLine + line)), effectiveLines)
+            }
+            case None =>
+              findEffectiveLines(filepath, next, None, effectiveLines :+
+                Left(ParseFailResult(lineId, filepath, "书写内容没有以标准格式开头")))
+          }
+        }
+      case Nil => effectiveLines
+    }
   }
 
   /**
