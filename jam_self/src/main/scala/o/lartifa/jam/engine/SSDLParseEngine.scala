@@ -161,7 +161,9 @@ object SSDLParseEngine extends Parser {
                 Left(ParseFailResult(currentLineId, filepath, "书写内容没有以标准格式开头")))
           }
         }
-      case Nil => effectiveLines
+      case Nil => lastEffectiveLine
+        .map(line => effectiveLines :+ Right(line))
+        .getOrElse(effectiveLines)
     }
   }
 
