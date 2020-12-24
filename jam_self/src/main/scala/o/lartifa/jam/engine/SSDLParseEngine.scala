@@ -140,12 +140,10 @@ object SSDLParseEngine extends Parser {
             val id = result.group("id")
             val newEffectiveLinePair = (EffectiveLine(name, content, id), currentLineId)
             lastEffectiveLine match {
-              case Some((effectiveLine, lastEffectiveLineId)) =>
-                findEffectiveLines(filepath, next, Some(newEffectiveLinePair),
-                  effectiveLines :+ Right(effectiveLine, lastEffectiveLineId))
+              case Some(effectiveLine) =>
+                findEffectiveLines(filepath, next, Some(newEffectiveLinePair), effectiveLines :+ Right(effectiveLine))
               case None =>
-                findEffectiveLines(filepath, next, Some(newEffectiveLinePair),
-                  effectiveLines)
+                findEffectiveLines(filepath, next, Some(newEffectiveLinePair), effectiveLines)
             }
           case None => lastEffectiveLine match {
             case Some(pair@(effectiveLine@EffectiveLine(_, lastLine, _), _)) => if (line.startsWith("|")) {
