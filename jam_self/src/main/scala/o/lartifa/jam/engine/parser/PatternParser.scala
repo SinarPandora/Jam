@@ -15,15 +15,15 @@ object PatternParser extends Parser {
   /**
    * 解析基础模式
    *
-   * @param string 待解析字符串
+   * @param content 待解析字符串
+   * @param id      行前 Id
    * @return 解析结果
    */
   @throws[ParseFailException]
-  def parseBasePattern(string: String): ParseResult = {
-    val result = Patterns.basePattern.findFirstMatchIn(string).getOrElse(throw ParseFailException("书写内容没有以标准格式开头"))
-    val stepId = Try(result.group("id").toLong).getOrElse(throw ParseFailException("步骤编号过大，过小或不合法"))
+  def parseBasePattern(content: String, id: String): ParseResult = {
+    val stepId = Try(id.toLong).getOrElse(throw ParseFailException("步骤编号过大，过小或不合法"))
     // 为引擎设置上下文
-    implicit val context: ParseEngineContext = preprocessStatement(result.group("content"), stepId)
+    implicit val context: ParseEngineContext = preprocessStatement(content, stepId)
     val processedStr = context.processedStr
     parseMatcher(processedStr, stepId) match {
       case Some((matcher, command)) =>

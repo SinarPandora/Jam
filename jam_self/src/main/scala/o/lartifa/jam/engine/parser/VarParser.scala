@@ -78,7 +78,7 @@ object VarParser extends Parser {
     val templates = Patterns.stringTemplatePattern.findAllMatchIn(string)
       .map(x => (x.group("template"), x.matched))
       .map { case (content, source) => StringTemplateResult(
-        parseRenderStrTemplate(content).getOrElse(throw ParseFailException("字符串模板格式不正确")), source)
+        parseRenderStrTemplate(content.stripMargin).getOrElse(throw ParseFailException("字符串模板格式不正确")), source)
       }
       .toList
     if (templates.isEmpty) None

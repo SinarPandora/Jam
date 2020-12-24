@@ -23,7 +23,7 @@ object Patterns {
    * 字符串模板匹配
    * 返回结果：template
    */
-  val stringTemplatePattern: Regex = """%\{(.+?)}%""".r("template")
+  val stringTemplatePattern: Regex = """(?s)%\{(.+?)}%""".r("template")
   // 1
   /**
    * 基本模式匹配

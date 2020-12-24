@@ -27,9 +27,13 @@ object SSDLParseEngine extends Parser {
 
   implicit val charset: Charset = Charset.forName("UTF-8")
 
+  type RawLine = (Option[String], String)
+  type RawLinePair = (RawLine, Int)
+
+  case class EffectiveLine(name: Option[String], line: String, id: String)
+
   type EffectiveLineIdPair = (EffectiveLine, Int)
 
-  type EffectiveLine = (Option[String], String)
 
   /**
    * 加载并解析 SSDL
@@ -88,7 +92,7 @@ object SSDLParseEngine extends Parser {
    * @return 解析结果
    */
   private def parseFileContent(file: File, chatInfo: ChatInfo): Iterable[Either[ParseFailResult, ParseSuccessResult]] = {
-    val lineWithIdxPairs: List[((Option[String], String), Int)] = file.lines
+    val lineWithIdxPairs: List[RawLinePair] = file.lines
       .map(_.trim)
       .map(line => {
         if (line.startsWith("(") || line.startsWith("（")) {
@@ -103,8 +107,10 @@ object SSDLParseEngine extends Parser {
     // 找到所有有效行并解析
     findEffectiveLines(file.pathAsString, lineWithIdxPairs)
       .map {
-        case failResult@Left(_) => failResult.asInstanceOf[Either[ParseFailResult, ParseSuccessResult]]
-        case Right(((name, step), idx)) => parseSSDL(step, file.pathAsString, idx + 1, chatInfo, name)
+        case failResult@Left(_) =>
+          failResult.asInstanceOf[Either[ParseFailResult, ParseSuccessResult]]
+        case Right((EffectiveLine(name, step, id), idx)) =>
+          parseSSDL(step, id, file.pathAsString, idx + 1, chatInfo, name)
       }
   }
 
@@ -122,29 +128,37 @@ object SSDLParseEngine extends Parser {
    * @return 全部有效行
    */
   @tailrec
-  private def findEffectiveLines(filepath: String, pairs: List[EffectiveLineIdPair], lastEffectiveLine: Option[EffectiveLine] = None,
+  private def findEffectiveLines(filepath: String, pairs: List[RawLinePair], lastEffectiveLine: Option[EffectiveLineIdPair] = None,
                                  effectiveLines: List[Either[ParseFailResult, EffectiveLineIdPair]] = Nil):
   List[Either[ParseFailResult, EffectiveLineIdPair]] = {
     pairs match {
-      case ((name, line), lineId) :: next =>
+      case ((name, line), currentLineId) :: next =>
         Patterns.basePattern.findFirstMatchIn(line) match {
           // 如果出现下一个带有 ID 的行，就说明上一个行组解析完毕了
-          case Some(_) => lastEffectiveLine match {
-            case Some(lastLine) =>
-              findEffectiveLines(filepath, next, Some((name, line)), effectiveLines :+ Right(lastLine, lineId))
-            case None =>
-              findEffectiveLines(filepath, next, Some((name, line)), effectiveLines)
-          }
+          case Some(result) =>
+            val content = result.group("content")
+            val id = result.group("id")
+            val newEffectiveLinePair = (EffectiveLine(name, content, id), currentLineId)
+            lastEffectiveLine match {
+              case Some((effectiveLine, lastEffectiveLineId)) =>
+                findEffectiveLines(filepath, next, Some(newEffectiveLinePair),
+                  effectiveLines :+ Right(effectiveLine, lastEffectiveLineId))
+              case None =>
+                findEffectiveLines(filepath, next, Some(newEffectiveLinePair),
+                  effectiveLines)
+            }
           case None => lastEffectiveLine match {
-            case Some(lastLine) => if (line.startsWith("|")) {
+            case Some(pair@(effectiveLine@EffectiveLine(_, lastLine, _), _)) => if (line.startsWith("|")) {
               // 如果开头是竖线，保留换行
-              findEffectiveLines(filepath, next, Some((name, lastLine + "\n" + line)), effectiveLines)
+              findEffectiveLines(filepath, next, Some(pair.copy(_1 = effectiveLine.copy(line = lastLine + "\n" + line))),
+                effectiveLines)
             } else {
-              findEffectiveLines(filepath, next, Some((name, lastLine + line)), effectiveLines)
+              findEffectiveLines(filepath, next, Some(pair.copy(_1 = effectiveLine.copy(line = lastLine + line))),
+                effectiveLines)
             }
             case None =>
               findEffectiveLines(filepath, next, None, effectiveLines :+
-                Left(ParseFailResult(lineId, filepath, "书写内容没有以标准格式开头")))
+                Left(ParseFailResult(currentLineId, filepath, "书写内容没有以标准格式开头")))
           }
         }
       case Nil => effectiveLines
@@ -155,13 +169,14 @@ object SSDLParseEngine extends Parser {
    * 解析 SSDL
    *
    * @param string   待解析字符串
+   * @param id       行前 Id
    * @param filepath 文件路径
    * @param lineId   行号
    * @param chatInfo 会话信息（针对非全局步骤）
    * @return 解析结果
    */
-  private def parseSSDL(string: String, filepath: String, lineId: Long, chatInfo: ChatInfo, name: Option[String]): Either[ParseFailResult, ParseSuccessResult] = {
-    Try(PatternParser.parseBasePattern(string)) match {
+  private def parseSSDL(string: String, id: String, filepath: String, lineId: Long, chatInfo: ChatInfo, name: Option[String]): Either[ParseFailResult, ParseSuccessResult] = {
+    Try(PatternParser.parseBasePattern(string, id)) match {
       case Failure(exception) => Left(ParseFailResult(lineId, filepath, exception.getMessage))
       case Success(result) => Right(ParseSuccessResult(lineId, filepath, result, chatInfo, name))
     }
