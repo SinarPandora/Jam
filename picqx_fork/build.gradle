@@ -1,0 +1,18 @@
+plugins {
+    id "idea"
+    id "java"
+    id "java-library"
+    id "io.freefair.lombok" version "5.3.0"
+}
+
+group 'lartifa.o'
+sourceCompatibility = "11"
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+dependencies {
+    api("com.github.hydevelop:PicqBotX:$bot_version")
+}
