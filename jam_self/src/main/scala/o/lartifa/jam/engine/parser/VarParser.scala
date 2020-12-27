@@ -102,7 +102,7 @@ object VarParser extends Parser {
         VarParseResult(VarKey(result.group("name"), VarKey.DB), result.matched)
       case varType if VarKey.Type.templateVarTemp.contains(varType) =>
         VarParseResult(new TemplateVar(VarKey(result.group("name"), VarKey.Temp),
-          parseTemplateVarKeySubType(varType)), result.matched)
+          parseTemplateVarKeySubType(varType.stripPrefix("*"))), result.matched)
       case varType if VarKey.Type.templateVarDB.contains(varType) =>
         VarParseResult(new TemplateVar(VarKey(result.group("name"), VarKey.DB),
           parseTemplateVarKeySubType(varType)), result.matched)
