@@ -78,6 +78,7 @@ object PatternParser extends Parser {
     // 3. 组装解析上下文
     val templateMap = templates.map(it => it._2 -> it._1.command).toMap
     val varKeysMap = varKeys.map(it => it._2 -> it._1.varKey).toMap
-    ParseEngineContext(stepId, varKeysMap, templateMap, string, processedStr)
+    // 4. 去除掉除模板外的全部空格
+    ParseEngineContext(stepId, varKeysMap, templateMap, string, processedStr.replaceAll("\\s", ""))
   }
 }
