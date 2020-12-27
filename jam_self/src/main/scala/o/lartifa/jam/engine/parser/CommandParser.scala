@@ -1,8 +1,8 @@
 package o.lartifa.jam.engine.parser
 
-import java.util.concurrent.TimeUnit
-
 import ammonite.ops.PipeableImplicit
+import cc.moecraft.icq.sender.message.components.ComponentContact.ContactType
+import cc.moecraft.icq.sender.message.components.ComponentMusic.MusicSourceType
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.model.commands.Ask.{AnyBody, CurrentSender}
 import o.lartifa.jam.model.commands._
@@ -11,6 +11,7 @@ import o.lartifa.jam.plugins.picbot._
 import o.lartifa.jam.plugins.rss.{RSSShowAll, RSSSubscribe, RSSUnSubscribe}
 import o.lartifa.jam.pool.JamContext
 
+import java.util.concurrent.TimeUnit
 import scala.collection.parallel.CollectionConverters._
 import scala.util.Try
 
@@ -49,10 +50,12 @@ object CommandParser extends Parser {
       parseCatchParameters _, parseMessageSend _, parseGoto _, parseOneByOne _, parseParamOpt _,
       parseRandomNumber _, parseRandomGoto _, parseLoopGoto _, parseParamDel _, parseWaiting _,
       parseSetPicFetcherMode _, parseSetPicRating _, parseRunTaskNow _, parseFetchAndSendPic _,
-      parseRollEveryThing _, parseBanSomeOneInGroup _) ++ regex ++ List(
+      parseRollEveryThing _, parseBanSomeOneInGroup _, parseSendVideo _, parseShareLocation _,
+      parseShareURL _, parseShareContact _, parseShareMusic _) ++ regex ++ List(
       // 包含类模式放在后边
       parseDoNoting _, parseGroupWholeBan _, parseGroupWholeUnBan _, parseShowPicInfo _,
-      parseRSSSubscribe _, parseRSSUnSubscribe _, parseRSSShowAll _, parseWhatICanDo _
+      parseRSSSubscribe _, parseRSSUnSubscribe _, parseRSSShowAll _, parseWhatICanDo _,
+      parseQQDice _, parseQQRPS _, parseShake _
     ) ++ contains
   }
 
@@ -526,4 +529,114 @@ object CommandParser extends Parser {
    */
   private def parseWhatICanDo(string: String, context: ParseEngineContext): Option[WhatICanDo.type] =
     if (string.contains(CommandPattern.whatICanDo)) Some(WhatICanDo) else None
+
+  /**
+   * 解析发送 QQ 骰子指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseQQDice(string: String, context: ParseEngineContext): Option[QQDice.type] =
+    if (string.contains(CommandPattern.qqDice)) Some(QQDice) else None
+
+  /**
+   * 解析发送 QQ 猜拳指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseQQRPS(string: String, context: ParseEngineContext): Option[QQRPS.type] =
+    if (string.contains(CommandPattern.qqRPS)) Some(QQRPS) else None
+
+  /**
+   * 解析抖一抖指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseShake(string: String, context: ParseEngineContext): Option[Shake.type] =
+    if (string.contains(CommandPattern.shake)) Some(Shake) else None
+
+  /**
+   * 解析发送视频指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseSendVideo(string: String, context: ParseEngineContext): Option[SendVideo] = {
+    CommandPattern.sendVideo.findFirstMatchIn(string).map(result => {
+      SendVideo(context.getTemplate(result.group("file")))
+    })
+  }
+
+  /**
+   * 解析分享位置指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseShareLocation(string: String, context: ParseEngineContext): Option[ShareLocation] = {
+    CommandPattern.shareLocation.findFirstMatchIn(string).map(result => {
+      import context.getTemplate
+      import result.group
+      ShareLocation(getTemplate(group("lat")), getTemplate(group("lon")),
+        getTemplate(group("title")), getTemplate(group("content")))
+    })
+  }
+
+  /**
+   * 解析分享链接指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseShareURL(string: String, context: ParseEngineContext): Option[ShareURL] = {
+    CommandPattern.shareURL.findFirstMatchIn(string).map(result => {
+      import context.getTemplate
+      import result.group
+      ShareURL(getTemplate(group("url")), getTemplate(group("title")),
+        getTemplate(group("content")), getTemplate(group("image")))
+    })
+  }
+
+  /**
+   * 解析分享聊天指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseShareContact(string: String, context: ParseEngineContext): Option[ShareContact] = {
+    CommandPattern.shareContact.findFirstMatchIn(string).map(result => {
+      val contactType = result.group("type") match {
+        case ShareContact.Friend.str => ContactType.qq
+        case ShareContact.Group.str => ContactType.group
+      }
+      ShareContact(context.getTemplate(result.group("qId")), contactType)
+    })
+  }
+
+  /**
+   * 解析分享音乐指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseShareMusic(string: String, context: ParseEngineContext): Option[ShareMusic] = {
+    CommandPattern.shareMusic.findFirstMatchIn(string).map(result => {
+      val sourceType = result.group("type") match {
+        case ShareMusic.Netease.str => MusicSourceType.netease
+        case ShareMusic.QQ.str => MusicSourceType.qq
+        case ShareMusic.XM.str => MusicSourceType.valueOf("xm") // Scala highlight error
+      }
+      ShareMusic(context.getTemplate(result.group("mId")), sourceType)
+    })
+  }
 }

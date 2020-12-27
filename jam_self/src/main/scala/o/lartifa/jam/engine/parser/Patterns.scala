@@ -155,6 +155,26 @@ object Patterns {
     val banSomeOneInGroup: Regex = """禁言%\{(.+?)}%时长%\{(.+?)}%(分钟|小时|天)""".r("qId", "time", "unit")
     // 展示果酱可以做什么
     val whatICanDo: String = "展示一条可用的触发词"
+    // QQ 骰子
+    val qqDice: String = "发送QQ骰子"
+    // QQ 猜拳
+    val qqRPS: String = "发送石头剪刀布"
+    // 抖一抖
+    val shake: String = "发送抖一抖"
+    // 发送视频
+    val sendVideo: Regex = """发送视频%\{(.+?)}%""".r("file")
+    // 分享聊天
+    val shareContact: Regex = """分享(群聊|好友)%\{(.+?)}%""".r("type", "qId")
+    // 分享地理位置
+    val shareLocation: Regex =
+      """分享地理位置[：:]经度%\{(.+?)}%纬度%\{(.+?)}%标题%\{(.+?)}%内容%\{(.+?)}%"""
+        .r("lat", "lon", "title", "content")
+    // 分享链接
+    val shareURL: Regex =
+      """分享链接[：:]地址%\{(.+?)}%标题%\{(.+?)}%内容%\{(.+?)}%图片%\{(.+?)}%"""
+        .r("url", "title", "content", "image")
+    // 分享音乐
+    val shareMusic: Regex = """分享(网易|QQ|虾米)音乐%\{(.+?)}%""".r("type", "mId")
   }
 
 }
