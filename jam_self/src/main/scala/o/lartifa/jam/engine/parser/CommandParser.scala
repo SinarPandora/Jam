@@ -634,7 +634,7 @@ object CommandParser extends Parser {
       val sourceType = result.group("type") match {
         case ShareMusic.Netease.str => MusicSourceType.netease
         case ShareMusic.QQ.str => MusicSourceType.qq
-        case ShareMusic.XM.str => MusicSourceType.valueOf("xm") // Scala highlight error
+        case ShareMusic.XM.str => MusicSourceType.xm
       }
       ShareMusic(context.getTemplate(result.group("mId")), sourceType)
     })
