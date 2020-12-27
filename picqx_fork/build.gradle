@@ -14,5 +14,8 @@ repositories {
 }
 
 dependencies {
-    api("com.github.hydevelop:PicqBotX:$bot_version")
+    api("cn.hutool:hutool-all:5.1.0")
+    api("com.github.hydevelop:HyLogger:4.0.254")
+
+    testImplementation("junit:junit:4.13.1")
 }

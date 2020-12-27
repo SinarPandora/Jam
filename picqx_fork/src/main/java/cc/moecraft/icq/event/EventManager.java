@@ -4,9 +4,6 @@ import cc.moecraft.icq.PicqBotX;
 import cc.moecraft.icq.command.CommandListener;
 import cc.moecraft.icq.event.events.local.*;
 import cc.moecraft.icq.event.events.message.*;
-import cc.moecraft.icq.event.events.meta.EventMeta;
-import cc.moecraft.icq.event.events.meta.EventMetaHeartbeat;
-import cc.moecraft.icq.event.events.meta.EventMetaLifecycle;
 import cc.moecraft.icq.event.events.notice.EventNotice;
 import cc.moecraft.icq.event.events.notice.EventNoticeFriendAdd;
 import cc.moecraft.icq.event.events.notice.EventNoticeGroupBan;
@@ -47,7 +44,6 @@ import static java.util.Arrays.asList;
  *
  * @author Hykilpikonna
  */
-@SuppressWarnings("unused")
 @Getter
 public class EventManager
 {
@@ -58,9 +54,9 @@ public class EventManager
     @Setter
     private CommandListener commandListener;
 
-    private final ArrayList<IcqListener> registeredListeners = new ArrayList<>();
+    private ArrayList<IcqListener> registeredListeners = new ArrayList<>();
 
-    private final HashMap<String, ArrayList<RegisteredListenerMethod>> registeredMethods = new HashMap<>();
+    private HashMap<String, ArrayList<RegisteredListenerMethod>> registeredMethods = new HashMap<>();
 
     /**
      * 所有可以注册的事件的类
@@ -68,6 +64,7 @@ public class EventManager
      * 因为这样可以减少 ≈600ms 的启动延迟
      */
     private static final List<Class<? extends Event>> eventClasses = asList(
+            EventLocal.class,
             EventLocalException.class,
             EventLocalHttpFail.class,
             EventLocalHttpReceive.class,
@@ -75,7 +72,6 @@ public class EventManager
             EventLocalSendGroupMessage.class,
             EventLocalSendPrivateMessage.class,
             EventLocalSendMessage.class,
-            EventLocal.class,
 
             EventDiscussMessage.class,
             EventGroupMessage.class,
@@ -102,13 +98,7 @@ public class EventManager
             EventFriendRequest.class,
             EventGroupAddRequest.class,
             EventGroupInviteRequest.class,
-            EventRequest.class,
-
-            EventMetaLifecycle.class,
-            EventMetaHeartbeat.class,
-            EventMeta.class,
-
-            Event.class
+            EventRequest.class
     );
 
     public EventManager(PicqBotX bot)
