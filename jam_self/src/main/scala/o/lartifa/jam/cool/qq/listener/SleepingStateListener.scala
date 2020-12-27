@@ -25,10 +25,8 @@ object SleepingStateListener extends IcqListener {
    */
   @EventHandler
   def listen(eventMessage: EventMessage): Unit = {
-    if (Random.nextInt(4) == 0) {
-      if (eventMessage.isInstanceOf[EventPrivateMessage] || eventMessage.message.contains(atMyself)) {
-        balderdash.size |> Random.nextInt |> balderdash |> eventMessage.respond
-      }
+    if (eventMessage.isInstanceOf[EventPrivateMessage] || eventMessage.message.contains(atMyself)) {
+      balderdash.size |> Random.nextInt |> balderdash |> eventMessage.respond
     }
   }
 
