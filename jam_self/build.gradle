@@ -69,7 +69,7 @@ dependencies {
     api("org.scala-lang.modules:scala-parallel-collections_2.13:0.2.0")
 
     // Core
-    api(project(":picqx_fork"))
+    api(project(":picq_bot_x_fork"))
 
     // Meta
     api("com.jayway.jsonpath:json-path:2.4.0")
