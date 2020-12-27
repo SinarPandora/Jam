@@ -2,7 +2,7 @@ package o.lartifa.jam.model
 
 import cc.moecraft.icq.sender.message.components.{ComponentAt, ComponentFace, ComponentImage}
 import o.lartifa.jam.common.exception.ExecutionException
-import o.lartifa.jam.model.TemplateVar.TemplateVarSubType
+import o.lartifa.jam.model.TemplateVarKey.TemplateVarSubType
 import o.lartifa.jam.pool.JamContext
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -14,7 +14,7 @@ import scala.util.Try
  * Author: sinar
  * 2020/12/26 23:22
  */
-class TemplateVar(valueVarKey: VarKey, subType: TemplateVarSubType) extends VarKey("模板变量", VarKey.Template) {
+class TemplateVarKey(valueVarKey: VarKey, subType: TemplateVarSubType) extends VarKey("模板变量", valueVarKey.category) {
   /**
    * 获取变量
    *
@@ -25,15 +25,15 @@ class TemplateVar(valueVarKey: VarKey, subType: TemplateVarSubType) extends VarK
     implicit val exec: ExecutionContext = context.executionContext
     valueVarKey.query.map(_.getOrElse(valueVarKey.name)).map { value =>
       subType match {
-        case TemplateVar.At =>
+        case TemplateVarKey.At =>
           val qId = Try(value.toLong).getOrElse(throw ExecutionException(s"At参数不是合法的QQ号$value"))
           Future.successful(new ComponentAt(qId))
-        case TemplateVar.QQFace =>
+        case TemplateVarKey.QQFace =>
           val fId = Try(value.toInt).getOrElse(throw ExecutionException(s"QQ小表情Id不合法$value"))
           Future.successful(new ComponentFace(fId))
-        case TemplateVar.Image =>
+        case TemplateVarKey.Image =>
           Future.successful(new ComponentImage(value))
-        case TemplateVar.Command =>
+        case TemplateVarKey.Command =>
           val stepId = Try(value.toLong).getOrElse(throw ExecutionException(s"指令编号不合法$value"))
           JamContext.stepPool.get().getById(stepId)
             .getOrElse(throw ExecutionException(s"编号为${stepId}的指令不存在"))
@@ -43,7 +43,7 @@ class TemplateVar(valueVarKey: VarKey, subType: TemplateVarSubType) extends VarK
   }
 }
 
-object TemplateVar {
+object TemplateVarKey {
 
   sealed abstract class TemplateVarSubType(val prefixes: Set[String])
 
