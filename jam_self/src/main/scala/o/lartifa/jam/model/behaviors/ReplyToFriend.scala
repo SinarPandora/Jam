@@ -8,6 +8,7 @@ import o.lartifa.jam.model.CommandExecuteContext
 
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.language.implicitConversions
 
 /**
  * 行为：回复给朋友
@@ -57,4 +58,14 @@ trait ReplyToFriend {
    */
   protected def reply(message: String, raw: Boolean = false)(implicit context: CommandExecuteContext): ReturnData[RMessageReturnData] =
     context.eventMessage.respond(message, raw)
+
+  /**
+   * 快速回复消息
+   *
+   * @param anyThing 任何对象
+   * @param context  指令上下文
+   * @return 操作结果
+   */
+  protected def reply(anyThing: Any)(implicit context: CommandExecuteContext): ReturnData[RMessageReturnData] =
+    context.eventMessage.respond(anyThing.toString)
 }

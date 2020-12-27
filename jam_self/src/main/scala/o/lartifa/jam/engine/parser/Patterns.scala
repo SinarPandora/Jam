@@ -18,7 +18,7 @@ object Patterns {
    * 变量匹配
    * 返回结果：type name
    */
-  val varKeyPattern: Regex = """\{(临时变量|\*变量|变量)(.+?)}""".r("type", "name")
+  val varKeyPattern: Regex = """\{(临时变量|\*变量|变量|\*[@#&P图$]|[@#&P图$])(.+?)}""".r("type", "name")
   /**
    * 字符串模板匹配
    * 返回结果：template

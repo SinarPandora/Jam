@@ -1,8 +1,8 @@
 package o.lartifa.jam.engine.parser
 
 import o.lartifa.jam.common.exception.ParseFailException
-import o.lartifa.jam.model.VarKey
 import o.lartifa.jam.model.commands.RenderStrTemplate
+import o.lartifa.jam.model.{TemplateVar, VarKey}
 
 import scala.util.matching.Regex.Match
 
@@ -49,6 +49,9 @@ object VarParser extends Parser {
    */
   def parseRenderStrTemplate(string: String): Option[RenderStrTemplate] = {
     if (string.isEmpty) return None
+    // 1. 找到其中全部模板变量
+    // 2. 解析模板变量中的子字符串模板
+
     // 1. 找到其中全部变量
     val vars: Seq[VarParseResult] = parseVars(string).getOrElse(return Some(RenderStrTemplate(string, Seq.empty)))
     // 2. 将变量扣除，位置换成 %s
@@ -92,10 +95,32 @@ object VarParser extends Parser {
    * @return 变量键
    */
   private def matchToVarKey(result: Match): VarParseResult = {
-    val `type` = result.group("type") match {
-      case x if VarKey.Type.temp.contains(x) => VarKey.Temp
-      case x if VarKey.Type.db.contains(x) => VarKey.DB
+    result.group("type") match {
+      case x if VarKey.Type.temp.contains(x) =>
+        VarParseResult(VarKey(result.group("name"), VarKey.Temp), result.matched)
+      case x if VarKey.Type.db.contains(x) =>
+        VarParseResult(VarKey(result.group("name"), VarKey.DB), result.matched)
+      case varType if VarKey.Type.templateVarTemp.contains(varType) =>
+        VarParseResult(new TemplateVar(VarKey(result.group("name"), VarKey.Temp),
+          parseTemplateVarKeySubType(varType)), result.matched)
+      case varType if VarKey.Type.templateVarDB.contains(varType) =>
+        VarParseResult(new TemplateVar(VarKey(result.group("name"), VarKey.DB),
+          parseTemplateVarKeySubType(varType)), result.matched)
     }
-    VarParseResult(VarKey(result.group("name"), `type`), result.matched)
+  }
+
+  /**
+   * 解析模板变量子类型
+   *
+   * @param varType 变量类型
+   * @return 子类型
+   */
+  private def parseTemplateVarKeySubType(varType: String): TemplateVar.TemplateVarSubType = {
+    varType match {
+      case x if TemplateVar.At.prefixes.contains(x) => TemplateVar.At
+      case x if TemplateVar.Image.prefixes.contains(x) => TemplateVar.Image
+      case x if TemplateVar.QQFace.prefixes.contains(x) => TemplateVar.QQFace
+      case x if TemplateVar.Command.prefixes.contains(x) => TemplateVar.Command
+    }
   }
 }

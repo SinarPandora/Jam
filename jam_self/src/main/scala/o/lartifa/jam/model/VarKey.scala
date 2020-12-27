@@ -1,5 +1,6 @@
 package o.lartifa.jam.model
 
+import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.VarKey.Category
 
 import scala.concurrent.Future
@@ -23,6 +24,7 @@ case class VarKey(name: String, category: Category) {
     category match {
       case VarKey.DB => context.vars.update(name, value)
       case VarKey.Temp => context.tempVars.update(name, value)
+      case VarKey.Template => Future.failed(ExecutionException("模板变量不应该被更新"))
     }
   }
 
@@ -37,6 +39,7 @@ case class VarKey(name: String, category: Category) {
     category match {
       case VarKey.DB => context.vars.updateOrElseSet(name, value)
       case VarKey.Temp => context.tempVars.updateOrElseSet(name, value)
+      case VarKey.Template => Future.failed(ExecutionException("模板变量不应该被更新"))
     }
   }
 
@@ -51,6 +54,7 @@ case class VarKey(name: String, category: Category) {
     category match {
       case VarKey.DB => context.vars.updateOrElseUse(name, value)
       case VarKey.Temp => context.tempVars.updateOrElseUse(name, value)
+      case VarKey.Template => Future.failed(ExecutionException("模板变量不应该被更新"))
     }
   }
 
@@ -64,6 +68,7 @@ case class VarKey(name: String, category: Category) {
     category match {
       case VarKey.DB => context.vars.get(name)
       case VarKey.Temp => context.tempVars.get(name)
+      case VarKey.Template => Future.failed(ExecutionException("当前变量不是模板变量"))
     }
   }
 
@@ -78,6 +83,7 @@ case class VarKey(name: String, category: Category) {
     category match {
       case VarKey.DB => context.vars.getOrElseUpdate(name, orElse)
       case VarKey.Temp => context.tempVars.getOrElseUpdate(name, orElse)
+      case VarKey.Template => Future.failed(ExecutionException("模板变量不应该被更新"))
     }
   }
 
@@ -91,6 +97,7 @@ case class VarKey(name: String, category: Category) {
     category match {
       case VarKey.DB => context.vars.delete(name)
       case VarKey.Temp => context.tempVars.delete(name)
+      case VarKey.Template => Future.failed(ExecutionException("模板变量不应该被删除"))
     }
   }
 }
@@ -103,9 +110,13 @@ object VarKey {
 
   case object Temp extends Category("临时变量")
 
+  case object Template extends Category("模板变量")
+
   object Type {
-    val temp: Set[String] = Set("临时变量", "*变量")
-    val db: Set[String] = Set("变量")
+    val temp: Set[String] = Set("临时变量", "*变量", "*$")
+    val db: Set[String] = Set("变量", "$")
+    val templateVarDB: Set[String] = Set("@", "#", "&", "P", "图")
+    val templateVarTemp: Set[String] = templateVarDB.map("*" + _)
   }
 
 }
