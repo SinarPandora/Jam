@@ -1,4 +1,4 @@
-package o.lartifa.jam.engine.parser
+package o.lartifa.jam.engine.ssdl.parser
 
 import ammonite.ops.PipeableImplicit
 import o.lartifa.jam.model.conditions.{Condition, VarCondition}

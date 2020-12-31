@@ -1,4 +1,4 @@
-package o.lartifa.jam.engine.parser
+package o.lartifa.jam.engine.ssdl.parser
 
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.model.Executable

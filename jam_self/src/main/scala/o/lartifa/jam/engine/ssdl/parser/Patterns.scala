@@ -1,4 +1,4 @@
-package o.lartifa.jam.engine.parser
+package o.lartifa.jam.engine.ssdl.parser
 
 import scala.util.matching.Regex
 

@@ -1,17 +1,16 @@
 package o.lartifa.jam.bionic
 
-import java.time.LocalTime
-
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import com.typesafe.config.Config
 import o.lartifa.jam.common.config.{JamCharacter, JamConfig}
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.common.util.MasterUtil
-import o.lartifa.jam.engine.parser.Parser
+import o.lartifa.jam.engine.ssdl.parser.Parser
 import o.lartifa.jam.model.tasks.{ChangeRespFrequency, GoASleep}
 import o.lartifa.jam.pool.JamContext
 
+import java.time.LocalTime
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Try}
 

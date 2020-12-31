@@ -3,7 +3,7 @@ package o.lartifa.jam.engine
 import better.files.File
 import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.common.exception.ParseFailException
-import o.lartifa.jam.engine.parser.{CommandParser, Parser, PatternParser, Patterns}
+import o.lartifa.jam.engine.ssdl.parser.{CommandParser, Parser, PatternParser, Patterns}
 import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.model.patterns.ParseResult
 

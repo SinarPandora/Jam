@@ -1,6 +1,6 @@
-package o.lartifa.jam.engine.parser
+package o.lartifa.jam.engine.ssdl.parser
 
-import o.lartifa.jam.engine.parser.SSDLCommandParser.CommandMatchType
+import o.lartifa.jam.engine.ssdl.parser.SSDLCommandParser.CommandMatchType
 import o.lartifa.jam.model.commands.Command
 
 /**
