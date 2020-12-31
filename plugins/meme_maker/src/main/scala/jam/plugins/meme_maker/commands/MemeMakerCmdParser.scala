@@ -1,6 +1,6 @@
 package jam.plugins.meme_maker.commands
 
-import o.lartifa.jam.engine.parser.{ParseEngineContext, SSDLCommandParser}
+import o.lartifa.jam.engine.ssdl.parser.{ParseEngineContext, SSDLCommandParser}
 
 /**
  * Meme maker 指令解析器

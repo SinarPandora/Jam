@@ -2,7 +2,7 @@ package jam.plugins.cool.apis.commands
 
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.cool.qq.listener.asking.{Answerer, Result}
-import o.lartifa.jam.engine.parser.{ParseEngineContext, SSDLCommandParser}
+import o.lartifa.jam.engine.ssdl.parser.{ParseEngineContext, SSDLCommandParser}
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.Command
 import o.lartifa.jam.pool.JamContext
