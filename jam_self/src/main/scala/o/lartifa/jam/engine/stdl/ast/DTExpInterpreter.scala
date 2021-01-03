@@ -4,6 +4,7 @@ import net.redhogs.cronparser.CronExpressionDescriptor
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.engine.stdl.ast.DefaultInterpretProtocol._
 
+import java.util.Locale
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -14,7 +15,7 @@ import scala.util.{Failure, Success, Try}
  */
 object DTExpInterpreter {
 
-  case class InterpreterResult(exp: String, description: String)
+  case class InterpreterResult(cronExp: String, description: String)
 
   /**
    * 解析并解释时间表达式
@@ -56,6 +57,6 @@ object DTExpInterpreter {
    * @return 校验结果
    */
   def validationCronExp(cronExp: String): Option[String] = {
-    Try(CronExpressionDescriptor.getDescription(cronExp)).toOption
+    Try(CronExpressionDescriptor.getDescription(cronExp, Locale.CHINESE)).toOption
   }
 }

@@ -2,8 +2,8 @@ package o.lartifa.jam.engine
 
 import better.files.StringExtensions
 import cc.moecraft.icq.PicqBotX
+import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
-import cc.moecraft.logger.{HyLogger, LogLevel}
 import o.lartifa.jam.bionic.BehaviorInitializer
 import o.lartifa.jam.common.config.{JamConfig, JamPluginConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
@@ -11,11 +11,15 @@ import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.cool.qq.command.MasterCommands
 import o.lartifa.jam.cool.qq.listener.{EventMessageListener, SystemEventListener}
 import o.lartifa.jam.database.temporary.Memory
-import o.lartifa.jam.engine.SSDLParseEngine.{ParseFailResult, ParseSuccessResult}
+import o.lartifa.jam.engine.SXDLParseEngine.{SSDLParseSuccessResult, STDLParseSuccessResult, SXDLParseFailResult, SXDLParseSuccessResult}
+import o.lartifa.jam.engine.stdl.ast.DTExpInterpreter.InterpreterResult
+import o.lartifa.jam.engine.stdl.parser.STDLParseResult.Succ
 import o.lartifa.jam.model.patterns.ContentMatcher
+import o.lartifa.jam.model.tasks.SimpleTask
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext, Step}
 import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.plugins.rss.SubscriptionPool
+import o.lartifa.jam.pool.CronTaskPool.TaskDefinition
 import o.lartifa.jam.pool.{CronTaskPool, JamContext, StepPool}
 
 import scala.async.Async._
@@ -58,7 +62,7 @@ object JamLoader {
     Memory.init(args.contains("--flyway_repair"))
     await(JamPluginLoader.initJamPluginSystems())
     JamContext.cronTaskPool.getAndSet(CronTaskPool().autoRefreshTaskDefinition())
-    await(initSSDL())
+    await(initSXDL())
     client.getEventManager.registerListeners(EventMessageListener, SystemEventListener)
     client.getCommandManager.registerCommands(MasterCommands.commands: _*)
     Runtime.getRuntime.addShutdownHook(shutdownHookThread)
@@ -80,7 +84,7 @@ object JamLoader {
       CoolQQLoader.reloadMasterCommands()
       JamContext.cronTaskPool.get().autoRefreshTaskDefinition()
       await(BehaviorInitializer.init())
-      await(initSSDL())
+      await(initSXDL())
       runBootTasks()
       JamContext.initLock.getAndSet(false)
       MasterUtil.notifyAndLog("加载完毕！")
@@ -116,11 +120,11 @@ object JamLoader {
   }
 
   /**
-   * 初始化并解析 SSDL
+   * 初始化并解析 SXDL
    */
-  private def initSSDL(): Future[Unit] = async {
-    await(loadSSDL()).foreach(errorMessages =>
-      MasterUtil.notifyAndLog(errorMessages.mkString("\n"), LogLevel.ERROR))
+  private def initSXDL(): Future[Unit] = async {
+    await(loadSXDL()).foreach(errorMessages =>
+      MasterUtil.notifyAndLog(errorMessages.mkString("\n")))
   }
 
   /**
@@ -128,15 +132,29 @@ object JamLoader {
    *
    * @return 错误信息
    */
-  private def loadSSDL(): Future[Option[List[String]]] = {
-    logger.log(s"${AnsiColor.GREEN}SSDL脚本解析开始")
-    SSDLParseEngine.load().map(result => {
-      val success: Option[Seq[Either[ParseFailResult, ParseSuccessResult]]] = result.get(true)
-      val fails: Option[Seq[Either[ParseFailResult, SSDLParseEngine.ParseSuccessResult]]] = result.get(false)
-      if (fails.isDefined) handleParseFail(fails.get.flatMap(_.left.toSeq))
-      else if (success.isDefined) handleParseResult(success.get.flatMap(_.toSeq))
+  private def loadSXDL(): Future[Option[List[String]]] = {
+    logger.log(s"${AnsiColor.GREEN}SSDL&STDL脚本解析开始")
+    SXDLParseEngine.load().map(result => {
+      val success: Option[Seq[Either[SXDLParseFailResult, SXDLParseSuccessResult]]] = result.get(true)
+      val fails: Option[Seq[Either[SXDLParseFailResult, SXDLParseSuccessResult]]] = result.get(false)
+      if (fails.isDefined) {
+        Some("脚本内容存在问题，请确认：" +: handleParseFail(fails.get.flatMap(_.left.toSeq)).getOrElse(List.empty))
+      } else if (success.isDefined) {
+        val stepDefs = ListBuffer.empty[SSDLParseSuccessResult]
+        val taskDefs = ListBuffer.empty[STDLParseSuccessResult]
+        success.get.flatMap(_.toSeq).foreach {
+          case x: SSDLParseSuccessResult => stepDefs.addOne(x)
+          case x: STDLParseSuccessResult => taskDefs.addOne(x)
+        }
+        val stepSetupMsg = handleSSDLParseResult(stepDefs.toSeq).getOrElse(List.empty)
+        val taskSetupMsg = handleSTDLParseResult(taskDefs.toSeq).getOrElse(List.empty)
+        Some(stepSetupMsg ++ taskSetupMsg)
+      }
       else None
-    }).recover(e => Some(List(e.getMessage)))
+    }).recover(e => {
+      logger.error(e)
+      Some("解析引擎出现未知错误：" +: List(e.getMessage))
+    })
   }
 
   /**
@@ -145,20 +163,20 @@ object JamLoader {
    * @param fails 解析失败结果列表
    * @return 错误信息
    */
-  def handleParseFail(fails: Seq[ParseFailResult]): Option[List[String]] = Some {
+  def handleParseFail(fails: Seq[SXDLParseFailResult]): Option[List[String]] = Some {
     fails.map {
-      case ParseFailResult(lineId, filepath, message) =>
+      case SXDLParseFailResult(lineId, filepath, message) =>
         s"""文件：${filepath.stripPrefix(SystemConfig.ssdlPath)}，行数：$lineId，$message""".stripMargin
     }.toList
   }
 
   /**
-   * 处理解析成功的结果
+   * 处理 SSDL 解析成功的结果
    *
    * @param success 解析成功结果列表
-   * @return 错误信息
+   * @return 输出内容
    */
-  private def handleParseResult(success: Seq[ParseSuccessResult]): Option[List[String]] = {
+  private def handleSSDLParseResult(success: Seq[SSDLParseSuccessResult]): Option[List[String]] = {
     val steps = mutable.Map[Long, (Option[String], ChatInfo, Step)]()
     val globalMatchers = ListBuffer[ContentMatcher]()
     val globalPrivateMatchers = ListBuffer[ContentMatcher]()
@@ -186,7 +204,7 @@ object JamLoader {
         }
     }
     if (errorMessage.nonEmpty) {
-      Some(errorMessage.toList)
+      Some("装载步骤时出现错误，请确认：" +: errorMessage.toList)
     } else {
       // 正则 - 开头 - 结尾 - 等于 - 包含
       JamContext.globalMatchers.getAndSet(sortMatchers(globalMatchers))
@@ -201,20 +219,59 @@ object JamLoader {
         }.toMap
       }
       JamContext.stepPool.getAndSet(StepPool(steps.toMap))
-      logger.log(s"${AnsiColor.GREEN}共加载${
-        globalMatchers.length +
-          globalGroupMatchers.length +
-          globalPrivateMatchers.length +
-          customMatchers.values.map(_.values.size).sum
-      }条SSDL捕获规则")
-      logger.log(s"${AnsiColor.GREEN}共加载${steps.size}条SSDL步骤")
-      logger.log(s"${AnsiColor.GREEN}SSDL脚本解析结束")
-      None
+      logger.log(s"${AnsiColor.GREEN}${steps.size}条SSDL脚本已全部成功载入！")
+      Some(List(
+        "Compile Success! 0 Warning, 0 Error",
+        s"已载入${
+          globalMatchers.length +
+            globalGroupMatchers.length +
+            globalPrivateMatchers.length +
+            customMatchers.values.map(_.values.size).sum
+        }条SSDL捕获规则与${steps.size}条行为步骤"
+      ))
+    }
+  }
+
+  /**
+   * 处理 STDL 解析成功的结果
+   *
+   * @param success 解析成功结果列表
+   * @return 输出内容
+   */
+  private def handleSTDLParseResult(success: Seq[STDLParseSuccessResult]): Option[List[String]] = {
+    val errorMessage = mutable.ListBuffer[String]()
+    val taskDefs: mutable.Map[String, TaskDefinition] = mutable.Map.empty
+    val instance: ListBuffer[SimpleTask] = ListBuffer.empty
+    success.foreach {
+      case STDLParseSuccessResult(_, _, Succ(id, InterpreterResult(cronExp, description), executable), chatInfo, name) =>
+        val task = SimpleTask(id = id, name = name, cronExp = cronExp, chatInfo = chatInfo, executable = executable)
+        if (!taskDefs.contains(task.name)) {
+          logger.debug(s"任务：${task.name}已被设置在：$description")
+          val taskDef = TaskDefinition(task.name, classOf[SimpleTask], isSingleton = true, simpleTaskInstance = Some(task))
+          taskDefs += task.name -> taskDef
+          instance += task
+        } else {
+          errorMessage += s"存在重名的任务：${task.name}"
+        }
+    }
+    JamContext.cronTaskPool.get().refreshSimpleTaskDefinitions(taskDefs.toMap)
+    instance.foreach(it => it.setUp(it.cronExp))
+    if (errorMessage.nonEmpty) {
+      Some(errorMessage.toList)
+    } else {
+      Some(
+        List(
+          "Compile Success! 0 Warning, 0 Error",
+          s"已载入${instance.length}条计划任务"
+        )
+      )
     }
   }
 
   /**
    * Matcher 排序
+   * 相等 > 正则 > 开头 > 结尾 > 包含
+   * 编号大 > 编号小
    *
    * @param matchers 无序 Matcher 列表
    * @return 排序后的 Matcher 列表
@@ -222,11 +279,11 @@ object JamLoader {
   private def sortMatchers(matchers: ListBuffer[ContentMatcher]): List[ContentMatcher] = {
     val matcherMap = matchers.groupBy(_.`type`)
     List() ++
-      matcherMap.getOrElse(ContentMatcher.EQUALS, List.empty).sortBy(_.stepId) ++
-      matcherMap.getOrElse(ContentMatcher.REGEX, List.empty).sortBy(_.stepId) ++
-      matcherMap.getOrElse(ContentMatcher.STARTS_WITH, List.empty).sortBy(_.stepId) ++
-      matcherMap.getOrElse(ContentMatcher.ENDS_WITH, List.empty).sortBy(_.stepId) ++
-      matcherMap.getOrElse(ContentMatcher.CONTAINS, List.empty).sortBy(_.stepId)
+      matcherMap.getOrElse(ContentMatcher.EQUALS, List.empty).sortBy(_.stepId * -1) ++
+      matcherMap.getOrElse(ContentMatcher.REGEX, List.empty).sortBy(_.stepId * -1) ++
+      matcherMap.getOrElse(ContentMatcher.STARTS_WITH, List.empty).sortBy(_.stepId * -1) ++
+      matcherMap.getOrElse(ContentMatcher.ENDS_WITH, List.empty).sortBy(_.stepId * -1) ++
+      matcherMap.getOrElse(ContentMatcher.CONTAINS, List.empty).sortBy(_.stepId * -1)
   }
 
   /**
@@ -238,20 +295,13 @@ object JamLoader {
   def reloadSSDL()(implicit context: CommandExecuteContext): Future[Unit] = async {
     if (!JamContext.initLock.get()) {
       JamContext.initLock.set(true)
-      context.eventMessage.respond("正在重新解析 SSDL（简易步骤定义语言） 脚本")
-      await(loadSSDL()) match {
-        case Some(messages) =>
-          context.eventMessage.respond("脚本内容存在问题，请确认：")
-          messages.sliding(10).foreach(lines => context.eventMessage.respond(lines.mkString("\n")))
-        case None =>
-          context.eventMessage.respond("Compile Success! 0 Warning, 0 Error")
-          context.eventMessage.respond(s"共加载${JamContext.globalMatchers.get().length}条捕获信息")
-          context.eventMessage.respond(s"共加载${JamContext.stepPool.get().size}条步骤")
+      context.eventMessage.respond("λ> 已连接到解析器实例，正在重新解析SXDL（简易定义语言）脚本...")
+      await(loadSXDL()).foreach {
+        _.sliding(10, 10).foreach(lines => context.eventMessage.respond(lines.map(it => s"λ> $it").mkString("\n")))
       }
-
       JamContext.initLock.set(false)
     } else {
-      context.eventMessage.respond("重新解析正在进行中，请等待")
+      context.eventMessage.respond("重新解析正在进行中，请稍后再试...")
     }
   }
 }

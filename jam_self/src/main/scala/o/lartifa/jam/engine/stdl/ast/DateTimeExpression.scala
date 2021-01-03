@@ -1,6 +1,5 @@
 package o.lartifa.jam.engine.stdl.ast
 
-import ammonite.ops.PipeableImplicit
 import o.lartifa.jam.engine.stdl.ast.DateTimeExpression.WeekDayName.Name
 
 import scala.util.matching.Regex
@@ -83,8 +82,8 @@ object DateTimeExpression {
   def apply(raw: String): Option[DateTimeExpression] = parse(raw)
 
   private val dtExpPattern: Regex =
-    """((每|[0-9]+)年)?((每|[0-9]+)月)?((每|[0-9]+)日)?(每(周|星期)[一二三四五六日天])?((每|[0-9]+)时)?((每|[0-9]+)分)?""".r
-  ("year", "month", "day", "weekday", "hour", "minute")
+    """((每|[0-9]+)年)?((每|[0-9]+)月)?((每|[0-9]+)日)?((周|星期)[一二三四五六日天])?((每|[0-9]+)时)?((每|[0-9]+)分)?""".
+      r("year", "month", "day", "weekday", "hour", "minute")
 
   /**
    * 解析日期时间表达式
@@ -95,15 +94,16 @@ object DateTimeExpression {
   private def parse(raw: String): Option[DateTimeExpression] = {
     dtExpPattern.findFirstMatchIn(raw).filterNot(_.source == "").map(result => {
       ParseParams(
-        year = result.group("year") |> Some.apply,
-        month = result.group("month") |> Some.apply,
-        day = result.group("day") |> Some.apply,
-        hour = result.group("hour") |> Some.apply,
-        minute = result.group("minute") |> Some.apply,
-        weekday = result.group("weekday") |> Some.apply
+        year = Option(result.group("year")).map(_.stripSuffix("年")),
+        month = Option(result.group("month")).map(_.stripSuffix("月")),
+        day = Option(result.group("day")).map(_.stripSuffix("日")),
+        hour = Option(result.group("hour")).map(_.stripSuffix("时")),
+        minute = Option(result.group("minute")).map(_.stripSuffix("分")),
+        weekday = Option(result.group("weekday"))
       )
     }).flatMap {
       case params@ParseParams(_, _, day, _, _, weekday) =>
+        println(params)
         weekday match {
           case Some(_) => parseWeekday(params)
           case None => if (day.isDefined) parseDate(params) else parseTime(params)

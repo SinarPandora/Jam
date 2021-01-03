@@ -1,16 +1,17 @@
 package o.lartifa.jam.pool
 
-import java.util.concurrent.Executors
-
 import cc.moecraft.logger.HyLogger
 import cn.hutool.cron.CronUtil
 import o.lartifa.jam.common.exception.ExecutionException
+import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.model.CommandExecuteContext
-import o.lartifa.jam.model.tasks.{ChangeRespFrequency, GoASleep, JamCronTask, WakeUp}
+import o.lartifa.jam.model.tasks._
 import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.plugins.picbot.FetchPictureTask
 import o.lartifa.jam.pool.CronTaskPool.{TaskDefinition, logger}
 
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.{Executors, Semaphore}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
@@ -25,7 +26,8 @@ class CronTaskPool {
 
   private var _taskDefinition: Map[String, TaskDefinition] = Map.empty
   private val runningTasks: mutable.Map[String, ListBuffer[JamCronTask]] = mutable.Map.empty
-  private var initing: Boolean = false
+  private val refreshing: AtomicBoolean = new AtomicBoolean(false)
+  private val mLock: Semaphore = new Semaphore(1)
 
   /**
    * 获取任务定义
@@ -35,13 +37,34 @@ class CronTaskPool {
   def taskDefinition: Map[String, TaskDefinition] = _taskDefinition
 
   /**
+   * 刷新 STDL 任务定义
+   *
+   * @param defs 任务定义
+   */
+  def refreshSimpleTaskDefinitions(defs: Map[String, TaskDefinition]): Unit = {
+    if (!refreshing.get()) {
+      refreshing.getAndSet(true)
+      mLock.acquireUninterruptibly()
+      val oldTasks = _taskDefinition.filter(_._2.simpleTaskInstance.isDefined)
+      oldTasks.keySet.foreach(name => {
+        runningTasks.remove(name).foreach(_.head.cancel(false))
+      })
+      _taskDefinition = _taskDefinition.filter(_._2.simpleTaskInstance.isEmpty) ++ defs
+      mLock.release()
+      refreshing.getAndSet(false)
+    } else {
+      MasterUtil.notifyAndLog("定时任务引擎处于刷新状态，STDL任务更新失败，请稍后再试")
+    }
+  }
+
+  /**
    * 自动刷新任务定义
    * 该操作会强制停止当前全部任务（等待任务完成）
    */
   def autoRefreshTaskDefinition(): CronTaskPool = {
-    initing = true
+    refreshing.getAndSet(true)
     logger.log("正在刷新定时任务定义，运行中的全部任务将被取消")
-    this.removeAll()
+    this.cancelAll()
     if (CronUtil.getScheduler.isStarted) CronUtil.stop()
     this._taskDefinition = Map(
       "回复频率变更" -> TaskDefinition("回复频率变更", classOf[ChangeRespFrequency], isSingleton = false),
@@ -53,10 +76,10 @@ class CronTaskPool {
     this._taskDefinition.values.foreach(_.startRequireTasks(this))
     // 如果是单例任务并且尚未被自动初始化，必须强制在此初始化一遍（确保其为单例）
     _taskDefinition.filter(it => !runningTasks.keySet.contains(it._1) && it._2.isSingleton).foreach {
-      case(name, definition) => runningTasks += name -> ListBuffer(definition.init(this))
+      case (name, definition) => runningTasks += name -> ListBuffer(definition.init(this))
     }
     logger.log("定时任务定义刷新完成")
-    initing = false
+    refreshing.getAndSet(false)
     this
   }
 
@@ -87,7 +110,7 @@ class CronTaskPool {
    * @return 任务列表
    */
   private def getAll(name: String): List[JamCronTask] = {
-    if (initing) {
+    if (refreshing.get()) {
       runningTasks.getOrElse(name, ListBuffer.empty).toList
     } else throw ExecutionException("该方法不能在定时任务初始化之外被调用")
   }
@@ -99,12 +122,15 @@ class CronTaskPool {
    * @return 删除结果
    */
   def remove(task: JamCronTask): Option[JamCronTask] = {
-    runningTasks.get(task.name).flatMap { taskList =>
+    mLock.acquire()
+    val opt = runningTasks.get(task.name).flatMap { taskList =>
       taskList.find(_.id == task.id).map { task =>
         taskList -= task
         task
       }
     }
+    mLock.release()
+    opt
   }
 
   /**
@@ -113,17 +139,31 @@ class CronTaskPool {
    * @param list 要删除的任务列表
    */
   def removeAll(list: List[JamCronTask]): Unit = {
+    mLock.acquire()
     list.groupBy(_.name).foreach { case (name, taskList) =>
       runningTasks.get(name).foreach(_ --= taskList)
     }
+    mLock.release()
+  }
+
+  /**
+   * 取消全部定时任务
+   */
+  def cancelAll(): Unit = {
+    mLock.acquire()
+    runningTasks.flatMap(_._2).foreach(_.cancel(false))
+    runningTasks.clear()
+    mLock.release()
   }
 
   /**
    * 删除全部定时任务
    */
   def removeAll(): Unit = {
-    runningTasks.flatMap(_._2).foreach(_.cancel(false))
+    mLock.acquire()
+    runningTasks.flatMap(_._2).foreach(_.cancel())
     runningTasks.clear()
+    mLock.release()
   }
 
   /**
@@ -136,12 +176,17 @@ class CronTaskPool {
    */
   @throws[ExecutionException]
   def getActiveTasks(name: String, inChat: Boolean = false)(implicit context: CommandExecuteContext = null): Either[JamCronTask, List[JamCronTask]] = {
+    mLock.acquire()
     val define = _taskDefinition.getOrElse(name, throw ExecutionException(s"任务不存在！$name"))
     val searchPath = runningTasks.getOrElse(name, ListBuffer.empty).toList
     if (define.isSingleton) {
-      if (searchPath.lengthIs == 1) Left(searchPath.head)
-      else if (searchPath.lengthIs == 0) throw ExecutionException(s"单例任务${name}尚未初始化")
-      else throw ExecutionException(s"存在重复的单例任务$name")
+      try {
+        if (searchPath.lengthIs == 1) Left(searchPath.head)
+        else if (searchPath.lengthIs == 0) throw ExecutionException(s"单例任务${name}尚未初始化")
+        else throw ExecutionException(s"存在重复的单例任务$name")
+      } finally {
+        mLock.release()
+      }
     } else {
       // 找到全部满足条件的 task
       val path = if (inChat) {
@@ -150,6 +195,7 @@ class CronTaskPool {
           searchPath.filter(_.chatInfo == chatInfo)
         } else throw ExecutionException("聊天上下文不存在！")
       } else searchPath
+      mLock.release()
       Right(path)
     }
   }
@@ -161,7 +207,10 @@ object CronTaskPool {
   // 用于定时任务的转换操作
   implicit val cronTaskWaitingPool: ExecutionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
-  def apply(): CronTaskPool = new CronTaskPool()
+  def apply(): CronTaskPool = {
+    CronUtil.setMatchSecond(false)
+    new CronTaskPool()
+  }
 
   case class CronPair(cron: String)
 
@@ -186,7 +235,13 @@ object CronTaskPool {
      * 在初始化后立刻创建按照如下 cron 定义的任务
      * 注意：定义了该变量的任务必须与聊天会话无关
      */
-    createTasksAfterInit: List[CronPair] = Nil
+    createTasksAfterInit: List[CronPair] = Nil,
+
+    /**
+     * 简单任务实例
+     * 用于 STDL 生成的 task 的定义
+     */
+    simpleTaskInstance: Option[SimpleTask] = None
   ) {
     /**
      * 根据 { createTasksAfterInit } 初始化对应数量和时间的任务
@@ -211,4 +266,5 @@ object CronTaskPool {
       } else throw ExecutionException(s"单例任务 '$name' 不能被初始化多次！")
     }
   }
+
 }

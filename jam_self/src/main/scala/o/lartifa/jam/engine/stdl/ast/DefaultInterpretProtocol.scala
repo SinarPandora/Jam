@@ -10,19 +10,19 @@ package o.lartifa.jam.engine.stdl.ast
 trait DefaultInterpretProtocol extends InterpretProtocol {
   override implicit val interpretCronExp: Interpret[CronExpression] = _.exp
   override implicit val interpretTime: Interpret[Time] = {
-    case DateTimeExpression.TODAY_ZERO => "0 0 0 * * ?"
-    case Time(hour, minute) => "0 " + interpretHAndM(hour, minute) + " * * ?"
+    case DateTimeExpression.TODAY_ZERO => "0 0 * * ?"
+    case Time(hour, minute) => interpretHAndM(hour, minute) + " * * ?"
   }
   override implicit val interpretDate: Interpret[Date] = {
-    case Date(year, month, day, Time(hour, minute)) => "0 " +
+    case Date(year, month, day, Time(hour, minute)) =>
       interpretHAndM(hour, minute) + " " +
-      s"${if (day == -1) "*" else day} " +
-      s"${if (month == -1) "*" else month} " +
-      "? " +
-      s"${if (year == -1) "*" else year}"
+        s"${if (day == -1) "*" else day} " +
+        s"${if (month == -1) "*" else month} " +
+        "? " +
+        s"${if (year == -1) "*" else year}"
   }
   override implicit val interpretEachAt: Interpret[WeekDay] = {
-    case WeekDay(weekday, Time(hour, minute)) => "0 " + interpretHAndM(hour, minute) + " * * " + weekday
+    case WeekDay(weekday, Time(hour, minute)) => interpretHAndM(hour, minute) + " * * " + weekday
   }
 
   /**

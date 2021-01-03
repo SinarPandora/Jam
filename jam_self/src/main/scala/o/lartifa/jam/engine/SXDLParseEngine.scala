@@ -3,9 +3,11 @@ package o.lartifa.jam.engine
 import better.files.File
 import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.common.exception.ParseFailException
-import o.lartifa.jam.engine.ssdl.parser.{CommandParser, Parser, PatternParser, Patterns}
+import o.lartifa.jam.engine.proto.Parser
+import o.lartifa.jam.engine.ssdl.parser._
+import o.lartifa.jam.engine.stdl.parser.{STDLParseResult, STDLParser}
 import o.lartifa.jam.model.ChatInfo
-import o.lartifa.jam.model.patterns.ParseResult
+import o.lartifa.jam.model.patterns.SSDLParseResult
 
 import java.nio.charset.Charset
 import scala.annotation.tailrec
@@ -19,11 +21,15 @@ import scala.util.{Failure, Success, Try}
  * Author: sinar
  * 2020/1/4 22:41
  */
-object SSDLParseEngine extends Parser {
+object SXDLParseEngine extends Parser {
 
-  sealed case class ParseSuccessResult(lineId: Long, filepath: String, result: ParseResult, chatInfo: ChatInfo, name: Option[String] = None)
+  sealed trait SXDLParseSuccessResult
 
-  sealed case class ParseFailResult(lineId: Long, filepath: String, message: String)
+  case class SSDLParseSuccessResult(lineId: Long, filepath: String, result: SSDLParseResult, chatInfo: ChatInfo, name: Option[String] = None) extends SXDLParseSuccessResult
+
+  case class STDLParseSuccessResult(lineId: Long, filepath: String, result: STDLParseResult.Succ, chatInfo: ChatInfo, name: Option[String] = None) extends SXDLParseSuccessResult
+
+  case class SXDLParseFailResult(lineId: Long, filepath: String, message: String)
 
   implicit val charset: Charset = Charset.forName("UTF-8")
 
@@ -42,7 +48,7 @@ object SSDLParseEngine extends Parser {
    * @return 解析结果，键为 false 对应的内容为解析失败的信息
    */
   @throws[ParseFailException]
-  def load()(implicit exec: ExecutionContext): Future[Map[Boolean, Seq[Either[ParseFailResult, ParseSuccessResult]]]] = Future {
+  def load()(implicit exec: ExecutionContext): Future[Map[Boolean, Seq[Either[SXDLParseFailResult, SXDLParseSuccessResult]]]] = Future {
     CommandParser.prepareParsers()
     loadFiles().flatMap {
       case (ssdlFiles, chatInfo) => parseFiles(ssdlFiles, chatInfo)
@@ -80,7 +86,7 @@ object SSDLParseEngine extends Parser {
    * @param chatInfo  会话信息（针对非全局步骤）
    * @return 解析结果
    */
-  private def parseFiles(ssdlFiles: List[File], chatInfo: ChatInfo): Seq[Either[ParseFailResult, ParseSuccessResult]] = {
+  private def parseFiles(ssdlFiles: List[File], chatInfo: ChatInfo): Seq[Either[SXDLParseFailResult, SXDLParseSuccessResult]] = {
     ssdlFiles.par.flatMap(parseFileContent(_, chatInfo)).seq
   }
 
@@ -91,7 +97,7 @@ object SSDLParseEngine extends Parser {
    * @param chatInfo 会话信息（针对非全局步骤）
    * @return 解析结果
    */
-  private def parseFileContent(file: File, chatInfo: ChatInfo): Iterable[Either[ParseFailResult, ParseSuccessResult]] = {
+  private def parseFileContent(file: File, chatInfo: ChatInfo): Iterable[Either[SXDLParseFailResult, SXDLParseSuccessResult]] = {
     val lineWithIdxPairs: List[RawLinePair] = file.lines
       .map(_.trim)
       .map(line => {
@@ -108,9 +114,15 @@ object SSDLParseEngine extends Parser {
     findEffectiveLines(file.pathAsString, lineWithIdxPairs)
       .map {
         case failResult@Left(_) =>
-          failResult.asInstanceOf[Either[ParseFailResult, ParseSuccessResult]]
-        case Right((EffectiveLine(name, step, id), idx)) =>
-          parseSSDL(step, id, file.pathAsString, idx + 1, chatInfo, name)
+          failResult.asInstanceOf[Either[SXDLParseFailResult, SSDLParseSuccessResult]]
+        case Right((EffectiveLine(name, step, id), lineId)) =>
+          Try(id.toLong) match {
+            case Failure(_) =>
+              Left(SXDLParseFailResult(lineId, file.pathAsString, "步骤编号过大，过小或不合法"))
+            case Success(id) =>
+              val context = preprocessStatement(step, id)
+              parseSXDL(step, context, file.pathAsString, lineId + 1, chatInfo, name)
+          }
       }
   }
 
@@ -129,8 +141,8 @@ object SSDLParseEngine extends Parser {
    */
   @tailrec
   private def findEffectiveLines(filepath: String, pairs: List[RawLinePair], lastEffectiveLine: Option[EffectiveLineIdPair] = None,
-                                 effectiveLines: List[Either[ParseFailResult, EffectiveLineIdPair]] = Nil):
-  List[Either[ParseFailResult, EffectiveLineIdPair]] = {
+                                 effectiveLines: List[Either[SXDLParseFailResult, EffectiveLineIdPair]] = Nil):
+  List[Either[SXDLParseFailResult, EffectiveLineIdPair]] = {
     pairs match {
       case ((name, line), currentLineId) :: next =>
         Patterns.basePattern.findFirstMatchIn(line) match {
@@ -156,7 +168,7 @@ object SSDLParseEngine extends Parser {
             }
             case None =>
               findEffectiveLines(filepath, next, None, effectiveLines :+
-                Left(ParseFailResult(currentLineId, filepath, "书写内容没有以标准格式开头")))
+                Left(SXDLParseFailResult(currentLineId, filepath, "书写内容没有以标准格式开头")))
           }
         }
       case Nil => lastEffectiveLine
@@ -166,19 +178,76 @@ object SSDLParseEngine extends Parser {
   }
 
   /**
-   * 解析 SSDL
+   * 解析 SXDL：SSDL/STDL
    *
    * @param string   待解析字符串
-   * @param id       行前 Id
+   * @param context  解析引擎上下文
    * @param filepath 文件路径
    * @param lineId   行号
    * @param chatInfo 会话信息（针对非全局步骤）
    * @return 解析结果
    */
-  private def parseSSDL(string: String, id: String, filepath: String, lineId: Long, chatInfo: ChatInfo, name: Option[String]): Either[ParseFailResult, ParseSuccessResult] = {
-    Try(PatternParser.parseBasePattern(string, id)) match {
-      case Failure(exception) => Left(ParseFailResult(lineId, filepath, exception.getMessage))
-      case Success(result) => Right(ParseSuccessResult(lineId, filepath, result, chatInfo, name))
+  private def parseSXDL(string: String, context: ParseEngineContext, filepath: String, lineId: Long, chatInfo: ChatInfo, name: Option[String]): Either[SXDLParseFailResult, SXDLParseSuccessResult] = {
+    // 判断是 STDL 还是 SSDL
+    STDLParser.stdlPattern.findFirstMatchIn(string) match {
+      case Some(result) => parseSTDL(result.group("cron"), result.group("action"), context, filepath, lineId, chatInfo, name)
+      case None => parseSSDL(string, context, filepath, lineId, chatInfo, name)
     }
+  }
+
+  /**
+   * 解析 STDL
+   *
+   * @param rawDTExp   待解析时间表达式
+   * @param rawCommand 待解析指令
+   * @param context    解析引擎上下文
+   * @param filepath   文件路径
+   * @param lineId     行号
+   * @param chatInfo   会话信息（针对非全局步骤）
+   * @return 解析结果
+   */
+  private def parseSTDL(rawDTExp: String, rawCommand: String, context: ParseEngineContext, filepath: String, lineId: Long, chatInfo: ChatInfo, name: Option[String]): Either[SXDLParseFailResult, STDLParseSuccessResult] = {
+    STDLParser.parseSTDL(rawDTExp, rawCommand)(context) match {
+      case result: STDLParseResult.Succ => Right(STDLParseSuccessResult(lineId, filepath, result, chatInfo, name))
+      case STDLParseResult.Fail(exception) => Left(SXDLParseFailResult(lineId, filepath, exception.getMessage))
+    }
+  }
+
+  /**
+   * 解析 SSDL
+   *
+   * @param string   待解析字符串
+   * @param context  解析引擎上下文
+   * @param filepath 文件路径
+   * @param lineId   行号
+   * @param chatInfo 会话信息（针对非全局步骤）
+   * @return 解析结果
+   */
+  private def parseSSDL(string: String, context: ParseEngineContext, filepath: String, lineId: Long, chatInfo: ChatInfo, name: Option[String]): Either[SXDLParseFailResult, SSDLParseSuccessResult] = {
+    Try(SSDLParser.parseSSDL(string)(context)) match {
+      case Failure(exception) => Left(SXDLParseFailResult(lineId, filepath, exception.getMessage))
+      case Success(result) => Right(SSDLParseSuccessResult(lineId, filepath, result, chatInfo, name))
+    }
+  }
+
+  /**
+   * 预处理语句中的变量和模板
+   *
+   * @param string 待解析字符串
+   * @param stepId 步骤 ID
+   * @return 解析引擎上下文
+   */
+  private def preprocessStatement(string: String, stepId: Long): ParseEngineContext = {
+    // 1. 找到全部模板，替换为 %{_1}%
+    val templates = VarParser.parseTemplates(string).getOrElse(Nil).zipWithIndex.map { case (it, idx) => it -> s"_$idx" }
+    val str1 = templates.foldLeft(string) { case (str, (it, idx)) => str.replace(it.source, s"%{$idx}%") }
+    // 2. 找到剩余的全部变量，替换掉 {_1}
+    val varKeys = VarParser.parseVars(str1).getOrElse(Nil).zipWithIndex.map { case (it, idx) => it -> s"_$idx" }
+    val processedStr = varKeys.foldLeft(str1) { case (str, (it, idx)) => str.replace(it.source, s"{$idx}") }
+    // 3. 组装解析上下文
+    val templateMap = templates.map(it => it._2 -> it._1.command).toMap
+    val varKeysMap = varKeys.map(it => it._2 -> it._1.varKey).toMap
+    // 4. 去除掉除模板外的全部空格
+    ParseEngineContext(stepId, varKeysMap, templateMap, string, processedStr.replaceAll("\\s", ""))
   }
 }

@@ -1,6 +1,7 @@
 package o.lartifa.jam.engine.ssdl.parser
 
 import o.lartifa.jam.common.exception.ParseFailException
+import o.lartifa.jam.engine.proto.Parser
 import o.lartifa.jam.model.commands.RenderStrTemplate
 import o.lartifa.jam.model.{TemplateVarKey, VarKey}
 

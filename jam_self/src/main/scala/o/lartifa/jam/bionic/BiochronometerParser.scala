@@ -6,7 +6,7 @@ import com.typesafe.config.Config
 import o.lartifa.jam.common.config.{JamCharacter, JamConfig}
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.common.util.MasterUtil
-import o.lartifa.jam.engine.ssdl.parser.Parser
+import o.lartifa.jam.engine.proto.Parser
 import o.lartifa.jam.model.tasks.{ChangeRespFrequency, GoASleep}
 import o.lartifa.jam.pool.JamContext
 

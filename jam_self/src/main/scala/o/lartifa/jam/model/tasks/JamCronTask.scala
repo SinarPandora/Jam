@@ -1,7 +1,5 @@
 package o.lartifa.jam.model.tasks
 
-import java.util.concurrent.atomic.AtomicBoolean
-
 import cc.moecraft.logger.format.AnsiColor
 import cc.moecraft.logger.{HyLogger, LogLevel}
 import cn.hutool.core.date.StopWatch
@@ -14,6 +12,7 @@ import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.model.tasks.JamCronTask.logger
 import o.lartifa.jam.pool.JamContext
 
+import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -24,12 +23,10 @@ import scala.util.{Failure, Success, Try}
  * Author: sinar
  * 2020/1/25 13:45
  */
-abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.None, val id: UUID = UUID.randomUUID(),
+abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.None, val id: String = UUID.randomUUID().toString(),
                            val onlyOnce: Boolean = false) extends Task {
 
   import o.lartifa.jam.pool.CronTaskPool.cronTaskWaitingPool
-
-  val idString: String = id.toString(true)
 
   val isRunning: AtomicBoolean = new AtomicBoolean(false)
 
@@ -83,8 +80,9 @@ abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.N
    *
    * @param cron 定时表达式
    */
+  @throws[ExecutionException]
   def setUp(cron: String): Unit = if (!isRunning.get()) {
-    CronUtil.schedule(idString, cron, this)
+    CronUtil.schedule(id, cron, this)
     JamContext.cronTaskPool.get().add(this)
   } else throw ExecutionException(s"该任务已经被初始化过了并正在运行：定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id")
 
@@ -94,7 +92,7 @@ abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.N
    * @param removeFromTaskPool 是否从定时任务池中删除（默认是）
    */
   def cancel(removeFromTaskPool: Boolean = true): Unit = {
-    CronUtil.remove(idString)
+    CronUtil.remove(id)
     if (removeFromTaskPool) JamContext.cronTaskPool.get().remove(this)
     isRunning.getAndSet(false)
   }

@@ -1,4 +1,4 @@
-package o.lartifa.jam.engine.ssdl.parser
+package o.lartifa.jam.engine.proto
 
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.model.behaviors.StringToVarKey
@@ -13,7 +13,7 @@ trait Parser extends StringToVarKey {
   /**
    * 检查参数是否满足条件
    *
-   * @param require 条件
+   * @param require   条件
    * @param elsePrint 错误提示信息
    */
   protected def need(require: Boolean, elsePrint: String): Unit = if (!require) throw ParseFailException(elsePrint)

@@ -42,4 +42,15 @@ object MasterUtil {
       }
     } else logger.log(logLevel, message)
   }
+
+  /**
+   * 通知并输出堆栈日志
+   *
+   * @param message 信息
+   * @param e       错误
+   */
+  def notifyAndLogError(message: String, e: Throwable): Unit = {
+    httpApi.sendPrivateMsg(JamConfig.masterQID, message.format(JamCharacter.ForMaster.name))
+    logger.error(message, e)
+  }
 }

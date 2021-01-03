@@ -4,6 +4,7 @@ import ammonite.ops.PipeableImplicit
 import cc.moecraft.icq.sender.message.components.ComponentContact.ContactType
 import cc.moecraft.icq.sender.message.components.ComponentMusic.MusicSourceType
 import o.lartifa.jam.common.exception.ParseFailException
+import o.lartifa.jam.engine.proto.Parser
 import o.lartifa.jam.model.commands.Ask.{AnyBody, CurrentSender}
 import o.lartifa.jam.model.commands._
 import o.lartifa.jam.plugins.JamPluginLoader
