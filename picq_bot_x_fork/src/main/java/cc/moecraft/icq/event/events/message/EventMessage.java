@@ -6,7 +6,9 @@ import cc.moecraft.icq.sender.returndata.returnpojo.send.RMessageReturnData;
 import cc.moecraft.icq.user.User;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import static cc.moecraft.icq.utils.CQUtils.removeCqCode;
 
@@ -17,7 +19,6 @@ import static cc.moecraft.icq.utils.CQUtils.removeCqCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@Setter(AccessLevel.NONE)
 @ToString(callSuper = true)
 public abstract class EventMessage extends Event
 {

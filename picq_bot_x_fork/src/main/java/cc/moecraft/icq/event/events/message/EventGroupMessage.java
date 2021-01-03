@@ -18,7 +18,6 @@ import lombok.*;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@Setter(AccessLevel.NONE)
 @ToString(callSuper = true)
 public class EventGroupMessage extends EventGroupOrDiscussMessage
 {

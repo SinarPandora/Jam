@@ -6,7 +6,9 @@ import cc.moecraft.icq.user.Group;
 import cc.moecraft.icq.user.User;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 /**
  * 讨论组消息事件
@@ -15,7 +17,6 @@ import lombok.*;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@Setter(AccessLevel.NONE)
 @ToString(callSuper = true)
 public class EventDiscussMessage extends EventGroupOrDiscussMessage
 {

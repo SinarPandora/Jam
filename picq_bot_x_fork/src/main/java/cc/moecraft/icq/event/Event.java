@@ -6,9 +6,7 @@ import cc.moecraft.icq.accounts.BotAccount;
 import cc.moecraft.icq.sender.IcqHttpApi;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import lombok.AccessLevel;
 import lombok.Data;
-import lombok.Setter;
 
 /**
  * 事件
@@ -16,7 +14,6 @@ import lombok.Setter;
  * @author Hykilpikonna
  */
 @Data
-@Setter(AccessLevel.NONE)
 public abstract class Event implements ContentComparable
 {
     @SerializedName("post_type")
