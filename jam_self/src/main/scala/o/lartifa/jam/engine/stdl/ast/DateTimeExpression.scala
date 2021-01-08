@@ -82,8 +82,8 @@ object DateTimeExpression {
   def apply(raw: String): Option[DateTimeExpression] = parse(raw)
 
   private val dtExpPattern: Regex =
-    """((每|[0-9]+)年)?((每|[0-9]+)月)?((每|[0-9]+)日)?((周|星期)[一二三四五六日天])?((每|[0-9]+)时)?((每|[0-9]+)分)?""".
-      r("year", "month", "day", "weekday", "hour", "minute")
+    """\{([每0-9]+年)?([每0-9]+月)?(周[一二三四五六日天]|星期[一二三四五六日天])?([每0-9]+日)?([每0-9]+时)?([每0-9]+分)?}""".
+      r("year", "month", "weekday", "day", "hour", "minute")
 
   /**
    * 解析日期时间表达式
@@ -103,7 +103,6 @@ object DateTimeExpression {
       )
     }).flatMap {
       case params@ParseParams(_, _, day, _, _, weekday) =>
-        println(params)
         weekday match {
           case Some(_) => parseWeekday(params)
           case None => if (day.isDefined) parseDate(params) else parseTime(params)
@@ -147,7 +146,7 @@ object DateTimeExpression {
    */
   private def parseTime: PartialFunction[ParseParams, Option[Time]] = {
     case ParseParams(_, _, _, hour, minute, _) =>
-      if (hour.isDefined && minute.isDefined) {
+      if (hour.isDefined || minute.isDefined) {
         Some(Time(
           hour = hour.map(it => if (it == "每") -1 else it.toInt).getOrElse(-1),
           minute = minute.map(it => if (it == "每") -1 else it.toInt).getOrElse(-1),

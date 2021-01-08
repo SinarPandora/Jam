@@ -221,7 +221,7 @@ object JamLoader {
       JamContext.stepPool.getAndSet(StepPool(steps.toMap))
       logger.log(s"${AnsiColor.GREEN}${steps.size}条SSDL脚本已全部成功载入！")
       Some(List(
-        "Compile Success! 0 Warning, 0 Error",
+        "SSDL Compile Success! 0 Warning, 0 Error",
         s"已载入${
           globalMatchers.length +
             globalGroupMatchers.length +
@@ -261,7 +261,7 @@ object JamLoader {
     } else {
       Some(
         List(
-          "Compile Success! 0 Warning, 0 Error",
+          "STDL Compile Success! 0 Warning, 0 Error",
           s"已载入${instance.length}条计划任务"
         )
       )

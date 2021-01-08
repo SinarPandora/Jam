@@ -28,7 +28,7 @@ trait STDLParser extends Parser {
 
 object STDLParser extends STDLParser {
 
-  val stdlPattern: Regex = """当\{(.+?)}时[,，](.+)""".r("cron", "action")
+  val stdlPattern: Regex = """当(\{.+?})时[,，](.+)""".r("cron", "action")
 
   /**
    * 解析 STDL
