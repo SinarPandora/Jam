@@ -1,7 +1,5 @@
 package o.lartifa.jam.model.commands
 
-import java.util.Base64
-
 import better.files.File
 import cc.moecraft.icq.sender.message.MessageBuilder
 import cc.moecraft.icq.sender.message.components.{ComponentImage, ComponentImageBase64, ComponentRecord}
@@ -11,6 +9,7 @@ import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.SendMessage.Type
 
+import java.util.Base64
 import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -34,7 +33,7 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
     `type` match {
       case SendMessage.SEND_TEXT => sendTextMessage()
       case SendMessage.SEND_PIC => sendPic()
-      case SendMessage.SEND_AUDIO => sendPic()
+      case SendMessage.SEND_AUDIO => sendAudio()
     }
   }
 
@@ -77,7 +76,6 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
 
   /**
    * 发送语音消息
-   * 由于酷Q系统限制，语音文件必须位于酷Q文件夹/data/record 下
    *
    * @param context 执行上下文
    * @param exec    异步执行上下文
@@ -88,7 +86,7 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
     val audioMessage = new MessageBuilder().add(new ComponentRecord(audioUri)).toString
     Try(reply(audioMessage)) match {
       case Failure(exception) =>
-        throw ExecutionException("图片发送可能失败，请检查是否语音文件较大或语音文件没有存放在酷Q /data/record 目录下").initCause(exception)
+        throw ExecutionException("语音发送可能失败，请检查是否语音文件较大或尝试将语音文件放在对应后端的 /data/record 目录下").initCause(exception)
       case Success(value) => value
     }
   }
