@@ -26,12 +26,14 @@ object Bootloader {
     JamContext.httpApi.getAndSet(() => client.getAccountManager.getNonAccountSpecifiedApi)
     JamContext.clientConfig.getAndSet(client.getConfig)
     client.getHttpServer.start()
-    MiraiBackend.startAndConnectToBackEnd(args)(() => {
+    val afterBoot = () => {
       JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}已连接 Mirai 后端，正在刷新数据...")
       client.addAccount(name, postUrl, postPort)
       Await.result(JamLoader.init(client, args), Duration.Inf)
       JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}数据刷新成功！开始接收消息")
-    })
+    }
+    if (args.contains("--no_backend")) afterBoot()
+    else MiraiBackend.startAndConnectToBackEnd(args)(afterBoot)
     JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}${name}已恢复生命体征")
   }
 
@@ -50,6 +52,7 @@ object Bootloader {
         |--help           输出该提示
         |--config=xxx     手动指定配置文件位置
         |--use_mirai3     使用 mirai 3 后端（实验性）
+        |--no_backend     不监控任何 backend（适合于独立运行CQHTTP后端）
         |""".stripMargin)
     sys.exit(0)
   }
