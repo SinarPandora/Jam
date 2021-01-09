@@ -44,6 +44,7 @@ class SimpleTask(id: Long, name: String, val cronExp: String, chatInfo: ChatInfo
       }
       Future.sequence(
         qIDs.map(it => {
+          Thread.sleep(2000) // 防止被屏蔽
           executable.execute()(unsafeMockContext(it), exec).recover(err => {
             logger.error(err)
             err
