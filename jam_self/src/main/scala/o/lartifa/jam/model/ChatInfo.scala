@@ -31,7 +31,7 @@ object ChatInfo {
         new ChatInfo(MessageType.PRIVATE, message.getSenderId)
     }
 
-  object None extends ChatInfo("None", -1L)
+  object None extends ChatInfo(MessageType.NONE, -1L)
   object Group extends ChatInfo(MessageType.GROUP, -1L)
   object Private extends ChatInfo(MessageType.PRIVATE, -1L)
 }

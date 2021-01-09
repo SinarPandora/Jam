@@ -11,7 +11,6 @@ import o.lartifa.jam.pool.JamContext
 
 import java.sql.Timestamp
 import java.time.Instant
-import java.{lang, util}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 
@@ -31,13 +30,20 @@ class SimpleTask(id: Long, name: String, val cronExp: String, chatInfo: ChatInfo
    */
   override def run()(implicit exec: ExecutionContext): Future[Unit] = {
     if (chatInfo.chatId == -1) {
-      val qIDs: util.Set[lang.Long] = chatInfo.chatType match {
-        case MessageType.PRIVATE => JamContext.bot.get().getUserManager.userCache.keySet()
-        case MessageType.GROUP => JamContext.bot.get().getGroupManager.groupCache.keySet()
+      val qIDs: Set[ChatInfo] = chatInfo.chatType match {
+        case MessageType.PRIVATE => JamContext.bot.get().getUserManager.userCache.keySet().asScala
+          .map(qId => chatInfo.copy(chatId = qId)).toSet
+        case MessageType.GROUP => JamContext.bot.get().getGroupManager.groupCache.keySet().asScala
+          .map(qId => chatInfo.copy(chatId = qId)).toSet
+        case MessageType.NONE =>
+          JamContext.bot.get().getGroupManager.groupCache.keySet().asScala
+            .map(qId => chatInfo.copy(chatId = qId)).toSet ++
+            JamContext.bot.get().getUserManager.userCache.keySet().asScala
+              .map(qId => chatInfo.copy(chatId = qId)).toSet
         case MessageType.DISCUSS => throw ExecutionException("STDL任务暂不支持讨论组")
       }
       Future.sequence(
-        qIDs.asScala.map(qId => chatInfo.copy(chatId = qId)).map(it => {
+        qIDs.map(it => {
           executable.execute()(unsafeMockContext(it), exec).recover(err => {
             logger.error(err)
             err
