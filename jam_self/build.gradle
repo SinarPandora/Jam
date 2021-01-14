@@ -70,6 +70,7 @@ dependencies {
 
     // Core
     api(project(":picq_bot_x_fork"))
+    api(project(":jam_utils"))
 
     // Meta
     api("com.jayway.jsonpath:json-path:2.4.0")

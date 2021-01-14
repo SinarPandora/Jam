@@ -19,6 +19,7 @@ application {
 }
 
 dependencies {
+    implementation(project(":jam_utils"))
     implementation(project(":sxdl_interpreter"))
 
     // Scala
