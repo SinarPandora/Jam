@@ -19,6 +19,8 @@ application {
 }
 
 dependencies {
+    implementation(project(":sxdl_interpreter"))
+
     // Scala
     implementation("org.scala-lang:scala-library:$scala_version")
     implementation("org.scala-lang:scala-reflect:$scala_version")
