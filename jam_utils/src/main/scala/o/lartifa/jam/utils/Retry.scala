@@ -20,15 +20,15 @@ object Retry {
 
   /**
    * 可重试的代码块
-   * *如果重试次数为 n，方法最多执行 n + 1 次
+   * *如果最大重试次数为 n，方法最多执行 n + 1 次
    *
-   * @param times 最大重试次数
-   * @param f     代码块（参数为当前重试次数）
+   * @param maxRetries 最大重试次数
+   * @param f          代码块（参数为当前重试次数）
    * @return 成功：Right[T]
    *         失败：Left(ReachMaxRetriesException)
    */
-  def retryable[T](times: Int)(f: Int => T): Either[ReachMaxRetriesException, T] = {
-    retryable(times, current = 0)(f)
+  def retryable[T](maxRetries: Int)(f: Int => T): Either[ReachMaxRetriesException, T] = {
+    retryable(maxRetries, current = 0)(f)
   }
 
   /**
