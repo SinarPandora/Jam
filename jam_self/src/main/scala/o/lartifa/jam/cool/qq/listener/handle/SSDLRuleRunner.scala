@@ -4,6 +4,7 @@ import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMe
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch
+import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.model.patterns.ContentMatcher
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
@@ -11,6 +12,7 @@ import o.lartifa.jam.pool.JamContext
 
 import scala.annotation.tailrec
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Random
 
 /**
  * 全局消息解析器
@@ -31,13 +33,8 @@ object SSDLRuleRunner {
     // 启动计时器
     val matchCost = new StopWatch()
     matchCost.start()
-    // 获取会话信息
-    val ChatInfo(chatType, chatId) = ChatInfo(eventMessage)
     // 组合捕获器列表
-    val scanList = JamContext.customMatchers.get().getOrElse(chatType, Map()).getOrElse(chatId, List()) ++ (eventMessage match {
-      case _: EventGroupOrDiscussMessage => JamContext.globalGroupMatchers.get()
-      case _: EventPrivateMessage => JamContext.globalPrivateMatchers.get()
-    }) ++ JamContext.globalMatchers.get()
+    val scanList = this.buildMatcherScanList(eventMessage)
     // 组建上下文
     implicit val context: CommandExecuteContext = CommandExecuteContext(eventMessage)
     // 查找步骤
@@ -76,6 +73,27 @@ object SSDLRuleRunner {
         if (matcher.isMatched(message)) Some(matcher)
         else findMatchedStep(message, next)
       case Nil => None
+    }
+  }
+
+  /**
+   * 构建关键词扫描列表
+   *
+   * @param eventMessage 聊天事件
+   * @return 扫描列表
+   */
+  private def buildMatcherScanList(eventMessage: EventMessage): List[ContentMatcher] = {
+    val ChatInfo(chatType, chatId) = ChatInfo(eventMessage)
+    val chatScopeMatchers = JamContext.customMatchers.get().getOrElse(chatType, Map()).getOrElse(chatId, List())
+    val chatTypeScopeMatchers = eventMessage match {
+      case _: EventGroupOrDiscussMessage => JamContext.globalGroupMatchers.get()
+      case _: EventPrivateMessage => JamContext.globalPrivateMatchers.get()
+    }
+    val globalScopeMatchers = JamContext.globalMatchers.get()
+    if (JamConfig.matchOutOfOrder) {
+      Random.shuffle(chatScopeMatchers) ++ Random.shuffle(chatTypeScopeMatchers) ++ Random.shuffle(globalScopeMatchers)
+    } else {
+      chatScopeMatchers ++ chatTypeScopeMatchers ++ globalScopeMatchers
     }
   }
 }

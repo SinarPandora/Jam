@@ -31,4 +31,7 @@ object JamConfig {
 
   // 自动接收群申请
   val autoAcceptGroupRequest: Boolean = config.getBoolean("auto_accept_group_request")
+
+  // 是否让关键词匹配乱序执行
+  val matchOutOfOrder: Boolean = config.getBoolean("match_out_of_order")
 }
