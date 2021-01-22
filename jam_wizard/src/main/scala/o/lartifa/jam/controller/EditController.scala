@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.RestController
  * 2020/10/8 23:52
  */
 @RestController
-class EditComponent extends AsyncComponent {
+class EditController extends AsyncComponent {
 
 }
 
-object EditComponent {
-  private val logger: Logger = LoggerFactory.getLogger(classOf[EditComponent])
+object EditController {
+  private val logger: Logger = LoggerFactory.getLogger(classOf[EditController])
 }
