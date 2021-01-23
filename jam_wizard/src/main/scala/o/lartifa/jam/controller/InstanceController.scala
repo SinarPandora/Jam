@@ -4,7 +4,7 @@ import o.lartifa.jam.common.util.RespMsg._
 import o.lartifa.jam.controller.InstanceController.logger
 import o.lartifa.jam.model.Instance
 import o.lartifa.jam.repository.InstanceRepo
-import org.slf4j.{Logger, LoggerFactory}
+import org.owasp.esapi.{ESAPI, Logger}
 import org.springframework.http.{HttpStatus, ResponseEntity}
 import org.springframework.web.bind.annotation._
 
@@ -53,7 +53,7 @@ class InstanceController(repo: InstanceRepo) {
       ResponseEntity.badRequest.body(error("实例数据不合法"))
     else repo.create(record) match {
       case Failure(exception) =>
-        logger.error("创建实例失败", exception)
+        logger.error(Logger.EVENT_FAILURE, "创建实例失败", exception)
         ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error("创建实例失败"))
       case Success(value) =>
         ResponseEntity.ok(done(value))
@@ -73,7 +73,7 @@ class InstanceController(repo: InstanceRepo) {
       ResponseEntity.badRequest.body(error("实例数据不合法"))
     else repo.update(id, record) match {
       case Failure(exception) =>
-        logger.error("更新实例失败", exception)
+        logger.error(Logger.EVENT_FAILURE, "更新实例失败", exception)
         ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error("创建实例失败"))
       case Success(value) =>
         ResponseEntity.ok(done(value))
@@ -90,7 +90,7 @@ class InstanceController(repo: InstanceRepo) {
   def delete(@PathVariable("id") id: Int): ResponseEntity[Object] = {
     repo.delete(id) match {
       case Failure(exception) =>
-        logger.error("删除实例失败", exception)
+        logger.error(Logger.EVENT_FAILURE, "删除实例失败", exception)
         ResponseEntity.badRequest.body(error("删除实例失败"))
       case Success(_) =>
         ResponseEntity.ok(done(true))
@@ -99,5 +99,5 @@ class InstanceController(repo: InstanceRepo) {
 }
 
 object InstanceController {
-  private val logger: Logger = LoggerFactory.getLogger(classOf[InstanceController])
+  private val logger: Logger = ESAPI.getLogger(classOf[InstanceController])
 }
