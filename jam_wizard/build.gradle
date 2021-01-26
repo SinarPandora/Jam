@@ -36,6 +36,7 @@ dependencies {
     implementation("com.lihaoyi:requests_2.13:0.6.2")
     implementation("net.redhogs.cronparser:cron-parser-core:3.5")
     implementation("org.owasp.esapi:esapi:2.1.0.1")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:5.10.0.202012080955-r")
 
     // Spring reactive
     implementation("org.springframework.boot:spring-boot-starter-webflux")
@@ -69,6 +70,8 @@ dependencies {
     }
     implementation("com.fasterxml.jackson.module:jackson-module-scala_2.13:2.12.1")
 
+    // Security
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 
     // Data
     implementation("io.getquill:quill-jdbc_2.13:3.6.0")
