@@ -20,5 +20,12 @@ class UserService extends UserDetailsService {
    *
    * @return 当前用户名
    */
-  def getSessionUsername: String = SecurityContextHolder.getContext.getAuthentication.getName
+  def getSessionUsername: Option[String] = Option(SecurityContextHolder.getContext.getAuthentication.getName)
+
+  /**
+   * 获取当前用户
+   *
+   * @return 当前用户
+   */
+  def getSessionUser: Option[User] = ???
 }

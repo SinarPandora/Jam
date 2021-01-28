@@ -23,6 +23,9 @@ class SecurityConfiguration(@Lazy userService: UserService) extends WebSecurityC
   }
 
   override def configure(http: HttpSecurity): Unit = {
-
+    http
+      .authorizeRequests()
+      .antMatchers("/system/*").permitAll()
+      // .anyRequest().authenticated()
   }
 }

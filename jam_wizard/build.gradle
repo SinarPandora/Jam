@@ -32,6 +32,7 @@ dependencies {
     implementation("com.lihaoyi:ammonite-ops_2.13:2.1.4")
 
     // Tools
+    implementation("cn.hutool:hutool-all:5.5.7")
     implementation("com.github.pathikrit:better-files_2.13:3.9.1")
     implementation("com.lihaoyi:requests_2.13:0.6.2")
     implementation("net.redhogs.cronparser:cron-parser-core:3.5")
