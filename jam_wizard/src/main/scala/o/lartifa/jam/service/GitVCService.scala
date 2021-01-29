@@ -4,13 +4,14 @@ import better.files._
 import o.lartifa.jam.common.util.ErrorMsg
 import o.lartifa.jam.service.VCService.{VCSFileStruct, VCSResult}
 import o.lartifa.jam.utils.FileUtil
-import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.api.{Git, ResetCommand}
 import org.eclipse.jgit.errors.RepositoryNotFoundException
 import org.eclipse.jgit.revwalk.RevCommit
 import org.owasp.esapi.{ESAPI, Logger}
 import org.springframework.stereotype.Service
 
 import java.io.File
+import java.util
 import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
 import scala.util.Try
@@ -23,21 +24,6 @@ import scala.util.Try
  */
 @Service
 class GitVCService(userService: UserService) extends VCService[RevCommit] {
-
-  /**
-   * 将目录视为仓库
-   *
-   * @param path 文件目录地址
-   * @return 转换结果
-   */
-  private implicit class pathASRepo(path: String) {
-    def toRepo: Either[String, Git] = FileUtil.castToDir(path).flatMap(dir => {
-      Try(Git.open(dir)).toEither.left.map {
-        case _: RepositoryNotFoundException => "当前目录没有被初始化"
-        case e => throw e
-      }
-    })
-  }
 
   // TODO 完备的测试
   /**
@@ -66,7 +52,7 @@ class GitVCService(userService: UserService) extends VCService[RevCommit] {
    * @return 操作结果
    */
   override def tag(tag: String, path: String): VCSResult =
-    path.toRepo.map(commit(_, tag))
+    toRepo(path).map(commit(_, tag))
 
   /**
    * 列出当前全部 tag 记录
@@ -75,7 +61,7 @@ class GitVCService(userService: UserService) extends VCService[RevCommit] {
    * @return 全部 tag 记录
    */
   def listTags(path: String): Either[String, Iterable[RevCommit]] =
-    path.toRepo.map(_.log().call().asScala)
+    toRepo(path).map(_.log().call().asScala)
 
   /**
    * 退回到指定版本
@@ -85,7 +71,7 @@ class GitVCService(userService: UserService) extends VCService[RevCommit] {
    * @return 操作结果
    */
   override def rollback(rollbackTo: String, path: String): VCSResult =
-    path.toRepo.map(_.reset().setRef(rollbackTo).call())
+    toRepo(path).map(_.reset().setRef(rollbackTo).setMode(ResetCommand.ResetType.HARD).call())
 
   /**
    * 获取当前版本 tag
@@ -94,7 +80,7 @@ class GitVCService(userService: UserService) extends VCService[RevCommit] {
    * @return 当前 tag
    */
   override def currentTag(path: String): Option[RevCommit] =
-    path.toRepo.toOption.flatMap { repo =>
+    toRepo(path).toOption.flatMap { repo =>
       val logIter = repo.log().call().iterator()
       if (logIter.hasNext) Some(logIter.next())
       else None
@@ -121,7 +107,34 @@ class GitVCService(userService: UserService) extends VCService[RevCommit] {
    * @param path 指定目录
    * @return 更改的文件
    */
-  override def currentChanges(path: String): Either[String, List[VCSFileStruct]] = ???
+  override def currentChanges(path: String): Either[String, List[VCSFileStruct]] = {
+    toRepo(path).map { repo =>
+      val status = repo.status().call()
+      import VCService.VCSFileStatus._
+      gitStatusToFileStructList(status.getAdded, Added) ++
+        gitStatusToFileStructList(status.getChanged, Changed) ++
+        gitStatusToFileStructList(status.getRemoved, Removed) ++
+        gitStatusToFileStructList(status.getMissing, Missing) ++
+        gitStatusToFileStructList(status.getModified, Modified) ++
+        gitStatusToFileStructList(status.getConflicting, Conflicting)
+    }
+  }
+
+  /**
+   * 将 Git 状态转换为文件结构列表
+   *
+   * @param statusFileList 该状态下的文件列表
+   * @param status         状态
+   * @return 文件结构列表
+   */
+  private def gitStatusToFileStructList(statusFileList: util.Set[String], status: String): List[VCSFileStruct] = {
+    statusFileList.asScala.map { path =>
+      VCSFileStruct(
+        name = path.substring(path.lastIndexOf("/") + 1, path.length),
+        path = path, isDir = false, status = status, subDirs = Nil
+      )
+    }.toList
+  }
 
   /**
    * 创建 ignore 文件
@@ -151,6 +164,19 @@ class GitVCService(userService: UserService) extends VCService[RevCommit] {
       if (gitDir.exists) Right(gitDir.delete())
       else Left("该目录并未被版本控制系统接管")
     }
+
+  /**
+   * 将目录视为仓库
+   *
+   * @param path 文件目录地址
+   * @return 转换结果
+   */
+  def toRepo(path: String): Either[String, Git] = FileUtil.castToDir(path).flatMap(dir => {
+    Try(Git.open(dir)).toEither.left.map {
+      case _: RepositoryNotFoundException => "当前目录没有被初始化"
+      case e => throw e
+    }
+  })
 
   /**
    * Git 提交
