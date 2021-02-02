@@ -9,6 +9,6 @@ import org.springframework.stereotype.Service
  * 2021/1/23 10:54
  */
 @Service
-class ScriptService {
+class ScriptService(gitVCService: GitVCService) {
 
 }

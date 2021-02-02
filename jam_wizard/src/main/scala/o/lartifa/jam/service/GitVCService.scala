@@ -11,6 +11,7 @@ import org.owasp.esapi.{ESAPI, Logger}
 import org.springframework.stereotype.Service
 
 import java.io.File
+import java.nio.file.Paths
 import java.util
 import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
@@ -25,7 +26,6 @@ import scala.util.Try
 @Service
 class GitVCService(userService: UserService) extends VCService[RevCommit] {
 
-  // TODO 完备的测试
   /**
    * 为目录初始化版本控制系统
    * > git init
@@ -37,11 +37,14 @@ class GitVCService(userService: UserService) extends VCService[RevCommit] {
    * @return 初始化结果
    */
   override def init(path: String): VCSResult =
-    FileUtil.castToDir(path).map { dir =>
-      val repo: Git = Git.init().setDirectory(dir).call()
-      createIgnoreFile(dir)
-      repo.add().addFilepattern(".").call()
-      repo
+    FileUtil.castToDir(path).flatMap { dir =>
+      if (Paths.get(path, ".git").toFile.exists()) {
+        Left("当前目录已初始化过")
+      } else {
+        val repo: Git = Git.init().setDirectory(dir).call()
+        createIgnoreFile(dir)
+        Right(repo)
+      }
     }.flatMap(commit(_, "首次保存"))
 
   /**
@@ -142,6 +145,7 @@ class GitVCService(userService: UserService) extends VCService[RevCommit] {
    * @param rootDir 根目录
    * @return 操作结果
    */
+  //noinspection SpellCheckingInspection
   private def createIgnoreFile(rootDir: File): Unit = {
     val ignoreFile = (rootDir.toScala / ".gitignore").createIfNotExists()
     ignoreFile.appendLines("# 以下类型的文件会被忽略", ".DS_Store", ".AppleDouble", ".LSOverride", "Icon", "._*",
@@ -191,7 +195,7 @@ class GitVCService(userService: UserService) extends VCService[RevCommit] {
       case Some(username) =>
         repo.add().addFilepattern(".").call()
         repo.commit().setAuthor(username, s"$username@jam.mgt.user").setMessage(message).call()
-        Right()
+        Right(())
     }
   }
 }

@@ -5,6 +5,7 @@ plugins {
     id "application"
     id "org.springframework.boot" version "$spring_version"
     id "io.spring.dependency-management" version "1.0.10.RELEASE"
+    id "com.github.maiflai.scalatest" version "$scala_test_plugin_version"
 }
 
 sourceCompatibility = "11"
@@ -86,6 +87,10 @@ dependencies {
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
     // Test
+    testImplementation("org.scalactic:scalactic_2.13:$scala_test_version")
+    testImplementation("org.scalatest:scalatest_2.13:$scala_test_version")
+    testImplementation("org.scalamock:scalamock_2.13:4.4.0")
+    testRuntime("com.vladsch.flexmark:flexmark-all:0.35.10")
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude group: "org.junit.vintage", module: "junit-vintage-engine"
     }
