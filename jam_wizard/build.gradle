@@ -3,8 +3,8 @@ plugins {
     id "scala"
     id "distribution"
     id "application"
-    id "org.springframework.boot" version "2.3.3.RELEASE"
-    id "io.spring.dependency-management" version "1.0.8.RELEASE"
+    id "org.springframework.boot" version "$spring_version"
+    id "io.spring.dependency-management" version "1.0.10.RELEASE"
 }
 
 sourceCompatibility = "11"
@@ -15,16 +15,77 @@ scala {
 
 application {
     mainClass = 'o.lartifa.jam.Bootloader'
-    applicationDefaultJvmArgs = ["-Xmx128m", "-Xms64m", "-ea", "-server"]
+    applicationDefaultJvmArgs = ["-Xmx512m", "-Xms128m", "-ea", "-server"]
 }
 
 dependencies {
-    implementation(project(":jam_self")) {
-        exclude group: "org.slf4j", module: "slf4j-simple"
-    }
+    implementation(project(":jam_utils"))
+    implementation(project(":sxdl_interpreter"))
 
+    // Scala
+    implementation("org.scala-lang:scala-library:$scala_version")
+    implementation("org.scala-lang:scala-reflect:$scala_version")
+    implementation("org.scala-lang.modules:scala-async_2.13:0.10.0")
+    implementation("org.scala-lang.modules:scala-parallel-collections_2.13:0.2.0")
+
+    // Scala extension
+    implementation("com.lihaoyi:ammonite-ops_2.13:2.1.4")
+
+    // Tools
+    implementation("cn.hutool:hutool-all:5.5.7")
+    implementation("com.github.pathikrit:better-files_2.13:3.9.1")
+    implementation("com.lihaoyi:requests_2.13:0.6.2")
+    implementation("net.redhogs.cronparser:cron-parser-core:3.5")
+    implementation("org.owasp.esapi:esapi:2.1.0.1")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:5.10.0.202012080955-r")
+
+    // Spring reactive
     implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
 
+    // Scala-Jackson
+    implementation("com.fasterxml.jackson.core:jackson-annotations") {
+        version {
+            strictly jackson_version
+        }
+    }
+    implementation("com.fasterxml.jackson.core:jackson-core") {
+        version {
+            strictly jackson_version
+        }
+    }
+    implementation("com.fasterxml.jackson.core:jackson-databind") {
+        version {
+            strictly jackson_version
+        }
+    }
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310") {
+        version {
+            strictly jackson_version
+        }
+    }
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8") {
+        version {
+            strictly jackson_version
+        }
+    }
+    implementation("com.fasterxml.jackson.module:jackson-module-scala_2.13:2.12.1")
+
+    // Security
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+
+    // Data
+    implementation("io.getquill:quill-jdbc_2.13:3.6.0")
+
+    // Flyway
+    runtimeOnly("org.springframework.boot:spring-boot-starter-jdbc")
+    runtimeOnly("org.postgresql:postgresql:42.2.14")
+    implementation("org.flywaydb:flyway-core:7.5.0")
+
+    // Devtools
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+
+    // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude group: "org.junit.vintage", module: "junit-vintage-engine"
     }
