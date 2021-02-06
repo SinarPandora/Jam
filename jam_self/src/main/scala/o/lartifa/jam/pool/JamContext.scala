@@ -1,11 +1,12 @@
 package o.lartifa.jam.pool
 
-import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
-
+import akka.actor.ActorSystem
 import cc.moecraft.icq.sender.IcqHttpApi
 import cc.moecraft.icq.{PicqBotX, PicqConfig}
 import o.lartifa.jam.common.util.LoggerFactory
 import o.lartifa.jam.model.patterns.ContentMatcher
+
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 
 /**
  * 果酱（系统）上下文
@@ -28,4 +29,5 @@ object JamContext {
   val messagePool: MessagePool = new MessagePool()
   val clientConfig: AtomicReference[PicqConfig] = new AtomicReference[PicqConfig]()
   val httpApi: AtomicReference[() => IcqHttpApi] = new AtomicReference()
+  val actorSystem: ActorSystem = ActorSystem("System")
 }
