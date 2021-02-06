@@ -14,6 +14,9 @@ create table story
     default_config varchar                               not null
 );
 
+create index story_author_name_index
+    on story (author, name);
+
 create table story_instance
 (
     id          bigserial                           not null
@@ -29,6 +32,9 @@ create table story_instance
     chat_id     bigint                              not null,
     last_update timestamp default current_timestamp not null
 );
+
+create index story_instance_story_id_index
+    on story_instance (story_id);
 
 create table story_save_file
 (
@@ -46,3 +52,16 @@ create table story_save_file
 
 create unique index story_save_file_chat_id_chat_type_story_id_uindex
     on story_save_file (chat_id, chat_type, story_id);
+
+create table story_save_inherit
+(
+    id              bigserial not null
+        constraint story_save_inherit_pk
+            primary key,
+    legacy_story_id bigint    not null
+        constraint story_save_inherit_legacy_story_id_fk
+            references story,
+    in_use_story_id bigint    not null
+        constraint story_save_inherit_in_use_story_id_fk
+            references story
+);

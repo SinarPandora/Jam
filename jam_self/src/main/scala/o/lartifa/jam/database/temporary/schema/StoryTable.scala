@@ -51,6 +51,9 @@ trait StoryTable {
     val loadDate: Rep[java.sql.Timestamp] = column[java.sql.Timestamp]("load_date")
     /** Database column default_config SqlType(varchar) */
     val defaultConfig: Rep[String] = column[String]("default_config")
+
+    /** Index over (author,name) (database name story_author_name_index) */
+    val index1 = index("story_author_name_index", (author, name))
   }
   /** Collection-like TableQuery object for table Story */
   lazy val Story = new TableQuery(tag => new Story(tag))
