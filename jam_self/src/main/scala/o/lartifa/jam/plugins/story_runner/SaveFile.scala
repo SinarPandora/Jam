@@ -36,7 +36,7 @@ object SaveFile {
    * @param string 字符串
    * @return 存档
    */
-  def read(string: String): SaveFile = uRead(string)
+  def read(string: String): SaveFile = uRead[SaveFile](string)
 
   /**
    * 从字符串读取存档列表
@@ -44,7 +44,7 @@ object SaveFile {
    * @param string 字符串
    * @return 存档
    */
-  def readAsList(string: String): List[SaveFile] = uRead(string)
+  def readAsList(string: String): List[SaveFile] = uRead[List[SaveFile]](string)
 
   /**
    * 将存档写入字符串
@@ -52,7 +52,7 @@ object SaveFile {
    * @param saveFile 存档对象
    * @return 字符串
    */
-  def write(saveFile: SaveFile): String = uWrite(saveFile)
+  def write(saveFile: SaveFile): String = uWrite[SaveFile](saveFile)
 
   /**
    * 将存档列表写入字符串
@@ -60,6 +60,6 @@ object SaveFile {
    * @param saveFiles 存档列表
    * @return 字符串
    */
-  def writeList(saveFiles: List[SaveFile]): String = uWrite(saveFiles)
+  def writeList(saveFiles: List[SaveFile]): String = uWrite[List[SaveFile]](saveFiles)
 }
 

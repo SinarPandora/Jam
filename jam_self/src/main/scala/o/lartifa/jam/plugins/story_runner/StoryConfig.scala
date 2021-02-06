@@ -35,5 +35,5 @@ object StoryConfig {
   def apply(breakTime: Double, showEachChose: Boolean, everyOneCanJoin: Boolean, autoPlayStep: List[Int], enablePainlessMigration: Boolean): StoryConfig =
     new StoryConfig(breakTime, showEachChose, everyOneCanJoin, autoPlayStep, enablePainlessMigration)
 
-  def apply(string: String): StoryConfig = read(string)
+  def apply(string: String): StoryConfig = read[StoryConfig](string)
 }
