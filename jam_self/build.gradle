@@ -87,6 +87,8 @@ dependencies {
     // Tools
     api("com.apptastic:rssreader:2.2.3")
     api("org.reflections:reflections:0.9.12")
+    api("com.typesafe.akka:akka-actor_2.13:$akka_verion")
+    api("tv.cntt:glokka_2.13:2.6.1")
     api("io.reactivex.rxjava3:rxjava:$rx_extension_version")
     api("com.lihaoyi:ammonite-ops_2.13:2.1.4")
     api("com.github.pathikrit:better-files_2.13:3.9.1")
@@ -95,6 +97,7 @@ dependencies {
     api("com.lihaoyi:ujson_2.13:1.2.2")
     api("org.jsoup:jsoup:1.13.1")
     api("net.redhogs.cronparser:cron-parser-core:3.5")
+    api("com.bladecoder.ink:blade-ink:0.7.4")
     api("com.sksamuel.scrimage:scrimage-core:4.0.6") {
         exclude group: "ch.qos.logback", module: "logback-classic"
     }
