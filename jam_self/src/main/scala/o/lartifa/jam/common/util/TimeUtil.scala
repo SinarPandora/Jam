@@ -25,5 +25,5 @@ object TimeUtil {
    * @param milliseconds 纪元秒
    * @return 时间戳
    */
-  def epochMilliToTimeStamp(milliseconds: Long): Timestamp = Timestamp.from(Instant.ofEpochMilli(milliseconds))
+  def epochMilliToTimeStamp(milliseconds: Long): Timestamp = new Timestamp(milliseconds)
 }

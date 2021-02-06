@@ -1,5 +1,6 @@
 package o.lartifa.jam.plugins.story_runner
 
+import o.lartifa.jam.common.util.TimeUtil
 import o.lartifa.jam.database.temporary.schema.Tables
 import o.lartifa.jam.database.temporary.schema.Tables._
 import o.lartifa.jam.model.ChatInfo
@@ -185,7 +186,8 @@ object StoryRepo {
    * @return 保存结果
    */
   def autoSave(instanceId: Long, saveFile: SaveFile): Future[Boolean] = db.run {
-    StoryInstance.filter(_.id === instanceId).map(r => (r.autoSave, r.data)).update((saveFile.choices, saveFile.data))
+    StoryInstance.filter(_.id === instanceId).map(r => (r.autoSave, r.data, r.lastUpdate))
+      .update((saveFile.choices, saveFile.data, TimeUtil.currentTimeStamp))
   }.map(_ == 1)
 
   /**
@@ -196,7 +198,8 @@ object StoryRepo {
    * @return 保存结果
    */
   def autoRefreshData(instanceId: Long, data: Option[String]): Future[Boolean] = db.run {
-    StoryInstance.filter(_.id === instanceId).map(_.data).update(data)
+    StoryInstance.filter(_.id === instanceId).map(it => (it.data, it.lastUpdate))
+      .update((data, TimeUtil.currentTimeStamp))
   }.map(_ == 1)
 
   /**
