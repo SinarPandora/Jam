@@ -6,6 +6,7 @@ import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch
 import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.util.MasterUtil
+import o.lartifa.jam.cool.qq.listener.fsm.FSMModeRouter
 import o.lartifa.jam.model.patterns.ContentMatcher
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.pool.JamContext
@@ -37,25 +38,32 @@ object SSDLRuleRunner {
     val scanList = this.buildMatcherScanList(eventMessage)
     // 组建上下文
     implicit val context: CommandExecuteContext = CommandExecuteContext(eventMessage)
-    // 查找步骤
-    findMatchedStep(eventMessage.getMessage, scanList).map { matcher =>
-      val stepId = matcher.stepId
-      // 执行任务
-      val ssdlTask = JamContext.stepPool.get().goto(stepId).recover(exception => {
-        logger.error(exception)
-        MasterUtil.notifyMaster(s"%s，步骤${stepId}执行失败了，原因是：${exception.getMessage}")
-      }).flatMap(_ => JamContext.messagePool.recordAPlaceholder(eventMessage, "已捕获并执行一次SSDL")).map(_ => ())
-      // 输出捕获信息
-      matchCost.stop()
-      val cost = matchCost.getTotalTimeSeconds
-      if (cost < 1) logger.log(s"${AnsiColor.GREEN}成功捕获！步骤ID：$stepId，耗时：小于1s")
-      else if (cost < 4) logger.log(s"${AnsiColor.GREEN}成功捕获！步骤ID：$stepId，耗时：${cost}s")
-      else logger.warning(s"${AnsiColor.RED}成功捕获但耗时较长，请考虑对捕获条件进行优化。步骤ID：$stepId，耗时：${cost}s")
-      ssdlTask
-    }.getOrElse {
-      Future.successful(matchCost.stop())
-    }
-  } else Future.successful(())
+    // 判断当前会话是否存在模式
+    FSMModeRouter.forward(eventMessage).flatMap(continue => {
+      // 是否继续执行普通流程（捕获并执行 SSDL）
+      if (continue) {
+        // 查找步骤
+        findMatchedStep(eventMessage.getMessage, scanList).map { matcher =>
+          val stepId = matcher.stepId
+          // 执行任务
+          val ssdlTask = JamContext.stepPool.get().goto(stepId).recover(exception => {
+            logger.error(exception)
+            MasterUtil.notifyMaster(s"%s，步骤${stepId}执行失败了，原因是：${exception.getMessage}")
+          }).flatMap(_ => JamContext.messagePool.recordAPlaceholder(eventMessage, "已捕获并执行一次SSDL")).map(_ => ())
+          // 输出捕获信息
+          matchCost.stop()
+          val cost = matchCost.getTotalTimeSeconds
+          if (cost < 1) logger.log(s"${AnsiColor.GREEN}成功捕获！步骤ID：$stepId，耗时：小于1s")
+          else if (cost < 4) logger.log(s"${AnsiColor.GREEN}成功捕获！步骤ID：$stepId，耗时：${cost}s")
+          else logger.warning(s"${AnsiColor.RED}成功捕获但耗时较长，请考虑对捕获条件进行优化。步骤ID：$stepId，耗时：${cost}s")
+          ssdlTask
+        }.getOrElse {
+          matchCost.stop()
+          Future.unit
+        }
+      } else Future.unit
+    })
+  } else Future.unit
 
   /**
    * 寻找匹配的步骤

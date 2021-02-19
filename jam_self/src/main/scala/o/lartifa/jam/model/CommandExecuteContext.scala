@@ -1,11 +1,10 @@
 package o.lartifa.jam.model
 
-import java.sql.Timestamp
-import java.time.Instant
-
 import cc.moecraft.icq.event.events.message.EventMessage
 import o.lartifa.jam.pool._
 
+import java.sql.Timestamp
+import java.time.Instant
 import scala.concurrent.ExecutionContext
 
 /**
