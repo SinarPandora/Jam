@@ -1,5 +1,7 @@
 package o.lartifa.jam.plugins.caiyunai.dream
 
+import requests.Session
+
 import scala.util.Try
 
 /**
@@ -13,9 +15,10 @@ object DreamClient {
    * 获取 UID
    *
    * @return UID
+   * @param session 当前会话
    */
-  def getUid: Either[String, String] = {
-    Try(requests.post(APIs.getUid, data = "{\"ostype\":\"\"}").text())
+  def getUid(implicit session: Session): Either[String, String] = {
+    Try(session.post(APIs.getUid, data = "{\"ostype\":\"\"}").text())
       .map(ujson.read(_)("data")("user")("_id").str)
       .map(Right.apply)
       .getOrElse(Left("获取 UID 失败"))
@@ -32,10 +35,11 @@ object DreamClient {
   /**
    * 获取小梦模型
    *
+   * @param session 当前会话
    * @return 可用的小梦 AI 模型列表
    */
-  def listModels: Either[String, List[AICharacter]] = {
-    Try(requests.post(APIs.listModels, data = "{\"ostype\":\"\"}").text())
+  def listModels(implicit session: Session): Either[String, List[AICharacter]] = {
+    Try(session.post(APIs.listModels, data = "{\"ostype\":\"\"}").text())
       .map(ujson.read(_)("data")("public_rows").arr.flatMap(v => {
         val name = v("name").str.trim
         val mid = v("mid").str.trim
@@ -48,10 +52,11 @@ object DreamClient {
   /**
    * 获取签名
    *
+   * @param session 当前会话
    * @return 彩云小梦 APP 签名
    */
-  def getSignature: Either[String, String] = {
-    Try(requests.post(APIs.getSignature, data = "{\"url\":\"http://if.caiyunai.com/dream/\",\"ostype\":\"\"}").text())
+  def getSignature(implicit session: Session): Either[String, String] = {
+    Try(session.post(APIs.getSignature, data = "{\"url\":\"http://if.caiyunai.com/dream/\",\"ostype\":\"\"}").text())
       .map(Right.apply)
       .getOrElse(Left("获取签名时失败"))
   }
@@ -63,10 +68,11 @@ object DreamClient {
    * @param content 内容
    * @param uid     用户 ID（必填）
    * @param nid     小说 ID（选填）
+   * @param session 当前会话
    * @return 保存成功时返回 UID（文章 ID)
    */
-  def save(title: String, content: String, uid: String, nid: Option[String] = None): Either[String, String] = {
-    Try(requests.post(APIs.save(uid), data =
+  def save(title: String, content: String, uid: String, nid: Option[String] = None)(implicit session: Session): Either[String, String] = {
+    Try(session.post(APIs.save(uid), data =
       s"""{
          |  "content": "$content",
          |  "title": "$title",
@@ -86,10 +92,11 @@ object DreamClient {
    * @param uid     用户 ID
    * @param nid     小说 ID
    * @param mid     模型 ID
+   * @param session 当前会话
    * @return 保存成功时返回 XID（梦境 ID）
    */
-  def dream(title: String, content: String, uid: String, nid: String, mid: String): Either[String, String] = {
-    Try(requests.post(APIs.dream(uid), data =
+  def dream(title: String, content: String, uid: String, nid: String, mid: String)(implicit session: Session): Either[String, String] = {
+    Try(session.post(APIs.dream(uid), data =
       s"""{
          |  "nid": "$nid",
          |  "content": "$content",
@@ -103,18 +110,26 @@ object DreamClient {
       .getOrElse(Left("AI 联想启动失败，请稍后再试"))
   }
 
+  /**
+   * 小云梦境
+   *
+   * @param idx     选项编号
+   * @param content 联想内容
+   * @param xid     梦境 ID
+   */
   case class Dream(idx: Int, content: String, xid: String)
 
   /**
    * 梦境回环（获取续写内容）
    *
-   * @param uid 用户 ID
-   * @param nid 小说 ID
-   * @param xid 梦境 ID
+   * @param uid     用户 ID
+   * @param nid     小说 ID
+   * @param xid     梦境 ID
+   * @param session 当前会话
    * @return 成功时返回梦境列表
    */
-  def dreamLoop(uid: String, nid: String, xid: String): Either[String, List[Dream]] = {
-    Try(requests.post(APIs.dreamLoop(uid), data = s"""{"nid":"$nid","xid":"$xid","ostype":""}""").text())
+  def dreamLoop(uid: String, nid: String, xid: String)(implicit session: Session): Either[String, List[Dream]] = {
+    Try(session.post(APIs.dreamLoop(uid), data = s"""{"nid":"$nid","xid":"$xid","ostype":""}""").text())
       .map(ujson.read(_)("data")("rows").arr.zipWithIndex.map {
         case (v, i) => Dream(i, v("content").str.trim, v("_id").str.trim)
       }.toList)
@@ -125,13 +140,14 @@ object DreamClient {
   /**
    * 稳定故事线（将续写内容添加到文本）
    *
-   * @param uid   用户 ID
-   * @param xid   梦境 ID
-   * @param index 选项编号
+   * @param uid     用户 ID
+   * @param xid     梦境 ID
+   * @param index   选项编号
+   * @param session 当前会话
    * @return 成功时返回 true
    */
-  def realizingDream(uid: String, xid: String, index: Int): Either[String, Boolean] = {
-    Try(requests.post(APIs.realizingDream(uid), data =
+  def realizingDream(uid: String, xid: String, index: Int)(implicit session: Session): Either[String, Boolean] = {
+    Try(session.post(APIs.realizingDream(uid), data =
       s"""{
          |  "xid": "$xid",
          |  "index": $index,
