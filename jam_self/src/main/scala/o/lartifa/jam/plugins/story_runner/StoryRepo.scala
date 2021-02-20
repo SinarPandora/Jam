@@ -1,5 +1,6 @@
 package o.lartifa.jam.plugins.story_runner
 
+import o.lartifa.jam.common.util.TimeUtil
 import o.lartifa.jam.database.temporary.schema.Tables
 import o.lartifa.jam.database.temporary.schema.Tables._
 import o.lartifa.jam.model.ChatInfo
@@ -135,6 +136,17 @@ object StoryRepo {
   }.map(_ == 1)
 
   /**
+   * 迁移全部存档
+   *
+   * @param legacyStoryId 遗留故事 ID
+   * @param targetStoryId 迁移目标 ID
+   * @return 迁移结果
+   */
+  def migrateAllSaveFile(legacyStoryId: Long, targetStoryId: Long): Future[Int] = db.run {
+    StorySaveFile.filter(_.storyId === legacyStoryId).map(_.storyId).update(targetStoryId)
+  }
+
+  /**
    * 创建对应的 instance
    *
    * @param storyId  故事 ID
@@ -185,7 +197,10 @@ object StoryRepo {
    * @return 保存结果
    */
   def autoSave(instanceId: Long, saveFile: SaveFile): Future[Boolean] = db.run {
-    StoryInstance.filter(_.id === instanceId).map(r => (r.autoSave, r.data)).update((saveFile.choices, saveFile.data))
+    // TODO
+    ???
+    StoryInstance.filter(_.id === instanceId).map(r => (r.autoSave, r.data, r.lastUpdate))
+      .update((saveFile.choices, saveFile.data, TimeUtil.currentTimeStamp))
   }.map(_ == 1)
 
   /**
@@ -196,7 +211,8 @@ object StoryRepo {
    * @return 保存结果
    */
   def autoRefreshData(instanceId: Long, data: Option[String]): Future[Boolean] = db.run {
-    StoryInstance.filter(_.id === instanceId).map(_.data).update(data)
+    StoryInstance.filter(_.id === instanceId).map(it => (it.data, it.lastUpdate))
+      .update((data, TimeUtil.currentTimeStamp))
   }.map(_ == 1)
 
   /**
@@ -244,13 +260,37 @@ object StoryRepo {
   }
 
   /**
-   * 清理升级故事产生的遗留关系数据
+   * 删除存档
+   *
+   * @param storyId    故事 ID
+   * @param chatInfo   会话属性
+   * @param saveFileId 存档 ID
+   * @return 删除结果
+   */
+  def deleteSaveFile(storyId: Long, chatInfo: ChatInfo, saveFileId: Long): Future[Boolean] = {
+    // TODO
+    ???
+  }
+
+  /**
+   * 清理升级故事产生的遗留关系数据，此方法应该用于每夜维护任务
+   * TODO 移动到 task
    * <p>
-   * 如果这是一个遗留故事，并且没有任何对应的 instance 和 save 存在，则清理继承关系和故事数据
+   * 第一步：检查是否存在游戏实例，如果存在，发出警告，保存存档后删除
+   * <br />
+   * 第二步：如果故事支持无痛迁移，在睡觉时迁移全部存档
+   * <br />
+   * 第三步：如果这是一个遗留故事，并且没有任何对应的 instance 和 save 存在，则清理继承关系和故事数据
    * </p>
+   *
    * @return 清理结果
    */
   def storyCleanup(): Future[Unit] = {
+    // 检查是否存在游戏实例，如果存在，发出警告，保存存档后删除
+
+    // 如果故事支持无痛迁移，在睡觉时迁移全部存档
+
+    // 如果这是一个遗留故事，并且没有任何对应的实例和存档存在，则清理继承关系和故事数据
     val query = sql"""select distinct s.id
             from public.story s
                 left join public.story_instance si on s.id = si.story_id
