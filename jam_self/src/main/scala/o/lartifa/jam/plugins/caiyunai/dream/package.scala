@@ -2,7 +2,7 @@ package o.lartifa.jam.plugins.caiyunai
 
 /**
  * 彩云小梦模块通用
- * 
+ *
  * Author: sinar
  * 2021/2/19 12:00
  */
@@ -23,7 +23,7 @@ package object dream {
    * 如果不接受结果：dream -[循环执行直到有结果]> dreamLoop
    */
   object APIs {
-    private val host = "http://if.caiyunai.com/v1/dream"
+    private val host: String = "http://if.caiyunai.com/v1/dream"
     /**
      * 获取 uid
      * _id 即为 uid，此 id 在会话内有效，应保存
@@ -36,7 +36,7 @@ package object dream {
      *    "dream":true,"cyopenid":"","cyunionid":null,"nickname":null,"headimgurl":null,"ostype":""
      *   }}}
      */
-    val getUid = s"$host/getUid"
+    val getUid: String = s"$host/getUid"
     /**
      * 列出可用模型
      * 请求方法：POST
@@ -54,7 +54,7 @@ package object dream {
      *      "name":"科幻","_type":"公开","_status":"转换完成","dreamid":"general","temperature":1.0,"description":",科幻"}
      *  ]}}
      */
-    val listModels = s"$host/model_list"
+    val listModels: String = s"$host/model_list"
     /**
      * 获取签名（用途未知）
      * 请求方法：POST
@@ -62,15 +62,16 @@ package object dream {
      * 返回体样例：a20c41e85a80bdda4f17f5192db09ad6ddfdf614&#95;&#95;1613707540510
      * 转义字符为两个下划线
      */
-    val getSignature = "https://xiaoyiwechat.caiyunai.com/getSignature"
+    val getSignature: String = "https://xiaoyiwechat.caiyunai.com/getSignature"
 
     /**
      * 保存文稿（官方建议不要高于1000字）
+     * 首次保存时，nid 可以不传
      * 请求方法：POST
      * 请求体样例：{"content":"花匠打开了手机，","title":"手机","nid":"602f3a7cb499433a1a16a458","ostype":""}
      * 返回体样例：{"status":0,"data":{"nid":"602f3a7cb499433a1a16a458"}}
      */
-    def save(uid: String) = s"$host/$uid/novel_save"
+    def save(uid: String): String = s"$host/$uid/novel_save"
 
     /**
      * 小云做梦（触发AI续写）
@@ -80,7 +81,7 @@ package object dream {
      * "mid":"60094a2a9661080dc490f75a","title":"手机","ostype":""}
      * 返回体样例：{"status":0,"msg":"ok","data":{"xid":"602f3dfe84f40329800a3760"}}
      */
-    def dream(uid: String) = s"$host/$uid/novel_ai"
+    def dream(uid: String): String = s"$host/$uid/novel_ai"
 
     /**
      * 梦境回环（获取续写内容）
@@ -97,7 +98,7 @@ package object dream {
      * 其中 _id 为 xid
      * 三条联想结果的 xid 相同，也就是说无论选择哪个结果，在使用 realizingDream 方法时都应该传入相同的 xid
      */
-    def dreamLoop(uid: String) = s"$host/$uid/novel_dream_loop"
+    def dreamLoop(uid: String): String = s"$host/$uid/novel_dream_loop"
 
     /**
      * 稳定故事线（将续写内容添加到文本）
@@ -105,7 +106,7 @@ package object dream {
      * 请求体样例：{"xid":"602f3bc4b7c2286a158255ed","index":0,"ostype":""}
      * 返回体样例：{"status":0,"msg":"ok"}
      */
-    def realizingDream(uid: String) = s"$host/$uid/add_dream_content"
+    def realizingDream(uid: String): String = s"$host/$uid/add_dream_content"
   }
 
 }
