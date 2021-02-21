@@ -110,7 +110,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
             |② 换一批梦境： -再入梦
             |③ 查看当前文章：-列出全文
             |④ 修改当前 AI 角色或文章标题： -修改角色/-修改标题
-            |⑤ 退出：-退出""".stripMargin)
+            |⑤ 返回编写模式：-返回""".stripMargin)
       } else if (text.startsWith("+")) {
         Try(text.stripPrefix("+").trim.toInt - 1) match {
           case Success(idx) =>
@@ -138,6 +138,9 @@ class DreamActor(startEvt: EventMessage) extends Actor {
             }
           case Failure(_) => reply(msg.evt, "请输入正确的编号")
         }
+      } else if (text.stripPrefix("-").trim == "返回") {
+        become(writing(data))
+        reply(msg.evt, "已返回编辑模式")
       }
     case evt: MenuEvent => menu(data, evt)
   }
