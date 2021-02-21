@@ -52,7 +52,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
         val uid = _uid.asInstanceOf[Either[String, String]]
         val models = _models.asInstanceOf[Either[String, List[AICharacter]]]
         val signature = _signature.asInstanceOf[Either[String, String]]
-        if (uid.isLeft || models.isLeft || signature.isLeft || models.getOrElse(Nil).nonEmpty) Future.successful(None)
+        if (uid.isLeft || models.isLeft || signature.isLeft || models.getOrElse(Nil).isEmpty) Future.successful(None)
         else {
           // 此处理应不能失败
           Future.successful(Some(Data(
