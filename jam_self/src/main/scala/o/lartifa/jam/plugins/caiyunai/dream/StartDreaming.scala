@@ -100,9 +100,9 @@ object StartDreaming extends Command[Unit] with SendMsgToActorWhenReady {
             if (exitEvent) {
               logger.log(s"收到结束事件，彩云小梦 worker 正在停止运行，聊天信息：${ctx.chatInfo.toString}")
               unBecomeToNormal()
+              context.stop(self)
               JamContext.registry ! Terminated(sender)(existenceConfirmed = true, addressTerminated = false)
               JamContext.registry ! Terminated(self)(existenceConfirmed = true, addressTerminated = false)
-              context.stop(self)
             }
           case Link(sender, chatInfo) =>
             context.become(working(dreamActor, linker + (chatInfo -> sender)))
