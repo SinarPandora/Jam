@@ -2,9 +2,9 @@ package o.lartifa.jam.plugins.caiyunai.dream
 
 import akka.actor.{Actor, ActorRef}
 import cc.moecraft.icq.event.events.message.EventMessage
+import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.JamConfig
-import o.lartifa.jam.model.ChatInfo
-import o.lartifa.jam.plugins.caiyunai.dream.DreamActor.{ContentUpdated, Data, Event}
+import o.lartifa.jam.plugins.caiyunai.dream.DreamActor._
 import o.lartifa.jam.plugins.caiyunai.dream.DreamClient.{AICharacter, Dream}
 import o.lartifa.jam.pool.JamContext
 import requests.Session
@@ -21,22 +21,55 @@ import scala.util.{Failure, Success, Try}
  */
 class DreamActor(startEvt: EventMessage) extends Actor {
 
-  private val chatInfo: ChatInfo = ChatInfo(startEvt)
-
   private implicit val session: Session = requests.Session()
 
   import context.{become, unbecome}
 
-  override def receive: Receive = ???
+  override def preStart(): Unit = self ! Start
 
   /**
    * 状态：初始化
-   *
-   * @return
    */
-  def init(): Receive = {
+  override def receive: Receive = {
+    case Start => init()
+    case _ => // 默认什么也不做
+  }
+
+
+  /**
+   * 初始化
+   */
+  def init(): Unit = {
     reply(startEvt, s"首先一棒子打晕${JamConfig.name}……")
-    ???
+    reply(startEvt, s"正在将探针连接到意识形成场……")
+    Future.sequence(Seq(
+      Future(DreamClient.getUid),
+      Future(DreamClient.listModels),
+      Future(DreamClient.getSignature)
+    )).flatMap {
+      case Seq(uid: Either[String, String], models: Either[String, List[AICharacter]], signature: Either[String, String]) =>
+        if (uid.isLeft || models.isLeft || signature.isLeft || models.getOrElse(Nil).nonEmpty) Future.successful(None)
+        else {
+          // 此处理应不能失败
+          Future.successful(Some(Data(
+            uid.toOption.get,
+            models.toOption.get.head.mid,
+            models.toOption.get,
+            signature.toOption.get
+          )))
+        }
+    }.map {
+      case Some(data) =>
+        reply(startEvt, s"意识连接建立成功！")
+        reply(startEvt,
+          """你可以发送 -帮助 打开帮助菜单
+            |祝你创作愉快~""".stripMargin)
+        become(writing(data))
+      case None =>
+    }.recoverWith(err => {
+      logger.error("彩云小梦模块初始化过程中出现未知错误！", err)
+      Future.unit
+    })
   }
 
   /**
@@ -85,7 +118,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
           }
         case text if text.stripPrefix("-").trim == "帮助" =>
           reply(msg.evt,
-            """编写模式：
+            """编写模式帮助：
               |① 追加内容：发送 + 开头的消息，如：
               |  +追加内容
               |② 覆盖已编写内容：发送 = 开头的消息，如：
@@ -152,7 +185,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
           reply(msg.evt, "已返回编辑模式")
         } else if (command == "帮助") {
           reply(msg.evt,
-            """梦境实现模式：
+            """梦境实现模式帮助：
               |① 采用这条梦境：发送 +梦境编号，如：
               |  +2
               |② 换一批梦境： -再入梦
@@ -194,7 +227,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
           reply(msg.evt, "已返回编辑模式")
         } else if (command == "帮助") {
           reply(msg.evt,
-            """标题更改模式：
+            """标题更改模式帮助：
               |① 更改标题：发送 =新标题 进行更改，如：
               |  =新标题
               |② 返回：-返回""".stripMargin)
@@ -236,7 +269,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
           reply(msg.evt, "已返回编辑模式")
         } else if (command == "帮助") {
           reply(msg.evt,
-            """角色更改模式：
+            """角色更改模式帮助：
               |① 更改角色：发送 =角色编号 进行更改，如：
               |  =3
               |② 返回：-返回""".stripMargin)
@@ -275,7 +308,8 @@ class DreamActor(startEvt: EventMessage) extends Actor {
           reply(evt.evt,
             s"""当前标题为：${if (data.title.isBlank) "未设置标题" else s"《${data.title.trim}》"}
                |发送 =新标题 来更改标题，如：=演员的自我修养
-               |发送 -返回 取消并回到编辑模式""".stripMargin)
+               |发送 -返回 取消并回到编辑模式
+               |发送 -帮助 打开帮助菜单""".stripMargin)
           become(changingTitle(data))
         case "更改角色" =>
           reply(evt.evt,
@@ -284,7 +318,8 @@ class DreamActor(startEvt: EventMessage) extends Actor {
                |可用角色如下：
                |${data.models.zipWithIndex.map { case (model, idx) => s"${idx + 1}：${model.name}" }.mkString("\n")}
                |发送 =编号 来更改 AI 角色，如：=2
-               |发送 -返回 取消并回到编辑模式""".stripMargin)
+               |发送 -返回 取消并回到编辑模式
+               |发送 -帮助 打开帮助菜单""".stripMargin)
           become(changingAICharacter(data))
         case "全文" => reply(evt.evt, "全文如下：\n" + data.content)
         case "入梦" | "再入梦" => dropIntoDream(data)
@@ -328,7 +363,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
    */
   private def saveContent(data: Data): Option[Data] = {
     data match {
-      case Data(_, content, title, uid, nid, _, _, _) =>
+      case Data(uid, _, _, _, title, nid, _, content) =>
         DreamClient.save(title, content, uid, nid) match {
           case Left(_) =>
             reply(startEvt,
@@ -416,7 +451,9 @@ class DreamActor(startEvt: EventMessage) extends Actor {
     }.foreach(reply(startEvt, _))
     reply(startEvt,
       """发送 +梦境编号 来将指定的梦境变为现实
-        |发送 -返回 取消并回到编辑模式""".stripMargin)
+        |发送 -再入梦 可以刷新梦境
+        |发送 -返回 取消并回到编辑模式
+        |发送 -帮助 打开帮助菜单""".stripMargin)
     become(dreaming(data, dreams))
   }
 
@@ -450,20 +487,22 @@ class DreamActor(startEvt: EventMessage) extends Actor {
 
 object DreamActor {
 
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(classOf[DreamActor])
+
   /**
    * 数据
    * - 梦境相关数据属于临时数据，不保存在状态中
    */
   private case class Data
   (
-    lastContent: String = "",
-    content: String = "",
-    title: String = "",
     uid: String,
-    nid: Option[String],
     mid: String,
+    models: List[AICharacter],
     signature: String,
-    models: List[AICharacter]
+    title: String = "",
+    nid: Option[String] = None,
+    lastContent: String = "",
+    content: String = ""
   )
 
   case class Event(sender: ActorRef, evt: EventMessage)
@@ -476,6 +515,8 @@ object DreamActor {
    */
   case class ContentUpdated(sender: ActorRef, delta: String, isAppend: Boolean, exitEvent: Boolean = false)
 
-  case object Shutdown
+  case object Start
+
+  case object Ready
 
 }
