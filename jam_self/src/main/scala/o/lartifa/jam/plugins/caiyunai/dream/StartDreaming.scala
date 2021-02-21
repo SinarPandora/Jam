@@ -84,6 +84,7 @@ object StartDreaming extends Command[Unit] with SendMsgToActorWhenReady {
             reply("检测到模式冲突，正在清理全部相关会话，请稍后重新启动梦境")
             context.stop(other)
             context.stop(dreamActor)
+            deregisterAll(dreamActor)
             unBecomeToNormal()
             reply("清理完成，现在可以重新启动梦境")
             context.stop(self)
@@ -100,14 +101,23 @@ object StartDreaming extends Command[Unit] with SendMsgToActorWhenReady {
             if (exitEvent) {
               logger.log(s"收到结束事件，worker 正在停止运行，聊天信息：${ctx.chatInfo.toString}")
               unBecomeToNormal()
-              JamContext.registry ! Terminated(sender)(existenceConfirmed = true, addressTerminated = false)
-              JamContext.registry ! Terminated(self)(existenceConfirmed = true, addressTerminated = false)
+              deregisterAll(sender)
               context.stop(self)
             }
           case Link(sender, chatInfo) =>
             context.become(working(dreamActor, linker + (chatInfo -> sender)))
           case UnLink(_, chatInfo) =>
             context.become(working(dreamActor, linker - chatInfo))
+        }
+
+        /**
+         * 注销梦境 actor 和 worker
+         *
+         * @param dreamActor 梦境 Actor 地址
+         */
+        private def deregisterAll(dreamActor: ActorRef): Unit = {
+          JamContext.registry ! Terminated(dreamActor)(existenceConfirmed = true, addressTerminated = false)
+          JamContext.registry ! Terminated(self)(existenceConfirmed = true, addressTerminated = false)
         }
       }))
 

@@ -175,6 +175,10 @@ object Patterns {
         .r("url", "title", "content", "image")
     // 分享音乐
     val shareMusic: Regex = """分享(网易|QQ|虾米)音乐%\{(.+?)}%""".r("type", "mId")
+    // 彩云小梦模式
+    val startDreaming: String = "在当前会话开启坠梦模式"
+    // 链接到指定梦境
+    val linkToDream: String = "链接到消息中的梦境"
   }
 
 }

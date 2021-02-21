@@ -8,6 +8,7 @@ import o.lartifa.jam.engine.proto.Parser
 import o.lartifa.jam.model.commands.Ask.{AnyBody, CurrentSender}
 import o.lartifa.jam.model.commands._
 import o.lartifa.jam.plugins.JamPluginLoader
+import o.lartifa.jam.plugins.caiyunai.dream.{LinkToDream, StartDreaming}
 import o.lartifa.jam.plugins.picbot._
 import o.lartifa.jam.plugins.rss.{RSSShowAll, RSSSubscribe, RSSUnSubscribe}
 import o.lartifa.jam.pool.JamContext
@@ -56,7 +57,7 @@ object CommandParser extends Parser {
       // 包含类模式放在后边
       parseDoNoting _, parseGroupWholeBan _, parseGroupWholeUnBan _, parseShowPicInfo _,
       parseRSSSubscribe _, parseRSSUnSubscribe _, parseRSSShowAll _, parseWhatICanDo _,
-      parseQQDice _, parseQQRPS _, parseShake _
+      parseQQDice _, parseQQRPS _, parseShake _, parseStartDreaming _, parseLinkToDream _
     ) ++ contains
   }
 
@@ -640,4 +641,24 @@ object CommandParser extends Parser {
       ShareMusic(context.getTemplate(result.group("mId")), sourceType)
     })
   }
+
+  /**
+   * 解析启动彩云小梦模式指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseStartDreaming(string: String, context: ParseEngineContext): Option[StartDreaming.type] =
+    if (string.contains(CommandPattern.startDreaming)) Some(StartDreaming) else None
+
+  /**
+   * 解析链接到梦境指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseLinkToDream(string: String, context: ParseEngineContext): Option[LinkToDream.type] =
+    if (string.contains(CommandPattern.linkToDream)) Some(LinkToDream) else None
 }
