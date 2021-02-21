@@ -58,7 +58,7 @@ object LinkToDream extends Command[Unit] with SendMsgToActorWhenReady {
                 ref ! Link(self, ctx.chatInfo)
                 context.become(listening(ref))
               case Registry.NotFound(_) =>
-                reply("")
+                reply("指定聊天不存在梦境会话")
                 unBecomeToNormal()
             }
 

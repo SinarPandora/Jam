@@ -81,11 +81,11 @@ object StartDreaming extends Command[Unit] with SendMsgToActorWhenReady {
             isReady.getAndSet(true)
             logger.log(s"彩云小梦 worker 完成全部启动任务，准备接收消息，聊天信息：${ctx.chatInfo.toString}")
           case Registry.Conflict(_, other, _) =>
-            reply("检测到模式冲突，正在清理全部相关会话，请稍后重新启动彩云小梦模式")
+            reply("检测到模式冲突，正在清理全部相关会话，请稍后重新启动梦境")
             context.stop(other)
             context.stop(dreamActor)
             unBecomeToNormal()
-            reply("清理完成，现在可以重新启动彩云小梦模式")
+            reply("清理完成，现在可以重新启动梦境")
             context.stop(self)
         }
 
@@ -98,7 +98,7 @@ object StartDreaming extends Command[Unit] with SendMsgToActorWhenReady {
           case event@ContentUpdated(sender, _, _, exitEvent) =>
             linker.values.foreach(ref => ref ! event.copy(sender = self))
             if (exitEvent) {
-              logger.log(s"收到结束事件，彩云小梦 worker 正在停止运行，聊天信息：${ctx.chatInfo.toString}")
+              logger.log(s"收到结束事件，worker 正在停止运行，聊天信息：${ctx.chatInfo.toString}")
               unBecomeToNormal()
               JamContext.registry ! Terminated(sender)(existenceConfirmed = true, addressTerminated = false)
               JamContext.registry ! Terminated(self)(existenceConfirmed = true, addressTerminated = false)
