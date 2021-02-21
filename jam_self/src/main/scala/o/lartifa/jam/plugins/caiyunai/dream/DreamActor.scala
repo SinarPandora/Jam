@@ -438,7 +438,13 @@ class DreamActor(startEvt: EventMessage) extends Actor {
    * @param data 会话数据
    */
   private def exit(data: Data): Unit = {
-    ???
+    become(skipping(data))
+    val finalContent = s"${data.title}：\n${data.content}"
+    reply(startEvt, s"最终的文稿：")
+    reply(startEvt, finalContent)
+    sender() ! ContentUpdated(self, finalContent, isAppend = true, exitEvent = true)
+    reply(startEvt, s"${JamConfig.name}苏醒了，好像，头有点痛？")
+    context.stop(self)
   }
 }
 
@@ -468,7 +474,7 @@ object DreamActor {
    * - 覆盖模式：delta = 全文
    * - 当会话结束时，向全部订阅者发送全文
    */
-  case class ContentUpdated(sender: ActorRef, delta: String, isAppend: Boolean)
+  case class ContentUpdated(sender: ActorRef, delta: String, isAppend: Boolean, exitEvent: Boolean = false)
 
   case object Shutdown
 
