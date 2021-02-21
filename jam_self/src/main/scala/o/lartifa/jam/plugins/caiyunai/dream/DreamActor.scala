@@ -41,14 +41,17 @@ class DreamActor(startEvt: EventMessage) extends Actor {
    * @param sender 消息发送者
    */
   def init(sender: ActorRef): Unit = {
-    reply(startEvt, s"首先一棒子打晕${JamConfig.name}……")
-    reply(startEvt, s"正在将探针连接到意识形成场……")
+    reply(startEvt, s"启动坠梦程序，首先一棒子打晕${JamConfig.name}……")
+    reply(startEvt, s"检测到目标意识模糊，正在将探针连接到形态形成场……")
     Future.sequence(Seq(
       Future(DreamClient.getUid),
       Future(DreamClient.listModels),
       Future(DreamClient.getSignature)
     )).flatMap {
-      case Seq(uid: Either[String, String], models: Either[String, List[AICharacter]], signature: Either[String, String]) =>
+      case Seq(_uid, _models, _signature) =>
+        val uid = _uid.asInstanceOf[Either[String, String]]
+        val models = _models.asInstanceOf[Either[String, List[AICharacter]]]
+        val signature = _signature.asInstanceOf[Either[String, String]]
         if (uid.isLeft || models.isLeft || signature.isLeft || models.getOrElse(Nil).nonEmpty) Future.successful(None)
         else {
           // 此处理应不能失败
@@ -64,12 +67,15 @@ class DreamActor(startEvt: EventMessage) extends Actor {
         reply(startEvt, s"意识连接建立成功！")
         reply(startEvt,
           """你可以发送 -帮助 打开帮助菜单
-            |祝你创作愉快~""".stripMargin)
+            |祝创作愉快~""".stripMargin)
         become(writing(data))
         sender ! Ready(self)
       case None =>
     }.recoverWith(err => {
       logger.error("彩云小梦模块初始化过程中出现未知错误！", err)
+      reply(startEvt, s"${JamConfig.name}拒绝了意识探针！目标已苏醒，坠梦失败。")
+      sender ! FailToStart(sender)
+      context.stop(self)
       Future.unit
     })
   }
@@ -217,6 +223,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
         saveContent(updatedData) match {
           case Some(data) =>
             become(writing(data))
+            sender() ! ContentUpdated(self, s"标题变更为：${data.title}", isAppend = true)
             reply(msg.evt, "标题已更新")
           case None =>
             // 手动保存会同时保存标题，所以退回编辑模式
@@ -323,7 +330,10 @@ class DreamActor(startEvt: EventMessage) extends Actor {
                |发送 -返回 取消并回到编辑模式
                |发送 -帮助 打开帮助菜单""".stripMargin)
           become(changingAICharacter(data))
-        case "全文" => reply(evt.evt, "全文如下：\n" + data.content)
+        case "全文" => reply(evt.evt,
+          s"""全文如下：
+             |${if (data.title.isBlank) "未设置标题" else s"《${data.title.trim}》"}
+             |${data.content}""".stripMargin)
         case "入梦" | "再入梦" => dropIntoDream(data)
         case "撤回" =>
           become(writing(data.copy(content = data.lastContent)))
@@ -426,12 +436,13 @@ class DreamActor(startEvt: EventMessage) extends Actor {
           case Right(dreams) =>
             if (dreams.isEmpty) {
               // 梦境尚未记录完毕
-              JamContext.actorSystem.scheduler.scheduleOnce(1.second, () => {
-                Future {
-                  // 递归调用，等待记录结果
-                  dreamingLoop(data, xid, count + 1)
+              JamContext.actorSystem.scheduler.scheduleOnce(1.second, new Runnable {
+                override def run(): Unit = {
+                  Future {
+                    // 递归调用，等待记录结果
+                    dreamingLoop(data, xid, count + 1)
+                  }
                 }
-                () // 占位符
               })
             } else dreamSuccessCallback(data, dreams)
           case Left(_) => dreamFailedCallback(data)
@@ -478,7 +489,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
    */
   private def exit(data: Data): Unit = {
     become(skipping(data))
-    val finalContent = s"${data.title}：\n${data.content}"
+    val finalContent = s"${if (data.title.isBlank) "无题" else s"《${data.title.trim}》"}\n${data.content}"
     reply(startEvt, s"最终的文稿：")
     reply(startEvt, finalContent)
     sender() ! ContentUpdated(self, finalContent, isAppend = true, exitEvent = true)
@@ -520,5 +531,7 @@ object DreamActor {
   case class Start(sender: ActorRef)
 
   case class Ready(sender: ActorRef)
+
+  case class FailToStart(sender: ActorRef)
 
 }

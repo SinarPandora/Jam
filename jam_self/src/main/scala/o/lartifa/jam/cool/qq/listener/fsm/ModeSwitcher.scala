@@ -2,8 +2,6 @@ package o.lartifa.jam.cool.qq.listener.fsm
 
 import o.lartifa.jam.model.CommandExecuteContext
 
-import scala.concurrent.Future
-
 trait ModeSwitcher {
   /**
    * 当前会话变更模式
@@ -20,7 +18,7 @@ trait ModeSwitcher {
    *
    * @param context 指令执行上下文
    */
-  def unBecome()(implicit context: CommandExecuteContext): Unit = {
+  def unBecomeToNormal()(implicit context: CommandExecuteContext): Unit = {
     modes.remove(context.chatInfo)
   }
 }
