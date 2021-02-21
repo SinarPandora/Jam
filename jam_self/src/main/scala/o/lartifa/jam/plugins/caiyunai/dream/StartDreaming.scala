@@ -64,9 +64,9 @@ object StartDreaming extends Command[Unit] with SendMsgToActorWhenReady {
             self ! RegisterMySelf(sender)
           case FailToStart(sender) =>
             logger.log(s"梦境会话创建失败，聊天信息：${ctx.chatInfo.toString}")
-            context.stop(self)
             JamContext.registry ! Terminated(sender)(existenceConfirmed = true, addressTerminated = false)
             unBecomeToNormal()
+            context.stop(self)
           case RegisterMySelf(dreamActor) =>
             JamContext.registry ! Registry.Register(s"caiyun_worker_${ctx.chatInfo.toString}", innerWorker)
             context.become(registerMySelf(dreamActor))
@@ -85,8 +85,8 @@ object StartDreaming extends Command[Unit] with SendMsgToActorWhenReady {
             context.stop(other)
             context.stop(dreamActor)
             unBecomeToNormal()
-            context.stop(self)
             reply("清理完成，现在可以重新启动彩云小梦模式")
+            context.stop(self)
         }
 
         /**
@@ -100,9 +100,9 @@ object StartDreaming extends Command[Unit] with SendMsgToActorWhenReady {
             if (exitEvent) {
               logger.log(s"收到结束事件，彩云小梦 worker 正在停止运行，聊天信息：${ctx.chatInfo.toString}")
               unBecomeToNormal()
-              context.stop(self)
               JamContext.registry ! Terminated(sender)(existenceConfirmed = true, addressTerminated = false)
               JamContext.registry ! Terminated(self)(existenceConfirmed = true, addressTerminated = false)
+              context.stop(self)
             }
           case Link(sender, chatInfo) =>
             context.become(working(dreamActor, linker + (chatInfo -> sender)))
