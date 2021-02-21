@@ -23,7 +23,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
 
   private implicit val session: Session = requests.Session()
 
-  import context.become
+  import context.{become, unbecome}
 
   override def receive: Receive = ???
 
@@ -51,34 +51,44 @@ class DreamActor(startEvt: EventMessage) extends Actor {
       msg.evt.message match {
         case text if text.startsWith("=") =>
           val newContent = text.stripPrefix("=").trim
-          become {
-            writing {
+          become(skipping())
+          Future {
+            saveContent {
               data.copy(
                 lastContent = data.content,
                 content = newContent
               )
+            } match {
+              case Some(data) =>
+                sender() ! ContentUpdated(self, newContent, isAppend = false)
+                become(writing(data))
+                reply(msg.evt, "内容已覆盖")
+              case None => unbecome()
             }
           }
-          reply(msg.evt, "内容已覆盖")
-          sender() ! ContentUpdated(self, newContent, isAppend = false)
         case text if text.startsWith("+") =>
           val append = text.stripPrefix("+").trim
-          become {
-            writing {
+          become(skipping())
+          Future {
+            saveContent {
               data.copy(
                 lastContent = data.content,
                 content = data.content + append
               )
+            } match {
+              case Some(data) =>
+                sender() ! ContentUpdated(self, append, isAppend = true)
+                become(writing(data))
+                reply(msg.evt, "内容已追加")
+              case None => unbecome()
             }
           }
-          reply(msg.evt, "内容已追加")
-          sender() ! ContentUpdated(self, append, isAppend = true)
         case text if text.stripPrefix("-").trim == "帮助" =>
           reply(msg.evt,
             """编写模式：
-              |① 追加内容：发送 + 开头的消息：
+              |① 追加内容：发送 + 开头的消息，如：
               |  +追加内容
-              |② 覆盖已编写内容：发送 = 开头的消息：
+              |② 覆盖已编写内容：发送 = 开头的消息，如：
               |  =替换文本
               |③ 查看当前文章：-列出全文
               |④ 开启 AI 梦境（智能联想）： -入梦
@@ -105,7 +115,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
       if (text.stripPrefix("-").trim == "帮助") {
         reply(msg.evt,
           """梦境实现模式：
-            |① 采用这条梦境：发送 +梦境编号：
+            |① 采用这条梦境：发送 +梦境编号，如：
             |  +2
             |② 换一批梦境： -再入梦
             |③ 查看当前文章：-列出全文
@@ -122,16 +132,21 @@ class DreamActor(startEvt: EventMessage) extends Actor {
               Future {
                 val dream = dreams(idx)
                 DreamClient.realizingDream(data.uid, xid, idx) match {
-                  case Left(errorMessage) | Right(false) => reply(msg.evt, errorMessage)
+                  case Left(_) | Right(false) =>
+                    reply(msg.evt, "梦境实体化失败，请稍后重试")
+                    unbecome()
                   case Right(true) =>
-                    reply(msg.evt, "梦境变成了现实")
-                    become {
-                      writing {
-                        data.copy(
-                          lastContent = data.content,
-                          content = data.content + dream.content
-                        )
-                      }
+                    val updatedData = data.copy(
+                      lastContent = data.content,
+                      content = data.content + dream.content
+                    )
+                    saveContent(updatedData) match {
+                      case Some(data) =>
+                        become(writing(data))
+                        reply(msg.evt, "梦境变成了现实")
+                      case None =>
+                        // 即使保存失败也退回到编辑模式，因为此时梦境已经结束
+                        become(writing(updatedData))
                     }
                 }
               }
@@ -186,6 +201,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
         case "修改角色" =>
         case "列出全文" =>
         case "入梦" | "再入梦" =>
+        case "保存" => saveContent(data)
         case "退出" =>
         case _ =>
       }
@@ -201,6 +217,31 @@ class DreamActor(startEvt: EventMessage) extends Actor {
    */
   private def reply(evt: EventMessage, msg: String): Unit = {
     msg.sliding(200, 200).foreach(evt.respond)
+  }
+
+  /**
+   * 保存当前文稿
+   *
+   * @param data 会话数据
+   * @return 更新后的会话数据
+   */
+  private def saveContent(data: Data): Option[Data] = {
+    data match {
+      case Data(_, content, title, uid, nid, _, _) =>
+        DreamClient.save(title, content, uid, nid) match {
+          case Left(_) => startEvt.respond(
+            """保存失败，你可以稍后尝试手动保存：
+              |发送 -保存 进行保存""".stripMargin)
+            None
+          case Right(nid) => Some {
+            data.copy(nid = Some(nid))
+          }
+        }
+    }
+  }
+
+  private def dropIntoDream(data: Data): Option[Data] = {
+
   }
 }
 
