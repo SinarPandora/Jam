@@ -102,7 +102,16 @@ class DreamActor(startEvt: EventMessage) extends Actor {
   def dreaming(data: Data, xid: String, dreams: List[Dream] = Nil): Receive = {
     case msg: WritingEvent =>
       val text = msg.evt.message
-      if (text.startsWith("+")) {
+      if (text.stripPrefix("-").trim == "帮助") {
+        reply(msg.evt,
+          """梦境实现模式：
+            |① 采用这条梦境：发送 +梦境编号：
+            |  +2
+            |② 换一批梦境： -再入梦
+            |③ 查看当前文章：-列出全文
+            |④ 修改当前 AI 角色或文章标题： -修改角色/-修改标题
+            |⑤ 退出：-退出""".stripMargin)
+      } else if (text.startsWith("+")) {
         Try(text.stripPrefix("+").trim.toInt - 1) match {
           case Success(idx) =>
             if (idx < 0 || idx > dreams.size - 1) {
@@ -173,7 +182,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
         case "修改标题" =>
         case "修改角色" =>
         case "列出全文" =>
-        case "开始联想" | "换一批" =>
+        case "入梦" | "再入梦" =>
         case "退出" =>
         case _ =>
       }
