@@ -1,5 +1,8 @@
 package o.lartifa.jam.plugins.caiyunai
 
+import java.util.concurrent.Executors
+import scala.concurrent.ExecutionContext
+
 /**
  * 彩云小梦模块通用
  *
@@ -7,6 +10,11 @@ package o.lartifa.jam.plugins.caiyunai
  * 2021/2/19 12:00
  */
 package object dream {
+
+  // 内部线程池
+  implicit private[dream] val dreamEC: ExecutionContext = ExecutionContext.fromExecutor(
+    Executors.newFixedThreadPool(10)
+  )
 
   /**
    * 彩云小梦相关 API
