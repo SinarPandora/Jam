@@ -15,6 +15,7 @@ import scala.util.{Failure, Success, Try}
 
 /**
  * 彩云小梦核心逻辑
+ * 向 Actor 发送 Start 事件来启动它
  *
  * Author: sinar
  * 2021/2/20 20:26
@@ -25,21 +26,21 @@ class DreamActor(startEvt: EventMessage) extends Actor {
 
   import context.{become, unbecome}
 
-  override def preStart(): Unit = self ! Start
-
   /**
    * 状态：初始化
    */
   override def receive: Receive = {
-    case Start => init()
+    case Start(sender) => init(sender)
     case _ => // 默认什么也不做
   }
 
 
   /**
    * 初始化
+   *
+   * @param sender 消息发送者
    */
-  def init(): Unit = {
+  def init(sender: ActorRef): Unit = {
     reply(startEvt, s"首先一棒子打晕${JamConfig.name}……")
     reply(startEvt, s"正在将探针连接到意识形成场……")
     Future.sequence(Seq(
@@ -65,6 +66,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
           """你可以发送 -帮助 打开帮助菜单
             |祝你创作愉快~""".stripMargin)
         become(writing(data))
+        sender ! Ready(self)
       case None =>
     }.recoverWith(err => {
       logger.error("彩云小梦模块初始化过程中出现未知错误！", err)
@@ -515,8 +517,8 @@ object DreamActor {
    */
   case class ContentUpdated(sender: ActorRef, delta: String, isAppend: Boolean, exitEvent: Boolean = false)
 
-  case object Start
+  case class Start(sender: ActorRef)
 
-  case object Ready
+  case class Ready(sender: ActorRef)
 
 }
