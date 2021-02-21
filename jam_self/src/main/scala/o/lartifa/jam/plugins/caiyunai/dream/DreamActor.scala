@@ -6,9 +6,11 @@ import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.plugins.caiyunai.dream.DreamActor.{ContentUpdated, Data, Event}
 import o.lartifa.jam.plugins.caiyunai.dream.DreamClient.{AICharacter, Dream}
+import o.lartifa.jam.pool.JamContext
 import requests.Session
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -271,9 +273,9 @@ class DreamActor(startEvt: EventMessage) extends Actor {
       command match {
         case "修改标题" =>
           reply(evt.evt,
-            s"""当前标题为：${if (data.title.trim == "") "未设置标题" else s"《${data.title.trim}》"}
-              |发送 =新标题 来更改标题，如：=演员的自我修养
-              |发送 -返回 取消并回到编辑模式""".stripMargin)
+            s"""当前标题为：${if (data.title.isBlank) "未设置标题" else s"《${data.title.trim}》"}
+               |发送 =新标题 来更改标题，如：=演员的自我修养
+               |发送 -返回 取消并回到编辑模式""".stripMargin)
           become(changingTitle(data))
         case "更改角色" =>
           reply(evt.evt,
@@ -314,6 +316,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
    * @param msg 消息内容
    */
   private def reply(evt: EventMessage, msg: String): Unit = {
+    // TODO 给输出带一些延迟
     msg.sliding(200, 200).foreach(evt.respond)
   }
 
@@ -327,9 +330,10 @@ class DreamActor(startEvt: EventMessage) extends Actor {
     data match {
       case Data(_, content, title, uid, nid, _, _, _) =>
         DreamClient.save(title, content, uid, nid) match {
-          case Left(_) => startEvt.respond(
-            """保存失败，你可以稍后尝试手动保存：
-              |发送 -保存 进行保存""".stripMargin)
+          case Left(_) =>
+            reply(startEvt,
+              """保存失败，你可以稍后尝试手动保存：
+                |发送 -保存 进行保存""".stripMargin)
             None
           case Right(nid) => Some {
             data.copy(nid = Some(nid))
@@ -344,8 +348,87 @@ class DreamActor(startEvt: EventMessage) extends Actor {
    * @param data 会话数据
    * @return 更新后的会话数据
    */
-  private def dropIntoDream(data: Data): Option[Data] = {
-    ???
+  private def dropIntoDream(data: Data): Unit = {
+    become(skipping(data))
+    Future {
+      if (data.nid.isEmpty || data.content.isBlank) {
+        become(writing(data)) // 因为存在多重梦境，所以梦境被中断时，应强制退回编辑模式
+        reply(startEvt, "巧妇难为无米之炊，先写点内容吧")
+        None
+      } else {
+        DreamClient.dream(data.title, data.content, data.uid, data.nid.get, data.mid) match {
+          case Right(xid) =>
+            reply(startEvt, s"${JamConfig.name}成功入梦，正在记录梦境……")
+            Some(xid)
+          case Left(_) =>
+            become(writing(data)) // 因为存在多重梦境，所以梦境被中断时，应强制退回编辑模式
+            reply(startEvt, s"${JamConfig.name}睡得太香了没做梦……请稍后再试")
+            None
+        }
+      }
+    }.map {
+      case Some(xid) => dreamingLoop(data, xid)
+      case None => // 此处已经退回到编辑状态了，所以不需要做任何操作
+    }
+  }
+
+  /**
+   * 梦境循环，循环直到有梦境被记录
+   *
+   * @param data  会话数据
+   * @param xid   梦境 ID
+   * @param count 重试次数
+   */
+  private def dreamingLoop(data: Data, xid: String, count: Int = 1): Unit = {
+    if (count > 3) {
+      // 失败次数过多时退回编辑模式
+      dreamFailedCallback(data)
+    } else {
+      Future {
+        DreamClient.dreamLoop(data.uid, data.nid.get, xid) match {
+          case Right(dreams) =>
+            if (dreams.isEmpty) {
+              // 梦境尚未记录完毕
+              JamContext.actorSystem.scheduler.scheduleOnce(1.second, () => {
+                Future {
+                  // 递归调用，等待记录结果
+                  dreamingLoop(data, xid, count + 1)
+                }
+                () // 占位符
+              })
+            } else dreamSuccessCallback(data, dreams)
+          case Left(_) => dreamFailedCallback(data)
+        }
+      }
+    }
+  }
+
+  /**
+   * 入梦成功的回调函数
+   *
+   * @param data   会话数据
+   * @param dreams 梦境记录
+   */
+  private def dreamSuccessCallback(data: Data, dreams: List[Dream]): Unit = {
+    reply(startEvt, "已收集到如下梦境：")
+    dreams.zipWithIndex.map {
+      case (dream, idx) => s"梦境编号：$idx\n内容：$dream"
+    }.foreach(reply(startEvt, _))
+    reply(startEvt,
+      """发送 +梦境编号 来将指定的梦境变为现实
+        |发送 -返回 取消并回到编辑模式""".stripMargin)
+    become(dreaming(data, dreams))
+  }
+
+  /**
+   * 入梦失败的回调函数
+   *
+   * @param data 会话数据
+   */
+  private def dreamFailedCallback(data: Data): Unit = {
+    reply(startEvt, s"${JamConfig.name}的大脑选择性的忘记了梦境……请稍后再试")
+    become(writing(data))
+    reply(startEvt, s"已返回编辑模式")
   }
 
   /**
