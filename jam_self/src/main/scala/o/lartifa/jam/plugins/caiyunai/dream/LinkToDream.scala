@@ -39,7 +39,7 @@ object LinkToDream extends Command[Unit] with SendMsgToActorWhenReady {
       case Some(result) =>
         val chatIdString = s"${if (result.group("type") == "群聊") MessageType.GROUP else MessageType.PRIVATE}_" +
           result.group("qid")
-        if (ctx.chatInfo.toString == chatIdString) {
+        if (ctx.chatInfo.serialize == chatIdString) {
           reply("不能对当前聊天进行梦境连接")
         } else become(new Mode {
           // 初始化
@@ -67,7 +67,7 @@ object LinkToDream extends Command[Unit] with SendMsgToActorWhenReady {
              */
             def listening(worker: ActorRef): Receive = {
               case ContentUpdated(_, delta, isAppend, exitEvent) =>
-                s"${if (isAppend) "文章被覆盖为：\n" else ""}$delta".sliding(200, 200).foreach(reply)
+                s"${if (!isAppend) "文章被覆盖为：\n" else ""}$delta".sliding(200, 200).foreach(reply)
                 if (exitEvent) {
                   reply("梦境会话结束，链接将自动关闭")
                   context.stop(self)

@@ -1,8 +1,10 @@
 package o.lartifa.jam.plugins.caiyunai.dream
 
+import cc.moecraft.logger.HyLogger
+import o.lartifa.jam.pool.JamContext
 import requests.Session
 
-import scala.util.Try
+import scala.util.{Failure, Try}
 
 /**
  * 彩云小梦客户端
@@ -11,6 +13,8 @@ import scala.util.Try
  * 2021/2/20 17:23
  */
 object DreamClient {
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(DreamClient.getClass)
+
   /**
    * 获取 UID
    *
@@ -19,6 +23,10 @@ object DreamClient {
    */
   def getUid(implicit session: Session): Either[String, String] = {
     Try(session.post(APIs.getUid, data = "{\"ostype\":\"\"}").text())
+      .recoverWith(err => {
+        logger.error(err)
+        Failure(err)
+      })
       .map(ujson.read(_)("data")("user")("_id").str)
       .map(Right.apply)
       .getOrElse(Left("获取 UID 失败"))
@@ -45,6 +53,10 @@ object DreamClient {
         val mid = v("mid").str.trim
         if (name != "" && mid != "") Some(AICharacter(name, mid)) else None
       }).toList)
+      .recoverWith(err => {
+        logger.error(err)
+        Failure(err)
+      })
       .map(Right.apply)
       .getOrElse(Left("获取小梦模型时失败"))
   }
@@ -57,6 +69,10 @@ object DreamClient {
    */
   def getSignature(implicit session: Session): Either[String, String] = {
     Try(session.post(APIs.getSignature, data = "{\"url\":\"http://if.caiyunai.com/dream/\",\"ostype\":\"\"}").text())
+      .recoverWith(err => {
+        logger.error(err)
+        Failure(err)
+      })
       .map(Right.apply)
       .getOrElse(Left("获取签名时失败"))
   }
@@ -72,13 +88,13 @@ object DreamClient {
    * @return 保存成功时返回 UID（文章 ID)
    */
   def save(title: String, content: String, uid: String, nid: Option[String] = None)(implicit session: Session): Either[String, String] = {
-    Try(session.post(APIs.save(uid), data =
-      s"""{
-         |  "content": "$content",
-         |  "title": "$title",
-         |  ${nid.map(nid => s""""nid": "$nid",""")}
-         |  "ostype": ""
-         |}""".stripMargin).text())
+    val data = ujson.Obj("content" -> content, "title" -> title, "ostype" -> "")
+    nid.foreach(id => data("nid") = id)
+    Try(session.post(APIs.save(uid), data = data).text())
+      .recoverWith(err => {
+        logger.error(err)
+        Failure(err)
+      })
       .map(ujson.read(_)("data")("nid").str)
       .map(Right.apply)
       .getOrElse(Left("保存失败，请稍后再试"))
@@ -97,14 +113,12 @@ object DreamClient {
    */
   def dream(title: String, content: String, uid: String, nid: String, mid: String)(implicit session: Session): Either[String, String] = {
     Try(session.post(APIs.dream(uid), data =
-      s"""{
-         |  "nid": "$nid",
-         |  "content": "$content",
-         |  "uid": "$uid",
-         |  "mid": "$mid",
-         |  "title": "$title",
-         |  "ostype": ""
-         |}""".stripMargin).text())
+      ujson.Obj("nid" -> nid, "content" -> content, "uid" -> uid,
+        "mid" -> mid, "title" -> title, "ostype" -> "")).text())
+      .recoverWith(err => {
+        logger.error(err)
+        Failure(err)
+      })
       .map(ujson.read(_)("data")("xid").str)
       .map(Right.apply)
       .getOrElse(Left("AI 联想启动失败，请稍后再试"))
@@ -133,6 +147,10 @@ object DreamClient {
       .map(ujson.read(_)("data")("rows").arr.zipWithIndex.map {
         case (v, i) => Dream(i, v("content").str.trim, v("_id").str.trim)
       }.toList)
+      .recoverWith(err => {
+        logger.error(err)
+        Failure(err)
+      })
       .map(Right.apply)
       .getOrElse(Left("无法获取联想结果，请稍后重试"))
   }
@@ -153,6 +171,10 @@ object DreamClient {
          |  "index": $index,
          |  "ostype": ""
          |}""".stripMargin).text())
+      .recoverWith(err => {
+        logger.error(err)
+        Failure(err)
+      })
       .map(ujson.read(_)("msg").str.trim == "ok")
       .map(Right.apply)
       .getOrElse(Left("保存梦境结果时失败，请稍后重试"))

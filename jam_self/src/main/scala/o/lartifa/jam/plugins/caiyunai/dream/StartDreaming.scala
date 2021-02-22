@@ -45,7 +45,7 @@ object StartDreaming extends Command[Unit] with SendMsgToActorWhenReady {
 
         override def preStart(): Unit = {
           // 试图注册新的 actor
-          JamContext.registry ! Registry.Register(s"caiyun_actor_${ctx.chatInfo.toString}",
+          JamContext.registry ! Registry.Register(s"caiyun_actor_${ctx.chatInfo.serialize}",
             Props(classOf[DreamActor], ctx.eventMessage))
         }
 
@@ -68,7 +68,7 @@ object StartDreaming extends Command[Unit] with SendMsgToActorWhenReady {
             unBecomeToNormal()
             context.stop(self)
           case RegisterMySelf(dreamActor) =>
-            JamContext.registry ! Registry.Register(s"caiyun_worker_${ctx.chatInfo.toString}", innerWorker)
+            JamContext.registry ! Registry.Register(s"caiyun_worker_${ctx.chatInfo.serialize}", innerWorker)
             context.become(registerMySelf(dreamActor))
         }
 

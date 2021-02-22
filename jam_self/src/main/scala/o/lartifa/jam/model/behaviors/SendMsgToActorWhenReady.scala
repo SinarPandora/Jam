@@ -32,6 +32,7 @@ trait SendMsgToActorWhenReady {
           Future.successful(Continue)
         }
       })
+      actor ! context.eventMessage
     }
     Future.successful(Continue)
   }

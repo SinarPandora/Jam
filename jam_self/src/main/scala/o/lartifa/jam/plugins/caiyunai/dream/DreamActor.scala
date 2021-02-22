@@ -101,7 +101,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
               )
             } match {
               case Some(data) =>
-                sender() ! ContentUpdated(self, newContent, isAppend = false)
+                msg.sender ! ContentUpdated(self, newContent, isAppend = false)
                 become(writing(data))
                 reply(msg.evt, "内容已覆盖")
               case None => unbecome()
@@ -118,7 +118,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
               )
             } match {
               case Some(data) =>
-                sender() ! ContentUpdated(self, append, isAppend = true)
+                msg.sender ! ContentUpdated(self, append, isAppend = true)
                 become(writing(data))
                 reply(msg.evt, "内容已追加")
               case None => unbecome()
@@ -223,7 +223,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
         saveContent(updatedData) match {
           case Some(data) =>
             become(writing(data))
-            sender() ! ContentUpdated(self, s"标题变更为：${data.title}", isAppend = true)
+            msg.sender ! ContentUpdated(self, s"标题变更为：${data.title}", isAppend = true)
             reply(msg.evt, "标题已更新")
           case None =>
             // 手动保存会同时保存标题，所以退回编辑模式
@@ -293,7 +293,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
     case msg: Event =>
       val message = msg.evt.message
       if (message.stripPrefix("-").trim == "退出") {
-        exit(data)
+        exit(data, msg)
       } else if (message.startsWith("-") || message.startsWith("+") || message.startsWith("=")) {
         reply(msg.evt, "正在处理中，暂时无法进行操作……")
       }
@@ -349,7 +349,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
                 reply(evt.evt, s"若一直无法保存，请尝试退出并重新进入梦境或通知${JamConfig.name}的监护人")
             }
           }
-        case "退出" => exit(data)
+        case "退出" => exit(data, evt)
         case _ => reply(evt.evt, s"指令：$command 不存在，你可以发送 -帮助 来获取帮助信息")
       }
     }
@@ -427,7 +427,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
    * @param count 重试次数
    */
   private def dreamingLoop(data: Data, xid: String, count: Int = 1): Unit = {
-    if (count > 3) {
+    if (count > 30) {
       // 失败次数过多时退回编辑模式
       dreamFailedCallback(data)
     } else {
@@ -436,7 +436,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
           case Right(dreams) =>
             if (dreams.isEmpty) {
               // 梦境尚未记录完毕
-              JamContext.actorSystem.scheduler.scheduleOnce(1.second, new Runnable {
+              JamContext.actorSystem.scheduler.scheduleOnce(3.seconds, new Runnable {
                 override def run(): Unit = {
                   Future {
                     // 递归调用，等待记录结果
@@ -460,7 +460,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
   private def dreamSuccessCallback(data: Data, dreams: List[Dream]): Unit = {
     reply(startEvt, "已收集到如下梦境：")
     dreams.zipWithIndex.map {
-      case (dream, idx) => s"梦境编号：$idx\n内容：$dream"
+      case (dream, idx) => s"梦境编号：${idx + 1}\n内容：${dream.content}"
     }.foreach(reply(startEvt, _))
     reply(startEvt,
       """发送 +梦境编号 来将指定的梦境变为现实
@@ -486,13 +486,14 @@ class DreamActor(startEvt: EventMessage) extends Actor {
    * 退出前将文章发送给原始会话和所有连接的聊天会话
    *
    * @param data 会话数据
+   * @param evt  消息事件
    */
-  private def exit(data: Data): Unit = {
+  private def exit(data: Data, evt: Event): Unit = {
     become(skipping(data))
     val finalContent = s"${if (data.title.isBlank) "无题" else s"《${data.title.trim}》"}\n${data.content}"
     reply(startEvt, s"最终的文稿：")
     reply(startEvt, finalContent)
-    sender() ! ContentUpdated(self, finalContent, isAppend = true, exitEvent = true)
+    evt.sender ! ContentUpdated(self, finalContent, isAppend = true, exitEvent = true)
     reply(startEvt, s"${JamConfig.name}苏醒了，好像，头有点痛？")
     context.stop(self)
   }
