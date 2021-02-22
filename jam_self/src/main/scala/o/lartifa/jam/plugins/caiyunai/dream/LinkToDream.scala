@@ -50,6 +50,11 @@ object LinkToDream extends Command[Unit] with SendMsgToActorWhenReady {
               JamContext.registry ! Registry.Lookup(s"caiyun_worker_$chatIdString")
             }
 
+
+            override def postStop(): Unit = {
+              unBecomeToNormal()
+            }
+
             /**
              * 初始化模式
              */
@@ -57,9 +62,10 @@ object LinkToDream extends Command[Unit] with SendMsgToActorWhenReady {
               case Registry.Found(_, ref) =>
                 ref ! Link(self, ctx.chatInfo)
                 context.become(listening(ref))
+                reply("梦境连接成功！你可以随时发送 -退出 来关闭链接")
+                isReady.getAndSet(true)
               case Registry.NotFound(_) =>
                 reply("指定聊天不存在梦境会话")
-                unBecomeToNormal()
             }
 
             /**
@@ -73,7 +79,7 @@ object LinkToDream extends Command[Unit] with SendMsgToActorWhenReady {
                   context.stop(self)
                 }
               case eventMessage: EventMessage =>
-                if (eventMessage.message.stripPrefix("-").trim == "关闭梦境链接") {
+                if (eventMessage.message.stripPrefix("-").trim == "退出") {
                   worker ! UnLink(self, ctx.chatInfo)
                   reply("梦境连接已关闭")
                   context.stop(self)

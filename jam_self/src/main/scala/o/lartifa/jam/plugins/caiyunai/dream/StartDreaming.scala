@@ -49,6 +49,11 @@ object StartDreaming extends Command[Unit] with SendMsgToActorWhenReady {
             Props(classOf[DreamActor], ctx.eventMessage))
         }
 
+
+        override def postStop(): Unit = {
+          unBecomeToNormal()
+        }
+
         /**
          * 初始化模式
          */
@@ -65,7 +70,6 @@ object StartDreaming extends Command[Unit] with SendMsgToActorWhenReady {
           case FailToStart(sender) =>
             logger.log(s"梦境会话创建失败，聊天信息：${ctx.chatInfo.toString}")
             JamContext.registry ! Terminated(sender)(existenceConfirmed = true, addressTerminated = false)
-            unBecomeToNormal()
             context.stop(self)
           case RegisterMySelf(dreamActor) =>
             JamContext.registry ! Registry.Register(s"caiyun_worker_${ctx.chatInfo.serialize}", innerWorker)
@@ -85,7 +89,6 @@ object StartDreaming extends Command[Unit] with SendMsgToActorWhenReady {
             context.stop(other)
             context.stop(dreamActor)
             deregisterAll(dreamActor)
-            unBecomeToNormal()
             reply("清理完成，现在可以重新启动梦境")
             context.stop(self)
         }
@@ -100,7 +103,6 @@ object StartDreaming extends Command[Unit] with SendMsgToActorWhenReady {
             linker.values.foreach(ref => ref ! event.copy(sender = self))
             if (exitEvent) {
               logger.log(s"收到结束事件，worker 正在停止运行，聊天信息：${ctx.chatInfo.toString}")
-              unBecomeToNormal()
               deregisterAll(sender)
               context.stop(self)
             }
