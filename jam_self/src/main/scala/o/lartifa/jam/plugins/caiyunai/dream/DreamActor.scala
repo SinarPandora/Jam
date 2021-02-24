@@ -41,8 +41,9 @@ class DreamActor(startEvt: EventMessage) extends Actor {
    * @param sender 消息发送者
    */
   def init(sender: ActorRef): Unit = {
-    reply(startEvt, s"启动坠梦程序，首先一棒子打晕${JamConfig.name}……")
-    reply(startEvt, s"检测到目标意识模糊，正在将探针连接到形态形成场……")
+    reply(startEvt,
+      s"""启动坠梦程序，首先一棒子打晕${JamConfig.name}……
+         |检测到目标意识模糊，正在连接意识探针……""".stripMargin)
     Future.sequence(Seq(
       Future(DreamClient.getUid),
       Future(DreamClient.listModels),
@@ -64,9 +65,9 @@ class DreamActor(startEvt: EventMessage) extends Actor {
         }
     }.map {
       case Some(data) =>
-        reply(startEvt, s"意识连接建立成功！")
         reply(startEvt,
-          """你可以发送 -帮助 打开帮助菜单
+          """意识连接建立成功！
+            |你可以发送 -帮助 打开帮助菜单
             |祝创作愉快~""".stripMargin)
         become(writing(data))
         sender ! Ready(self)
@@ -127,7 +128,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
               case None => unbecome()
             }
           }
-        case text if text.stripPrefix("-").trim == "帮助" =>
+        case text if text.startsWith("-") && text.stripPrefix("-").trim == "帮助" =>
           reply(msg.evt,
             """编写模式帮助：
               |① 追加内容：发送 + 开头的消息，如：
@@ -297,8 +298,8 @@ class DreamActor(startEvt: EventMessage) extends Actor {
   def skipping(data: Data): Receive = {
     case msg: Event =>
       val message = msg.evt.message
-      if (message.stripPrefix("-").trim == "退出") {
-        exit(data, msg)
+      if (message.stripPrefix("-").trim == "退出" && !data.isExiting) {
+        exit(data.copy(isExiting = true), msg)
       } else if (message.startsWith("-") || message.startsWith("+") || message.startsWith("=")) {
         reply(msg.evt, "正在处理中，暂时无法进行操作……")
       }
@@ -355,7 +356,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
                 reply(evt.evt, s"若一直无法保存，请尝试退出并重新进入梦境或通知${JamConfig.name}的监护人")
             }
           }
-        case "退出" => exit(data, evt)
+        case "退出" => exit(data.copy(isExiting = true), evt)
         case _ => reply(evt.evt, s"指令：$command 不存在，你可以发送 -帮助 来获取帮助信息")
       }
     }
@@ -381,7 +382,7 @@ class DreamActor(startEvt: EventMessage) extends Actor {
    */
   private def saveContent(data: Data): Option[Data] = {
     data match {
-      case Data(uid, _, _, _, title, nid, _, content) =>
+      case Data(uid, _, _, _, title, nid, _, content, _) =>
         DreamClient.save(title, content, uid, nid) match {
           case Left(_) =>
             reply(startEvt,
@@ -520,7 +521,8 @@ object DreamActor {
     title: String = "",
     nid: Option[String] = None,
     lastContent: String = "",
-    content: String = ""
+    content: String = "",
+    isExiting: Boolean = false
   )
 
   case class Event(sender: ActorRef, evt: EventMessage)
