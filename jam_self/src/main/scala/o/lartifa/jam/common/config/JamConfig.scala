@@ -2,6 +2,9 @@ package o.lartifa.jam.common.config
 
 import com.typesafe.config.{Config, ConfigFactory}
 
+import java.lang
+import scala.jdk.CollectionConverters._
+
 /**
  * 果酱配置
  *
@@ -20,8 +23,8 @@ object JamConfig {
   // Bot password
   val password: String = config.getString("password")
 
-  // Master 用户
-  val masterQID: Long = config.getLong("master_qq")
+  // 监护者列表
+  val masterList: List[lang.Long] = config.getLongList("master_list").asScala.toList
 
   // 响应频率
   val responseFrequency: Int = config.getInt("response_frequency")
