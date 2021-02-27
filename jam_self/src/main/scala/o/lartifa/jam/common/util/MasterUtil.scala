@@ -21,7 +21,7 @@ object MasterUtil {
    *
    * @param message 信息
    */
-  def notifyMaster(message: String): Unit = {
+def notifyMaster(message: String): Unit = {
     JamConfig.masterList.foreach(qid =>
       httpApi.sendPrivateMsg(qid, message.format(JamCharacter.ForMaster.name))
     )

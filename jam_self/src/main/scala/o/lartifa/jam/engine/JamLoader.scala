@@ -99,7 +99,7 @@ object JamLoader {
    */
   private def makeSureDirsExist(): Unit = {
     // SSDL 文件夹
-    SystemConfig.ssdlPath.toFile.createDirectoryIfNotExists(createParents = true)
+    SystemConfig.sxdlPath.toFile.createDirectoryIfNotExists(createParents = true)
     // 插件文件夹
     JamPluginConfig.path.toFile.createDirectoryIfNotExists(createParents = true)
   }
@@ -166,7 +166,7 @@ object JamLoader {
   def handleParseFail(fails: Seq[SXDLParseFailResult]): Option[List[String]] = Some {
     fails.map {
       case SXDLParseFailResult(lineId, filepath, message) =>
-        s"""文件：${filepath.stripPrefix(SystemConfig.ssdlPath)}，行数：$lineId，$message""".stripMargin
+        s"""文件：${filepath.stripPrefix(SystemConfig.sxdlPath)}，行数：$lineId，$message""".stripMargin
     }.toList
   }
 

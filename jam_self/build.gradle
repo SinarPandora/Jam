@@ -85,6 +85,7 @@ dependencies {
     api("org.flywaydb:flyway-core:6.5.5")
 
     // Tools
+    api("org.eclipse.jgit:org.eclipse.jgit:5.10.0.202012080955-r")
     api("com.apptastic:rssreader:2.2.3")
     api("org.reflections:reflections:0.9.12")
     api("com.typesafe.akka:akka-actor_2.13:$akka_verion")

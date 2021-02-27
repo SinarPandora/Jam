@@ -3,14 +3,13 @@ package o.lartifa.jam.service
 import better.files._
 import o.lartifa.jam.common.util.ErrorMsg
 import o.lartifa.jam.service.VCService.{VCSFileStruct, VCSResult}
-import o.lartifa.jam.utils.FileUtil
+import o.lartifa.jam.utils.{FileUtil, GitUtil}
 import org.eclipse.jgit.api.{Git, ResetCommand}
 import org.eclipse.jgit.errors.RepositoryNotFoundException
 import org.eclipse.jgit.revwalk.RevCommit
 import org.owasp.esapi.{ESAPI, Logger}
 import org.springframework.stereotype.Service
 
-import java.io.File
 import java.util
 import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
@@ -39,7 +38,7 @@ class GitVCService(userService: UserService) extends VCService[RevCommit] {
   override def init(path: String): VCSResult =
     FileUtil.castToDir(path).map { dir =>
       val repo: Git = Git.init().setDirectory(dir).call()
-      createIgnoreFile(dir)
+      GitUtil.createIgnoreFile(dir)
       repo.add().addFilepattern(".").call()
       repo
     }.flatMap(commit(_, "首次保存"))
@@ -134,22 +133,6 @@ class GitVCService(userService: UserService) extends VCService[RevCommit] {
         path = path, isDir = false, status = status, subDirs = Nil
       )
     }.toList
-  }
-
-  /**
-   * 创建 ignore 文件
-   *
-   * @param rootDir 根目录
-   * @return 操作结果
-   */
-  private def createIgnoreFile(rootDir: File): Unit = {
-    val ignoreFile = (rootDir.toScala / ".gitignore").createIfNotExists()
-    ignoreFile.appendLines("# 以下类型的文件会被忽略", ".DS_Store", ".AppleDouble", ".LSOverride", "Icon", "._*",
-      ".DocumentRevisions-V100", ".fseventsd", ".Spotlight-V100", ".TemporaryItems", ".Trashes",
-      ".VolumeIcon.icns", ".com.apple.timemachine.donotpresent", ".AppleDB", ".AppleDesktop",
-      "Network Trash Folder", "Temporary Items", ".apdisk", "*.bak", "*.gho", "*.ori", "*.orig",
-      "*.tmp", "Thumbs.db", "Thumbs.db:encryptable", "ehthumbs.db", "ehthumbs_vista.db", "*.stackdump",
-      "[Dd]esktop.ini", "$RECYCLE.BIN/", "*.cab", "*.msi", "*.msix", "*.msm", "*.msp", "*.lnk")
   }
 
   /**

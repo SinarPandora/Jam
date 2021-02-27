@@ -37,4 +37,19 @@ object JamConfig {
 
   // 是否让关键词匹配乱序执行
   val matchOutOfOrder: Boolean = config.getBoolean("match_out_of_order")
+
+  // 远程编辑
+  object RemoteEditing {
+    private val remote: Config = config.getConfig("remote_editing")
+    // 开启远程编辑
+    val enable: Boolean = remote.getBoolean("enable")
+    // 远程仓库地址（http）
+    val repo: String = remote.getString("repo")
+    // 用户名
+    val username: String = remote.getString("user_name")
+    // Git 邮件地址
+    val email: String = remote.getString("git_email")
+    // 秘钥
+    val secret: String = remote.getString("secret")
+  }
 }

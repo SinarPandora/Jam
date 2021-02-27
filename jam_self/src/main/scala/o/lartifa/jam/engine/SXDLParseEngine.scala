@@ -1,7 +1,7 @@
 package o.lartifa.jam.engine
 
 import better.files.File
-import o.lartifa.jam.common.config.SystemConfig
+import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.engine.proto.Parser
 import o.lartifa.jam.engine.ssdl.parser._
@@ -11,6 +11,7 @@ import o.lartifa.jam.model.patterns.SSDLParseResult
 
 import java.nio.charset.Charset
 import scala.annotation.tailrec
+import scala.async.Async.{async, await}
 import scala.collection.parallel.CollectionConverters._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -48,9 +49,13 @@ object SXDLParseEngine extends Parser {
    * @return 解析结果，键为 false 对应的内容为解析失败的信息
    */
   @throws[ParseFailException]
-  def load()(implicit exec: ExecutionContext): Future[Map[Boolean, Seq[Either[SXDLParseFailResult, SXDLParseSuccessResult]]]] = Future {
+  def load()(implicit exec: ExecutionContext): Future[Map[Boolean, Seq[Either[SXDLParseFailResult, SXDLParseSuccessResult]]]] = async {
     CommandParser.prepareParsers()
-    loadFiles().flatMap {
+    val scriptPath: File = File(SystemConfig.sxdlPath).createDirectoryIfNotExists()
+    if (JamConfig.RemoteEditing.enable) {
+      await(RemoteSXDLClient.fetchRemoteScripts(scriptPath))
+    }
+    loadFiles(scriptPath).flatMap {
       case (ssdlFiles, chatInfo) => parseFiles(ssdlFiles, chatInfo)
     }.groupBy(_.isRight)
   }
@@ -58,11 +63,12 @@ object SXDLParseEngine extends Parser {
   /**
    * 加载 SSDL 文件
    *
+   * @param scriptPath SXDL 脚本路径
    * @return 文件列表
    */
-  private def loadFiles(): List[(List[File], ChatInfo)] = {
+  private def loadFiles(scriptPath: File): List[(List[File], ChatInfo)] = {
     import SystemConfig._
-    File(ssdlPath).list.filterNot(f => f.isRegularFile || f.pathAsString.contains("modes")).map { dir =>
+    scriptPath.list.filterNot(f => f.isRegularFile || f.pathAsString.contains("modes")).map { dir =>
       // 忽略备注 + 获取会话格式
       val dirName = dir.name.split("[）)]").last
       val chatInfo = dirName match {
@@ -75,7 +81,7 @@ object SXDLParseEngine extends Parser {
           val Array(tp, id) = split.take(2)
           ChatInfo(tp, id.toLong)
       }
-      dir.listRecursively.filter(file => ssdlFileExtension.contains(file.extension.getOrElse(""))).toList -> chatInfo
+      dir.listRecursively.filter(file => sxdlFileExtension.contains(file.extension.getOrElse(""))).toList -> chatInfo
     }.toList
   }
 

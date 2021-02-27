@@ -13,10 +13,10 @@ import scala.jdk.CollectionConverters._
 object SystemConfig {
   private val config: Config = ConfigFactory.load().getConfig("system")
 
-  // SSDL 文件目录
-  val ssdlPath: String = config.getString("ssdl_path")
-  // SSDL 文件扩展名列表
-  val ssdlFileExtension: List[String] = config.getStringList("file_extension").asScala.toList
+  // SXDL 脚本目录
+  val sxdlPath: String = config.getString("sxdl_path")
+  // SXDL 脚本扩展名列表
+  val sxdlFileExtension: List[String] = config.getStringList("file_extension").asScala.toList
   // Debug 模式开启标识
   val debugMode: Boolean = config.getBoolean("debugMode")
   // 自动清理消息天数
