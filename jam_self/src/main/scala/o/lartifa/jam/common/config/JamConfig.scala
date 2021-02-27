@@ -51,5 +51,7 @@ object JamConfig {
     val email: String = remote.getString("git_email")
     // 秘钥
     val secret: String = remote.getString("secret")
+    // 分支名称
+    val branch: String = remote.getString("branch")
   }
 }

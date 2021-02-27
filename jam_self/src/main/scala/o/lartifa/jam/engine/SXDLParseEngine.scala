@@ -68,7 +68,9 @@ object SXDLParseEngine extends Parser {
    */
   private def loadFiles(scriptPath: File): List[(List[File], ChatInfo)] = {
     import SystemConfig._
-    scriptPath.list.filterNot(f => f.isRegularFile || f.pathAsString.contains("modes")).map { dir =>
+    scriptPath.list.filterNot(f => f.isRegularFile || f.pathAsString.contains("modes"))
+      .filterNot(_.name.startsWith("."))
+      .map { dir =>
       // 忽略备注 + 获取会话格式
       val dirName = dir.name.split("[）)]").last
       val chatInfo = dirName match {
