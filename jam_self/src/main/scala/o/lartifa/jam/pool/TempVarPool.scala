@@ -1,13 +1,12 @@
 package o.lartifa.jam.pool
 
-import java.sql.Timestamp
-
 import cc.moecraft.icq.event.events.message.EventMessage
 import o.lartifa.jam.common.exception.{ExecutionException, VarNotFoundException}
 import o.lartifa.jam.common.util.EventMessageHelper._
 import o.lartifa.jam.database.temporary.schema.Tables
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 
+import java.sql.Timestamp
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -168,7 +167,7 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
       case "发送者年龄" | "对方年龄" => eventMessage.getSender.refreshInfo(true).getAge.toString
       case "发送者性别" | "对方性别" => eventMessage.getSender.refreshInfo(true).getSex
       case "会话类型" => if (eventMessage.chatInfo.chatType == "private") "私聊" else "群聊"
-      case "是否为好友" => if (eventMessage.toGroupMessage.getGroupSender.getInfo.getUnfriendly) "是" else "否"
+      case "是否为好友" => if (eventMessage.toGroupMessage.getGroupSender.getInfo.getUnfriendly) "否" else "是"
       case "对方管理状态" => if (eventMessage.isSenderManager) "是" else "否"
       case other => return CommandScopeParameters.get(other)
     }

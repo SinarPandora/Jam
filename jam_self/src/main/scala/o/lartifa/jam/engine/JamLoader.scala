@@ -123,8 +123,8 @@ object JamLoader {
    * 初始化并解析 SXDL
    */
   private def initSXDL(): Future[Unit] = async {
-    await(loadSXDL()).foreach(errorMessages =>
-      MasterUtil.notifyAndLog(errorMessages.mkString("\n")))
+    await(loadSXDL()).foreach(message =>
+      MasterUtil.notifyAndLog(message.mkString("\n")))
   }
 
   /**
@@ -295,7 +295,12 @@ object JamLoader {
   def reloadSSDL()(implicit context: CommandExecuteContext): Future[Unit] = async {
     if (!JamContext.initLock.get()) {
       JamContext.initLock.set(true)
-      context.eventMessage.respond("λ> 已连接到解析器实例，正在重新解析SXDL（简易定义语言）脚本...")
+      context.eventMessage.respond(
+        s"""${
+          if (JamConfig.RemoteEditing.enable)
+            "λ> 远程编辑已开启，即将从远程仓库获取最新脚本文件...\n"
+          else ""
+        }λ> 已连接到解析器实例，正在重新解析SXDL（简易定义语言）脚本...""".stripMargin)
       await(loadSXDL()).foreach {
         _.sliding(10, 10).foreach(lines => context.eventMessage.respond(lines.map(it => s"λ> $it").mkString("\n")))
       }

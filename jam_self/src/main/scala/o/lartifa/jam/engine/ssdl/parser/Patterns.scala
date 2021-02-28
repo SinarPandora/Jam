@@ -43,28 +43,7 @@ object Patterns {
    */
   val matcherPattern: Regex = """^(当|如果)(句中出现|句首出现|句末出现|内容为|匹配)%\{(.+?)}%时?[,，](.+)""".r("ignored", "type", "template", "command")
 
-  // TODO 4
-  object TimeExp {
-    /**
-     * 定时任务捕获器匹配
-     * 返回结果：expression command
-     */
-    val cronTaskPattern: Regex = """^每到?(.+?)时[,，](.+)""".r("expression", "command")
-    // 月-日
-    val month: Regex = """^(每|一|二|三|四|五|六|七|八|九|十|十一|十二)月""".r("month")
-    // 周
-    val weekday: Regex = """周(一|二|三|四|五|六|日|末|工作日)""".r("weekday")
-    // 日
-    val day: Regex = """([0-9]+)日""".r("day")
-    // 时
-    val hour: Regex = """([0-9]+)点""".r("hour")
-    // 分
-    val minute: Regex = """([0-9]+)分""".r("minute")
-    // 秒
-    val second: Regex = """([0-9]+)秒""".r("second")
-    // 时间表达式
-    val cron: Regex = """满足(.+?)""".r("cron")
-  }
+  // 4 -> STDL 解析
 
   // 平行 5
   object ConditionPattern {
