@@ -1,17 +1,20 @@
-# 果酱 3（Jam to Mirai，迁移工作进行中）
+# 果酱 3
+
+基于语法简洁的中文步骤定义语言 SXDL ，可由用户添加行为的 QQ 机器人
 
 > QQBot  
 > Based on Mirai Console + Mirai CQHTTP Plugin + PicqBotX
-
-原先的果酱 3 因为设计过于复杂已经搁浅，该版本是基于相同的思想，用最简单地方式在一个周末实现的预览版。
+> 全面迁移到 Mirai 的工作正在进行……
 
 ## Getting Started 使用指南
 
-参照[文档（最新版本）](https://mubu.com/doc/X8zrTpx7c)
+SXDL [脚本手册](https://www.yuque.com/docs/share/1405438e-c596-4ce4-ad3c-483eb3057451)
+[部署文档（暂时没有更新）](https://mubu.com/doc/X8zrTpx7c)
 
 ## Release History 版本历史
 
-* （计划中）3.0.6 Jam x Ink
+* 3.0.7 SXDL + 彩云小梦 + 远程编辑
+* 3.0.6 插件系统
 * 3.0.5 RSS 订阅（预览版）+ 询问模式
 * 3.0.2 字符串模板 + 图片 Bot
     * 该版本在实现过程中遭遇 CQ 关站，因此在迁移到 Mirai 前暂不发布
@@ -21,8 +24,8 @@
 ## TODO 计划
 
 * [ ] Mirai Jam
-* [ ] 定时任务的 SSDL
-* [ ] SSDL 2
+* [x] 定时任务的 SSDL
+* [x] SSDL 2
 * [ ] UI 界面
 * [ ] Ink 语法支持
 * [x] PostgreSQL + Flyway
