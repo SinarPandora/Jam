@@ -53,7 +53,7 @@ object CommandParser extends Parser {
       parseRandomNumber _, parseRandomGoto _, parseLoopGoto _, parseParamDel _, parseWaiting _,
       parseSetPicFetcherMode _, parseSetPicRating _, parseRunTaskNow _, parseFetchAndSendPic _,
       parseRollEveryThing _, parseBanSomeOneInGroup _, parseSendVideo _, parseShareLocation _,
-      parseShareURL _, parseShareContact _, parseShareMusic _) ++ regex ++ List(
+      parseShareURL _, parseShareContact _, parseShareMusic _, parsePoke _, parseTTS _) ++ regex ++ List(
       // 包含类模式放在后边
       parseDoNoting _, parseGroupWholeBan _, parseGroupWholeUnBan _, parseShowPicInfo _,
       parseRSSSubscribe _, parseRSSUnSubscribe _, parseRSSShowAll _, parseWhatICanDo _,
@@ -661,4 +661,31 @@ object CommandParser extends Parser {
    */
   private def parseLinkToDream(string: String, context: ParseEngineContext): Option[LinkToDream.type] =
     if (string.contains(CommandPattern.linkToDream)) Some(LinkToDream) else None
+
+  /**
+   * 解析真·戳一戳指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parsePoke(string: String, context: ParseEngineContext): Option[Poke] = {
+    CommandPattern.poke.findFirstMatchIn(string).map(result => {
+      Poke(context.getTemplate(result.group("qId")))
+    })
+  }
+
+  /**
+   * 解析TTS（文本转语音）指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseTTS(string: String, context: ParseEngineContext): Option[SendTTSMessage] = {
+    CommandPattern.tts.findFirstMatchIn(string).map(result => {
+      SendTTSMessage(context.getTemplate(result.group("message")))
+    })
+  }
+
 }
