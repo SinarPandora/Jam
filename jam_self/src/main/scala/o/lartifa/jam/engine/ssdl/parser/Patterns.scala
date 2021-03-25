@@ -159,9 +159,9 @@ object Patterns {
     // 链接到指定梦境
     val linkToDream: String = "链接到消息中的梦境"
     // 真·戳一戳指令
-    val poke: Regex = """"戳%\{(.+?)}%""".r("qId")
+    val poke: Regex = """戳%\{(.+?)}%""".r("qId")
     // TTS（文本转语音）指令
-    val tts: Regex = """"朗读%\{(.+?)}%""".r("message")
+    val tts: Regex = """朗读%\{(.+?)}%""".r("message")
   }
 
 }
