@@ -1,5 +1,6 @@
 package o.lartifa.jam.model.tasks
 
+import better.files.File
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.{JamCharacter, JamConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
@@ -10,6 +11,7 @@ import o.lartifa.jam.pool.JamContext
 
 import scala.collection.parallel.CollectionConverters._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 /**
  * 作息时间 - 睡眠
@@ -29,6 +31,12 @@ class GoASleep(name: String) extends JamCronTask(name) {
         logger.log(s"${count}条消息记录已清理")
       })
     }
+    logger.log(s"正在清理缓存文件夹...")
+    Try(File(SystemConfig.tempDir).clear()).recover(err => {
+      logger.warning("缓存文件夹清理失败，某些文件可能被占用，清理任务将在下次睡眠后进行")
+      err
+    })
+    logger.log(s"缓存文件夹清理完成...")
     Future {
       // 乱序执行睡后任务
       JamPluginLoader.loadedComponents.afterSleepTasks.par.foreach(_.apply())

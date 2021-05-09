@@ -2,7 +2,6 @@ package o.lartifa.jam.plugins.filppic
 
 import better.files._
 import cc.moecraft.logger.HyLogger
-import com.github.kokorin.jaffree.LogLevel
 import com.github.kokorin.jaffree.ffmpeg.{FFmpeg, UrlInput, UrlOutput}
 import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.pool.JamContext
@@ -19,7 +18,12 @@ object FFMpegGifFlipper {
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(FFMpegGifFlipper.getClass)
   private val tmp: File = (File(SystemConfig.tempDir) / "flip_pic_cache").createDirectoryIfNotExists()
 
-  private lazy val ffmpeg: FFmpeg = {
+  /**
+   * 获取 FFMpeg 实例
+   *
+   * @return 实例
+   */
+  private def ffmpeg: FFmpeg = {
     if (ffmpegPath.isBlank) FFmpeg.atPath()
     else FFmpeg.atPath(Path.of(ffmpegPath))
   }
@@ -66,9 +70,8 @@ object FFMpegGifFlipper {
   private def flipImgViaFFMpeg(source: (UrlInput, File)): Array[Byte] = {
     val (in: UrlInput, out: File) = source
     ffmpeg.addInput(in)
-      .setLogLevel(LogLevel.DEBUG)
       .addOutput(UrlOutput.toUrl(out.pathAsString))
-      .addArguments("-vf", "reverse,hflip,vflip,scale=512:-1:flags=lanczos")
+      .addArguments("-vf", "reverse,hflip,vflip")
       .execute()
     out.byteArray
   }
