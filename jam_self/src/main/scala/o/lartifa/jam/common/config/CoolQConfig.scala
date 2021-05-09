@@ -1,6 +1,6 @@
 package o.lartifa.jam.common.config
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 
 /**
  * 酷 Q 连接设置
@@ -9,7 +9,7 @@ import com.typesafe.config.{Config, ConfigFactory}
  * 2019/9/28 15:19
  */
 object CoolQConfig {
-  private val config: Config = ConfigFactory.load().getConfig("coolQQ")
+  private val config: Config = configFile.getConfig("coolQQ")
 
   // 酷 Q 服务器地址
   val postUrl: String = config.getString("host")

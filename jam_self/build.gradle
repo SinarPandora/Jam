@@ -99,9 +99,10 @@ dependencies {
     api("org.jsoup:jsoup:1.13.1")
     api("net.redhogs.cronparser:cron-parser-core:3.5")
     api("com.bladecoder.ink:blade-ink:0.7.4")
-    api("com.sksamuel.scrimage:scrimage-core:4.0.6") {
+    api("com.sksamuel.scrimage:scrimage-core:4.0.17") {
         exclude group: "ch.qos.logback", module: "logback-classic"
     }
+    api("com.github.kokorin.jaffree:jaffree:2021-05-02")
     implementation("org.slf4j:slf4j-simple:1.7.30")
 
     // Test

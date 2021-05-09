@@ -1,6 +1,6 @@
 package o.lartifa.jam.common.config
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 
 /**
  * 果酱插件设置
@@ -9,7 +9,7 @@ import com.typesafe.config.{Config, ConfigFactory}
  * 2020/10/1 21:33
  */
 object JamPluginConfig {
-  private val config: Config = ConfigFactory.load().getConfig("plugin")
+  private val config: Config = configFile.getConfig("plugin")
 
   // 是否自动启用插件
   val autoEnablePlugins: Boolean = config.getBoolean("auto_enable")

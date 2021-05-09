@@ -1,6 +1,6 @@
 package o.lartifa.jam.common.config
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 
 import scala.jdk.CollectionConverters._
 
@@ -11,7 +11,7 @@ import scala.jdk.CollectionConverters._
  * 2020/1/4 22:46
  */
 object SystemConfig {
-  private val config: Config = ConfigFactory.load().getConfig("system")
+  private val config: Config = configFile.getConfig("system")
 
   // SXDL 脚本目录
   val sxdlPath: String = config.getString("sxdl_path")
@@ -21,6 +21,8 @@ object SystemConfig {
   val debugMode: Boolean = config.getBoolean("debugMode")
   // 自动清理消息天数
   val cleanUpMessagePeriod: Int = config.getInt("auto_remove_message_before")
+  // 临时文件目录
+  val tempDir: String = config.getString("temp_dir")
 
   object MessageListenerConfig {
     private val ruleEngineConfig: Config = config.getConfig("message_listener")

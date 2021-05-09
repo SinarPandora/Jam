@@ -1,6 +1,6 @@
 package o.lartifa.jam.common.config
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 
 import scala.jdk.CollectionConverters._
 
@@ -11,7 +11,7 @@ import scala.jdk.CollectionConverters._
  * 2020/9/1 19:52
  */
 object JamCharacter {
-  val config: Config = ConfigFactory.load().getConfig("character")
+  val config: Config = configFile.getConfig("character")
 
   // 梦话
   val balderdash: List[String] = config.getStringList("balderdash").asScala.toList

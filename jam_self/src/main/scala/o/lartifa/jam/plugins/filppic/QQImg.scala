@@ -1,13 +1,12 @@
 package o.lartifa.jam.plugins.filppic
 
-import java.util.NoSuchElementException
-
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
 import com.sksamuel.scrimage.nio.{ImageWriter, JpegWriter, PngWriter}
 import o.lartifa.jam.plugins.filppic.QQImg.ImageType
 import o.lartifa.jam.pool.JamContext
 
+import java.util.NoSuchElementException
 import scala.util.matching.Regex
 import scala.util.{Failure, Try}
 

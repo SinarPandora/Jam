@@ -1,9 +1,11 @@
 package o.lartifa.jam
 
+import better.files.File
 import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.backend.MiraiBackend
 import o.lartifa.jam.common.config.CoolQConfig.{postPort, postUrl}
 import o.lartifa.jam.common.config.JamConfig._
+import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.engine.JamLoader
 import o.lartifa.jam.pool.JamContext
@@ -21,6 +23,7 @@ object Bootloader {
   def main(args: Array[String]): Unit = {
     setUpJVMParameters(args)
     if (args.contains("--help")) help()
+    File(SystemConfig.tempDir).createDirectoryIfNotExists()
     val client = CoolQQLoader.createCoolQQClient()
     JamContext.bot.set(client)
     JamContext.httpApi.getAndSet(() => client.getAccountManager.getNonAccountSpecifiedApi)

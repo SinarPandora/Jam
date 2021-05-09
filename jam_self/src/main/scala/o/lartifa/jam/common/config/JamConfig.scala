@@ -1,6 +1,6 @@
 package o.lartifa.jam.common.config
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 
 import java.lang
 import scala.jdk.CollectionConverters._
@@ -12,7 +12,7 @@ import scala.jdk.CollectionConverters._
  * 2020/1/2 22:01
  */
 object JamConfig {
-  val config: Config = ConfigFactory.load().getConfig("bot")
+  val config: Config = configFile.getConfig("bot")
 
   // Bot 姓名
   val name: String = config.getString("name")

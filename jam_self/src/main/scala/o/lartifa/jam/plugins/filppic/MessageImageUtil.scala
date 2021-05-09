@@ -1,7 +1,5 @@
 package o.lartifa.jam.plugins.filppic
 
-import java.util.Base64
-
 import at.dhyan.open_imaging.GifDecoder
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.icq.sender.message.components.ComponentImageBase64
@@ -10,6 +8,7 @@ import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.GifSequenceWriter
 import o.lartifa.jam.pool.JamContext
 
+import java.util.Base64
 import scala.util.{Failure, Try}
 
 /**
@@ -46,7 +45,7 @@ object MessageImageUtil {
    */
   private def flipImage(image: QQImg): Option[Array[Byte]] = image.imageType match {
     case QQImg.JPEG | QQImg.PNG => flipStaticImage(image)
-    case QQImg.GIF => flipGIFImage(image)
+    case QQImg.GIF => if (useFFMpeg) FFMpegGifFlipper.flip(image) else flipGIFImage(image)
   }
 
   /**
