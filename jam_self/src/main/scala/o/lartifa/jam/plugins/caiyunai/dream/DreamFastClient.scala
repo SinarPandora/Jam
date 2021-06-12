@@ -102,13 +102,16 @@ object DreamFastClient {
   private def fastLooping(uid: String, nid: String, xid: String, count: Int = 1)(implicit session: Session): Option[String] = {
     DreamClient.dreamLoop(uid, nid, xid) match {
       case Left(_) =>
-        if (count > 10) {
-          None
-        } else {
-          TimeUnit.SECONDS.sleep(3)
-          fastLooping(uid, nid, xid, count + 1)
-        }
-      case Right(resp) => resp.headOption.map(_.content)
+        logger.warning("彩云小梦梦境循环失败，若此问题连续出现多次，请关闭后置任务：联想回复")
+        throw ExecutionException("彩云小梦梦境循环失败")
+      case Right(resp) =>
+        if (resp.isEmpty) {
+          if (count > 10) None
+          else {
+            TimeUnit.SECONDS.sleep(3)
+            fastLooping(uid, nid, xid, count + 1)
+          }
+        } else resp.headOption.map(_.content)
     }
   }
 }
