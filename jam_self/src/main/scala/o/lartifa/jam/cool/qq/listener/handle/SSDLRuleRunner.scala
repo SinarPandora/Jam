@@ -29,8 +29,9 @@ object SSDLRuleRunner {
    *
    * @param eventMessage 消息对象
    * @param exec         异步执行上下文
+   * @return 执行结果，若成功捕获并执行，则返回当次的指令上下文
    */
-  def executeIfFound(eventMessage: EventMessage)(implicit exec: ExecutionContext): Future[Unit] = if (!JamContext.initLock.get()) {
+  def executeIfFound(eventMessage: EventMessage)(implicit exec: ExecutionContext): Future[Option[CommandExecuteContext]] = if (!JamContext.initLock.get()) {
     // 启动计时器
     val matchCost = new StopWatch()
     matchCost.start()
@@ -56,14 +57,14 @@ object SSDLRuleRunner {
           if (cost < 1) logger.log(s"${AnsiColor.GREEN}成功捕获！步骤ID：$stepId，耗时：小于1s")
           else if (cost < 4) logger.log(s"${AnsiColor.GREEN}成功捕获！步骤ID：$stepId，耗时：${cost}s")
           else logger.warning(s"${AnsiColor.RED}成功捕获但耗时较长，请考虑对捕获条件进行优化。步骤ID：$stepId，耗时：${cost}s")
-          ssdlTask
+          ssdlTask.map(_ => Some(context))
         }.getOrElse {
           matchCost.stop()
-          Future.unit
+          Future.successful(None)
         }
-      } else Future.unit
+      } else Future.successful(None)
     })
-  } else Future.unit
+  } else Future.successful(None)
 
   /**
    * 寻找匹配的步骤

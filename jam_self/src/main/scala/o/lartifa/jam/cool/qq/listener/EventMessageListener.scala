@@ -1,17 +1,18 @@
 package o.lartifa.jam.cool.qq.listener
 
-import java.security.SecureRandom
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.icq.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.listener.asking.Questioner
-import o.lartifa.jam.cool.qq.listener.fsm.FSMModeRouter
 import o.lartifa.jam.cool.qq.listener.handle.SSDLRuleRunner
+import o.lartifa.jam.cool.qq.listener.posthandle.PostHandleTask
 import o.lartifa.jam.cool.qq.listener.prehandle.PreHandleTask
+import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.pool.{JamContext, MessagePool}
 
+import java.security.SecureRandom
 import scala.async.Async.{async, await}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
@@ -28,6 +29,7 @@ object EventMessageListener extends IcqListener {
 
   private val messageRecorder: MessagePool = JamContext.messagePool
   private var preHandleTasks: List[PreHandleTask] = PreHandleTaskInitializer.tasks
+  private var postHandleTasks: List[PostHandleTask] = PostHandleTaskInitializer.tasks
 
   // 决定是否响应前置任务和 SSDL 规则
   private var willResponse: () => Boolean = createFrequencyFunc(JamConfig.responseFrequency)
@@ -43,7 +45,8 @@ object EventMessageListener extends IcqListener {
       recordMessage(eventMessage) // 记录消息
         .flatMap(it => if (it) Questioner.tryAnswerer(eventMessage) else Future.successful(false)) // 处理存在的询问
         .flatMap(it => if (it && willResponse()) preHandleMessage(eventMessage) else Future.successful(false)) // 处理前置任务
-        .foreach(it => if (it) SSDLRuleRunner.executeIfFound(eventMessage)) // 执行 SSDL 规则解析
+        .flatMap(it => if (it) SSDLRuleRunner.executeIfFound(eventMessage)) // 执行 SSDL 规则解析
+        .foreach(postHandleMessage(eventMessage, _))
     }
   }
 
@@ -88,6 +91,22 @@ object EventMessageListener extends IcqListener {
   })
 
   /**
+   * 执行后置任务
+   *
+   * @param eventMessage 消息对象
+   */
+  def postHandleMessage(eventMessage: EventMessage, contextOpt: Option[CommandExecuteContext]): Future[Unit] = async {
+    if (SystemConfig.MessageListenerConfig.PostHandleTask.runTaskAsync) {
+      val tasks = Future.sequence(postHandleTasks.map(_.execute(eventMessage, contextOpt)))
+      await(tasks).foreach(_ => ())
+    } else {
+      postHandleTasks.foreach(it => Await.result(it.execute(eventMessage, contextOpt), Duration.Inf))
+    }
+  }.recover(err => {
+    logger.error("后置任务执行出错", err)
+  })
+
+  /**
    * 调整回复频率
    *
    * @param frequency 回复频率
@@ -101,6 +120,13 @@ object EventMessageListener extends IcqListener {
    */
   def reloadPreHandleTasks(): Unit = {
     this.preHandleTasks = PreHandleTaskInitializer.tasks
+  }
+
+  /**
+   * 重新加载后置任务
+   */
+  def reloadPostHandleTasks(): Unit = {
+    this.postHandleTasks = PostHandleTaskInitializer.tasks
   }
 
   /**

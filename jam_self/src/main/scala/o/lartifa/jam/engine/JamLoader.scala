@@ -81,6 +81,7 @@ object JamLoader {
       makeSureDirsExist()
       MasterUtil.notifyAndLog(s"开始重新加载${JamConfig.name}的各个组件")
       EventMessageListener.reloadPreHandleTasks()
+      EventMessageListener.reloadPostHandleTasks()
       CoolQQLoader.reloadMasterCommands()
       JamContext.cronTaskPool.get().autoRefreshTaskDefinition()
       await(BehaviorInitializer.init())

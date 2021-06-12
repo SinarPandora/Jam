@@ -6,6 +6,7 @@ import cc.moecraft.logger.{HyLogger, LogLevel}
 import o.lartifa.jam.common.config.{JamConfig, JamPluginConfig}
 import o.lartifa.jam.common.util.{MasterUtil, TimeUtil}
 import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
+import o.lartifa.jam.cool.qq.listener.posthandle.PostHandleTask
 import o.lartifa.jam.cool.qq.listener.prehandle.PreHandleTask
 import o.lartifa.jam.database.temporary.Memory.database.db
 import o.lartifa.jam.database.temporary.schema.Tables
@@ -42,6 +43,7 @@ object JamPluginLoader {
     bootTasks: List[LifeCycleTask] = Nil,
     shutdownTasks: List[LifeCycleTask] = Nil,
     preHandleTasks: List[PreHandleTask] = Nil,
+    postHandleTasks: List[PostHandleTask] = Nil,
     containsModeCommandParsers: List[SSDLCommandParser.Parser] = Nil,
     regexModeCommandParsers: List[SSDLCommandParser.Parser] = Nil,
     highOrderModeCommandParsers: List[SSDLCommandParser.Parser] = Nil,
@@ -179,6 +181,7 @@ object JamPluginLoader {
     val bootTasks: ListBuffer[LifeCycleTask] = ListBuffer.empty
     val shutdownTasks: ListBuffer[LifeCycleTask] = ListBuffer.empty
     val preHandleTasks: ListBuffer[PreHandleTask] = ListBuffer.empty
+    val postHandleTasks: ListBuffer[PostHandleTask] = ListBuffer.empty
     val containsModeCommandParsers: ListBuffer[SSDLCommandParser.Parser] = ListBuffer.empty
     val regexModeCommandParsers: ListBuffer[SSDLCommandParser.Parser] = ListBuffer.empty
     val highOrderModeCommandParsers: ListBuffer[SSDLCommandParser.Parser] = ListBuffer.empty
@@ -189,6 +192,7 @@ object JamPluginLoader {
       bootTasks ++= it.bootTasks
       shutdownTasks ++= it.bootTasks
       preHandleTasks ++= it.preHandleTasks
+      postHandleTasks ++= it.postHandleTasks
       cronTaskDefinitions ++= it.cronTaskDefinitions
       masterCommands ++= it.masterCommands
       afterSleepTasks ++= it.afterSleepTasks
@@ -199,9 +203,9 @@ object JamPluginLoader {
     }
     logger.log(s"${AnsiColor.YELLOW} 插件挂载结束！")
     LoadedComponents(
-      bootTasks.result(), shutdownTasks.result(), preHandleTasks.result(), containsModeCommandParsers.result(),
-      regexModeCommandParsers.result(), highOrderModeCommandParsers.result(), cronTaskDefinitions.result(),
-      masterCommands.result(), afterSleepTasks.result()
+      bootTasks.result(), shutdownTasks.result(), preHandleTasks.result(), postHandleTasks.result(),
+      containsModeCommandParsers.result(), regexModeCommandParsers.result(), highOrderModeCommandParsers.result(),
+      cronTaskDefinitions.result(), masterCommands.result(), afterSleepTasks.result()
     )
   }
 

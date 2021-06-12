@@ -3,6 +3,8 @@ package o.lartifa.jam.model
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
+ * 可执行对象
+ *
  * Author: sinar
  * 2020/1/4 18:59
  */

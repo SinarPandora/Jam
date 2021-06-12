@@ -1,6 +1,7 @@
 package o.lartifa.jam.plugins.api
 
 import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
+import o.lartifa.jam.cool.qq.listener.posthandle.PostHandleTask
 import o.lartifa.jam.cool.qq.listener.prehandle.PreHandleTask
 import o.lartifa.jam.engine.ssdl.parser.SSDLCommandParser
 import o.lartifa.jam.model.tasks.LifeCycleTask
@@ -28,6 +29,11 @@ case class MountPoint
    * （挂载点）预处理任务
    */
   preHandleTasks: List[PreHandleTask] = Nil,
+
+  /**
+   * （挂载点）后置任务（指令）
+   */
+  postHandleTasks: List[PostHandleTask] = Nil,
 
   /**
    * （挂载点）SSDL 指令解析器

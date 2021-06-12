@@ -33,5 +33,13 @@ object SystemConfig {
       // 开启的前置任务
       val enabledTasks: List[String] = preHandleTaskConfig.getStringList("enabled_tasks").asScala.toList
     }
+
+    object PostHandleTask {
+      private val postHandleTaskConfig: Config = ruleEngineConfig.getConfig("post_handle")
+      // 允许异步执行后置任务
+      val runTaskAsync: Boolean = postHandleTaskConfig.getBoolean("run_task_async")
+      // 开启的后置任务
+      val enabledTasks: List[String] = postHandleTaskConfig.getStringList("enabled_tasks").asScala.toList
+    }
   }
 }
