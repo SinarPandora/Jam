@@ -97,8 +97,7 @@ object EventMessageListener extends IcqListener {
    */
   def postHandleMessage(eventMessage: EventMessage, contextOpt: Option[CommandExecuteContext]): Future[Unit] = async {
     if (SystemConfig.MessageListenerConfig.PostHandleTask.runTaskAsync) {
-      val tasks = Future.sequence(postHandleTasks.map(_.execute(eventMessage, contextOpt)))
-      await(tasks).foreach(_ => ())
+      await(Future.sequence(postHandleTasks.map(_.execute(eventMessage, contextOpt)))).foreach(_ => ())
     } else {
       postHandleTasks.foreach(it => Await.result(it.execute(eventMessage, contextOpt), Duration.Inf))
     }
