@@ -85,7 +85,7 @@ object DreamClient {
    * @param uid     用户 ID（必填）
    * @param nid     小说 ID（选填）
    * @param session 当前会话
-   * @return 保存成功时返回 UID（文章 ID)
+   * @return 保存成功时返回 NID（小说 ID)
    */
   def save(title: String, content: String, uid: String, nid: Option[String] = None)(implicit session: Session): Either[String, String] = {
     val data = ujson.Obj("content" -> content, "title" -> title, "ostype" -> "")
