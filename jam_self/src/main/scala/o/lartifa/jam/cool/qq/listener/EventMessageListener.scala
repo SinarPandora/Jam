@@ -45,8 +45,10 @@ object EventMessageListener extends IcqListener {
       recordMessage(eventMessage) // 记录消息
         .flatMap(it => if (it) Questioner.tryAnswerer(eventMessage) else Future.successful(false)) // 处理存在的询问
         .flatMap(it => if (it && willResponse()) preHandleMessage(eventMessage) else Future.successful(false)) // 处理前置任务
-        .flatMap(it => if (it) SSDLRuleRunner.executeIfFound(eventMessage)) // 执行 SSDL 规则解析
-        .foreach(postHandleMessage(eventMessage, _))
+        .foreach(it => if (it) SSDLRuleRunner.executeIfFound(eventMessage) // 执行 SSDL 规则解析
+          .flatMap(postHandleMessage(eventMessage, _)) // 执行后置任务
+        )
+
     }
   }
 

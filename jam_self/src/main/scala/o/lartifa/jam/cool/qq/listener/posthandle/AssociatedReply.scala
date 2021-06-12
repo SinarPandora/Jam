@@ -27,7 +27,7 @@ object AssociatedReply extends PostUnProcessedHandleTask("联想回复") {
    * @param exec  异步上下文
    * @return 异步返回执行结果
    */
-  override def execute(event: EventMessage)(implicit exec: ExecutionContext): Future[Unit] = {
+  override def execute(event: EventMessage)(implicit exec: ExecutionContext): Future[Unit] = Future {
     val msg = event.message.replace(" ", "")
     if (msg.contains(atMe)) {
       DreamFastClient.reply(content = msg.replace(atMe, "")).map {
