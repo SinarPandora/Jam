@@ -57,7 +57,8 @@ object CommandParser extends Parser {
       // 包含类模式放在后边
       parseDoNoting _, parseGroupWholeBan _, parseGroupWholeUnBan _, parseShowPicInfo _,
       parseRSSSubscribe _, parseRSSUnSubscribe _, parseRSSShowAll _, parseWhatICanDo _,
-      parseQQDice _, parseQQRPS _, parseShake _, parseStartDreaming _, parseLinkToDream _
+      parseQQDice _, parseQQRPS _, parseShake _, parseStartDreaming _, parseLinkToDream _,
+      parseBreakDirectly _, parseBreakAsUnMatched _
     ) ++ contains
   }
 
@@ -688,4 +689,23 @@ object CommandParser extends Parser {
     })
   }
 
+  /**
+   * 解析打断指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseBreakDirectly(string: String, context: ParseEngineContext): Option[BreakDirectly.type] =
+    if (string.contains(CommandPattern.breakDirectly)) Some(BreakDirectly) else None
+
+  /**
+   * 解析视为未捕获指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseBreakAsUnMatched(string: String, context: ParseEngineContext): Option[BreakAsUnMatched.type] =
+    if (string.contains(CommandPattern.breakAsUnMatched)) Some(BreakAsUnMatched) else None
 }

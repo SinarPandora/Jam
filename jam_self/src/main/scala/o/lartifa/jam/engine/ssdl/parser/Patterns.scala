@@ -162,6 +162,10 @@ object Patterns {
     val poke: Regex = """戳%\{(.+?)}%""".r("qId")
     // TTS（文本转语音）指令
     val tts: Regex = """朗读%\{(.+?)}%""".r("message")
+    // 打断指令
+    val breakDirectly: String = "立刻打断"
+    // 视为未捕获指令
+    val breakAsUnMatched: String = "打断并视为未捕获"
   }
 
 }
