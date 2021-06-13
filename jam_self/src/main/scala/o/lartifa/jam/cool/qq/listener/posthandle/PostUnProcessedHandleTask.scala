@@ -1,5 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.posthandle
 import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.common.util.TriBoolValue
 import o.lartifa.jam.model.CommandExecuteContext
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -10,7 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2021/6/12 21:48
  */
-abstract class PostUnProcessedHandleTask(name: String) extends PostHandleTask(name, false) {
+abstract class PostUnProcessedHandleTask(name: String) extends PostHandleTask(name, TriBoolValue.False) {
   /**
    * 执行
    *

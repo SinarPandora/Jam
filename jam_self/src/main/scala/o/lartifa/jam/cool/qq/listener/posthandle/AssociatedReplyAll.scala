@@ -1,21 +1,17 @@
 package o.lartifa.jam.cool.qq.listener.posthandle
-
 import cc.moecraft.icq.event.events.message.EventMessage
 import o.lartifa.jam.common.util.TriBoolValue
 import o.lartifa.jam.model.CommandExecuteContext
-import o.lartifa.jam.model.commands.Command
 
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
- * 在消息被捕获处理后的后置任务
- * 此时后置任务相当于一个空返回指令
+ * 在任何情况下进行联想回复
  *
  * Author: sinar
- * 2021/6/12 21:43
+ * 2021/6/13 03:53
  */
-abstract class PostProcessedHandleTask(name: String) extends PostHandleTask(name, TriBoolValue.True)
-  with Command[Unit] {
+object AssociatedReplyAll extends PostHandleTask("联想回复（匹配后）", TriBoolValue.Both) {
   /**
    * 执行
    *
@@ -25,5 +21,5 @@ abstract class PostProcessedHandleTask(name: String) extends PostHandleTask(name
    * @return 异步返回执行结果
    */
   override def execute(event: EventMessage, context: Option[CommandExecuteContext])(implicit exec: ExecutionContext): Future[Unit] =
-    this.execute()(context.get, exec)
+    AssociatedReply.execute(event)
 }

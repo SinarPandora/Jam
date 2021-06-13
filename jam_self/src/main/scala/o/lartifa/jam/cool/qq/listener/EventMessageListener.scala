@@ -4,8 +4,9 @@ import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.icq.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
-import o.lartifa.jam.common.util.MasterUtil
+import o.lartifa.jam.common.util.{MasterUtil, TriBoolValue}
 import o.lartifa.jam.cool.qq.listener.asking.Questioner
+import o.lartifa.jam.cool.qq.listener.base.ExitCodes
 import o.lartifa.jam.cool.qq.listener.handle.SSDLRuleRunner
 import o.lartifa.jam.cool.qq.listener.posthandle.PostHandleTask
 import o.lartifa.jam.cool.qq.listener.prehandle.PreHandleTask
@@ -97,15 +98,24 @@ object EventMessageListener extends IcqListener {
    *
    * @param eventMessage 消息对象
    */
-  def postHandleMessage(eventMessage: EventMessage, contextOpt: Option[CommandExecuteContext]): Future[Unit] = async {
-    if (SystemConfig.MessageListenerConfig.PostHandleTask.runTaskAsync) {
-      await(Future.sequence(postHandleTasks.map(_.execute(eventMessage, contextOpt)))).foreach(_ => ())
+  def postHandleMessage(eventMessage: EventMessage, contextOpt: Option[CommandExecuteContext]): Future[Unit] = {
+    if (contextOpt.isDefined && contextOpt.get.exitCode == ExitCodes.AsUnMatched) {
+      postHandleMessage(eventMessage, None)
     } else {
-      postHandleTasks.foreach(it => Await.result(it.execute(eventMessage, contextOpt), Duration.Inf))
+      val tasks = postHandleTasks.filter(it => it.handleOnProcessed == TriBoolValue.Both ||
+        ((it.handleOnProcessed == TriBoolValue.True) == contextOpt.isDefined))
+      if (tasks.nonEmpty) {
+        val fu = if (SystemConfig.MessageListenerConfig.PostHandleTask.runTaskAsync) {
+          Future.sequence(tasks.map(_.execute(eventMessage, contextOpt))).map(_ => ())
+        } else {
+          Future { tasks.foreach(it => Await.result(it.execute(eventMessage, contextOpt), Duration.Inf)) }
+        }
+        fu.recover(err => {
+          logger.error("后置任务执行出错", err)
+        })
+      } else Future.unit
     }
-  }.recover(err => {
-    logger.error("后置任务执行出错", err)
-  })
+  }
 
   /**
    * 调整回复频率
