@@ -1,15 +1,15 @@
 package o.lartifa.jam.model.commands
 
-import java.security.SecureRandom
-
+import o.lartifa.jam.cool.qq.listener.base.ExitCodes
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.ExecutableCommand.Type
 
+import java.security.SecureRandom
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Author: sinar
- * 2020/1/4 12:37 
+ * 2020/1/4 12:37
  */
 case class ExecutableCommand(frequency: Type, command: Command[_]) extends Command[Option[_]] {
 
@@ -30,7 +30,9 @@ case class ExecutableCommand(frequency: Type, command: Command[_]) extends Comma
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Option[_]] = {
     if (ExecutableCommand.ALWAYS == frequency || isExecutable) {
       command.execute().map(Some.apply)
-    } else Future.successful(None)
+    } else {
+      break(ExitCodes.DueToProb)
+    }
   }
 
   /**

@@ -1,5 +1,6 @@
 package o.lartifa.jam.model.structure
 
+import o.lartifa.jam.cool.qq.listener.base.ExitCodes
 import o.lartifa.jam.model.conditions.Condition
 import o.lartifa.jam.model.{CommandExecuteContext, Executable}
 
@@ -10,7 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * If 结构
  *
  * Author: sinar
- * 2020/1/4 19:05 
+ * 2020/1/4 19:05
  */
 case class If(condition: Condition, command: Executable[_]) extends LogicStructure {
   /**
@@ -24,6 +25,8 @@ case class If(condition: Condition, command: Executable[_]) extends LogicStructu
     if (await(condition.isMatched)) {
       await(command.execute())
       true
-    } else false
+    } else {
+      break(ExitCodes.DueToIfCond)
+    }
   }
 }

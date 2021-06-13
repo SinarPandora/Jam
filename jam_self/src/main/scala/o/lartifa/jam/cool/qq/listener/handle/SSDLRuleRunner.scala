@@ -6,6 +6,7 @@ import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch
 import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.util.MasterUtil
+import o.lartifa.jam.cool.qq.listener.base.Break
 import o.lartifa.jam.cool.qq.listener.fsm.FSMModeRouter
 import o.lartifa.jam.model.patterns.ContentMatcher
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
@@ -47,10 +48,13 @@ object SSDLRuleRunner {
         findMatchedStep(eventMessage.getMessage, scanList).map { matcher =>
           val stepId = matcher.stepId
           // 执行任务
-          val ssdlTask = JamContext.stepPool.get().goto(stepId).recover(exception => {
-            logger.error(exception)
-            MasterUtil.notifyMaster(s"%s，步骤${stepId}执行失败了，原因是：${exception.getMessage}")
-          }).flatMap(_ => JamContext.messagePool.recordAPlaceholder(eventMessage, "已捕获并执行一次SSDL")).map(_ => ())
+          val ssdlTask = JamContext.stepPool.get().goto(stepId).recover {
+            case break: Break =>
+              logger.debug(s"SSDL 执行被打断，退出码为：${break.exitCode}")
+            case exception =>
+              logger.error(exception)
+              MasterUtil.notifyMaster(s"%s，步骤${stepId}执行失败了，原因是：${exception.getMessage}")
+          }.flatMap(_ => JamContext.messagePool.recordAPlaceholder(eventMessage, "已捕获并执行一次SSDL")).map(_ => ())
           // 输出捕获信息
           matchCost.stop()
           val cost = matchCost.getTotalTimeSeconds

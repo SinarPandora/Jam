@@ -1,6 +1,8 @@
 package o.lartifa.jam.model
 
 import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.cool.qq.listener.base.ExitCodes
+import o.lartifa.jam.cool.qq.listener.base.ExitCodes.ExitCode
 import o.lartifa.jam.pool._
 
 import java.sql.Timestamp
@@ -16,7 +18,8 @@ import scala.concurrent.ExecutionContext
 case class CommandExecuteContext(eventMessage: EventMessage, vars: DBVarPool,
                                  msgRecords: MessagePool, stepPool: StepPool,
                                  executionContext: ExecutionContext, startTime: Timestamp,
-                                 var lastResult: Option[String] = None) {
+                                 var lastResult: Option[String] = None,
+                                 var exitCode: ExitCode = ExitCodes.Finish) {
   // 懒加载的临时变量池
   lazy val tempVars: TempVarPool = new TempVarPool(eventMessage, startTime)(executionContext)
 

@@ -5,4 +5,8 @@ package o.lartifa.jam.common.exception
  * Author: sinar
  * 2020/1/4 01:36
  */
-case class ExecutionException(message: String) extends Exception(message)
+class ExecutionException(message: String) extends Exception(message)
+
+object ExecutionException {
+  def apply(message: String): ExecutionException = new ExecutionException(message)
+}
