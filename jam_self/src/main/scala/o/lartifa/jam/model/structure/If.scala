@@ -1,6 +1,5 @@
 package o.lartifa.jam.model.structure
 
-import o.lartifa.jam.cool.qq.listener.base.ExitCodes
 import o.lartifa.jam.model.conditions.Condition
 import o.lartifa.jam.model.{CommandExecuteContext, Executable}
 
@@ -25,8 +24,6 @@ case class If(condition: Condition, command: Executable[_]) extends LogicStructu
     if (await(condition.isMatched)) {
       await(command.execute())
       true
-    } else {
-      break(ExitCodes.DueToIfCond)
-    }
+    } else false
   }
 }

@@ -165,7 +165,7 @@ object Patterns {
     // 打断指令
     val breakDirectly: String = "立刻打断"
     // 视为未捕获指令
-    val breakAsUnMatched: String = "打断并视为未捕获"
+    val breakAsUnMatched: String = "打断视为未捕获"
   }
 
 }

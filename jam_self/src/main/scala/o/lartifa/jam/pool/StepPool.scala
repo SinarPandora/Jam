@@ -4,6 +4,7 @@ import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch
 import o.lartifa.jam.common.exception.ExecutionException
+import o.lartifa.jam.cool.qq.listener.base.Break
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext, Step}
 import o.lartifa.jam.pool.StepPool.logger
 
@@ -36,11 +37,17 @@ class StepPool(private val steps: Map[Long, Step], private val names: Map[String
       cost.stop()
       val time = if (cost.getTotalTimeSeconds < 1) "小于1" else cost.getTotalTimeSeconds.toString
       logger.log(s"${AnsiColor.GREEN}步骤${stepId}执行结束，总计耗时：${time}s")
-    }).recover(err => {
+    }).recoverWith(err => {
       cost.stop()
       val time = if (cost.getTotalTimeSeconds < 1) "小于1" else cost.getTotalTimeSeconds.toString
-      logger.error(err)
-      logger.log(s"${AnsiColor.RED}步骤${stepId}执行失败，当前耗时：${time}s")
+      err match {
+        case _: Break =>
+          logger.log(s"${AnsiColor.RED}步骤${stepId}打断了当前执行，当前耗时：${time}s")
+        case _ =>
+          logger.error(err)
+          logger.log(s"${AnsiColor.RED}步骤${stepId}执行失败，当前耗时：${time}s")
+      }
+      Future.failed(err)
     })
   }
 

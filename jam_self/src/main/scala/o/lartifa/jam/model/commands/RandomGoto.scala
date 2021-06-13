@@ -9,9 +9,9 @@ import scala.util.Random
  * 随机执行指令
  *
  * Author: sinar
- * 2020/1/4 17:05 
+ * 2020/1/4 17:05
  */
-case class RandomGoto(stepIds: List[Long], amount: Int) extends Command[List[Future[Unit]]] {
+case class RandomGoto(stepIds: List[Long], amount: Int) extends Command[Unit] {
   /**
    * 执行指令
    *
@@ -19,11 +19,7 @@ case class RandomGoto(stepIds: List[Long], amount: Int) extends Command[List[Fut
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[List[Future[Unit]]] = Future {
-    val pool = context.stepPool
-    LazyList.from(Random.shuffle(stepIds))
-      .take(amount)
-      .map(pool.goto)
-      .toList
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = {
+    OneByOne(List.from(Random.shuffle(stepIds)).take(amount), inOrder = false).execute()
   }
 }

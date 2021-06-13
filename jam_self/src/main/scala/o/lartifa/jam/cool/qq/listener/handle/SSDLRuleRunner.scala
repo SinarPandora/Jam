@@ -50,7 +50,7 @@ object SSDLRuleRunner {
           // 执行任务
           val ssdlTask = JamContext.stepPool.get().goto(stepId).recover {
             case break: Break =>
-              logger.debug(s"SSDL 执行被打断，退出码为：${break.exitCode}")
+              logger.log(s"SSDL 执行被打断，退出码为：${break.exitCode}")
             case exception =>
               logger.error(exception)
               MasterUtil.notifyMaster(s"%s，步骤${stepId}执行失败了，原因是：${exception.getMessage}")

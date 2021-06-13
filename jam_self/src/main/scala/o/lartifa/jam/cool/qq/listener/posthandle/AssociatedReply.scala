@@ -32,7 +32,7 @@ object AssociatedReply extends PostUnProcessedHandleTask("联想回复") {
     if (msg.contains(atMe)) {
       DreamFastClient.reply(content = msg.replace(atMe, "")).map {
         case Some(result) =>
-          val resp = result.trim.replaceFirst("[,，。！.!？?;；\n\t]", "")
+          val resp = result.trim.replaceFirst("[,，。！.!？?;；\n\t]+", "")
           resp.sliding(200, 200).foreach(event.respond)
         case None => event.respond("🤔")
       }.recover(err => {
