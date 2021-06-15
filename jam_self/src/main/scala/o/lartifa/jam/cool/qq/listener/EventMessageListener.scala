@@ -14,6 +14,7 @@ import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.pool.{JamContext, MessagePool}
 
 import java.security.SecureRandom
+import scala.annotation.tailrec
 import scala.async.Async.{async, await}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
@@ -98,7 +99,7 @@ object EventMessageListener extends IcqListener {
    *
    * @param eventMessage 消息对象
    */
-  def postHandleMessage(eventMessage: EventMessage, contextOpt: Option[CommandExecuteContext]): Future[Unit] = {
+  @tailrec def postHandleMessage(eventMessage: EventMessage, contextOpt: Option[CommandExecuteContext]): Future[Unit] = {
     if (contextOpt.isDefined && contextOpt.get.exitCode == ExitCodes.AsUnMatched) {
       postHandleMessage(eventMessage, None)
     } else {
