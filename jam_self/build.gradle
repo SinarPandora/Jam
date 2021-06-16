@@ -54,6 +54,7 @@ startScripts {
 
 repositories {
     maven { url "https://jitpack.io" }
+    maven { url 'https://maven.aliyun.com/repository/jcenter/'}
     mavenCentral()
 }
 
@@ -85,7 +86,7 @@ dependencies {
 
     // Tools
     api("org.eclipse.jgit:org.eclipse.jgit:5.10.0.202012080955-r")
-    api("com.apptastic:rssreader:2.2.3")
+    api("com.apptastic:rssreader:2.5.0")
     api("org.reflections:reflections:0.9.12")
     api("com.typesafe.akka:akka-actor_2.13:$akka_verion")
     api("tv.cntt:glokka_2.13:2.6.1")
