@@ -1,5 +1,5 @@
 drop table if exists story_instance;
-create table story_instance
+create table story_runner_instance
 (
     id          bigserial                           not null
         constraint story_instance_pk
@@ -14,9 +14,7 @@ create table story_instance
     last_update timestamp default current_timestamp not null
 );
 
-create
-index story_instance_story_id_index
-    on story_instance (story_id);
+comment on column story_runner_instance.data is '自动存档';
 
 drop table if exists story_save_file;
 create table story_save_file
