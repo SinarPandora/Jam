@@ -54,7 +54,6 @@ startScripts {
 
 repositories {
     maven { url "https://jitpack.io" }
-    jcenter()
     mavenCentral()
 }
 
@@ -98,7 +97,7 @@ dependencies {
     api("com.lihaoyi:ujson_2.13:1.2.2")
     api("org.jsoup:jsoup:1.13.1")
     api("net.redhogs.cronparser:cron-parser-core:3.5")
-    api("com.bladecoder.ink:blade-ink:0.7.4")
+    api("com.bladecoder.ink:blade-ink:1.0.0")
     api("com.sksamuel.scrimage:scrimage-core:4.0.17") {
         exclude group: "ch.qos.logback", module: "logback-classic"
     }

@@ -9,7 +9,6 @@ group 'lartifa.o'
 sourceCompatibility = "11"
 
 repositories {
-    jcenter()
     mavenCentral()
 }
 
