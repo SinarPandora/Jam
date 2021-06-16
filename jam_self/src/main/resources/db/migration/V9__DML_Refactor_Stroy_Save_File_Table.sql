@@ -25,6 +25,7 @@ create table story_save_file
     story_id      bigint                              not null
         constraint story_save_file_story_id_fk
             references story,
+    name          varchar,
     data          varchar                             not null,
     config        varchar                             not null,
     chat_type     varchar(15)                         not null,
@@ -34,16 +35,17 @@ create table story_save_file
 );
 
 create
-index story_save_file_chat_id_chat_type_story_id_uindex
+    index story_save_file_chat_id_chat_type_story_id_uindex
     on story_save_file (chat_id, chat_type, story_id);
 
 create table story_runner_config
 (
     id          bigserial                           not null
-        constraint story_save_file_pk
+        constraint story_runner_config_pk
             primary key,
-    story_id    bigint                              not null,
-    constraint story_save_file_story_id_fk references story,
+    story_id    bigint                              not null
+        constraint story_runner_config_story_id_fk
+            references story,
     chat_type   varchar(15)                         not null,
     chat_id     bigint                              not null,
     config      varchar                             not null,
