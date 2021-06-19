@@ -25,10 +25,10 @@ abstract class PostHandleTask(val name: String, val handleOnProcessed: TriBool =
   /**
    * 执行
    *
-   * @param event   消息对象
-   * @param context 执行上下文
-   * @param exec    异步上下文
+   * @param event      消息对象
+   * @param contextOpt 执行上下文
+   * @param exec       异步上下文
    * @return 异步返回执行结果
    */
-  def execute(event: EventMessage, context: Option[CommandExecuteContext])(implicit exec: ExecutionContext): Future[Unit]
+  def execute(event: EventMessage, contextOpt: Option[CommandExecuteContext])(implicit exec: ExecutionContext): Future[Unit]
 }

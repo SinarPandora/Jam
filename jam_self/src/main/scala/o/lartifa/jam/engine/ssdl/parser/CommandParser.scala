@@ -58,7 +58,7 @@ object CommandParser extends Parser {
       parseDoNoting _, parseGroupWholeBan _, parseGroupWholeUnBan _, parseShowPicInfo _,
       parseRSSSubscribe _, parseRSSUnSubscribe _, parseRSSShowAll _, parseWhatICanDo _,
       parseQQDice _, parseQQRPS _, parseShake _, parseStartDreaming _, parseLinkToDream _,
-      parseBreakDirectly _, parseBreakAsUnMatched _
+      parseBreakDirectly _, parseBreakAsUnMatched _, parseListAIModels _
     ) ++ contains
   }
 
@@ -708,4 +708,14 @@ object CommandParser extends Parser {
    */
   private def parseBreakAsUnMatched(string: String, context: ParseEngineContext): Option[BreakAsUnMatched.type] =
     if (string.contains(CommandPattern.breakAsUnMatched)) Some(BreakAsUnMatched) else None
+
+  /**
+   * 解析列出可用模型指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseListAIModels(string: String, context: ParseEngineContext): Option[ListAIModels.type] =
+    if (string.contains(CommandPattern.listAIModels)) Some(ListAIModels) else None
 }

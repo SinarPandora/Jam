@@ -166,6 +166,8 @@ object Patterns {
     val breakDirectly: String = "立刻打断"
     // 视为未捕获指令
     val breakAsUnMatched: String = "打断视为未捕获"
+    // 列出可用模型指令
+    val listAIModels: String = "列出可用模型"
   }
 
 }

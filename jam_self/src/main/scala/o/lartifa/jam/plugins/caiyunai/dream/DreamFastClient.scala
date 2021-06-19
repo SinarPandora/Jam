@@ -25,12 +25,13 @@ object DreamFastClient {
   /**
    * 使用彩云小梦引擎对内容进行单词联想
    *
+   * @param modelId 模型编号（默认第一个模型）
    * @param content 消息内容
    * @return 联想结果
    */
-  def reply(content: String): Future[Option[String]] = {
+  def reply(content: String, modelId: Int = 0): Future[Option[String]] = {
     implicit val session: Session = requests.Session()
-    initConnection()
+    initConnection(modelId)
       .map {
         case Some(value) => value
         case None =>
@@ -43,15 +44,16 @@ object DreamFastClient {
   /**
    * 初始化连接
    *
+   * @param modelId 模型编号
    * @param session 消息会话
    * @return 彩云小梦连接
    */
-  private def initConnection()(implicit session: Session): Future[Option[Connection]] = async {
+  private def initConnection(modelId: Int)(implicit session: Session): Future[Option[Connection]] = async {
     val uidFu = async(DreamClient.getUid)
     val modelsFu = async(DreamClient.listModels)
     val signFu = async(DreamClient.getSignature)
     val uidOpt = await(uidFu).toOption
-    val midOpt = await(modelsFu).map(_.headOption).toOption.flatten
+    val midOpt = await(modelsFu).map(_(modelId)).toOption
     val signOpt = await(signFu).toOption
     if (uidOpt.isEmpty || midOpt.isEmpty || signOpt.isEmpty) None
     else Some(Connection(uid = uidOpt.get, mid = midOpt.get.mid, sign = signOpt.get))
