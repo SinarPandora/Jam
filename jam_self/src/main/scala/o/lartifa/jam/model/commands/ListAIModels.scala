@@ -24,7 +24,7 @@ object ListAIModels extends Command[Unit] {
     implicit val session: Session = requests.Session()
     DreamClient.listModels match {
       case Left(_) => reply("获取失败请稍后重试")
-      case Right(list) => list.map(it => s"${it.mid}: ${it.name}").mkString("\n") |> reply
+      case Right(list) => list.zipWithIndex.map(it => s"${it._2}: ${it._1.name}").mkString("\n") |> reply
     }
   }
 }
