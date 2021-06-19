@@ -102,3 +102,5 @@ hs_err_pid*
 
 *TODO.md
 *.DS_Store
+
+!**/libs/*.jar

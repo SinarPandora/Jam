@@ -54,7 +54,7 @@ startScripts {
 
 repositories {
     maven { url "https://jitpack.io" }
-    jcenter()
+    maven { url 'https://maven.aliyun.com/repository/jcenter/'}
     mavenCentral()
 }
 
@@ -86,7 +86,9 @@ dependencies {
 
     // Tools
     api("org.eclipse.jgit:org.eclipse.jgit:5.10.0.202012080955-r")
-    api("com.apptastic:rssreader:2.2.3")
+    // 暂时修复因为 JCenter 关闭而无法导入的包
+    // 原始导入：api("com.apptastic:rssreader:2.5.0")
+    api(files("./libs/rssreader-2.2.3.jar"))
     api("org.reflections:reflections:0.9.12")
     api("com.typesafe.akka:akka-actor_2.13:$akka_verion")
     api("tv.cntt:glokka_2.13:2.6.1")
@@ -98,7 +100,7 @@ dependencies {
     api("com.lihaoyi:ujson_2.13:1.2.2")
     api("org.jsoup:jsoup:1.13.1")
     api("net.redhogs.cronparser:cron-parser-core:3.5")
-    api("com.bladecoder.ink:blade-ink:0.7.4")
+    api("com.bladecoder.ink:blade-ink:1.0.0")
     api("com.sksamuel.scrimage:scrimage-core:4.0.17") {
         exclude group: "ch.qos.logback", module: "logback-classic"
     }
