@@ -85,21 +85,20 @@ trait ReplyToFriend {
   /**
    * 快速回复消息
    *
-   * @param message 消息内容
-   * @param raw     是否不转义（默认自动转义）
-   * @param context 指令上下文
-   * @return 操作结果
-   */
-  protected def reply(message: String, raw: Boolean = false)(implicit context: CommandExecuteContext): ReturnData[RMessageReturnData] =
-    context.eventMessage.respond(message, raw)
-
-  /**
-   * 快速回复消息
-   *
    * @param anyThing 任何对象
    * @param context  指令上下文
    * @return 操作结果
    */
   protected def reply(anyThing: Any)(implicit context: CommandExecuteContext): ReturnData[RMessageReturnData] =
     context.eventMessage.respond(anyThing.toString)
+
+  /**
+   * 快速回复消息（不转义）
+   *
+   * @param anyThing 任何对象
+   * @param context  指令上下文
+   * @return 操作结果
+   */
+  protected def replyRaw(anyThing: Any)(implicit context: CommandExecuteContext): ReturnData[RMessageReturnData] =
+    context.eventMessage.respond(anyThing.toString, false)
 }
