@@ -5,7 +5,7 @@ import cc.moecraft.icq.event.events.message.EventMessage
 import com.bladecoder.ink.runtime.Story
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.behaviors.ReplyToFriend
-import o.lartifa.jam.plugins.story_runner.StoryRunner.Message._
+import o.lartifa.jam.plugins.story_runner.StoryRunningActor.Message._
 
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters._
@@ -16,7 +16,7 @@ import scala.jdk.CollectionConverters._
  * Author: sinar
  * 2021/2/2 20:47
  */
-class StoryRunner(story: Story, save: List[Int], initEvent: EventMessage, config: StoryConfig) extends Actor with ReplyToFriend {
+class StoryRunningActor(story: Story, save: List[Int], initEvent: EventMessage, config: StoryConfig) extends Actor with ReplyToFriend {
 
   val choice: ListBuffer[Int] = ListBuffer.from(save)
 
@@ -117,7 +117,7 @@ class StoryRunner(story: Story, save: List[Int], initEvent: EventMessage, config
   }
 }
 
-object StoryRunner {
+object StoryRunningActor {
 
   object Message {
 

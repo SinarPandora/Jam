@@ -147,101 +147,15 @@ object StoryRepo {
   }
 
   /**
-   * 创建对应的 instance
-   *
-   * @param storyId  故事 ID
-   * @param chatInfo 会话属性
-   * @return 创建结果
-   */
-  def createInstance(chatInfo: ChatInfo, storyId: Long): Future[Boolean] = db.run {
-    Story.filter(_.id === storyId).result.headOption
-  }.flatMap {
-    case Some(story) => db.run {
-      StoryInstance.map(r => (r.storyId, r.config, r.chatType, r.chatId)) += ((
-        storyId, story.defaultConfig, chatInfo.chatType, chatInfo.chatId
-      ))
-    } map (_ == 1)
-    case None => Future.successful(false)
-  }
-
-  /**
-   * 查询当前会话中的实例
-   *
-   * @param chatInfo 会话属性
-   * @param storyId  故事 ID
-   * @return 查询结果
-   */
-  def instanceInSession(chatInfo: ChatInfo, storyId: Long): Future[Option[Tables.StoryInstanceRow]] = db.run {
-    chatInfo match {
-      case ChatInfo(chatType, chatId) =>
-        StoryInstance.filter(it => it.chatId === chatId && it.chatType === chatType && it.storyId === storyId)
-          .result.headOption
-    }
-  }
-
-  /**
-   * 结束对应实例
-   *
-   * @param instanceId 实例 ID
-   * @return 终止结果
-   */
-  def terminateInstance(instanceId: Long): Future[Boolean] = db.run {
-    StoryInstance.filter(_.id === instanceId).delete
-  }.map(_ == 1)
-
-  /**
-   * 游戏实例自动存档
-   *
-   * @param instanceId 实例 ID
-   * @param saveFile   存档数据
-   * @return 保存结果
-   */
-  def autoSave(instanceId: Long, saveFile: SaveFile): Future[Boolean] = db.run {
-    // TODO
-    ???
-    StoryInstance.filter(_.id === instanceId).map(r => (r.autoSave, r.data, r.lastUpdate))
-      .update((saveFile.choices, saveFile.data, TimeUtil.currentTimeStamp))
-  }.map(_ == 1)
-
-  /**
-   * 游戏实例自动刷新（保存）数据
-   *
-   * @param instanceId 实例 ID
-   * @param data       实例数据
-   * @return 保存结果
-   */
-  def autoRefreshData(instanceId: Long, data: Option[String]): Future[Boolean] = db.run {
-    StoryInstance.filter(_.id === instanceId).map(it => (it.data, it.lastUpdate))
-      .update((data, TimeUtil.currentTimeStamp))
-  }.map(_ == 1)
-
-  /**
    * 存档
    *
    * @param storyId  故事 ID
-   * @param chatInfo 会话属性
    * @param saveFile 存档
    * @return 保存结果
    */
-  def saveStoryStatus(storyId: Long, chatInfo: ChatInfo, saveFile: SaveFile): Future[Boolean] = {
-    chatInfo match {
-      case ChatInfo(chatType, chatId) => db.run {
-        StorySaveFile.filter(it => it.storyId === storyId && it.chatId === chatId && it.chatType === chatType)
-          .map(r => (r.id, r.saveList)).result.headOption
-      }.flatMap {
-        case Some((id, saveList)) => // 存在存档记录，添加
-          db.run {
-            StorySaveFile.filter(_.id === id).map(_.saveList).update(SaveFile.writeList(SaveFile.readAsList(saveList) :+ saveFile))
-          }
-        case None => // 不存在存档记录，创建存档记录
-          db.run {
-            StorySaveFile.map(r => (r.chatId, r.chatType, r.storyId, r.saveList)) += ((
-              chatId, chatType, storyId, SaveFile.writeList(List(saveFile))
-            ))
-          }
-      }.map(_ == 1)
-    }
-  }
+  def save(storyId: Long, saveFile: StorySaveFileRow): Future[Boolean] = db.run {
+    StorySaveFile += saveFile
+  }.map(_ == 1)
 
   /**
    * 获取全部存档
@@ -250,53 +164,110 @@ object StoryRepo {
    * @param chatInfo 会话属性
    * @return 全部存档信息
    */
-  def saveFileList(storyId: Long, chatInfo: ChatInfo): Future[List[SaveFile]] = {
+  def saveList(storyId: Long, chatInfo: ChatInfo): Future[Seq[StorySaveFileRow]] = {
     chatInfo match {
       case ChatInfo(chatType, chatId) => db.run {
         StorySaveFile.filter(it => it.storyId === storyId && it.chatId === chatId && it.chatType === chatType)
-          .map(_.saveList).result.headOption
-      }.map(_.map(SaveFile.readAsList).getOrElse(Nil))
+          .result
+      }
     }
   }
 
   /**
    * 删除存档
    *
-   * @param storyId    故事 ID
-   * @param chatInfo   会话属性
    * @param saveFileId 存档 ID
    * @return 删除结果
    */
-  def deleteSaveFile(storyId: Long, chatInfo: ChatInfo, saveFileId: Long): Future[Boolean] = {
-    // TODO
-    ???
+  def deleteSave(saveFileId: Long): Future[Boolean] = db.run {
+    StorySaveFile.filter(it => it.id === saveFileId).delete
+  }.map(_ == 1)
+
+  /**
+   * 加载最新的存档为状态对象
+   *
+   * @param storyId  故事 ID
+   * @param chatInfo 会话信息
+   * @return 最新的状态对象
+   */
+  def loadLatestSaveFile(storyId: Long, chatInfo: ChatInfo): Future[Option[RunnerState]] = {
+    chatInfo match {
+      case ChatInfo(chatType, chatId) => db.run {
+        StorySaveFile.filter(it => it.storyId === storyId && it.chatId === chatId && it.chatType === chatType)
+          .sortBy(_.recordTime.desc)
+          .result
+          .headOption
+      }.map(_.map(RunnerState.load))
+    }
   }
 
   /**
-   * 清理升级故事产生的遗留关系数据，此方法应该用于每夜维护任务
+   * 创建或更新配置
+   *
+   * @param storyId  故事 ID
+   * @param chatInfo 会话信息
+   * @param config   故事配置
+   * @return 是否更新成功
+   */
+  def createOrUpdateConfig(storyId: Long, chatInfo: ChatInfo, config: StoryConfig): Future[Boolean] = {
+    chatInfo match {
+      case ChatInfo(chatType, chatId) => db.run {
+        StoryRunnerConfig.filter(it => it.storyId === storyId && it.chatId === chatId && it.chatType === chatType)
+          .result.headOption
+      }.flatMap {
+        case Some(_) => db.run {
+          StoryRunnerConfig.filter(it => it.storyId === storyId && it.chatId === chatId && it.chatType === chatType)
+            .map(row => (row.config, row.lastUpdate)).update((config.jsonStr, TimeUtil.currentTimeStamp))
+        }
+        case None => db.run {
+          StoryRunnerConfig += StoryRunnerConfigRow(
+            -1, storyId, chatType, chatId, config.jsonStr, TimeUtil.currentTimeStamp
+          )
+        }
+      }.map(_ == 1)
+    }
+  }
+
+  /**
+   * 迁移配置文件
+   *
+   * @param fromId 来源故事 ID
+   * @param toId   目标故事 ID
+   */
+  def migrateConfig(fromId: Long, toId: Long): Future[Unit] = db.run {
+    StoryRunnerConfig.filter(it => it.storyId === fromId)
+      .map(_.storyId)
+      .update(toId)
+  }.flatMap(_ => Future.unit)
+
+  /**
+   * 通过故事 ID 删除全部相关配置
+   *
+   * @param storyId 故事 ID
+   */
+  def deleteAllConfig(storyId: Long): Future[Unit] = db.run {
+    StoryRunnerConfig.filter(it => it.storyId === storyId).delete
+  }.flatMap(_ => Future.unit)
+
+  /**
+   * 清理升级故事产生的遗留关系数据，此方法应该也可以用于每夜维护任务
    * TODO 移动到 task
    * <p>
-   * 第一步：检查是否存在游戏实例，如果存在，发出警告，保存存档后删除
+   * 第一步：如果故事支持无痛迁移，迁移全部存档
    * <br />
-   * 第二步：如果故事支持无痛迁移，在睡觉时迁移全部存档
-   * <br />
-   * 第三步：如果这是一个遗留故事，并且没有任何对应的 instance 和 save 存在，则清理继承关系和故事数据
+   * 第二步：如果这是一个遗留故事，并且没有任何对应的存档存在，则清理继承关系和故事数据
    * </p>
    *
    * @return 清理结果
    */
   def storyCleanup(): Future[Unit] = {
-    // 检查是否存在游戏实例，如果存在，发出警告，保存存档后删除
-
     // 如果故事支持无痛迁移，在睡觉时迁移全部存档
 
     // 如果这是一个遗留故事，并且没有任何对应的实例和存档存在，则清理继承关系和故事数据
     val query = sql"""select distinct s.id
             from public.story s
-                left join public.story_instance si on s.id = si.story_id
                 left join public.story_save_file ssf on s.id = ssf.story_id
             where status = '遗留'
-              and si.id is null
               and ssf.id is null""".as[Long]
     db.run(query).flatMap(needCleanup => db.run {
       DBIO.seq(
