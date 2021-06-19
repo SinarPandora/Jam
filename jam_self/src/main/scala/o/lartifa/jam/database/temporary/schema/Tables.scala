@@ -9,7 +9,7 @@ object Tables extends Tables {
     Each generated XXXXTable trait is mixed in this trait hence allowing access to all the TableQuery lazy vals.
   */
 trait Tables extends MessageRecordsTable with VariablesTable with WebPicturesTable with RssSubscriptionTable with PluginsTable
-  with StoryTable with StoryRunnerInstanceTable with StoryRunnerConfigTable with StorySaveFileTable with StorySaveInheritTable {
+  with StoryTable with StoryRunnerConfigTable with StorySaveFileTable with StorySaveInheritTable {
   val profile: slick.jdbc.JdbcProfile
   import profile.api._
   // NOTE: GetResult mappers for plain SQL are only generated for tables where Slick knows how to map the types of all columns.

@@ -1,6 +1,5 @@
 package o.lartifa.jam.database.temporary.schema
 
-// AUTO-GENERATED Slick data model for table StorySaveFile
 trait StorySaveFileTable {
 
   self:Tables  =>
@@ -13,23 +12,22 @@ trait StorySaveFileTable {
    *  @param id Database column id SqlType(bigserial), AutoInc, PrimaryKey
    *  @param storyId Database column story_id SqlType(int8)
    *  @param data Database column data SqlType(varchar)
-   *  @param config Database column config SqlType(varchar)
    *  @param chatType Database column chat_type SqlType(varchar), Length(15,true)
    *  @param chatId Database column chat_id SqlType(int8)
    *  @param recordTime Database column record_time SqlType(timestamp)
    *  @param isAutoSaved Database column is_auto_saved SqlType(bool), Default(false)
    *  @param name Database column name SqlType(varchar), Default(None) */
-  case class StorySaveFileRow(id: Long, storyId: Long, data: String, config: String, chatType: String, chatId: Long, recordTime: java.sql.Timestamp, isAutoSaved: Boolean = false, name: Option[String] = None)
+  case class StorySaveFileRow(id: Long, storyId: Long, data: String, chatType: String, chatId: Long, recordTime: java.sql.Timestamp, isAutoSaved: Boolean = false, name: Option[String] = None)
   /** GetResult implicit for fetching StorySaveFileRow objects using plain SQL queries */
   implicit def GetResultStorySaveFileRow(implicit e0: GR[Long], e1: GR[String], e2: GR[java.sql.Timestamp], e3: GR[Boolean], e4: GR[Option[String]]): GR[StorySaveFileRow] = GR{
     prs => import prs._
-      StorySaveFileRow.tupled((<<[Long], <<[Long], <<[String], <<[String], <<[String], <<[Long], <<[java.sql.Timestamp], <<[Boolean], <<?[String]))
+      StorySaveFileRow.tupled((<<[Long], <<[Long], <<[String], <<[String], <<[Long], <<[java.sql.Timestamp], <<[Boolean], <<?[String]))
   }
   /** Table description of table story_save_file. Objects of this class serve as prototypes for rows in queries. */
   class StorySaveFile(_tableTag: Tag) extends profile.api.Table[StorySaveFileRow](_tableTag, "story_save_file") {
-    def * = (id, storyId, data, config, chatType, chatId, recordTime, isAutoSaved, name) <> (StorySaveFileRow.tupled, StorySaveFileRow.unapply)
+    def * = (id, storyId, data, chatType, chatId, recordTime, isAutoSaved, name) <> (StorySaveFileRow.tupled, StorySaveFileRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(storyId), Rep.Some(data), Rep.Some(config), Rep.Some(chatType), Rep.Some(chatId), Rep.Some(recordTime), Rep.Some(isAutoSaved), name).shaped.<>({ r=>import r._; _1.map(_=> StorySaveFileRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(storyId), Rep.Some(data), Rep.Some(chatType), Rep.Some(chatId), Rep.Some(recordTime), Rep.Some(isAutoSaved), name).shaped.<>({ r=>import r._; _1.map(_=> StorySaveFileRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)
@@ -37,8 +35,6 @@ trait StorySaveFileTable {
     val storyId: Rep[Long] = column[Long]("story_id")
     /** Database column data SqlType(varchar) */
     val data: Rep[String] = column[String]("data")
-    /** Database column config SqlType(varchar) */
-    val config: Rep[String] = column[String]("config")
     /** Database column chat_type SqlType(varchar), Length(15,true) */
     val chatType: Rep[String] = column[String]("chat_type", O.Length(15,varying=true))
     /** Database column chat_id SqlType(int8) */
