@@ -33,7 +33,7 @@ object AssociatedReplyAll extends PostHandleTask("联想回复（匹配后）", 
   override def execute(event: EventMessage, contextOpt: Option[CommandExecuteContext])(implicit exec: ExecutionContext): Future[Unit] = Future {
     implicit val context: CommandExecuteContext = contextOpt.getOrElse(CommandExecuteContext(event))
     val msg = event.message.replace(" ", "")
-    if (msg.contains(atMe)) {
+    if (msg.startsWith(atMe)) {
       varModelId.query.map(_.map(_.toInt).getOrElse(0)).flatMap(modelId =>
         DreamFastClient.reply(content = msg.replace(atMe, ""), modelId)
       ).map {
