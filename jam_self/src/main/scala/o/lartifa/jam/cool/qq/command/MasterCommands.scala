@@ -322,27 +322,29 @@ object MasterCommands {
      * @param args    参数
      * @return 输出内容
      */
-    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = Future {
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = {
       val chatInfo@ChatInfo(chatType, chatId) = ChatInfo(event)
       if (args.isEmpty) {
-        if (chatType == GlobalConstant.MessageType.PRIVATE) {
+        (if (chatType == GlobalConstant.MessageType.PRIVATE) {
           BanList.user.add(chatId)
+          JamContext.variablePool.updateOrElseSet("Private_Ban_List", BanList.user.mkString(","))
         } else {
           BanList.group.add(chatId)
-        }
-        s"已屏蔽当前会话：$chatInfo"
+          JamContext.variablePool.updateOrElseSet("Group_Ban_List", BanList.group.mkString(","))
+        }).map(_ => s"已屏蔽当前会话：$chatInfo")
       } else if (args.size() == 2) {
-        if (args.get(0) == "群") {
+        (if (args.get(0) == "群") {
           BanList.group.add(chatId)
-        } else if (args.get(0) == "用户") {
+          JamContext.variablePool.updateOrElseSet("Group_Ban_List", BanList.group.mkString(","))
+        } else {
           BanList.user.add(chatId)
-        }
-        s"已屏蔽会话：$chatInfo"
+          JamContext.variablePool.updateOrElseSet("Private_Ban_List", BanList.user.mkString(","))
+        }).map(_ => s"已屏蔽会话：$chatInfo")
       } else {
-        """请输入正确的指令格式，示例：
-          |屏蔽当前会话：.ban
-          |屏蔽指定群聊：.ban 群 12345678
-          |屏蔽指定用户：.ban 用户 12345678""".stripMargin
+        Future.successful("""请输入正确的指令格式，示例：
+                            |屏蔽当前会话：.ban
+                            |屏蔽指定群聊：.ban 群 12345678
+                            |屏蔽指定用户：.ban 用户 12345678""".stripMargin)
       }
     }
   }
@@ -357,27 +359,29 @@ object MasterCommands {
      * @param args    参数
      * @return 输出内容
      */
-    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = Future {
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = {
       val chatInfo@ChatInfo(chatType, chatId) = ChatInfo(event)
       if (args.isEmpty) {
-        if (chatType == GlobalConstant.MessageType.PRIVATE) {
+        (if (chatType == GlobalConstant.MessageType.PRIVATE) {
           BanList.user.remove(chatId)
+          JamContext.variablePool.updateOrElseSet("Private_Ban_List", BanList.user.mkString(","))
         } else {
           BanList.group.remove(chatId)
-        }
-        s"已解禁当前会话：$chatInfo"
+          JamContext.variablePool.updateOrElseSet("Group_Ban_List", BanList.group.mkString(","))
+        }).map(_ => s"已解禁当前会话：$chatInfo")
       } else if (args.size() == 2) {
-        if (args.get(0) == "群") {
+        (if (args.get(0) == "群") {
           BanList.group.remove(chatId)
-        } else if (args.get(0) == "用户") {
+          JamContext.variablePool.updateOrElseSet("Group_Ban_List", BanList.group.mkString(","))
+        } else {
           BanList.user.remove(chatId)
-        }
-        s"已解禁会话：$chatInfo"
+          JamContext.variablePool.updateOrElseSet("Private_Ban_List", BanList.user.mkString(","))
+        }).map(_ => s"已解禁会话：$chatInfo")
       } else {
-        """请输入正确的指令格式，示例：
-          |解禁当前会话：.allow
-          |解禁指定群聊：.allow 群 12345678
-          |解禁指定用户：.allow 用户 12345678""".stripMargin
+        Future.successful("""请输入正确的指令格式，示例：
+                            |解禁当前会话：.allow
+                            |解禁指定群聊：.allow 群 12345678
+                            |解禁指定用户：.allow 用户 12345678""".stripMargin)
       }
     }
   }
