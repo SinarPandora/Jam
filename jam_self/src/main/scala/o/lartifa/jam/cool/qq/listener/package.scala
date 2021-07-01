@@ -28,10 +28,10 @@ package object listener {
       JamContext.loggerFactory.get().system.log("开始正在加载禁言列表……")
       Future.sequence(Seq(
         JamContext.variablePool.getOrElseUpdate("Private_Ban_List", "")
-          .map(_.split(",").map(_.toLong).toIterable)
+          .map(_.split(",").filterNot(_ == "").map(_.toLong).toIterable)
           .map(user.addAll),
         JamContext.variablePool.getOrElseUpdate("Group_Ban_List", "")
-          .map(_.split(",").map(_.toLong).toIterable)
+          .map(_.split(",").filterNot(_ == "").map(_.toLong).toIterable)
           .map(group.addAll)
       )).flatMap(_ => {
         JamContext.loggerFactory.get().system.log("禁言列表加载完成！")
