@@ -327,18 +327,18 @@ object MasterCommands {
       if (args.isEmpty) {
         (if (chatType == GlobalConstant.MessageType.PRIVATE) {
           BanList.user.add(chatId)
-          JamContext.variablePool.updateOrElseSet("Private_Ban_List", BanList.user.mkString(","))
+          JamContext.variablePool.update("Private_Ban_List", BanList.user.mkString(","))
         } else {
           BanList.group.add(chatId)
-          JamContext.variablePool.updateOrElseSet("Group_Ban_List", BanList.group.mkString(","))
+          JamContext.variablePool.update("Group_Ban_List", BanList.group.mkString(","))
         }).map(_ => s"已屏蔽当前会话：$chatInfo")
       } else if (args.size() == 2) {
         (if (args.get(0) == "群") {
           BanList.group.add(chatId)
-          JamContext.variablePool.updateOrElseSet("Group_Ban_List", BanList.group.mkString(","))
+          JamContext.variablePool.update("Group_Ban_List", BanList.group.mkString(","))
         } else {
           BanList.user.add(chatId)
-          JamContext.variablePool.updateOrElseSet("Private_Ban_List", BanList.user.mkString(","))
+          JamContext.variablePool.update("Private_Ban_List", BanList.user.mkString(","))
         }).map(_ => s"已屏蔽会话：$chatInfo")
       } else {
         Future.successful("""请输入正确的指令格式，示例：
@@ -364,18 +364,18 @@ object MasterCommands {
       if (args.isEmpty) {
         (if (chatType == GlobalConstant.MessageType.PRIVATE) {
           BanList.user.remove(chatId)
-          JamContext.variablePool.updateOrElseSet("Private_Ban_List", BanList.user.mkString(","))
+          JamContext.variablePool.update("Private_Ban_List", BanList.user.mkString(","))
         } else {
           BanList.group.remove(chatId)
-          JamContext.variablePool.updateOrElseSet("Group_Ban_List", BanList.group.mkString(","))
+          JamContext.variablePool.update("Group_Ban_List", BanList.group.mkString(","))
         }).map(_ => s"已解禁当前会话：$chatInfo")
       } else if (args.size() == 2) {
         (if (args.get(0) == "群") {
           BanList.group.remove(chatId)
-          JamContext.variablePool.updateOrElseSet("Group_Ban_List", BanList.group.mkString(","))
+          JamContext.variablePool.update("Group_Ban_List", BanList.group.mkString(","))
         } else {
           BanList.user.remove(chatId)
-          JamContext.variablePool.updateOrElseSet("Private_Ban_List", BanList.user.mkString(","))
+          JamContext.variablePool.update("Private_Ban_List", BanList.user.mkString(","))
         }).map(_ => s"已解禁会话：$chatInfo")
       } else {
         Future.successful("""请输入正确的指令格式，示例：

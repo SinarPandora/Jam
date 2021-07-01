@@ -9,7 +9,7 @@ import o.lartifa.jam.common.config.{JamConfig, JamPluginConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.cool.qq.command.MasterCommands
-import o.lartifa.jam.cool.qq.listener.{EventMessageListener, SystemEventListener}
+import o.lartifa.jam.cool.qq.listener.{BanList, EventMessageListener, SystemEventListener}
 import o.lartifa.jam.database.temporary.Memory
 import o.lartifa.jam.engine.SXDLParseEngine.{SSDLParseSuccessResult, STDLParseSuccessResult, SXDLParseFailResult, SXDLParseSuccessResult}
 import o.lartifa.jam.engine.stdl.ast.DTExpInterpreter.InterpreterResult
@@ -69,6 +69,7 @@ object JamLoader {
     SubscriptionPool.init()
     runBootTasks()
     await(BehaviorInitializer.init())
+    await(BanList.loadBanList())
   }
 
   /**

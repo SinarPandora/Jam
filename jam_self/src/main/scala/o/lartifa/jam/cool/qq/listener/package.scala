@@ -1,8 +1,11 @@
 package o.lartifa.jam.cool.qq
 
+import cc.moecraft.logger.HyLogger
+import o.lartifa.jam.pool.JamContext
+
 import java.util.concurrent.Executors
 import scala.collection.mutable
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
 /**
  * Listener 包对象
@@ -11,10 +14,32 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
  * 2020/9/18 21:26
  */
 package object listener {
+  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(listener.getClass)
+
   private[listener] implicit val listenerCommonPool: ExecutionContextExecutor =
     ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
   object BanList {
     val group: mutable.Set[Long] = mutable.Set[Long]()
     val user: mutable.Set[Long] = mutable.Set[Long]()
+
+    /**
+     * 加载屏蔽列表
+     *
+     * @return 加载结果
+     */
+    def loadBanList(): Future[Unit] = {
+      logger.log("开始正在加载禁言列表……")
+      Future.sequence(Seq(
+        JamContext.variablePool.getOrElseUpdate("Private_Ban_List", "")
+          .map(_.split(",").map(_.toLong).toIterable)
+          .map(user.addAll),
+        JamContext.variablePool.getOrElseUpdate("Group_Ban_List", "")
+          .map(_.split(",").map(_.toLong).toIterable)
+          .map(group.addAll)
+      )).flatMap(_ => {
+        logger.log("禁言列表加载完成！")
+        Future.unit
+      })
+    }
   }
 }

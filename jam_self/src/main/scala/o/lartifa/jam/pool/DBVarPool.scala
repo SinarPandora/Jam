@@ -114,7 +114,7 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
    * @param context 执行上下文
    * @return 变量值
    */
-  override def getOrElseUpdate(name: String, orElse: String)(implicit context: CommandExecuteContext): Future[String] = async {
+  override def getOrElseUpdate(name: String, orElse: String)(implicit context: CommandExecuteContext = null): Future[String] = async {
     await(get(name)) match {
       case Some(value) => value
       case None =>
