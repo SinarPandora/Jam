@@ -29,6 +29,7 @@ object ChatInfo {
         new ChatInfo(message.getMessageType, message.getGroup.getId)
       case message: EventPrivateMessage =>
         new ChatInfo(MessageType.PRIVATE, message.getSenderId)
+      case null => None
     }
 
   object None extends ChatInfo(MessageType.NONE, -1L)

@@ -1,7 +1,5 @@
 package o.lartifa.jam.pool
 
-import java.util.concurrent.Executors
-
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.exception.ExecutionException
@@ -12,6 +10,7 @@ import o.lartifa.jam.database.temporary.schema.Tables._
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.pool.DBVarPool.logger
 
+import java.util.concurrent.Executors
 import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -33,8 +32,8 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
    * @param context 执行上下文
    * @return 更新结果
    */
-  override def update(name: String, value: String)(implicit context: CommandExecuteContext): Future[String] = {
-    val ChatInfo(chatType, chatId) = context.chatInfo
+  override def update(name: String, value: String)(implicit context: CommandExecuteContext = null): Future[String] = {
+    val ChatInfo(chatType, chatId) = if (context == null) ChatInfo.None else context.chatInfo
     logger.debug(s"变量更新：名称：$name，值：$value，聊天类型：$chatType，会话 ID：$chatId")
     val task = Variables
       .filter(row => row.chatId === chatId && row.chatType === chatType && row.name === name)
@@ -51,7 +50,7 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
    * @param context 执行上下文
    * @return 执行结果
    */
-  override def updateOrElseSet(name: String, value: String)(implicit context: CommandExecuteContext): Future[String] = {
+  override def updateOrElseSet(name: String, value: String)(implicit context: CommandExecuteContext = null): Future[String] = {
     get(name).flatMap {
       case Some(_) => update(name, value)
       case None => add(name, value).map(_ => value)
@@ -66,7 +65,7 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
    * @param context 执行上下文
    * @return 执行结果
    */
-  override def updateOrElseUse(name: String, value: String)(implicit context: CommandExecuteContext): Future[String] = async {
+  override def updateOrElseUse(name: String, value: String)(implicit context: CommandExecuteContext = null): Future[String] = async {
     await(get(name)) match {
       case Some(_) => await(update(name, value))
       case None => value
@@ -81,8 +80,8 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
    * @param context 执行上下文
    * @return 添加结果
    */
-  private def add(name: String, value: String)(implicit context: CommandExecuteContext): Future[Boolean] = {
-    val ChatInfo(chatType, chatId) = context.chatInfo
+  private def add(name: String, value: String)(implicit context: CommandExecuteContext = null): Future[Boolean] = {
+    val ChatInfo(chatType, chatId) = if (context == null) ChatInfo.None else context.chatInfo
     logger.debug(s"变量添加：名称：$name，值：$value，聊天类型：$chatType，会话 ID：$chatId")
     val task = Variables
       .map(row => (row.name, row.value, row.chatType, row.chatId, row.lastUpdateDate)) +=
@@ -97,8 +96,8 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
    * @param context 执行上下文
    * @return 变量值（Optional）
    */
-  override def get(name: String)(implicit context: CommandExecuteContext): Future[Option[String]] = {
-    val ChatInfo(chatType, chatId) = context.chatInfo
+  override def get(name: String)(implicit context: CommandExecuteContext = null): Future[Option[String]] = {
+    val ChatInfo(chatType, chatId) = if (context == null) ChatInfo.None else context.chatInfo
     db.run {
       Variables
         .filter(row => row.chatId === chatId && row.chatType === chatType && row.name === name)
@@ -131,8 +130,8 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
    * @param context 执行上下文
    * @return true：删除成功
    */
-  override def delete(name: String)(implicit context: CommandExecuteContext): Future[Boolean] = async {
-    val ChatInfo(chatType, chatId) = context.chatInfo
+  override def delete(name: String)(implicit context: CommandExecuteContext = null): Future[Boolean] = async {
+    val ChatInfo(chatType, chatId) = if (context == null) ChatInfo.None else context.chatInfo
     logger.debug(s"变量移除：名称：$name，聊天类型：$chatType，会话 ID：$chatId")
     await {
       db.run {
