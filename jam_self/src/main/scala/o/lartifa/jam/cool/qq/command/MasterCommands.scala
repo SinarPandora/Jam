@@ -17,6 +17,7 @@ import java.util
 import java.util.concurrent.Executors
 import scala.async.Async._
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
+import scala.util.{Failure, Success, Try}
 
 /**
  * 监护人指令
@@ -33,7 +34,7 @@ object MasterCommands {
     Ping, SessionInfo, Refresh, ReloadSSDL,
     ListVariable, ClearVariableInChat, SetVariable, RemoveVariable,
     ListPlugins, EnablePlugin, DisablePlugin, UninstallPlugin,
-    WakeUpNow, GoASleepNow, ShowRawMessage, BanChat, AllowChat
+    WakeUpNow, GoASleepNow, ShowRawMessage, BanChat, AllowChat, ShowBanList
   ) ++ JamPluginLoader.loadedComponents.masterCommands
 
   private object Ping extends MasterEverywhereCommand("ping", "在吗") {
@@ -323,8 +324,8 @@ object MasterCommands {
      * @return 输出内容
      */
     override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = {
-      val chatInfo@ChatInfo(chatType, chatId) = ChatInfo(event)
       if (args.isEmpty) {
+        val chatInfo@ChatInfo(chatType, chatId) = ChatInfo(event)
         (if (chatType == GlobalConstant.MessageType.PRIVATE) {
           BanList.user.add(chatId)
           JamContext.variablePool.update("Private_Ban_List", BanList.user.mkString(","))
@@ -333,18 +334,25 @@ object MasterCommands {
           JamContext.variablePool.update("Group_Ban_List", BanList.group.mkString(","))
         }).map(_ => s"已屏蔽当前会话：$chatInfo")
       } else if (args.size() == 2) {
-        (if (args.get(0) == "群") {
-          BanList.group.add(chatId)
-          JamContext.variablePool.update("Group_Ban_List", BanList.group.mkString(","))
-        } else {
-          BanList.user.add(chatId)
-          JamContext.variablePool.update("Private_Ban_List", BanList.user.mkString(","))
-        }).map(_ => s"已屏蔽会话：$chatInfo")
+        Try(args.get(1).toLong) match {
+          case Failure(_) =>
+            Future.successful("请输入正确的QQ号")
+          case Success(value) =>
+            (if (args.get(0) == "群") {
+              BanList.group.add(value)
+              JamContext.variablePool.update("Group_Ban_List", BanList.group.mkString(","))
+            } else {
+              BanList.user.add(value)
+              JamContext.variablePool.update("Private_Ban_List", BanList.user.mkString(","))
+            }).map(_ => s"已屏蔽会话：$value")
+        }
       } else {
-        Future.successful("""请输入正确的指令格式，示例：
-                            |屏蔽当前会话：.ban
-                            |屏蔽指定群聊：.ban 群 12345678
-                            |屏蔽指定用户：.ban 用户 12345678""".stripMargin)
+        Future.successful(
+          """请输入正确的指令格式，示例：
+            |屏蔽当前会话：!ban
+            |屏蔽指定群聊：!ban 群 12345678
+            |屏蔽指定用户：!ban 用户 12345678
+            |列出禁言列表：!ban_list""".stripMargin)
       }
     }
   }
@@ -360,8 +368,8 @@ object MasterCommands {
      * @return 输出内容
      */
     override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = {
-      val chatInfo@ChatInfo(chatType, chatId) = ChatInfo(event)
       if (args.isEmpty) {
+        val chatInfo@ChatInfo(chatType, chatId) = ChatInfo(event)
         (if (chatType == GlobalConstant.MessageType.PRIVATE) {
           BanList.user.remove(chatId)
           JamContext.variablePool.update("Private_Ban_List", BanList.user.mkString(","))
@@ -370,19 +378,45 @@ object MasterCommands {
           JamContext.variablePool.update("Group_Ban_List", BanList.group.mkString(","))
         }).map(_ => s"已解禁当前会话：$chatInfo")
       } else if (args.size() == 2) {
-        (if (args.get(0) == "群") {
-          BanList.group.remove(chatId)
-          JamContext.variablePool.update("Group_Ban_List", BanList.group.mkString(","))
-        } else {
-          BanList.user.remove(chatId)
-          JamContext.variablePool.update("Private_Ban_List", BanList.user.mkString(","))
-        }).map(_ => s"已解禁会话：$chatInfo")
+        Try(args.get(1).toLong) match {
+          case Failure(_) =>
+            Future.successful("请输入正确的QQ号")
+          case Success(value) =>
+            (if (args.get(0) == "群") {
+              BanList.group.remove(value)
+              JamContext.variablePool.update("Group_Ban_List", BanList.group.mkString(","))
+            } else {
+              BanList.user.remove(value)
+              JamContext.variablePool.update("Private_Ban_List", BanList.user.mkString(","))
+            }).map(_ => s"已解禁会话：$value")
+        }
       } else {
-        Future.successful("""请输入正确的指令格式，示例：
-                            |解禁当前会话：.allow
-                            |解禁指定群聊：.allow 群 12345678
-                            |解禁指定用户：.allow 用户 12345678""".stripMargin)
+        Future.successful(
+          """请输入正确的指令格式，示例：
+            |解禁当前会话：!allow
+            |解禁指定群聊：!allow 群 12345678
+            |解禁指定用户：!allow 用户 12345678
+            |列出禁言列表：!ban_list""".stripMargin)
       }
+    }
+  }
+
+  private object ShowBanList extends MasterEverywhereCommand("ban_list", "banList", "禁言列表") {
+    /**
+     * 指令操作
+     *
+     * @param event   消息事件
+     * @param sender  发送者
+     * @param command 指令内容
+     * @param args    参数
+     * @return 输出内容
+     */
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = Future {
+      event.respond(
+        s"""已屏蔽的群：
+           |${BanList.group.sliding(3, 3).map(_.mkString(" ")).mkString("\n")}""".stripMargin)
+      s"""已屏蔽的用户：
+         |${BanList.user.sliding(3, 3).map(_.mkString(" ")).mkString("\n")}""".stripMargin
     }
   }
 

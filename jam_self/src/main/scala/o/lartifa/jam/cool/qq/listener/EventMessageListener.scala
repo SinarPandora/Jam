@@ -61,7 +61,8 @@ object EventMessageListener extends IcqListener {
    */
   def isAllowed(eventMessage: EventMessage): Boolean = {
     eventMessage match {
-      case msg: EventGroupOrDiscussMessage => !BanList.group.contains(msg.getGroup.getId)
+      case msg: EventGroupOrDiscussMessage =>
+        !(BanList.group.contains(msg.getGroup.getId) || BanList.user.contains(msg.getSenderId))
       case msg: EventPrivateMessage => !BanList.user.contains(msg.getSenderId)
     }
   }
