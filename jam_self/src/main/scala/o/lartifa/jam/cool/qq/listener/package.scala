@@ -1,6 +1,5 @@
 package o.lartifa.jam.cool.qq
 
-import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.pool.JamContext
 
 import java.util.concurrent.Executors
@@ -14,8 +13,6 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
  * 2020/9/18 21:26
  */
 package object listener {
-  private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(listener.getClass)
-
   private[listener] implicit val listenerCommonPool: ExecutionContextExecutor =
     ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
   object BanList {
@@ -28,7 +25,7 @@ package object listener {
      * @return 加载结果
      */
     def loadBanList(): Future[Unit] = {
-      logger.log("开始正在加载禁言列表……")
+      JamContext.loggerFactory.get().system.log("开始正在加载禁言列表……")
       Future.sequence(Seq(
         JamContext.variablePool.getOrElseUpdate("Private_Ban_List", "")
           .map(_.split(",").map(_.toLong).toIterable)
@@ -37,7 +34,7 @@ package object listener {
           .map(_.split(",").map(_.toLong).toIterable)
           .map(group.addAll)
       )).flatMap(_ => {
-        logger.log("禁言列表加载完成！")
+        JamContext.loggerFactory.get().system.log("禁言列表加载完成！")
         Future.unit
       })
     }
