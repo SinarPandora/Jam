@@ -4,7 +4,9 @@ import cc.moecraft.icq.command.interfaces.IcqCommand
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.icq.user.User
 import o.lartifa.jam.common.config.JamConfig
+import o.lartifa.jam.common.util.GlobalConstant
 import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
+import o.lartifa.jam.cool.qq.listener.BanList
 import o.lartifa.jam.engine.JamLoader
 import o.lartifa.jam.model.tasks.{GoASleep, WakeUp}
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
@@ -31,7 +33,7 @@ object MasterCommands {
     Ping, SessionInfo, Refresh, ReloadSSDL,
     ListVariable, ClearVariableInChat, SetVariable, RemoveVariable,
     ListPlugins, EnablePlugin, DisablePlugin, UninstallPlugin,
-    WakeUpNow, GoASleepNow, ShowRawMessage
+    WakeUpNow, GoASleepNow, ShowRawMessage, BanChat, AllowChat
   ) ++ JamPluginLoader.loadedComponents.masterCommands
 
   private object Ping extends MasterEverywhereCommand("ping", "在吗") {
@@ -307,6 +309,76 @@ object MasterCommands {
     override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = Future {
       event.respond(event.getRawMessage, true)
       NO_RESPONSE
+    }
+  }
+
+  private object BanChat extends MasterEverywhereCommand("禁止", "ban") {
+    /**
+     * 指令操作
+     *
+     * @param event   消息事件
+     * @param sender  发送者
+     * @param command 指令内容
+     * @param args    参数
+     * @return 输出内容
+     */
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = Future {
+      val chatInfo@ChatInfo(chatType, chatId) = ChatInfo(event)
+      if (args.isEmpty) {
+        if (chatType == GlobalConstant.MessageType.PRIVATE) {
+          BanList.user.add(chatId)
+        } else {
+          BanList.group.add(chatId)
+        }
+        s"已屏蔽当前会话：$chatInfo"
+      } else if (args.size() == 2) {
+        if (args.get(0) == "群") {
+          BanList.group.add(chatId)
+        } else if (args.get(0) == "用户") {
+          BanList.user.add(chatId)
+        }
+        s"已屏蔽会话：$chatInfo"
+      } else {
+        """请输入正确的指令格式，示例：
+          |屏蔽当前会话：.ban
+          |屏蔽指定群聊：.ban 群 12345678
+          |屏蔽指定用户：.ban 用户 12345678""".stripMargin
+      }
+    }
+  }
+
+  private object AllowChat extends MasterEverywhereCommand("解禁", "allow") {
+    /**
+     * 指令操作
+     *
+     * @param event   消息事件
+     * @param sender  发送者
+     * @param command 指令内容
+     * @param args    参数
+     * @return 输出内容
+     */
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = Future {
+      val chatInfo@ChatInfo(chatType, chatId) = ChatInfo(event)
+      if (args.isEmpty) {
+        if (chatType == GlobalConstant.MessageType.PRIVATE) {
+          BanList.user.remove(chatId)
+        } else {
+          BanList.group.remove(chatId)
+        }
+        s"已解禁当前会话：$chatInfo"
+      } else if (args.size() == 2) {
+        if (args.get(0) == "群") {
+          BanList.group.remove(chatId)
+        } else if (args.get(0) == "用户") {
+          BanList.user.remove(chatId)
+        }
+        s"已解禁会话：$chatInfo"
+      } else {
+        """请输入正确的指令格式，示例：
+          |解禁当前会话：.allow
+          |解禁指定群聊：.allow 群 12345678
+          |解禁指定用户：.allow 用户 12345678""".stripMargin
+      }
     }
   }
 

@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener
 
-import cc.moecraft.icq.event.events.message.EventMessage
+import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
 import cc.moecraft.icq.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
@@ -43,14 +43,26 @@ object EventMessageListener extends IcqListener {
    */
   @EventHandler
   def listen(eventMessage: EventMessage): Unit = {
-    if (!JamContext.initLock.get()) { // 在当前没有锁的情况下
+    if (!JamContext.initLock.get() && isAllowed(eventMessage)) { // 在当前没有锁并且聊天没被禁止的情况下
       recordMessage(eventMessage) // 记录消息
         .flatMap(it => if (it) Questioner.tryAnswerer(eventMessage) else Future.successful(false)) // 处理存在的询问
         .flatMap(it => if (it && willResponse()) preHandleMessage(eventMessage) else Future.successful(false)) // 处理前置任务
         .foreach(it => if (it) SSDLRuleRunner.executeIfFound(eventMessage) // 执行 SSDL 规则解析
           .flatMap(postHandleMessage(eventMessage, _)) // 执行后置任务
         )
+    }
+  }
 
+  /**
+   * 检查消息是否允许处理
+   *
+   * @param eventMessage 消息对象
+   * @return 是否允许
+   */
+  def isAllowed(eventMessage: EventMessage): Boolean = {
+    eventMessage match {
+      case msg: EventGroupOrDiscussMessage => BanList.group.contains(msg.getGroup.getId)
+      case msg: EventPrivateMessage => BanList.user.contains(msg.getSenderId)
     }
   }
 
