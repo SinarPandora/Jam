@@ -15,6 +15,7 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 package object listener {
   private[listener] implicit val listenerCommonPool: ExecutionContextExecutor =
     ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
+
   object BanList {
     val group: mutable.Set[Long] = mutable.Set[Long]()
     val user: mutable.Set[Long] = mutable.Set[Long]()
@@ -25,18 +26,23 @@ package object listener {
      * @return 加载结果
      */
     def loadBanList(): Future[Unit] = {
-      JamContext.loggerFactory.get().system.log("开始正在加载禁言列表……")
-      Future.sequence(Seq(
-        JamContext.variablePool.getOrElseUpdate("Private_Ban_List", "")
-          .map(_.split(",").filterNot(_ == "").map(_.toLong).toIterable)
-          .map(user.addAll),
-        JamContext.variablePool.getOrElseUpdate("Group_Ban_List", "")
-          .map(_.split(",").filterNot(_ == "").map(_.toLong).toIterable)
-          .map(group.addAll)
-      )).flatMap(_ => {
-        JamContext.loggerFactory.get().system.log("禁言列表加载完成！")
-        Future.unit
-      })
+      JamContext.loggerFactory.get().system.log("开始正在加载屏蔽列表……")
+      Future.sequence {
+        List("Private_Ban_List", "Group_Ban_List")
+          .map {
+            JamContext.variablePool.getOrElseUpdate(_, "")
+              .map(_.split(",").filterNot(_ == "").map(_.toLong).toIterable)
+          }
+      }.flatMap {
+        case priBan :: groupBan :: Nil =>
+          user.addAll(priBan)
+          group.addAll(groupBan)
+          JamContext.loggerFactory.get().system.log("屏蔽列表加载完成！")
+          Future.unit
+        case _ =>
+          JamContext.loggerFactory.get().system.warning("屏蔽列表加载异常！屏蔽功能可能无法正常运行")
+          Future.unit
+      }
     }
   }
 }
