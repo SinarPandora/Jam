@@ -208,7 +208,7 @@ object JamLoader {
     if (errorMessage.nonEmpty) {
       Some("装载步骤时出现错误，请确认：" +: errorMessage.toList)
     } else {
-      // 正则 - 开头 - 结尾 - 等于 - 包含
+      // 带参数指令 - 正则 - 开头 - 结尾 - 等于 - 包含
       JamContext.globalMatchers.getAndSet(sortMatchers(globalMatchers))
       JamContext.globalGroupMatchers.getAndSet(sortMatchers(globalGroupMatchers))
       JamContext.globalPrivateMatchers.getAndSet(sortMatchers(globalPrivateMatchers))
@@ -281,6 +281,7 @@ object JamLoader {
   private def sortMatchers(matchers: ListBuffer[ContentMatcher]): List[ContentMatcher] = {
     val matcherMap = matchers.groupBy(_.`type`)
     List() ++
+      matcherMap.getOrElse(ContentMatcher.SHELL_LIKE_COMMAND, List.empty).sortBy(_.stepId * -1) ++
       matcherMap.getOrElse(ContentMatcher.EQUALS, List.empty).sortBy(_.stepId * -1) ++
       matcherMap.getOrElse(ContentMatcher.REGEX, List.empty).sortBy(_.stepId * -1) ++
       matcherMap.getOrElse(ContentMatcher.STARTS_WITH, List.empty).sortBy(_.stepId * -1) ++

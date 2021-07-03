@@ -1,6 +1,6 @@
 package o.lartifa.jam.model.patterns
 
-import o.lartifa.jam.common.exception.ExecutionException
+import o.lartifa.jam.common.exception.{ExecutionException, ParseFailException}
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.RenderStrTemplate
 import o.lartifa.jam.model.patterns.ContentMatcher._
@@ -25,9 +25,9 @@ case class ContentMatcher(stepId: Long, template: RenderStrTemplate, `type`: Typ
    * @return 比对结果
    */
   def isMatched(string: String)(implicit context: CommandExecuteContext, exec: ExecutionContext): Boolean = {
-    val keywords = if (template.isPlainString) template.template
+    val keyword = if (template.isPlainString) template.template
     else Await.result(template.execute(), 3.seconds)
-    matcher(string, keywords)
+    matcher(string, keyword)
   }
 
   /**
@@ -45,6 +45,7 @@ case class ContentMatcher(stepId: Long, template: RenderStrTemplate, `type`: Typ
         case ContentMatcher.ENDS_WITH => s"说以“$pattern”结尾的话"
         case ContentMatcher.STARTS_WITH => s"说以“$pattern”开头的话"
         case ContentMatcher.REGEX => s"说匹配“$pattern”的话"
+        case ContentMatcher.SHELL_LIKE_COMMAND => s"发送“$pattern help”"
         case other => throw ExecutionException(s"该匹配类型不支持转换为提示：$other")
       }
     }
@@ -65,28 +66,38 @@ object ContentMatcher {
 
   case object STARTS_WITH extends Type
 
+  case object SHELL_LIKE_COMMAND extends Type
+
   object Constant {
     val REGEX: String = "匹配"
     val EQUALS: String = "内容为"
     val CONTAINS: String = "句中出现"
     val ENDS_WITH: String = "句末出现"
     val STARTS_WITH: String = "句首出现"
+    val SHELL_LIKE_COMMAND: String = "带参数指令"
   }
 
   def apply(stepId: Long, `type`: Type, template: RenderStrTemplate): ContentMatcher = {
-
-    val isMatched: (String, String) => Boolean = (target, keywords) => (`type`: @unchecked) match {
+    val isMatched: (String, String) => Boolean = (target, keyword) => (`type`: @unchecked) match {
       case ContentMatcher.REGEX =>
         if (template.isPlainString) {
           val regex = template.template.r
           regex.matches(target)
-        } else keywords.r.matches(target)
-      case ContentMatcher.EQUALS => target == keywords
-      case ContentMatcher.CONTAINS => target.contains(keywords)
-      case ContentMatcher.ENDS_WITH => target.endsWith(keywords)
-      case ContentMatcher.STARTS_WITH => target.startsWith(keywords)
+        } else keyword.r.matches(target)
+      case ContentMatcher.EQUALS => target == keyword
+      case ContentMatcher.CONTAINS => target.contains(keyword)
+      case ContentMatcher.ENDS_WITH => target.endsWith(keyword)
+      case ContentMatcher.STARTS_WITH => target.startsWith(keyword)
+      case ContentMatcher.SHELL_LIKE_COMMAND => throw ParseFailException("解析引擎内部错误：带参数指令解析器应使用专用的方法创建")
     }
     new ContentMatcher(stepId, template, `type`, isMatched)
+  }
+
+  def apply(stepId: Long, commandName: RenderStrTemplate, prefixes: List[String]): ContentMatcher = {
+    new ContentMatcher(stepId, commandName, ContentMatcher.SHELL_LIKE_COMMAND, (target, keywords) => {
+      val content = target.trim
+      prefixes.map(_ + keywords).exists(content.startsWith)
+    })
   }
 
 }

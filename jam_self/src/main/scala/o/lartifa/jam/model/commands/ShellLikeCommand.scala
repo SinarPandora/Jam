@@ -11,7 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2021/7/3 19:24
  */
-abstract class ShellLikeCommand[T](prefix: List[String]) extends Command[T] {
+abstract class ShellLikeCommand(prefixes: List[String]) extends Command[Unit] {
   /**
    * 执行
    *
@@ -19,12 +19,14 @@ abstract class ShellLikeCommand[T](prefix: List[String]) extends Command[T] {
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[T] = {
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = {
     val msg = context.eventMessage.message
-    val content = prefix.find(msg.startsWith).map(msg.stripPrefix).getOrElse(msg)
+    val content = prefixes.find(msg.startsWith).map(msg.stripPrefix).getOrElse(msg)
     content.split("\\W+").toList match {
+      case "help" :: Nil => help()
+      case "帮助" :: Nil => help()
       case name :: args => this.execute(name, args)
-      case Nil => throw ExecutionException(s"捕获到的指令没有内容，请不要将指令名本身放在前缀中，指令前缀：${prefix.mkString(",")},消息内容：$msg")
+      case Nil => throw ExecutionException(s"捕获到的指令没有内容，请不要将指令名本身放在前缀中，指令前缀：${prefixes.mkString(",")},消息内容：$msg")
     }
   }
 
@@ -37,5 +39,13 @@ abstract class ShellLikeCommand[T](prefix: List[String]) extends Command[T] {
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  def execute(name: String, args: List[String])(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[T]
+  def execute(name: String, args: List[String])(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit]
+
+  /**
+   * 输出指令帮助信息
+   * 若帮助信息过长，请手动分隔发送
+   *
+   * @return 帮助信息
+   */
+  def help()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit]
 }

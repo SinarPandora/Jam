@@ -42,6 +42,7 @@ object Patterns {
    * 返回结果：type keyword command
    */
   val matcherPattern: Regex = """^(当|如果)(句中出现|句首出现|句末出现|内容为|匹配)%\{(.+?)}%时?[,，](.+)""".r("ignored", "type", "template", "command")
+  val shellLikeCommandPattern: Regex = """注册前缀为[\[【]([^{}【】\[\]]+)[】\]]的指令%\{(.+?)}%[:：](.+)""".r("prefixes", "template", "command")
 
   // 4 -> STDL 解析
 

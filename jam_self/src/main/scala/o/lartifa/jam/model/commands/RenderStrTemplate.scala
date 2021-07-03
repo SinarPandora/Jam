@@ -10,7 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2020/7/18 16:20
  */
-case class RenderStrTemplate(template: String, varKeys: Seq[VarKey]) extends Command[String] {
+case class RenderStrTemplate(template: String, varKeys: Seq[VarKey] = Seq()) extends Command[String] {
   /**
    * 执行
    *
