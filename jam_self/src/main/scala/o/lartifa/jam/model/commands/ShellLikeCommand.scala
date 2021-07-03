@@ -24,7 +24,7 @@ abstract class ShellLikeCommand[T](prefix: List[String]) extends Command[T] {
     val content = prefix.find(msg.startsWith).map(msg.stripPrefix).getOrElse(msg)
     content.split("\\W+").toList match {
       case name :: args => this.execute(name, args)
-      case Nil => throw ExecutionException(s"匹配到了，但是又没匹配到。指令解析错误，指令前缀：${prefix.mkString(",")},消息内容：$msg")
+      case Nil => throw ExecutionException(s"捕获到的指令没有内容，请不要将指令名本身放在前缀中，指令前缀：${prefix.mkString(",")},消息内容：$msg")
     }
   }
 
