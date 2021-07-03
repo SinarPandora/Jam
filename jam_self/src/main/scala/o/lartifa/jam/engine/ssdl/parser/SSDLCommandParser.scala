@@ -40,7 +40,7 @@ object SSDLCommandParser {
   case object HighOrder extends CommandMatchType
 
   /**
-   * 正则匹配模式（最常用的插件模式）
+   * 正则匹配模式（最常用的插件模式）：
    * 使用正则表达式匹配是否符合指令内容
    */
   case object Regex extends CommandMatchType
