@@ -13,10 +13,8 @@ import java.util.List;
  * 群信息
  *
  * @author Hykilpikonna
- * @deprecated 因为不稳定被 RGroupInfo 代替了w
  */
 @Data
-@Deprecated
 @Setter(AccessLevel.NONE)
 public class RGroupDetail implements ReturnPojoBase
 {

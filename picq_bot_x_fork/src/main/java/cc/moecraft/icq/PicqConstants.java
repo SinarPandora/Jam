@@ -18,7 +18,7 @@ public class PicqConstants
     // 版本常量 | Version constant
 
     /** 当前版本 */
-    public static final String VERSION = "4.15.0.1058";
+    public static final String VERSION = "4.15.0.1072";
 
     /** 兼容版本检测Regex */
     public static String HTTP_API_VERSION_DETECTION = ".*4.15.*";
@@ -64,6 +64,13 @@ public class PicqConstants
     public static final String EVENT_KEY_NOTICE_TYPE_GROUP_INCREASE_APPROVE = "approve";
     public static final String EVENT_KEY_NOTICE_TYPE_GROUP_INCREASE_INVITE = "invite";
     public static final String EVENT_KEY_NOTICE_TYPE_GROUP_BAN = "group_ban";
+    public static final String EVENT_KEY_NOTICE_TYPE_GROUP_RECALL = "group_recall";
+    public static final String EVENT_KEY_NOTICE_TYPE_FRIEND_RECALL = "friend_recall";
+    public static final String EVENT_KEY_NOTICE_TYPE_NOTIFY = "notify";
+    public static final String EVENT_KEY_NOTIFY_POKE = "poke";
+    public static final String EVENT_KEY_NOTIFY_LUCKY_KING = "lucky_king";
+    public static final String EVENT_KEY_NOTIFY_HONOR = "honor";
+    public static final String EVENT_KEY_NOTIFY_GROUP_CARD = "group_card";
 
     public static final String EVENT_KEY_META_TYPE = "meta_event_type";
     public static final String EVENT_KEY_META_TYPE_HEARTBEAT = "heartbeat";

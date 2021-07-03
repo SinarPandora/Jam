@@ -98,14 +98,15 @@ public class IcqHttpApi
      */
     public JsonElement send(HttpApiNode api, Map<String, Object> params)
     {
-        // 创建请求
-        HttpRequest request = HttpRequest.post(makeUrl(api)).body(new JSONObject(params).toString()).timeout(20000);
-
-        // 判断有没有 Access Token, 并加到头上w
+        String url = makeUrl(api);
+        // 判断有没有 Access Token, 并加到 Url 后
         if (!bot.getConfig().getAccessToken().isEmpty())
         {
-            request.header("Authorization", "Bearer " + bot.getConfig().getAccessToken());
+            url += "?access_token=" + bot.getConfig().getAccessToken();
         }
+
+        // 创建请求
+        HttpRequest request = HttpRequest.post(url).body(new JSONObject(params).toString()).timeout(5000);
 
         // 发送并返回
         return new JsonParser().parse(request.execute().body());
@@ -348,6 +349,16 @@ public class IcqHttpApi
     public RawReturnData sendGroupNotice(long groupId, String title, String content)
     {
         return sendReturnRaw(SEND_GROUP_NOTICE, "group_id", groupId, "title", title, "content", content);
+    }
+
+    /**
+     * 获取消息
+     *
+     * @param messageId 消息 ID
+     * @return 消息
+     */
+    public ReturnData<RMessage> getMsg(long messageId) {
+        return send(RMessage.class, GET_MSG, "message_id", messageId);
     }
 
     /**
