@@ -1,7 +1,7 @@
 package o.lartifa.jam.cool.qq.listener
 
 import cc.moecraft.icq.event.events.meta.EventMetaHeartbeat
-import cc.moecraft.icq.event.events.request.{EventFriendRequest, EventGroupAddRequest, EventGroupInviteRequest}
+import cc.moecraft.icq.event.events.request.{EventFriendRequest, EventGroupInviteRequest}
 import cc.moecraft.icq.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.JamConfig
@@ -19,20 +19,7 @@ object SystemEventListener extends IcqListener {
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(SystemEventListener.getClass)
 
   /**
-   * 自动加群
-   *
-   * @param event 加群事件
-   */
-  @EventHandler
-  def autoAddGroup(event: EventGroupAddRequest): Unit = {
-    if (JamConfig.autoAcceptGroupRequest) {
-      event.accept()
-    }
-    event.getBot.getAccountManager.refreshCache()
-  }
-
-  /**
-   * 自动加群
+   * 被邀请时自动加群
    *
    * @param event 加群事件
    */

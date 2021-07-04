@@ -32,3 +32,7 @@ case class RenderStrTemplate(template: String, varKeys: Seq[VarKey] = Seq()) ext
    */
   val isPlainString: Boolean = varKeys.isEmpty
 }
+
+object RenderStrTemplate {
+  val Empty: RenderStrTemplate = RenderStrTemplate("")
+}

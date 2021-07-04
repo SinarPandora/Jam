@@ -68,6 +68,23 @@ object ContentMatcher {
 
   case object SHELL_LIKE_COMMAND extends Type
 
+  case class EVENT(eventType: Events.EventType) extends Type
+
+  object Events {
+    sealed abstract class EventType(val name: String)
+    case object Pock extends EventType("拍一拍")
+    case object PockInGroup extends EventType("群内拍一拍")
+    case object MemberInc extends EventType("成员入群")
+    case object MemberDec extends EventType("群员退群")
+    case object MemberKick extends EventType("群员被踢")
+    case object SelfBeKick extends EventType("被踢出群聊")
+    case object NewGroupHonor extends EventType("群荣耀变更")
+    case object NewLuckDog extends EventType("运气王")
+    case object PrivateRecall extends EventType("私聊撤回")
+    case object GroupRecall extends EventType("群聊撤回")
+    case object GroupFileUpload extends EventType("群文件上传")
+  }
+
   object Constant {
     val REGEX: String = "匹配"
     val EQUALS: String = "内容为"

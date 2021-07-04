@@ -1,7 +1,9 @@
 package o.lartifa.jam.engine.ssdl.parser
 
 import o.lartifa.jam.common.exception.ParseFailException
+import o.lartifa.jam.model.commands.RenderStrTemplate
 import o.lartifa.jam.model.patterns.ContentMatcher
+import o.lartifa.jam.model.patterns.ContentMatcher.Events
 
 import scala.util.Try
 
@@ -12,6 +14,8 @@ import scala.util.Try
  * 2021/7/3 22:27
  */
 object MatcherParser {
+  private val eventNames: Set[String] = Set("拍一拍", "群内拍一拍", "成员入群", "群员退群", "群员被踢",
+    "被踢出群聊", "群荣耀变更", "运气王", "私聊撤回", "群聊撤回", "群文件上传")
   /**
    * 解析捕获器
    *
@@ -22,6 +26,7 @@ object MatcherParser {
    */
   def parseMatcher(string: String, stepId: Long)(implicit context: ParseEngineContext): Option[(ContentMatcher, String)] = {
     if (string.startsWith("注册前缀为")) parseCommandMatcher(string, stepId)
+    else if (string.startsWith("当接收到事件")) parseEventMatcher(string, stepId)
     else parseMessageMatcher(string, stepId)
   }
 
@@ -60,10 +65,42 @@ object MatcherParser {
    * @return 解析结果
    */
   def parseCommandMatcher(string: String, stepId: Long)(implicit context: ParseEngineContext): Option[(ContentMatcher, String)] = {
-    Patterns.shellLikeCommandPattern.findFirstMatchIn(string).map(result => {
+    Patterns.commandMatcherPattern.findFirstMatchIn(string).map(result => {
       val prefixes: String = result.group("prefixes")
       val template = context.getTemplate(result.group("template"))
       (ContentMatcher(stepId, template, prefixes.split("[,，]").toList), result.group("command"))
+    })
+  }
+
+  /**
+   * 解析事件捕获器
+   *
+   * @param string  待解析字符串
+   * @param stepId  步骤 ID
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  def parseEventMatcher(string: String, stepId: Long)(implicit context: ParseEngineContext): Option[(ContentMatcher, String)] = {
+    Patterns.eventMatcherPattern.findFirstMatchIn(string).map(result => {
+      val eventName = result.group("event")
+      if (!eventNames.contains(eventName)) {
+        throw ParseFailException(s"绑定了不支持的事件类型：$eventName")
+      }
+      // 所有支持的事件
+      val eventType = eventName match {
+        case Events.Pock.name => Events.Pock
+        case Events.PockInGroup.name => Events.PockInGroup
+        case Events.MemberInc.name => Events.MemberInc
+        case Events.MemberDec.name => Events.MemberDec
+        case Events.MemberKick.name => Events.MemberKick
+        case Events.SelfBeKick.name => Events.SelfBeKick
+        case Events.NewGroupHonor.name => Events.NewGroupHonor
+        case Events.NewLuckDog.name => Events.NewLuckDog
+        case Events.PrivateRecall.name => Events.PrivateRecall
+        case Events.GroupRecall.name => Events.GroupRecall
+        case Events.GroupFileUpload.name => Events.GroupFileUpload
+      }
+      (ContentMatcher(stepId, ContentMatcher.EVENT(eventType), RenderStrTemplate.Empty), result.group("command"))
     })
   }
 }
