@@ -41,7 +41,7 @@ object AsyncUtil {
    */
   def setTimeout(runnable: Runnable, seconds: Double = 0): String = {
     val id = UUID.fastUUID().toString
-    this.waitingQueue += (id, seconds -> runnable)
+    this.waitingQueue.addOne((id, seconds -> runnable))
     id
   }
 
@@ -52,7 +52,7 @@ object AsyncUtil {
    * @param seconds  等待秒数
    * @return 唯一 ID
    */
-  def setTimeout(seconds: Double = 0)(runnable: Runnable): String = this.setTimeout(runnable, seconds)
+  def setTimeout(seconds: Double)(runnable: Runnable): String = this.setTimeout(runnable, seconds)
 
   /**
    * 通过 ID 清除异步任务

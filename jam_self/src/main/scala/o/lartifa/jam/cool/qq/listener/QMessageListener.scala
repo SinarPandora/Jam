@@ -1,10 +1,11 @@
 package o.lartifa.jam.cool.qq.listener
 
-import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
+import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.icq.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
 import o.lartifa.jam.common.util.{MasterUtil, TriBoolValue}
+import o.lartifa.jam.cool.qq.listener.BanList.isAllowed
 import o.lartifa.jam.cool.qq.listener.asking.Questioner
 import o.lartifa.jam.cool.qq.listener.base.ExitCodes
 import o.lartifa.jam.cool.qq.listener.handle.SSDLRuleRunner
@@ -25,9 +26,9 @@ import scala.concurrent.{Await, Future}
  * Author: sinar
  * 2020/9/18 18:39
  */
-object QEventListener extends IcqListener {
+object QMessageListener extends IcqListener {
 
-  private val logger: HyLogger = JamContext.loggerFactory.get().getLogger(QEventListener.getClass)
+  private val logger: HyLogger = JamContext.loggerFactory.get().getLogger(QMessageListener.getClass)
 
   private val messageRecorder: MessagePool = JamContext.messagePool
   private var preHandleTasks: List[PreHandleTask] = PreHandleTaskInitializer.tasks
@@ -50,20 +51,6 @@ object QEventListener extends IcqListener {
         .foreach(it => if (it) SSDLRuleRunner.executeIfFound(eventMessage) // 执行 SSDL 规则解析
           .flatMap(postHandleMessage(eventMessage, _)) // 执行后置任务
         )
-    }
-  }
-
-  /**
-   * 检查消息是否允许处理
-   *
-   * @param eventMessage 消息对象
-   * @return 是否允许
-   */
-  def isAllowed(eventMessage: EventMessage): Boolean = {
-    eventMessage match {
-      case msg: EventGroupOrDiscussMessage =>
-        !(BanList.group.contains(msg.getGroup.getId) || BanList.user.contains(msg.getSenderId))
-      case msg: EventPrivateMessage => !BanList.user.contains(msg.getSenderId)
     }
   }
 

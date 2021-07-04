@@ -9,7 +9,7 @@ import o.lartifa.jam.common.config.{JamConfig, JamPluginConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.cool.qq.command.MasterCommands
-import o.lartifa.jam.cool.qq.listener.{BanList, QEventListener, SystemEventListener}
+import o.lartifa.jam.cool.qq.listener.{BanList, Matchers, QMessageListener, SystemEventListener}
 import o.lartifa.jam.database.temporary.Memory
 import o.lartifa.jam.engine.SXDLParseEngine.{SSDLParseSuccessResult, STDLParseSuccessResult, SXDLParseFailResult, SXDLParseSuccessResult}
 import o.lartifa.jam.engine.stdl.ast.DTExpInterpreter.InterpreterResult
@@ -63,7 +63,7 @@ object JamLoader {
     await(JamPluginLoader.initJamPluginSystems())
     JamContext.cronTaskPool.getAndSet(CronTaskPool().autoRefreshTaskDefinition())
     await(initSXDL())
-    client.getEventManager.registerListeners(QEventListener, SystemEventListener)
+    client.getEventManager.registerListeners(QMessageListener, SystemEventListener)
     client.getCommandManager.registerCommands(MasterCommands.commands: _*)
     Runtime.getRuntime.addShutdownHook(shutdownHookThread)
     SubscriptionPool.init()
@@ -81,8 +81,8 @@ object JamLoader {
     if (!JamContext.initLock.get()) {
       makeSureDirsExist()
       MasterUtil.notifyAndLog(s"开始重新加载${JamConfig.name}的各个组件")
-      QEventListener.reloadPreHandleTasks()
-      QEventListener.reloadPostHandleTasks()
+      QMessageListener.reloadPreHandleTasks()
+      QMessageListener.reloadPostHandleTasks()
       CoolQQLoader.reloadMasterCommands()
       JamContext.cronTaskPool.get().autoRefreshTaskDefinition()
       await(BehaviorInitializer.init())
@@ -209,10 +209,10 @@ object JamLoader {
       Some("装载步骤时出现错误，请确认：" +: errorMessage.toList)
     } else {
       // 带参数指令 - 正则 - 开头 - 结尾 - 等于 - 包含
-      JamContext.globalMatchers.getAndSet(sortMatchers(globalMatchers))
-      JamContext.globalGroupMatchers.getAndSet(sortMatchers(globalGroupMatchers))
-      JamContext.globalPrivateMatchers.getAndSet(sortMatchers(globalPrivateMatchers))
-      JamContext.customMatchers.getAndSet {
+      Matchers.globalMatchers.getAndSet(sortMatchers(globalMatchers))
+      Matchers.globalGroupMatchers.getAndSet(sortMatchers(globalGroupMatchers))
+      Matchers.globalPrivateMatchers.getAndSet(sortMatchers(globalPrivateMatchers))
+      Matchers.customMatchers.getAndSet {
         customMatchers.map {
           case (k, v) =>
             (k, v.map {

@@ -6,7 +6,6 @@ import cc.moecraft.icq.{PicqBotX, PicqConfig}
 import glokka.Registry
 import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.util.LoggerFactory
-import o.lartifa.jam.model.patterns.ContentMatcher
 
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 
@@ -23,10 +22,6 @@ object JamContext {
   val stepPool: AtomicReference[StepPool] = new AtomicReference[StepPool]()
   val cronTaskPool: AtomicReference[CronTaskPool] = new AtomicReference[CronTaskPool]()
   val variablePool: DBVarPool = DBVarPool()
-  val globalMatchers: AtomicReference[List[ContentMatcher]] = new AtomicReference[List[ContentMatcher]]()
-  val globalGroupMatchers: AtomicReference[List[ContentMatcher]] = new AtomicReference[List[ContentMatcher]]()
-  val globalPrivateMatchers: AtomicReference[List[ContentMatcher]] = new AtomicReference[List[ContentMatcher]]()
-  val customMatchers: AtomicReference[Map[String, Map[Long, List[ContentMatcher]]]] = new AtomicReference()
   val loggerFactory: AtomicReference[LoggerFactory] = new AtomicReference[LoggerFactory]()
   val messagePool: MessagePool = new MessagePool()
   val clientConfig: AtomicReference[PicqConfig] = new AtomicReference[PicqConfig]()

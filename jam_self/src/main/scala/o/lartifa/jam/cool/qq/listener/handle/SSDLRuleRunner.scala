@@ -6,6 +6,7 @@ import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch
 import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.util.MasterUtil
+import o.lartifa.jam.cool.qq.listener.Matchers
 import o.lartifa.jam.cool.qq.listener.base.Break
 import o.lartifa.jam.cool.qq.listener.fsm.FSMModeRouter
 import o.lartifa.jam.model.patterns.ContentMatcher
@@ -97,12 +98,12 @@ object SSDLRuleRunner {
    */
   private def buildMatcherScanList(eventMessage: EventMessage): List[ContentMatcher] = {
     val ChatInfo(chatType, chatId) = ChatInfo(eventMessage)
-    val chatScopeMatchers = JamContext.customMatchers.get().getOrElse(chatType, Map()).getOrElse(chatId, List())
+    val chatScopeMatchers = Matchers.customMatchers.get().getOrElse(chatType, Map()).getOrElse(chatId, List())
     val chatTypeScopeMatchers = eventMessage match {
-      case _: EventGroupOrDiscussMessage => JamContext.globalGroupMatchers.get()
-      case _: EventPrivateMessage => JamContext.globalPrivateMatchers.get()
+      case _: EventGroupOrDiscussMessage => Matchers.globalGroupMatchers.get()
+      case _: EventPrivateMessage => Matchers.globalPrivateMatchers.get()
     }
-    val globalScopeMatchers = JamContext.globalMatchers.get()
+    val globalScopeMatchers = Matchers.globalMatchers.get()
     if (JamConfig.matchOutOfOrder) {
       Random.shuffle(chatScopeMatchers) ++ Random.shuffle(chatTypeScopeMatchers) ++ Random.shuffle(globalScopeMatchers)
     } else {
