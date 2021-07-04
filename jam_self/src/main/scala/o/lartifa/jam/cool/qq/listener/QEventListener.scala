@@ -25,9 +25,9 @@ import scala.concurrent.{Await, Future}
  * Author: sinar
  * 2020/9/18 18:39
  */
-object EventMessageListener extends IcqListener {
+object QEventListener extends IcqListener {
 
-  private val logger: HyLogger = JamContext.loggerFactory.get().getLogger(EventMessageListener.getClass)
+  private val logger: HyLogger = JamContext.loggerFactory.get().getLogger(QEventListener.getClass)
 
   private val messageRecorder: MessagePool = JamContext.messagePool
   private var preHandleTasks: List[PreHandleTask] = PreHandleTaskInitializer.tasks
@@ -42,7 +42,7 @@ object EventMessageListener extends IcqListener {
    * @param eventMessage 消息对象
    */
   @EventHandler
-  def listen(eventMessage: EventMessage): Unit = {
+  def listenEventMessage(eventMessage: EventMessage): Unit = {
     if (!JamContext.initLock.get() && isAllowed(eventMessage)) { // 在当前没有锁并且聊天没被禁止的情况下
       recordMessage(eventMessage) // 记录消息
         .flatMap(it => if (it) Questioner.tryAnswerer(eventMessage) else Future.successful(false)) // 处理存在的询问

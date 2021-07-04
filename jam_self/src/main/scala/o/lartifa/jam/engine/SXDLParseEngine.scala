@@ -128,7 +128,7 @@ object SXDLParseEngine extends Parser {
             case Failure(_) =>
               Left(SXDLParseFailResult(lineId, file.pathAsString, "步骤编号过大，过小或不合法"))
             case Success(id) =>
-              val context = preprocessStatement(step, id)
+              val context = preprocessStatement(step.trim, id)
               parseSXDL(context.processedStr, context, file.pathAsString, lineId + 1, chatInfo, name)
           }
       }
