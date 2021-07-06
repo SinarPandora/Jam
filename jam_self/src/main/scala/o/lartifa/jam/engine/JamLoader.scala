@@ -9,7 +9,7 @@ import o.lartifa.jam.common.config.{JamConfig, JamPluginConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.cool.qq.command.MasterCommands
-import o.lartifa.jam.cool.qq.listener.{BanList, Matchers, QMessageListener, SystemEventListener}
+import o.lartifa.jam.cool.qq.listener.{BanList, MsgMatchers, QMessageListener, SystemEventListener}
 import o.lartifa.jam.database.temporary.Memory
 import o.lartifa.jam.engine.SXDLParseEngine.{SSDLParseSuccessResult, STDLParseSuccessResult, SXDLParseFailResult, SXDLParseSuccessResult}
 import o.lartifa.jam.engine.stdl.ast.DTExpInterpreter.InterpreterResult
@@ -209,10 +209,10 @@ object JamLoader {
       Some("装载步骤时出现错误，请确认：" +: errorMessage.toList)
     } else {
       // 带参数指令 - 正则 - 开头 - 结尾 - 等于 - 包含
-      Matchers.globalMatchers.getAndSet(sortMatchers(globalMatchers))
-      Matchers.globalGroupMatchers.getAndSet(sortMatchers(globalGroupMatchers))
-      Matchers.globalPrivateMatchers.getAndSet(sortMatchers(globalPrivateMatchers))
-      Matchers.customMatchers.getAndSet {
+      MsgMatchers.global.getAndSet(sortMatchers(globalMatchers))
+      MsgMatchers.globalGroup.getAndSet(sortMatchers(globalGroupMatchers))
+      MsgMatchers.globalPrivate.getAndSet(sortMatchers(globalPrivateMatchers))
+      MsgMatchers.custom.getAndSet {
         customMatchers.map {
           case (k, v) =>
             (k, v.map {

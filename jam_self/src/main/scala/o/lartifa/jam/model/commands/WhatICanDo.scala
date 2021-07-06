@@ -1,6 +1,6 @@
 package o.lartifa.jam.model.commands
 
-import o.lartifa.jam.cool.qq.listener.Matchers
+import o.lartifa.jam.cool.qq.listener.MsgMatchers
 import o.lartifa.jam.model.patterns.ContentMatcher
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 
@@ -24,9 +24,9 @@ object WhatICanDo extends Command[Unit] {
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
     val ChatInfo(chatType, chatId) = ChatInfo(context.eventMessage)
-    val matchers: Seq[ContentMatcher] = (Matchers.customMatchers.get()
+    val matchers: Seq[ContentMatcher] = (MsgMatchers.custom.get()
       .getOrElse(chatType, Map())
-      .getOrElse(chatId, List()) ++ Matchers.globalMatchers.get())
+      .getOrElse(chatId, List()) ++ MsgMatchers.global.get())
       // 由于正则不是人人能看懂的，所以这里过滤掉正则触发的语句
       .filterNot(_.`type` == ContentMatcher.REGEX)
     val idx = Random.nextInt(matchers.size)

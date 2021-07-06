@@ -1,11 +1,10 @@
 package o.lartifa.jam.cool.qq
 
 import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
-import o.lartifa.jam.model.patterns.ContentMatcher
+import o.lartifa.jam.model.patterns.MatcherGroup
 import o.lartifa.jam.pool.JamContext
 
 import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicReference
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
 
@@ -19,13 +18,19 @@ package object listener {
   private[listener] implicit val listenerCommonPool: ExecutionContextExecutor =
     ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
 
-  object Matchers {
-    val globalMatchers: AtomicReference[List[ContentMatcher]] = new AtomicReference[List[ContentMatcher]]()
-    val globalGroupMatchers: AtomicReference[List[ContentMatcher]] = new AtomicReference[List[ContentMatcher]]()
-    val globalPrivateMatchers: AtomicReference[List[ContentMatcher]] = new AtomicReference[List[ContentMatcher]]()
-    val customMatchers: AtomicReference[Map[String, Map[Long, List[ContentMatcher]]]] = new AtomicReference()
-  }
+  /**
+   * 消息捕获器组
+   */
+  object MsgMatchers extends MatcherGroup
 
+  /**
+   * 事件捕获器组
+   */
+  object EventMatchers extends MatcherGroup
+
+  /**
+   * 禁言列表
+   */
   object BanList {
     val group: mutable.Set[Long] = mutable.Set[Long]()
     val user: mutable.Set[Long] = mutable.Set[Long]()

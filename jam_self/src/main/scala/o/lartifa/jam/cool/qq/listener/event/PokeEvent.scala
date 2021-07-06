@@ -1,6 +1,8 @@
 package o.lartifa.jam.cool.qq.listener.event
 
 import cc.moecraft.icq.event.events.notice.EventNoticeFriendPoke
+import o.lartifa.jam.common.util.GlobalConstant.MessageType
+import o.lartifa.jam.model.ChatInfo
 
 import java.sql.Timestamp
 
@@ -22,13 +24,19 @@ import java.sql.Timestamp
  * Author: sinar
  * 2021/7/6 22:29
  */
-case class PokeEvent(event: EventNoticeFriendPoke) extends ExtractableEvent {
+case class PokeEvent(event: EventNoticeFriendPoke) extends CQEvent {
+
+  /**
+   * 会话信息
+   */
+  override val chatInfo: ChatInfo = ChatInfo(MessageType.PRIVATE, event.getUserId)
+
   /**
    * 事件中的数据
    *
    * @return 数据
    */
-  override def data: Map[String, String] = Map(
+  override val data: Map[String, String] = Map(
     "目标QQ" -> event.getTargetId.toString,
     "自己QQ" -> event.getSelfId.toString,
     "发送者QQ" -> event.getUser.getId.toString,
