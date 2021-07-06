@@ -88,8 +88,8 @@ object MatcherParser {
       }
       // 所有支持的事件
       val eventType = eventName match {
-        case Events.Pock.name => Events.Pock
-        case Events.PockInGroup.name => Events.PockInGroup
+        case Events.Poke.name => Events.Poke
+        case Events.PokeInGroup.name => Events.PokeInGroup
         case Events.MemberInc.name => Events.MemberInc
         case Events.MemberDec.name => Events.MemberDec
         case Events.MemberKick.name => Events.MemberKick

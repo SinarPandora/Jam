@@ -23,6 +23,10 @@ public class EventNoticeFriendPoke extends EventNotice {
     @Expose
     protected Long targetId;
 
+    @SerializedName("sub_type")
+    @Expose
+    protected String subType;
+
     /**
      * 获取戳人者的用户对象
      *
