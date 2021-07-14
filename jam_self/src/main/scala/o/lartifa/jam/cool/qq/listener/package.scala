@@ -26,7 +26,7 @@ package object listener {
   /**
    * 事件捕获器组
    */
-  object EventMatchers extends MatcherGroup
+  object EvtMatchers extends MatcherGroup
 
   /**
    * 禁言列表

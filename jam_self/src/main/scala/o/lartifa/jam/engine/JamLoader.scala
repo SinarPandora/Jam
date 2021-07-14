@@ -9,12 +9,12 @@ import o.lartifa.jam.common.config.{JamConfig, JamPluginConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.cool.qq.command.MasterCommands
-import o.lartifa.jam.cool.qq.listener.{BanList, MsgMatchers, QEventListener, QMessageListener, SystemEventListener}
+import o.lartifa.jam.cool.qq.listener.{BanList, EvtMatchers, MsgMatchers, QEventListener, QMessageListener, SystemEventListener}
 import o.lartifa.jam.database.temporary.Memory
 import o.lartifa.jam.engine.SXDLParseEngine.{SSDLParseSuccessResult, STDLParseSuccessResult, SXDLParseFailResult, SXDLParseSuccessResult}
 import o.lartifa.jam.engine.stdl.ast.DTExpInterpreter.InterpreterResult
 import o.lartifa.jam.engine.stdl.parser.STDLParseResult.Succ
-import o.lartifa.jam.model.patterns.ContentMatcher
+import o.lartifa.jam.model.patterns.{ContentMatcher, MatcherParseGroup}
 import o.lartifa.jam.model.tasks.SimpleTask
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext, Step}
 import o.lartifa.jam.plugins.JamPluginLoader
@@ -180,10 +180,8 @@ object JamLoader {
    */
   private def handleSSDLParseResult(success: Seq[SSDLParseSuccessResult]): Option[List[String]] = {
     val steps = mutable.Map[Long, (Option[String], ChatInfo, Step)]()
-    val globalMatchers = ListBuffer[ContentMatcher]()
-    val globalPrivateMatchers = ListBuffer[ContentMatcher]()
-    val globalGroupMatchers = ListBuffer[ContentMatcher]()
-    val customMatchers = mutable.Map[String, mutable.Map[Long, ListBuffer[ContentMatcher]]]()
+    val msgMatchers = new MatcherParseGroup()
+    val evtMatchers = new MatcherParseGroup()
     val errorMessage = mutable.ListBuffer[String]()
     success.map(result => (result.result, result.chatInfo, result.name)).foreach {
       case (result, chatInfo, name) =>
@@ -191,17 +189,19 @@ object JamLoader {
           errorMessage += s"存在重复的步骤 ID：${result.id}"
         } else {
           steps += result.id -> (name, chatInfo, result.toStep)
-          chatInfo match {
-            case ChatInfo.None => result.matcher.foreach(globalMatchers.addOne)
-            case ChatInfo.Group => result.matcher.foreach(globalGroupMatchers.addOne)
-            case ChatInfo.Private => result.matcher.foreach(globalPrivateMatchers.addOne)
-            case ChatInfo(chatType, chatId) =>
-              result.matcher.foreach(
-                customMatchers
-                  .getOrElseUpdate(chatType, mutable.Map())
-                  .getOrElseUpdate(chatId, ListBuffer())
-                  .addOne
-              )
+          result.matcher.foreach {
+            case matcher@ContentMatcher(_, _, tpe, _) =>
+              val group = if (tpe.isInstanceOf[ContentMatcher.EVENT]) evtMatchers else msgMatchers
+              chatInfo match {
+                case ChatInfo.None => group.global.addOne(matcher)
+                case ChatInfo.Group => group.globalGroup.addOne(matcher)
+                case ChatInfo.Private => group.globalPrivate.addOne(matcher)
+                case ChatInfo(chatType, chatId) =>
+                  group.custom
+                    .getOrElseUpdate(chatType, mutable.Map())
+                    .getOrElseUpdate(chatId, ListBuffer())
+                    .addOne(matcher)
+              }
           }
         }
     }
@@ -209,27 +209,34 @@ object JamLoader {
       Some("装载步骤时出现错误，请确认：" +: errorMessage.toList)
     } else {
       // 带参数指令 - 正则 - 开头 - 结尾 - 等于 - 包含
-      MsgMatchers.global.getAndSet(sortMatchers(globalMatchers))
-      MsgMatchers.globalGroup.getAndSet(sortMatchers(globalGroupMatchers))
-      MsgMatchers.globalPrivate.getAndSet(sortMatchers(globalPrivateMatchers))
+      MsgMatchers.global.getAndSet(sortMatchers(msgMatchers.global))
+      MsgMatchers.globalGroup.getAndSet(sortMatchers(msgMatchers.globalGroup))
+      MsgMatchers.globalPrivate.getAndSet(sortMatchers(msgMatchers.globalPrivate))
       MsgMatchers.custom.getAndSet {
-        customMatchers.map {
+        msgMatchers.custom.map {
           case (k, v) =>
             (k, v.map {
               case (k2, v2) => (k2, sortMatchers(v2))
             }.toMap)
         }.toMap
       }
+      EvtMatchers.global.getAndSet(evtMatchers.global.sortBy(_.stepId * -1).toList)
+      EvtMatchers.globalGroup.getAndSet(evtMatchers.globalGroup.sortBy(_.stepId * -1).toList)
+      EvtMatchers.globalPrivate.getAndSet(evtMatchers.globalPrivate.sortBy(_.stepId * -1).toList)
+      EvtMatchers.custom.getAndSet(evtMatchers.custom.map {
+        case (k, v) =>
+          (k, v.map {
+            case (k2, v2) => (k2, v2.sortBy(_.stepId * -1).toList)
+          }.toMap)
+      }.toMap)
       JamContext.stepPool.getAndSet(StepPool(steps.toMap))
       logger.log(s"${AnsiColor.GREEN}${steps.size}条SSDL脚本已全部成功载入！")
       Some(List(
-        "SSDL Compile Success! 0 Warning, 0 Error",
-        s"已载入${
-          globalMatchers.length +
-            globalGroupMatchers.length +
-            globalPrivateMatchers.length +
-            customMatchers.values.map(_.values.size).sum
-        }条SSDL捕获规则与${steps.size}条行为步骤"
+        "SXDL Compile Success! 0 Warning, 0 Error",
+        s"""已载入：
+           |${msgMatchers.size()}条SSDL捕获规则
+           |${evtMatchers.size()}条事件捕获规则
+           |${steps.size} 条行为步骤""".stripMargin
       ))
     }
   }

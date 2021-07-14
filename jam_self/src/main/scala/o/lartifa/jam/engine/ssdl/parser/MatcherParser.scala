@@ -38,7 +38,7 @@ object MatcherParser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  def parseMessageMatcher(string: String, stepId: Long)(implicit context: ParseEngineContext): Option[(ContentMatcher, String)] = {
+  private def parseMessageMatcher(string: String, stepId: Long)(implicit context: ParseEngineContext): Option[(ContentMatcher, String)] = {
     import ContentMatcher.Constant
     Patterns.matcherPattern.findFirstMatchIn(string).map(result => {
       val `type`: ContentMatcher.Type = result.group("type") match {
@@ -64,7 +64,7 @@ object MatcherParser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  def parseCommandMatcher(string: String, stepId: Long)(implicit context: ParseEngineContext): Option[(ContentMatcher, String)] = {
+  private def parseCommandMatcher(string: String, stepId: Long)(implicit context: ParseEngineContext): Option[(ContentMatcher, String)] = {
     Patterns.commandMatcherPattern.findFirstMatchIn(string).map(result => {
       val prefixes: String = result.group("prefixes")
       val template = context.getTemplate(result.group("template"))
@@ -80,7 +80,7 @@ object MatcherParser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  def parseEventMatcher(string: String, stepId: Long)(implicit context: ParseEngineContext): Option[(ContentMatcher, String)] = {
+  private def parseEventMatcher(string: String, stepId: Long)(implicit context: ParseEngineContext): Option[(ContentMatcher, String)] = {
     Patterns.eventMatcherPattern.findFirstMatchIn(string).map(result => {
       val eventName = result.group("event")
       if (!eventNames.contains(eventName)) {

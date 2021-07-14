@@ -75,7 +75,7 @@ object QEventListener extends IcqListener {
    * @return 搜索路径
    */
   private def buildSearchPath(chatInfo: ChatInfo): List[ContentMatcher] = {
-    import EventMatchers._
+    import EvtMatchers._
     val customMatchers = custom.get().get(chatInfo.chatType).flatMap(_.get(chatInfo.chatId)).getOrElse(List.empty)
     val chatTypeScopeMatchers = (chatInfo.chatType match {
       case MessageType.PRIVATE => globalPrivate
