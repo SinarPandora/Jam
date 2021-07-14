@@ -61,22 +61,22 @@ object CommandExecuteContext {
    */
   def apply(event: CQEvent)(implicit exec: ExecutionContext): CommandExecuteContext = {
     val startTime = Timestamp.from(Instant.now)
-    val mockedMessage = event.chatInfo match {
-      case ChatInfo.Group =>
+    val mockedMessage = event.chatInfo.chatType match {
+      case MessageType.GROUP | MessageType.DISCUSS =>
         val mocked = new EventGroupMessage()
         mocked.setGroupId(event.chatInfo.chatId)
         mocked.setSubType(MessageType.EVENT)
         mocked.setMessage(MessageType.EVENT)
         mocked.setPostType(MessageType.EVENT)
         mocked
-      case ChatInfo.Private =>
+      case MessageType.PRIVATE =>
         val mocked = new EventPrivateMessage()
         mocked.setSenderId(event.chatInfo.chatId)
         mocked.setSubType(MessageType.EVENT)
         mocked.setPostType(MessageType.EVENT)
         mocked.setMessageType(MessageType.EVENT)
         mocked
-      case _ => throw ExecutionException("事件不包括会话信息")
+      case _ => throw ExecutionException("不支持的消息类型")
     }
     new CommandExecuteContext(
       mockedMessage,
