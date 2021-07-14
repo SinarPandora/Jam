@@ -9,7 +9,7 @@ import o.lartifa.jam.common.config.{JamConfig, JamPluginConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.cool.qq.command.MasterCommands
-import o.lartifa.jam.cool.qq.listener.{BanList, MsgMatchers, QMessageListener, SystemEventListener}
+import o.lartifa.jam.cool.qq.listener.{BanList, MsgMatchers, QEventListener, QMessageListener, SystemEventListener}
 import o.lartifa.jam.database.temporary.Memory
 import o.lartifa.jam.engine.SXDLParseEngine.{SSDLParseSuccessResult, STDLParseSuccessResult, SXDLParseFailResult, SXDLParseSuccessResult}
 import o.lartifa.jam.engine.stdl.ast.DTExpInterpreter.InterpreterResult
@@ -63,7 +63,7 @@ object JamLoader {
     await(JamPluginLoader.initJamPluginSystems())
     JamContext.cronTaskPool.getAndSet(CronTaskPool().autoRefreshTaskDefinition())
     await(initSXDL())
-    client.getEventManager.registerListeners(QMessageListener, SystemEventListener)
+    client.getEventManager.registerListeners(QMessageListener, QEventListener, SystemEventListener)
     client.getCommandManager.registerCommands(MasterCommands.commands: _*)
     Runtime.getRuntime.addShutdownHook(shutdownHookThread)
     SubscriptionPool.init()

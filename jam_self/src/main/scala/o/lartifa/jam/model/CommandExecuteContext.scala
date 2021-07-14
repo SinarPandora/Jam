@@ -1,8 +1,11 @@
 package o.lartifa.jam.model
 
-import cc.moecraft.icq.event.events.message.EventMessage
+import cc.moecraft.icq.event.events.message.{EventGroupMessage, EventMessage, EventPrivateMessage}
+import o.lartifa.jam.common.exception.ExecutionException
+import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.cool.qq.listener.base.ExitCodes
 import o.lartifa.jam.cool.qq.listener.base.ExitCodes.ExitCode
+import o.lartifa.jam.cool.qq.listener.event.CQEvent
 import o.lartifa.jam.pool._
 
 import java.sql.Timestamp
@@ -30,10 +33,53 @@ case class CommandExecuteContext(eventMessage: EventMessage, vars: DBVarPool,
 }
 
 object CommandExecuteContext {
+  /**
+   * 使用会话消息对象构建执行上下文
+   *
+   * @param eventMessage 会话消息对象
+   * @param exec         异步上下文
+   * @return 执行上下文
+   */
   def apply(eventMessage: EventMessage)(implicit exec: ExecutionContext): CommandExecuteContext = {
     val startTime = Timestamp.from(Instant.now)
     new CommandExecuteContext(
       eventMessage,
+      JamContext.variablePool,
+      JamContext.messagePool,
+      JamContext.stepPool.get(),
+      exec,
+      startTime
+    )
+  }
+
+  /**
+   * 使用事件消息对象模拟消息对象并构建执行上下文
+   *
+   * @param event 事件对象
+   * @param exec  异步上下文
+   * @return 执行上下文
+   */
+  def apply(event: CQEvent)(implicit exec: ExecutionContext): CommandExecuteContext = {
+    val startTime = Timestamp.from(Instant.now)
+    val mockedMessage = event.chatInfo match {
+      case ChatInfo.Group =>
+        val mocked = new EventGroupMessage()
+        mocked.setGroupId(event.chatInfo.chatId)
+        mocked.setSubType(MessageType.EVENT)
+        mocked.setMessage(MessageType.EVENT)
+        mocked.setPostType(MessageType.EVENT)
+        mocked
+      case ChatInfo.Private =>
+        val mocked = new EventPrivateMessage()
+        mocked.setSenderId(event.chatInfo.chatId)
+        mocked.setSubType(MessageType.EVENT)
+        mocked.setPostType(MessageType.EVENT)
+        mocked.setMessageType(MessageType.EVENT)
+        mocked
+      case _ => throw ExecutionException("事件不包括会话信息")
+    }
+    new CommandExecuteContext(
+      mockedMessage,
       JamContext.variablePool,
       JamContext.messagePool,
       JamContext.stepPool.get(),

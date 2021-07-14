@@ -95,7 +95,7 @@ object MatcherParser {
         case Events.MemberKick.name => Events.MemberKick
         case Events.SelfBeKick.name => Events.SelfBeKick
         case Events.NewGroupHonor.name => Events.NewGroupHonor
-        case Events.NewLuckDog.name => Events.NewLuckDog
+        case Events.NewLuckyDog.name => Events.NewLuckyDog
         case Events.PrivateRecall.name => Events.PrivateRecall
         case Events.GroupRecall.name => Events.GroupRecall
         case Events.GroupFileUpload.name => Events.GroupFileUpload

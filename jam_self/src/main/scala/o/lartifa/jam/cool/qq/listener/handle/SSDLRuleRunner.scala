@@ -98,7 +98,7 @@ object SSDLRuleRunner {
    */
   private def buildMatcherScanList(eventMessage: EventMessage): List[ContentMatcher] = {
     val ChatInfo(chatType, chatId) = ChatInfo(eventMessage)
-    val chatScopeMatchers = MsgMatchers.custom.get().getOrElse(chatType, Map()).getOrElse(chatId, List())
+    val chatScopeMatchers = MsgMatchers.custom.get().get(chatType).flatMap(_.get(chatId)).getOrElse(List.empty)
     val chatTypeScopeMatchers = eventMessage match {
       case _: EventGroupOrDiscussMessage => MsgMatchers.globalGroup.get()
       case _: EventPrivateMessage => MsgMatchers.globalPrivate.get()

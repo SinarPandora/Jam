@@ -24,7 +24,7 @@ import java.sql.Timestamp
  * Author: sinar
  * 2021/7/6 22:29
  */
-case class PokeEvent(event: EventNoticeFriendPoke) extends CQEvent {
+case class PokeEvent(event: EventNoticeFriendPoke) extends CQEvent("私聊戳一戳") {
 
   /**
    * 会话信息
@@ -37,12 +37,13 @@ case class PokeEvent(event: EventNoticeFriendPoke) extends CQEvent {
    * @return 数据
    */
   override val data: Map[String, String] = Map(
-    "目标QQ" -> event.getTargetId.toString,
+    // 自己信息
     "自己QQ" -> event.getSelfId.toString,
+    "自己昵称" -> event.getBotAccount.getName,
+    // 对方信息
     "发送者QQ" -> event.getUser.getId.toString,
-    "对方QQ" -> event.getUser.getId.toString,
     "发送者昵称" -> event.getUser.getInfo.getNickname,
-    "对方昵称" -> event.getUser.getInfo.getNickname,
+    // Metadata
     "事件类型" -> event.getPostType,
     "通知类型" -> event.getNoticeType,
     "事件子类型" -> event.getSubType,

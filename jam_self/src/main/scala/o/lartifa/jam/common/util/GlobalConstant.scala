@@ -14,5 +14,6 @@ object GlobalConstant {
     val NONE: String = "none"
     val SUB_TYPE_NORMAL: String = "normal"
     val SUB_TYPE_FRIEND: String = "friend"
+    val EVENT: String = "event"
   }
 }

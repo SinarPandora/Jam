@@ -72,14 +72,14 @@ object ContentMatcher {
 
   object Events {
     sealed abstract class EventType(val name: String)
-    case object Poke extends EventType("拍一拍")
-    case object PokeInGroup extends EventType("群内拍一拍")
+    case object Poke extends EventType("私聊戳一戳")
+    case object PokeInGroup extends EventType("群聊戳一戳")
     case object MemberInc extends EventType("成员入群")
     case object MemberDec extends EventType("群员退群")
     case object MemberKick extends EventType("群员被踢")
     case object SelfBeKick extends EventType("被踢出群聊")
     case object NewGroupHonor extends EventType("群荣耀变更")
-    case object NewLuckDog extends EventType("运气王")
+    case object NewLuckyDog extends EventType("运气王")
     case object PrivateRecall extends EventType("私聊撤回")
     case object GroupRecall extends EventType("群聊撤回")
     case object GroupFileUpload extends EventType("群文件上传")
