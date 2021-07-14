@@ -23,6 +23,9 @@ public class EventNoticeFriendPoke extends EventNotice {
     @Expose
     protected Long targetId;
 
+    /**
+     * 事件子类型
+     */
     @SerializedName("sub_type")
     @Expose
     protected String subType;

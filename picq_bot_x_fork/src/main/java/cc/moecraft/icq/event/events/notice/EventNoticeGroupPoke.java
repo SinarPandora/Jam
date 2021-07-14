@@ -32,6 +32,13 @@ public class EventNoticeGroupPoke extends EventNotice {
     protected Long groupId;
 
     /**
+     * 事件子类型
+     */
+    @SerializedName("sub_type")
+    @Expose
+    protected String subType;
+
+    /**
      * 获取群对象
      *
      * @return 群对象
