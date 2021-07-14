@@ -72,8 +72,8 @@ object ContentMatcher {
 
   object Events {
     sealed abstract class EventType(val name: String)
-    case object Poke extends EventType("私聊戳一戳")
-    case object PokeInGroup extends EventType("群聊戳一戳")
+    case object Poke extends EventType("私聊拍一拍")
+    case object PokeInGroup extends EventType("群聊拍一拍")
     case object MemberInc extends EventType("成员入群")
     case object MemberDec extends EventType("群员退群")
     case object MemberKick extends EventType("群员被踢")
