@@ -14,8 +14,14 @@ import scala.util.Try
  * 2021/7/3 22:27
  */
 object MatcherParser {
-  private val eventNames: Set[String] = Set("拍一拍", "群内拍一拍", "成员入群", "群员退群", "群员被踢",
-    "被踢出群聊", "群荣耀变更", "运气王", "私聊撤回", "群聊撤回", "群文件上传")
+  private val eventNames: Set[String] = {
+    import Events._
+    Set(Poke.name, PokeInGroup.name, MemberInc.name,
+      MemberDec.name, MemberKick.name, SelfBeKick.name,
+      NewGroupHonor.name, NewLuckyDog.name, PrivateRecall.name,
+      GroupRecall.name, GroupFileUpload.name)
+  }
+
   /**
    * 解析捕获器
    *
@@ -26,7 +32,7 @@ object MatcherParser {
    */
   def parseMatcher(string: String, stepId: Long)(implicit context: ParseEngineContext): Option[(ContentMatcher, String)] = {
     if (string.startsWith("注册前缀为")) parseCommandMatcher(string, stepId)
-    else if (string.startsWith("当接收到事件")) parseEventMatcher(string, stepId)
+    else if (string.startsWith("当接收到")) parseEventMatcher(string, stepId)
     else parseMessageMatcher(string, stepId)
   }
 

@@ -106,6 +106,7 @@ object ContentMatcher {
       case ContentMatcher.ENDS_WITH => target.endsWith(keyword)
       case ContentMatcher.STARTS_WITH => target.startsWith(keyword)
       case ContentMatcher.SHELL_LIKE_COMMAND => throw ParseFailException("解析引擎内部错误：带参数指令解析器应使用专用的方法创建")
+      case ContentMatcher.EVENT(tpe) => target == tpe.name
     }
     new ContentMatcher(stepId, template, `type`, isMatched)
   }

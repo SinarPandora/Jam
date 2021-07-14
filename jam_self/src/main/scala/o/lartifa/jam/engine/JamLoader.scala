@@ -232,11 +232,11 @@ object JamLoader {
       JamContext.stepPool.getAndSet(StepPool(steps.toMap))
       logger.log(s"${AnsiColor.GREEN}${steps.size}条SSDL脚本已全部成功载入！")
       Some(List(
-        "SXDL Compile Success! 0 Warning, 0 Error",
+        "SXDL Compile Success!\n0 Warning, 0 Error",
         s"""已载入：
-           |${msgMatchers.size()}条SSDL捕获规则
-           |${evtMatchers.size()}条事件捕获规则
-           |${steps.size} 条行为步骤""".stripMargin
+           |  ${msgMatchers.size()} 条SSDL捕获规则
+           |  ${evtMatchers.size()} 条事件捕获规则
+           |  ${steps.size} 条行为步骤""".stripMargin
       ))
     }
   }
@@ -269,10 +269,7 @@ object JamLoader {
       Some(errorMessage.toList)
     } else {
       Some(
-        List(
-          "STDL Compile Success! 0 Warning, 0 Error",
-          s"已载入${instance.length}条计划任务"
-        )
+        List(s"  ${instance.length} 条计划任务")
       )
     }
   }

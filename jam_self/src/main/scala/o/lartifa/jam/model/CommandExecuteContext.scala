@@ -1,6 +1,7 @@
 package o.lartifa.jam.model
 
 import cc.moecraft.icq.event.events.message.{EventGroupMessage, EventMessage, EventPrivateMessage}
+import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.cool.qq.listener.base.ExitCodes
@@ -66,18 +67,18 @@ object CommandExecuteContext {
         val mocked = new EventGroupMessage()
         mocked.setGroupId(event.chatInfo.chatId)
         mocked.setSubType(MessageType.EVENT)
-        mocked.setMessage(MessageType.EVENT)
-        mocked.setPostType(MessageType.EVENT)
         mocked
       case MessageType.PRIVATE =>
         val mocked = new EventPrivateMessage()
         mocked.setSenderId(event.chatInfo.chatId)
         mocked.setSubType(MessageType.EVENT)
-        mocked.setPostType(MessageType.EVENT)
-        mocked.setMessageType(MessageType.EVENT)
         mocked
       case _ => throw ExecutionException("不支持的消息类型")
     }
+    mockedMessage.setPostType(MessageType.EVENT)
+    mockedMessage.setMessageType(MessageType.EVENT)
+    mockedMessage.setSelfId(JamConfig.qID)
+    mockedMessage.setBot(JamContext.bot.get())
     new CommandExecuteContext(
       mockedMessage,
       JamContext.variablePool,
