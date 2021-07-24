@@ -70,11 +70,11 @@ object CommandExecuteContext {
         mocked
       case MessageType.PRIVATE =>
         val mocked = new EventPrivateMessage()
-        mocked.setSenderId(event.chatInfo.chatId)
         mocked.setSubType(MessageType.EVENT)
         mocked
       case _ => throw ExecutionException("不支持的消息类型")
     }
+    mockedMessage.setSenderId(event.senderId)
     mockedMessage.setPostType(MessageType.EVENT)
     mockedMessage.setMessageType(MessageType.EVENT)
     mockedMessage.setSelfId(JamConfig.qID)

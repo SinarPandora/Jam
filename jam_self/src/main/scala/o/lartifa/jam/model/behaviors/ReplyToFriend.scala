@@ -22,6 +22,14 @@ import scala.language.implicitConversions
 trait ReplyToFriend {
 
   /**
+   * 获取当前消息的发送者 QQ
+   *
+   * @param context 指令上下文
+   * @return 发送者 QQ
+   */
+  protected def senderId(implicit context: CommandExecuteContext): Long = context.eventMessage.getSenderId
+
+  /**
    * 获取指定群聊的群员列表
    *
    * @param groupId 群号

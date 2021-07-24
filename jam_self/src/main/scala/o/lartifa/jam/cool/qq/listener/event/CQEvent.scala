@@ -8,7 +8,7 @@ import o.lartifa.jam.model.ChatInfo
  * Author: sinar
  * 2021/7/7 00:09
  */
-abstract class CQEvent(val name: String) extends Extractable {
+abstract class CQEvent(val name: String, val senderId: Long) extends Extractable {
   /**
    * 会话信息
    */
