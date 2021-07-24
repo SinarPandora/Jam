@@ -17,22 +17,23 @@ trait TrpgGameTable {
    *
    * @param id       Database column id SqlType(bigserial), AutoInc, PrimaryKey
    * @param ruleName Database column rule_name SqlType(text)
-   * @param kpList   Database column kp_list SqlType(text) */
-  case class TrpgGameRow(id: Long, ruleName: String, kpList: String)
+   * @param kpList   Database column kp_list SqlType(text)
+   * @param name     Database column name SqlType(text) */
+  case class TrpgGameRow(id: Long, ruleName: String, kpList: String, name: String)
 
   /** GetResult implicit for fetching TrpgGameRow objects using plain SQL queries */
   implicit def GetResultTrpgGameRow(implicit e0: GR[Long], e1: GR[String]): GR[TrpgGameRow] = GR {
     prs =>
       import prs._
-      TrpgGameRow.tupled((<<[Long], <<[String], <<[String]))
+      TrpgGameRow.tupled((<<[Long], <<[String], <<[String], <<[String]))
   }
 
   /** Table description of table trpg_game. Objects of this class serve as prototypes for rows in queries. */
   class TrpgGame(_tableTag: Tag) extends profile.api.Table[TrpgGameRow](_tableTag, "trpg_game") {
-    def * = (id, ruleName, kpList) <> (TrpgGameRow.tupled, TrpgGameRow.unapply)
+    def * = (id, ruleName, kpList, name) <> (TrpgGameRow.tupled, TrpgGameRow.unapply)
 
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(ruleName), Rep.Some(kpList)).shaped.<>({ r => import r._; _1.map(_ => TrpgGameRow.tupled((_1.get, _2.get, _3.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(ruleName), Rep.Some(kpList), Rep.Some(name)).shaped.<>({ r => import r._; _1.map(_ => TrpgGameRow.tupled((_1.get, _2.get, _3.get, _4.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)
@@ -40,6 +41,8 @@ trait TrpgGameTable {
     val ruleName: Rep[String] = column[String]("rule_name")
     /** Database column kp_list SqlType(text) */
     val kpList: Rep[String] = column[String]("kp_list")
+    /** Database column name SqlType(text) */
+    val name: Rep[String] = column[String]("name")
   }
 
   /** Collection-like TableQuery object for table TrpgGame */

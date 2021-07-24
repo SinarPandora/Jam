@@ -44,6 +44,7 @@ create table trpg_game
     id        bigserial not null
         constraint trpg_game_pk
             primary key,
+    name      text      not null,
     rule_name text      not null,
     kp_list   text      not null
 );
