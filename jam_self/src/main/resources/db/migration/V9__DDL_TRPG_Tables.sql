@@ -58,6 +58,7 @@ create table trpg_status
     game_id     bigint    not null references trpg_game,
     attr_adjust text      not null default '{}',
     status      text      not null default '{}',
+    tags        text      not null default '{}',
     update_date timestamp not null default current_timestamp
 );
 
@@ -71,6 +72,7 @@ create table trpg_status_history
     game_id     bigint    not null references trpg_game,
     attr_adjust text      not null default '{}',
     status      text      not null default '{}',
+    tags        text      not null default '{}',
     update_date timestamp not null default current_timestamp
 );
 
@@ -78,8 +80,8 @@ create table trpg_status_history
 create or replace function trpg_status_history_trigger() returns trigger as
 $$
 begin
-    insert into trpg_status_history(status_id, actor_id, game_id, attr_adjust, status, update_date)
-    values (new.id, new.actor_id, new.game_id, new.attr_adjust, new.status, new.update_date);
+    insert into trpg_status_history(status_id, actor_id, game_id, attr_adjust, status, tags, update_date)
+    values (new.id, new.actor_id, new.game_id, new.attr_adjust, new.status, new.tags, new.update_date);
 end;
 $$ language plpgsql;
 
