@@ -12,7 +12,7 @@ case class CheckersConf
   hugeSuccess: CheckConf,
   hugeFail: CheckConf,
   hardSuccess: CheckConf,
-  veryHardSuccess: CheckConf,
+  veryHardSuccess: CheckConf
 )
 
 case class CheckConf
@@ -24,7 +24,7 @@ case class CheckConf
 case class CheckPrompt
 (
   prob: Double,
-  msgs: List[String]
+  msgs: Seq[String]
 )
 
 case class ExtraAttr
@@ -50,6 +50,7 @@ case class ActorGeneration
 
 case class ActorAttr
 (
+  name: String,
   valueExpr: String,
   range: String,
   hidden: Option[Boolean]

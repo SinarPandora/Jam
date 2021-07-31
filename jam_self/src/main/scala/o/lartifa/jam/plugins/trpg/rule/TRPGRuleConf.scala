@@ -10,7 +10,7 @@ case class TRPGRuleConf
 (
   name: String,
   checking: CheckersConf,
-  extraAttrs: Map[String, Int],
+  extraAttrs: Map[String, ExtraAttr],
   extraAdjusts: List[ExtraAdjust],
   actorGeneration: ActorGeneration
 )
