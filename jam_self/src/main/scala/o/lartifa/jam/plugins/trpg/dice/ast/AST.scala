@@ -1,6 +1,7 @@
-package o.lartifa.jam.plugins.dice.ast
+package o.lartifa.jam.plugins.trpg.dice.ast
 
 import groovy.util.Eval
+import o.lartifa.jam.plugins.trpg.rule.Check.CheckResult
 
 /**
  * 骰子语法
@@ -38,7 +39,7 @@ case class Roll(n: Int, size: Int) extends AST {
    * @param dice 骰子组
    * @return 结果
    */
-  override def calc(dice: DiceSuit): BigDecimal = n * dice.roll(size)
+  override def calc(dice: DiceSuit): BigDecimal = 1.0 * n * dice.roll(size)
 
   /**
    * 转换为可读的字符串形式
@@ -80,12 +81,22 @@ case class Evaluable(template: String, rollActs: List[Roll]) extends AST {
  * @param value     结果
  * @param extraInfo 附加信息
  */
-case class DiceResult(value: Int, extraInfo: Option[String])
+case class SingleDiceResult(value: Int, extraInfo: Option[String])
 
 /**
  * 多次投掷结果
  *
  * @param sum       合计结果
+ * @param results   每次结果
  * @param extraInfo 附加信息
  */
-case class MultiDiceResult(sum: Int, results: List[String], extraInfo: List[String])
+case class DiceResult(sum: Int, results: List[String], extraInfo: List[String])
+
+/**
+ * 带有基准线的多次投掷结果
+ *
+ * @param sum       合计结果
+ * @param results   每次结果
+ * @param extraInfo 附加信息
+ */
+case class BaselineResult(sum: Int, results: List[CheckResult], extraInfo: List[String])

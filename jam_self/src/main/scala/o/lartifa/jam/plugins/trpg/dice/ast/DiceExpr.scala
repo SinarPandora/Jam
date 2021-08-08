@@ -1,4 +1,4 @@
-package o.lartifa.jam.plugins.dice.ast
+package o.lartifa.jam.plugins.trpg.dice.ast
 
 import o.lartifa.jam.common.exception.ExecutionException
 
@@ -19,16 +19,22 @@ case class DiceExpr(evaluable: Evaluable) {
    * @return 投掷结果
    */
   @throws[ExecutionException]("表达式无法计算时，返回该异常")
-  def tryEval(dice: DiceSuit, retry: Int = 0): DiceResult = {
+  def tryEval(dice: DiceSuit, retry: Int = 0): SingleDiceResult = {
     try {
+      if (retry > 5) {
+        throw ExecutionException("表达式失败（如出现一除以零）次数过多，请调整表达式内容或再试一次")
+      }
       val result = evaluable.calc(dice)
       if (result.isWhole) {
         // 是整数
-        DiceResult(result.intValue, None)
+        SingleDiceResult(result.intValue, None)
       } else {
+        // 四舍五入
         val whole = result.setScale(0, BigDecimal.RoundingMode.HALF_UP).intValue
-        DiceResult(whole, Some(s"投掷结果（$whole）已舍入，原值：$result"))
+        SingleDiceResult(whole, Some(s"投掷结果（$whole）已舍入，原值：$result"))
       }
+    } catch {
+      case _: NumberFormatException | _: ArithmeticException => tryEval(dice, retry + 1)
     }
   }
 

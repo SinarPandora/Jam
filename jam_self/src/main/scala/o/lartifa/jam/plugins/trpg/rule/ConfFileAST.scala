@@ -6,7 +6,7 @@ package o.lartifa.jam.plugins.trpg.rule
  * Author: sinar
  * 2021/7/25 00:26
  */
-case class CheckersConf
+case class ChecksConf
 (
   successRule: String,
   hugeSuccess: CheckConf,
@@ -27,18 +27,10 @@ case class CheckPrompt
   msgs: Seq[String]
 )
 
-case class ExtraAttr
-(
-  name: String,
-  default: String,
-  hidden: Option[Boolean],
-  range: Option[String],
-)
-
 case class ExtraAdjust
 (
   attr: String,
-  adjust: String,
+  adjustExpr: String,
   range: Option[String]
 )
 
@@ -52,7 +44,7 @@ case class ActorAttr
 (
   name: String,
   valueExpr: String,
-  range: String,
+  range: Option[String],
   hidden: Option[Boolean]
 )
 

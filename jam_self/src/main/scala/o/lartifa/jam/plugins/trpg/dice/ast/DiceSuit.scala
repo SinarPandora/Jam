@@ -1,4 +1,6 @@
-package o.lartifa.jam.plugins.dice.ast
+package o.lartifa.jam.plugins.trpg.dice.ast
+
+import o.lartifa.jam.model.CommandExecuteContext
 
 import scala.util.Random
 
@@ -23,4 +25,16 @@ object DiceSuit {
     val seed = (name.hashCode.toString + System.currentTimeMillis()).hashCode
     new DiceSuit(name, new Random(seed))
   }
+
+  /**
+   * 尝试获取骰子组
+   * 搜索顺序：
+   *  个人偏爱
+   *  群偏爱
+   *  系统默认
+   *
+   * @param context 指令上下文
+   * @return 骰子组
+   */
+  def getSuit(implicit context: CommandExecuteContext): DiceSuit = ???
 }

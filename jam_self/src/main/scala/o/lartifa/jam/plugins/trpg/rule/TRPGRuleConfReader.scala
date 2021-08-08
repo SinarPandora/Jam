@@ -58,7 +58,7 @@ object TRPGRuleConfReader {
             readChecksConf(config.getConfig("检定"))
           } else defaultConf.getOrElse(failToRead("检定", """默认配置没有"检定"配置""")).checking
         }
-        val extraAttrs: Map[String, ExtraAttr] = {
+        val extraAttrs: Map[String, ActorAttr] = {
           if (config.hasPath("额外属性")) {
             val extraAttrs = config.getObject("额外属性")
             readExtraAttrs {
@@ -145,10 +145,10 @@ object TRPGRuleConfReader {
           config.getString("数值").trim
         } else failToRead("属性", s"未给人物属性${name}设置数值表达式")
       }
-      val range: String = {
+      val range: Option[String] = {
         if (config.hasPath("范围")) {
-          config.getString("范围").trim
-        } else failToRead("属性", s"未给人物属性${name}设置范围")
+          Some(config.getString("范围").trim)
+        } else None
       }
       val hidden: Option[Boolean] = {
         if (config.hasPath("隐藏")) {
@@ -165,11 +165,11 @@ object TRPGRuleConfReader {
      * @return 检定规则
      */
     @throws[ParseFailException]
-    private def readChecksConf(config: Config): CheckersConf = {
+    private def readChecksConf(config: Config): ChecksConf = {
       val successRule = {
         if (config.hasPath("成功规则")) {
           val successRule = config.getString("成功规则").trim
-          if (successRule != "小于" && successRule != "大于") {
+          if (successRule != "小于" && successRule != "小于等于" && successRule != "大于" && successRule != "大于等于") {
             failToRead("检定", s"""成功规则必须在"大于"，"大于等于"，"小于"或"小于等于"中选择，当前值为$successRule""")
           } else successRule
         } else defaultConf.getOrElse(failToRead("检定", "默认配置没有配置检定判定成功规则"))
@@ -179,7 +179,7 @@ object TRPGRuleConfReader {
       val hugeFail = readSingleCheck("大失败", config.getConfig("大失败"), defaultConf.map(_.checking.hugeFail))
       val hardSuccess = readSingleCheck("困难成功", config.getConfig("困难成功"), defaultConf.map(_.checking.hardSuccess))
       val veryHardSuccess = readSingleCheck("极难成功", config.getConfig("极难成功"), defaultConf.map(_.checking.veryHardSuccess))
-      CheckersConf(
+      ChecksConf(
         successRule = successRule,
         hugeSuccess = hugeSuccess,
         hugeFail = hugeFail,
@@ -231,7 +231,7 @@ object TRPGRuleConfReader {
      * @return 全部额外属性
      */
     @throws[ParseFailException]
-    private def readExtraAttrs(configs: Map[String, Config]): Map[String, ExtraAttr] = {
+    private def readExtraAttrs(configs: Map[String, Config]): Map[String, ActorAttr] = {
       if (configs.isEmpty) return Map.empty
       configs.view.map {
         case (name, config) =>
@@ -248,7 +248,7 @@ object TRPGRuleConfReader {
             if (config.hasPath("隐藏")) Some(config.getBoolean("隐藏"))
             else None
           }
-          name -> ExtraAttr(name, defaultValue, hidden, range)
+          name -> ActorAttr(name, defaultValue, range, hidden)
       }.toMap
     }
 

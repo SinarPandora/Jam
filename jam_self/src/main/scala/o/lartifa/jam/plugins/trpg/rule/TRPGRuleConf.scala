@@ -9,8 +9,8 @@ package o.lartifa.jam.plugins.trpg.rule
 case class TRPGRuleConf
 (
   name: String,
-  checking: CheckersConf,
-  extraAttrs: Map[String, ExtraAttr],
+  checking: ChecksConf,
+  extraAttrs: Map[String, ActorAttr],
   extraAdjusts: List[ExtraAdjust],
   actorGeneration: ActorGeneration
 )
