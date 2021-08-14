@@ -4,11 +4,10 @@ import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMe
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.model.patterns.MatcherGroup
-import o.lartifa.jam.pool.JamContext
+import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
-import java.util.concurrent.Executors
 import scala.collection.mutable
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Listener 包对象
@@ -17,8 +16,7 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
  * 2020/9/18 21:26
  */
 package object listener {
-  private[listener] implicit val listenerCommonPool: ExecutionContextExecutor =
-    ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
+  private[listener] implicit val listenerCommonPool: ExecutionContext = ThreadPools.DEFAULT
 
   /**
    * 消息捕获器组

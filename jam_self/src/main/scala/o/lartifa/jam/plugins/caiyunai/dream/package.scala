@@ -1,6 +1,7 @@
 package o.lartifa.jam.plugins.caiyunai
 
-import java.util.concurrent.Executors
+import o.lartifa.jam.pool.ThreadPools
+
 import scala.concurrent.ExecutionContext
 
 /**
@@ -12,9 +13,7 @@ import scala.concurrent.ExecutionContext
 package object dream {
 
   // 内部线程池
-  implicit private[dream] val dreamEC: ExecutionContext = ExecutionContext.fromExecutor(
-    Executors.newFixedThreadPool(10)
-  )
+  implicit private[dream] val dreamEC: ExecutionContext = ThreadPools.NETWORK
 
   /**
    * 彩云小梦相关 API

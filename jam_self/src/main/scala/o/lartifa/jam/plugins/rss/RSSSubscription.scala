@@ -1,9 +1,5 @@
 package o.lartifa.jam.plugins.rss
 
-import java.util.Optional
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.{Executors, TimeUnit}
-
 import cc.moecraft.logger.{HyLogger, LogLevel}
 import com.apptastic.rssreader.Item
 import io.reactivex.rxjava3.core.{Observable, Scheduler}
@@ -18,7 +14,9 @@ import o.lartifa.jam.plugins.rss.PrettyRSSPrinters.PrettyRSSPrinter
 import o.lartifa.jam.plugins.rss.RSSSubscription.{getSourceUrl, logger, scheduler}
 import o.lartifa.jam.pool.JamContext
 
-import scala.concurrent.ExecutionContext
+import java.util.Optional
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.{Executors, TimeUnit}
 import scala.util.Try
 
 /**
@@ -153,9 +151,7 @@ class RSSSubscription(val source: String, private var _channelName: String, val 
 }
 
 object RSSSubscription {
-  private[rss] implicit val rssRecordPool: ExecutionContext = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(
-    Runtime.getRuntime.availableProcessors() * 2
-  ))
+
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(RSSSubscription.getClass)
 
   private lazy val scheduler: Scheduler = Schedulers.from(Executors.newFixedThreadPool(50))

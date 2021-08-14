@@ -11,12 +11,11 @@ import o.lartifa.jam.engine.JamLoader
 import o.lartifa.jam.model.tasks.{GoASleep, WakeUp}
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.plugins.JamPluginLoader
-import o.lartifa.jam.pool.JamContext
+import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
 import java.util
-import java.util.concurrent.Executors
 import scala.async.Async._
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -27,8 +26,7 @@ import scala.util.{Failure, Success, Try}
  */
 object MasterCommands {
 
-  private implicit val exec: ExecutionContextExecutor = ExecutionContext.fromExecutor(
-    Executors.newFixedThreadPool(Runtime.getRuntime.availableProcessors()))
+  private implicit val exec: ExecutionContext = ThreadPools.DEFAULT
 
   def commands: List[IcqCommand] = List(
     Ping, SessionInfo, Refresh, ReloadSSDL,

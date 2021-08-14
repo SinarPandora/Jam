@@ -1,8 +1,5 @@
 package o.lartifa.jam.pool
 
-import java.util.UUID
-import java.util.concurrent.Executors
-
 import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
@@ -11,6 +8,7 @@ import o.lartifa.jam.database.temporary.schema.Tables._
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.plugins.filppic.QQImg
 
+import java.util.UUID
 import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -24,9 +22,7 @@ class MessagePool {
 
   import o.lartifa.jam.database.temporary.Memory.database.profile.api._
 
-  private implicit val exec: ExecutionContext = ExecutionContext.fromExecutor(Executors.newWorkStealingPool(
-    Runtime.getRuntime.availableProcessors() * 2
-  ))
+  private implicit val exec: ExecutionContext = ThreadPools.DB
 
   /**
    * 记录聊天消息
