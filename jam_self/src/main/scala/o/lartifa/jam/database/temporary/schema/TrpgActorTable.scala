@@ -2,7 +2,7 @@ package o.lartifa.jam.database.temporary.schema
 
 /**
  * Author: sinar
- * 2021/7/24 21:02
+ * 2021/8/15 21:23
  */
 // AUTO-GENERATED Slick data model for table TrpgActor
 trait TrpgActorTable {

@@ -20,8 +20,8 @@ trait Tables extends MessageRecordsTable
   with TrpgActorTable
   with TrpgGameTable
   with TrpgStatusTable
-  with TrpgActorHistoryTable
-  with TrpgStatusHistoryTable
+  with TrpgActorSnapshotTable
+  with TrpgStatusChangeHistoryTable
 {
   val profile: slick.jdbc.JdbcProfile
   import profile.api._
