@@ -10,11 +10,11 @@ import o.lartifa.jam.model.behaviors.ReplyToFriend
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
-import java.util.stream.Collectors
 import scala.async.Async.{async, await}
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.AnsiColor
+import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -207,7 +207,7 @@ object SubscriptionPool extends ReplyToFriend {
       if (prefix.isEmpty) content
       else prefix
     }
-    Try(rss.read(RSSSubscription.getSourceUrl(source)).limit(1).collect(Collectors.toList())) match {
+    Try(rss.read(RSSSubscription.getSourceUrl(source)).limit(1).iterator().asScala) match {
       case Failure(exception) =>
         logger.error(s"获取源数据时失败，该源可能不属于 RSSHUB，源名称：$source", exception)
         context.eventMessage.respond("订阅失败，请检查源是否属于 RSSHUB")
@@ -218,13 +218,14 @@ object SubscriptionPool extends ReplyToFriend {
           context.eventMessage.respond("源没有响应，稍后再试试？")
           None
         } else {
-          val channelName = items.get(0).getChannel.getTitle
+          val channelName = items.next.getChannel.getTitle
           val subscription = RSSSubscription(source, channelName, sourceCategory)
           await {
             db.run {
               RssSubscription
-                .map(row => (row.source, row.channel, row.sourceCategory, row.subscribers)) += (
-                source, channelName, sourceCategory, "")
+                .map(row => (row.source, row.channel, row.sourceCategory, row.subscribers)) += ((
+                source, channelName, sourceCategory, ""
+              ))
             }
           }
           Some(subscription)
