@@ -1,13 +1,14 @@
 create table trpg_actor
 (
-    id        bigserial not null
+    id             bigserial not null
         constraint trpg_actor_pk
             primary key,
-    name      text      not null,
-    qid       bigint    not null,
-    attr      text      not null,
-    info      text      not null,
-    is_active boolean   not null default false
+    name           text      not null,
+    qid            bigint    not null,
+    attr           text      not null,
+    info           text      not null,
+    default_config text      not null default '{}',
+    is_active      boolean   not null default false
 );
 
 create table trpg_actor_snapshot
@@ -42,6 +43,7 @@ create table trpg_status
     game_id        bigint    not null references trpg_game,
     attr_overrides text      not null default '{}',
     tags           text      not null default '{}',
+    config         text      not null default '{}',
     update_time    timestamp not null default current_timestamp
 );
 

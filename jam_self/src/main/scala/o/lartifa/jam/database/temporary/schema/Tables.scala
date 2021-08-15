@@ -20,6 +20,7 @@ trait Tables extends MessageRecordsTable
   with TrpgActorTable
   with TrpgGameTable
   with TrpgStatusTable
+  with TrpgRollHistoryTable
   with TrpgActorSnapshotTable
   with TrpgStatusChangeHistoryTable
 {
