@@ -1,7 +1,5 @@
 package o.lartifa.jam.plugins.rss
 
-import java.util.stream.Collectors
-
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.common.exception.ExecutionException
@@ -10,8 +8,9 @@ import o.lartifa.jam.database.temporary.Memory.database.db
 import o.lartifa.jam.database.temporary.schema.Tables._
 import o.lartifa.jam.model.behaviors.ReplyToFriend
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
-import o.lartifa.jam.pool.JamContext
+import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
+import java.util.stream.Collectors
 import scala.async.Async.{async, await}
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,18 +34,17 @@ object SubscriptionPool extends ReplyToFriend {
    * 在果酱苏醒后重新建立 RSS 订阅
    */
   def init(): Unit = {
-    import RSSSubscription.rssRecordPool
     db.run(RssSubscription.result).map(list => {
       rssSubscriptions ++= list.map(RSSSubscription.applyAndStart).toMap
       logger.log(s"${AnsiColor.GREEN}RSS订阅已恢复，已导入${rssSubscriptions.size}个源，监听中...")
-    }).onComplete {
+    })(ThreadPools.DB).onComplete {
       case Failure(exception) =>
         logger.error("从数据库恢复源时出错", exception)
         MasterUtil.notifyMaster("%s，自动恢复订阅失败，目前订阅功能无法使用，请检查数据源是否正常")
       case Success(_) => if (SystemConfig.debugMode && rssSubscriptions.nonEmpty) {
         MasterUtil.notifyMaster(s"%s，RSS订阅已恢复，已导入${rssSubscriptions.size}个源")
       }
-    }
+    }(ThreadPools.DEFAULT)
   }
 
   /**
