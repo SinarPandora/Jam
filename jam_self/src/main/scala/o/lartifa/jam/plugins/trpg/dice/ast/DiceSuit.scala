@@ -1,7 +1,5 @@
 package o.lartifa.jam.plugins.trpg.dice.ast
 
-import o.lartifa.jam.model.CommandExecuteContext
-
 import scala.util.Random
 
 /**
@@ -27,14 +25,22 @@ object DiceSuit {
   }
 
   /**
-   * 尝试获取骰子组
-   * 搜索顺序：
-   *  个人偏爱
-   *  群偏爱
-   *  系统默认
+   * TODO 骰子可定义
+   */
+  val suits: Map[String, DiceSuit] = Map(
+    "精致的水晶骰" -> DiceSuit("水晶骰"),
+    "可爱的猫爪骰" -> DiceSuit("猫爪骰"),
+    "有魄力的骨骰" -> DiceSuit("骨骰"),
+    "普通的塑料骰" -> DiceSuit("骰子"),
+    "黏黏的触手骰" -> DiceSuit("触手骰"),
+    "冰凉的金属骰" -> DiceSuit("金属骰")
+  )
+
+  /**
+   * 获取骰子
    *
-   * @param context 指令上下文
+   * @param name 名称
    * @return 骰子组
    */
-  def getSuit(implicit context: CommandExecuteContext): DiceSuit = ???
+  def get(name: String): DiceSuit = suits.getOrElse(name, DiceSuit.suits("精致的水晶骰"))
 }
