@@ -29,7 +29,7 @@ object Patterns {
    * 基本模式匹配
    * 返回结果：id content
    */
-  val basePattern: Regex = """^(-?[0-9]+)[：:](.+)""".r("id", "content")
+  val basePattern: Regex = """^(auto|@|[0-9]+)[：:](.+)""".r("id", "content")
   // 2
   /**
    * TODO 立即执行！

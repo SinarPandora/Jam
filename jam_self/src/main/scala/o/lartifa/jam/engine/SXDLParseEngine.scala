@@ -10,6 +10,7 @@ import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.model.patterns.SSDLParseResult
 
 import java.nio.charset.Charset
+import java.util.concurrent.atomic.AtomicLong
 import scala.annotation.tailrec
 import scala.async.Async.{async, await}
 import scala.collection.parallel.CollectionConverters._
@@ -71,20 +72,20 @@ object SXDLParseEngine extends Parser {
     scriptPath.list.filterNot(f => f.isRegularFile || f.pathAsString.contains("modes"))
       .filterNot(_.name.startsWith("."))
       .map { dir =>
-      // 忽略备注 + 获取会话格式
-      val dirName = dir.name.split("[）)]").last
-      val chatInfo = dirName match {
-        case "global" => ChatInfo.None
-        case "global_private" => ChatInfo.Private
-        case "global_group" => ChatInfo.Group
-        case _ =>
-          val split = dirName.split("_")
-          need(split.length == 2, s"文件夹名：${dir.pathAsString}格式不正确（起名格式：global，global_private, global_group，private_xxx, group_xxx）")
-          val Array(tp, id) = split.take(2)
-          ChatInfo(tp, id.toLong)
-      }
-      dir.listRecursively.filter(file => sxdlFileExtension.contains(file.extension.getOrElse(""))).toList -> chatInfo
-    }.toList
+        // 忽略备注 + 获取会话格式
+        val dirName = dir.name.split("[）)]").last
+        val chatInfo = dirName match {
+          case "global" => ChatInfo.None
+          case "global_private" => ChatInfo.Private
+          case "global_group" => ChatInfo.Group
+          case _ =>
+            val split = dirName.split("_")
+            need(split.length == 2, s"文件夹名：${dir.pathAsString}格式不正确（起名格式：global，global_private, global_group，private_xxx, group_xxx）")
+            val Array(tp, id) = split.take(2)
+            ChatInfo(tp, id.toLong)
+        }
+        dir.listRecursively.filter(file => sxdlFileExtension.contains(file.extension.getOrElse(""))).toList -> chatInfo
+      }.toList
   }
 
   /**
@@ -95,17 +96,19 @@ object SXDLParseEngine extends Parser {
    * @return 解析结果
    */
   private def parseFiles(ssdlFiles: List[File], chatInfo: ChatInfo): Seq[Either[SXDLParseFailResult, SXDLParseSuccessResult]] = {
-    ssdlFiles.par.flatMap(parseFileContent(_, chatInfo)).seq
+    val autoIdCounter = new AtomicLong(-1)
+    ssdlFiles.par.flatMap(parseFileContent(_, chatInfo, autoIdCounter)).seq
   }
 
   /**
    * 解析文件内容
    *
-   * @param file     文件对象
-   * @param chatInfo 会话信息（针对非全局步骤）
+   * @param file          文件对象
+   * @param chatInfo      会话信息（针对非全局步骤）
+   * @param autoIdCounter 自动 Id 计数器
    * @return 解析结果
    */
-  private def parseFileContent(file: File, chatInfo: ChatInfo): Iterable[Either[SXDLParseFailResult, SXDLParseSuccessResult]] = {
+  private def parseFileContent(file: File, chatInfo: ChatInfo, autoIdCounter: AtomicLong): Iterable[Either[SXDLParseFailResult, SXDLParseSuccessResult]] = {
     val lineWithIdxPairs: List[RawLinePair] = file.lines
       .map(_.trim)
       .map(line => {
@@ -124,9 +127,13 @@ object SXDLParseEngine extends Parser {
         case failResult@Left(_) =>
           failResult.asInstanceOf[Either[SXDLParseFailResult, SSDLParseSuccessResult]]
         case Right((EffectiveLine(name, step, id), lineId)) =>
-          Try(id.toLong) match {
+          val parseId = {
+            if (id == "@" || id == "auto") Success(autoIdCounter.getAndDecrement())
+            else Try(id.toLong)
+          }
+          parseId match {
             case Failure(_) =>
-              Left(SXDLParseFailResult(lineId, file.pathAsString, "步骤编号过大，过小或不合法"))
+              Left(SXDLParseFailResult(lineId, file.pathAsString, "请使用非负正整数、auto或@作为编号"))
             case Success(id) =>
               val context = preprocessStatement(step.trim, id)
               parseSXDL(context.processedStr, context, file.pathAsString, lineId + 1, chatInfo, name)
