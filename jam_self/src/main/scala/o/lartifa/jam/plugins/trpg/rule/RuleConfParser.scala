@@ -39,14 +39,15 @@ class RuleConfParser(val configName: String) {
   def parse(conf: TRPGRuleConf): TRPGRule = {
     val succRule = SuccRules.withName(conf.checking.successRule)
     val (succCheckers, failCheckers) = parseChecks(conf.checking, succRule)
+    val (rate, actorGenerator) = parseActorGenerator(conf.actorGeneration)
     TRPGRule(
       name = conf.name,
       succCheckers = succCheckers,
       failCheckers = failCheckers,
       succRule = succRule,
-      extraAttrs = parseExtraAttrs(conf.extraAttrs),
+      extraAttrs = parseExtraAttrs(conf.extraAttrs, rate),
       extraAdjusts = parseAttrAdjusts(conf.extraAdjusts),
-      actorGenerator = parseActorGenerator(conf.actorGeneration)
+      actorGenerator = actorGenerator
     )
   }
 
@@ -103,12 +104,13 @@ class RuleConfParser(val configName: String) {
    * 解析额外属性
    *
    * @param conf 额外属性配置
+   * @param rate 属性倍率
    * @return 额外属性生成器组
    */
   @throws[ParseFailException]
-  private def parseExtraAttrs(conf: Map[String, ActorAttr]): Map[String, AttrApply] = {
+  private def parseExtraAttrs(conf: Map[String, ActorAttr], rate: Int): Map[String, AttrApply] = {
     conf.map {
-      case (name, conf) => Try(name -> parseAttr(name, conf))
+      case (name, conf) => Try(name -> parseAttr(name, conf, rate))
         .recover(err => failToParse("额外属性", err.getMessage))
         .get
     }
@@ -121,11 +123,11 @@ class RuleConfParser(val configName: String) {
    * @return 任务生成器
    */
   @throws[ParseFailException]
-  private def parseActorGenerator(conf: ActorGeneration): ActorGenerator = {
-    val attrApplies = Try(conf.actorAttrs.map(it => parseAttr(it.name, it)))
+  private def parseActorGenerator(conf: ActorGeneration): (Int, ActorGenerator) = {
+    val attrApplies = Try(conf.actorAttrs.map(it => parseAttr(it.name, it, conf.ratio)))
       .recover(err => failToParse("人物生成/属性", err.getMessage))
       .get
-    ActorGenerator(conf.ratio, attrApplies)
+    conf.ratio -> ActorGenerator(attrApplies)
   }
 
   /**
@@ -166,10 +168,11 @@ class RuleConfParser(val configName: String) {
    *
    * @param name 属性名
    * @param conf 属性配置
+   * @param rate 属性倍率
    * @return 属性生成函数
    */
   @throws[ParseFailException]
-  private def parseAttr(name: String, conf: ActorAttr): AttrApply = {
+  private def parseAttr(name: String, conf: ActorAttr, rate: Int): AttrApply = {
     val expr = Try(DiceExpr(conf.valueExpr))
       .recover(err => throw ParseFailException(s"属性${name}的默认值表达式解析失败：${err.getMessage}"))
       .get
@@ -184,13 +187,13 @@ class RuleConfParser(val configName: String) {
     val func = rangeOpt match {
       case Some(range) =>
         (ds: DiceSuit) => {
-          val value = expr.tryEval(ds).value
+          val value = expr.tryEval(ds).value * rate
           if (value < range.start) range.start
           else if (value > range.end) range.end
           else value
         }
       case None => (ds: DiceSuit) => {
-        expr.tryEval(ds).value
+        expr.tryEval(ds).value * rate
       }
     }
     (ds: DiceSuit) => {

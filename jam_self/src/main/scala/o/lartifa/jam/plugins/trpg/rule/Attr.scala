@@ -2,8 +2,8 @@ package o.lartifa.jam.plugins.trpg.rule
 
 import o.lartifa.jam.plugins.trpg.dice.ast.DiceSuit
 import ujson.Value.Value
-
-import scala.collection.mutable
+import upickle.default
+import upickle.default._
 
 /**
  * 调查员属性
@@ -18,7 +18,24 @@ object Attr {
   /**
    * 属性组
    */
-  type Attrs = mutable.Map[String, Attr]
+  type Attrs = Map[String, Attr]
+
+  /**
+   * 创建空的属性组
+   *
+   * @return 空属性组
+   */
+  def empty: Attrs = Map[String, Attr]()
+
+  implicit val attrRW: default.ReadWriter[Attr] = macroRW[Attr]
+
+  /**
+   * 将属性组转换为 JSON
+   *
+   * @param attrs 属性组
+   * @return JSON 字符串
+   */
+  def attrsToJson(attrs: Attrs): Value = write(attrs)
 
   /**
    * 将 JSON 转换为属性组
@@ -33,6 +50,6 @@ object Attr {
         value = value.obj.get("value").map(_.num.toInt).getOrElse(0),
         hidden = value.obj.get("hidden").exists(_.bool)
       )
-    }
+    }.toMap
   }
 }
