@@ -20,7 +20,7 @@ import scala.util.{Failure, Success, Try}
  * Author: sinar
  * 2021/8/14 18:44
  */
-object TRPGDataPool {
+object TRPGData {
 
   private val logger: HyLogger = JamContext.loggerFactory.get().getLogger(this.getClass)
 
