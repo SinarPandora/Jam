@@ -22,6 +22,22 @@ import scala.language.implicitConversions
 trait ReplyToFriend {
 
   /**
+   * 是否为私聊
+   *
+   * @param context 指令上下文
+   * @return 是否为私聊
+   */
+  protected def isPrivate(implicit context: CommandExecuteContext): Boolean = context.eventMessage.isInstanceOf[EventPrivateMessage]
+
+  /**
+   * 是否为群聊
+   *
+   * @param context 指令上下文
+   * @return 是否为群聊
+   */
+  protected def isGroup(implicit context: CommandExecuteContext): Boolean = context.eventMessage.isInstanceOf[EventGroupOrDiscussMessage]
+
+  /**
    * 获取当前消息的发送者 QQ
    *
    * @param context 指令上下文
