@@ -9,6 +9,7 @@ import o.lartifa.jam.cool.qq.listener.BanList.isAllowed
 import o.lartifa.jam.cool.qq.listener.asking.Questioner
 import o.lartifa.jam.cool.qq.listener.base.ExitCodes
 import o.lartifa.jam.cool.qq.listener.handle.SSDLRuleRunner
+import o.lartifa.jam.cool.qq.listener.interactive.InteractiveSessionListener
 import o.lartifa.jam.cool.qq.listener.posthandle.PostHandleTask
 import o.lartifa.jam.cool.qq.listener.prehandle.PreHandleTask
 import o.lartifa.jam.model.CommandExecuteContext
@@ -46,6 +47,7 @@ object QMessageListener extends IcqListener {
   def listenEventMessage(eventMessage: EventMessage): Unit = {
     if (!JamContext.initLock.get() && isAllowed(eventMessage)) { // 在当前没有锁并且聊天没被禁止的情况下
       recordMessage(eventMessage) // 记录消息
+        .flatMap(it => if (it) InteractiveSessionListener.blockAndInactiveIfExist(eventMessage) else Future.successful(false)) // 处理交互式会话
         .flatMap(it => if (it) Questioner.tryAnswerer(eventMessage) else Future.successful(false)) // 处理存在的询问
         .flatMap(it => if (it && willResponse()) preHandleMessage(eventMessage) else Future.successful(false)) // 处理前置任务
         .foreach(it => if (it) SSDLRuleRunner.executeIfFound(eventMessage) // 执行 SSDL 规则解析
