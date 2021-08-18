@@ -52,3 +52,9 @@ trait ExtraActorPattern {
     }))
   }
 }
+
+object ExtraActorPattern {
+  sealed trait Event
+  case object Timeout extends Event
+}
+

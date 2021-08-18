@@ -31,6 +31,11 @@ case class CommandExecuteContext(eventMessage: EventMessage, vars: DBVarPool,
    * 当前聊天会话的信息
    */
   val chatInfo: ChatInfo = ChatInfo(eventMessage)
+
+  /**
+   * 当前聊天的发送者
+   */
+  val msgSender: SpecificSender = SpecificSender(this.chatInfo, eventMessage.getSenderId)
 }
 
 object CommandExecuteContext {
