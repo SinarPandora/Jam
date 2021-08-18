@@ -5,6 +5,7 @@ plugins {
 allprojects {
     repositories {
         maven { url "https://jitpack.io" }
+        jcenter()
         mavenCentral()
     }
 
