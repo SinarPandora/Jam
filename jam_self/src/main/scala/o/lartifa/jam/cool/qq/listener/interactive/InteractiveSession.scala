@@ -3,7 +3,6 @@ package o.lartifa.jam.cool.qq.listener.interactive
 import akka.actor.{Actor, ActorRef}
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.cool.qq.listener.interactive.Interactive.InteractiveFunction
 import o.lartifa.jam.cool.qq.listener.interactive.InteractiveSession.logger
 import o.lartifa.jam.cool.qq.listener.interactive.InteractiveSessionProtocol.Manage
 import o.lartifa.jam.model.SpecificSender
@@ -17,7 +16,10 @@ import o.lartifa.jam.pool.JamContext
  */
 class InteractiveSession(f: InteractiveFunction, sender: SpecificSender, manager: ActorRef) extends Actor {
 
-  override def receive: Receive = f(this)
+  override def receive: Receive = {
+    case event: EventMessage => f(this, event)
+    case other => logger.warning(s"收到未知消息：$other，类型：${other.getClass.getName}，$sender")
+  }
 
   /**
    * 释放会话
@@ -34,7 +36,7 @@ class InteractiveSession(f: InteractiveFunction, sender: SpecificSender, manager
    *
    * @return 逻辑处理偏函数
    */
-  def waitingForRelease(): Receive = {
+  private def waitingForRelease(): Receive = {
     case Manage.Unregistered(refOpt) =>
       if (refOpt.isEmpty) {
         logger.warning(s"该会话被重复注销：${sender.toString}")

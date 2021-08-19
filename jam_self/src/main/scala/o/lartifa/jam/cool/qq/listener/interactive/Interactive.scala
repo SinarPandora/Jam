@@ -1,10 +1,9 @@
 package o.lartifa.jam.cool.qq.listener.interactive
 
-import akka.actor.Actor.Receive
 import akka.actor.{Actor, ActorRef, Props}
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.exception.ExecutionException
-import o.lartifa.jam.cool.qq.listener.interactive.Interactive.{InteractiveFunction, logger}
+import o.lartifa.jam.cool.qq.listener.interactive.Interactive.logger
 import o.lartifa.jam.cool.qq.listener.interactive.InteractiveSessionProtocol.Manage
 import o.lartifa.jam.model.{CommandExecuteContext, SpecificSender}
 import o.lartifa.jam.pool.JamContext
@@ -60,5 +59,4 @@ trait Interactive {
 
 object Interactive {
   private val logger: HyLogger = JamContext.loggerFactory.get().getLogger(this.getClass)
-  type InteractiveFunction = InteractiveSession => Receive
 }

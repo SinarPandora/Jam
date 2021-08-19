@@ -1,7 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.interactive
 
 import akka.actor.ActorRef
-import o.lartifa.jam.cool.qq.listener.interactive.Interactive.InteractiveFunction
 import o.lartifa.jam.model.SpecificSender
 
 /**
