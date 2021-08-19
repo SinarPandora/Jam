@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.interactive
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorRef, PoisonPill, Props}
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.cool.qq.listener.interactive.InteractiveSessionProtocol.Manage
 import o.lartifa.jam.model.SpecificSender
@@ -28,10 +28,16 @@ object InteractiveSessionManager extends Actor {
       req match {
         case Manage.Register(msgSender, f, senderRef) =>
           // 注册
+          val refOpt = sessions.get(msgSender)
           val ref = context.actorOf(Props(new InteractiveSession(f, msgSender, self)))
           context.become(receive(sessions.updated(msgSender, ref)))
           logger.debug(s"已注册交互会话：$msgSender")
           senderRef ! Manage.Registered(ref)
+          // 如果存在旧的交互实例，在处理完全部逻辑后发送毒丸停止它
+          if (refOpt.isDefined) {
+            refOpt.get ! PoisonPill
+            logger.debug(s"已尝试停止旧的交互会话：$msgSender")
+          }
 
         case Manage.Unregister(msgSender, senderRef) =>
           // 注销
