@@ -218,7 +218,7 @@ object SubscriptionPool extends ReplyToFriend {
           context.eventMessage.respond("源没有响应，稍后再试试？")
           None
         } else {
-          val channelName = items.next.getChannel.getTitle
+          val channelName = items.next().getChannel.getTitle
           val subscription = RSSSubscription(source, channelName, sourceCategory)
           await {
             db.run {
