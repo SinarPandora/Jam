@@ -1,10 +1,9 @@
 package o.lartifa.jam.cool.qq.listener.asking
 
-import java.util.concurrent.atomic.AtomicInteger
-
 import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
 import o.lartifa.jam.cool.qq.listener.listenerCommonPool
 
+import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
@@ -16,6 +15,7 @@ import scala.concurrent.duration.{Duration, _}
  * Author: sinar
  * 2020/9/18 19:48
  */
+@Deprecated(since = "3.1")
 object Questioner {
 
   case class QuestionContext(answerer: Answerer, event: EventMessage, question: Question)
