@@ -46,8 +46,10 @@ case class Ask(question: RenderStrTemplate, answererType: AnswererType, askMatch
       case (key, _) => key.equalsIgnoreCase(event.message.trim)
     } match {
       case Some((_, command)) => command.execute().foreach(_ => session.release())
-      case None => defaultCallback.map(_.execute().foreach(_ => session.release()))
-        .getOrElse(Future(session.release()))
+      case None => defaultCallback.map(_.execute().foreach(_ => session.release())) match {
+        case None => session.release()
+        case _ =>
+      }
     }
   }
 }
