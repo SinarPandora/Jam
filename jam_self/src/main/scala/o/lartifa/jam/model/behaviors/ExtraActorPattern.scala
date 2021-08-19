@@ -2,7 +2,6 @@ package o.lartifa.jam.model.behaviors
 
 import akka.actor.Actor.Receive
 import akka.actor.{Actor, ActorRef, Props}
-import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.pool.JamContext
 
 import scala.concurrent.{Future, Promise}
@@ -20,17 +19,15 @@ trait ExtraActorPattern {
    * @param msg 消息内容
    * @param ref 目标 actor
    * @tparam T 消息类型
-   * @tparam R 接收消息类型
-   * @return 异步结果
+   * @return 异步结果（因为类型擦除，此处返回 Any）
    */
-  protected def sendViaActor[T, R](msg: T, ref: ActorRef): Future[R] = {
-    val promise = Promise[R]()
+  protected def sendViaActor[T](msg: T, ref: ActorRef): Future[Any] = {
+    val promise = Promise[Any]()
     JamContext.actorSystem.actorOf(Props(new Actor {
       override def preStart(): Unit = ref ! msg
 
       override def receive: Receive = {
-        case rtn: R => promise.success(rtn)
-        case other => promise.failure(ExecutionException(s"收到消息类型不匹配：${other.getClass.toString}"))
+        case any => promise.success(any)
       }
     }))
     promise.future
@@ -55,6 +52,7 @@ trait ExtraActorPattern {
 
 object ExtraActorPattern {
   sealed trait Event
+
   case object Timeout extends Event
 }
 
