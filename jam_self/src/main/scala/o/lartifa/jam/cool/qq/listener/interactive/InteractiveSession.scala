@@ -1,6 +1,7 @@
 package o.lartifa.jam.cool.qq.listener.interactive
 
 import akka.actor.{Actor, ActorRef}
+import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.cool.qq.listener.interactive.Interactive.InteractiveFunction
 import o.lartifa.jam.cool.qq.listener.interactive.InteractiveSession.logger
@@ -40,6 +41,7 @@ class InteractiveSession(f: InteractiveFunction, sender: SpecificSender, manager
       }
       logger.debug(s"会话已销毁：$sender")
       context.stop(self)
+    case _: EventMessage => // 直接忽略注销过程中收到的其他聊天消息
     case other => logger.warning(s"注销会话时收到未知消息：$other，类型：${other.getClass.getName}，$sender")
   }
 }
