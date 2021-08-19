@@ -35,11 +35,13 @@ trait Interactive {
       override def receive: Receive = {
         case Manage.Registered(ref) =>
           promise.success(ref)
+          context.stop(self)
         case other =>
           logger.warning(s"在创建交互式会话过程中接收到无法处理的消息内容：$other，类型：${other.getClass.getName}，$msgSender")
           promise.failure(ExecutionException(
             s"在创建交互式会话过程中接收到无法处理的消息内容：$other，类型：${other.getClass.getName}，$msgSender"
           ))
+          context.stop(self)
       }
     }))
     promise.future

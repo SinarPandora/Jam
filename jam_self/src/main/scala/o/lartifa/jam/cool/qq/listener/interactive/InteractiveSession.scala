@@ -28,7 +28,6 @@ class InteractiveSession(f: InteractiveFunction, sender: SpecificSender, manager
     // 结束时注销
     manager ! Manage.Unregister(sender, self)
     context.become(waitingForRelease())
-    context.stop(self)
   }
 
   /**
@@ -41,7 +40,7 @@ class InteractiveSession(f: InteractiveFunction, sender: SpecificSender, manager
       if (refOpt.isEmpty) {
         logger.warning(s"该会话被重复注销：${sender.toString}")
       }
-      logger.debug(s"会话已销毁：$sender")
+      logger.debug(s"会话已销毁：${self.path.name}，$sender")
       context.stop(self)
     case _: EventMessage => // 直接忽略注销过程中收到的其他聊天消息
     case other => logger.warning(s"注销会话时收到未知消息：$other，类型：${other.getClass.getName}，$sender")

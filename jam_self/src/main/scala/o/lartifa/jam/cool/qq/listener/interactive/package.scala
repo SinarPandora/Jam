@@ -10,5 +10,5 @@ import o.lartifa.jam.pool.JamContext
  * 2021/8/19 01:13
  */
 package object interactive {
-  val manager: ActorRef = JamContext.actorSystem.actorOf(Props(InteractiveSessionManager))
+  val manager: ActorRef = JamContext.actorSystem.actorOf(Props(InteractiveSessionManager), "interactive-session-manager")
 }
