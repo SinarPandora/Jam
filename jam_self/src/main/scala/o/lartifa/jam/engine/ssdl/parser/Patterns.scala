@@ -129,9 +129,9 @@ object Patterns {
     // 源列出
     val rssShowAll: String = "列出当前会话订阅的源"
     // 询问
-    val ask: Regex = """询问(发送者|任何人)[:：]%\{(.+?)}%[，,]((若答案为\{.+?}|其他答案)则(.+)[;；]?)+""".r("questioner", "question", "answerMatchers")
+    val ask: Regex = """询问(发送者|任何人)[:：]%\{(.+?)}%[，,]((若答案为\{.+?}|其他答案)[，,]则(.+)[;；]?)+""".r("questioner", "question", "answerMatchers")
     // 答案匹配器
-    val answerMatcher: Regex = """(若答案为\{.+?}|其他答案)则([^;；]+)[;；]?""".r("answer", "command")
+    val answerMatcher: Regex = """(若答案为\{.+?}|其他答案)[，,]则([^;；]+)[;；]?""".r("answer", "command")
     // 禁言某人
     val banSomeOneInGroup: Regex = """禁言%\{(.+?)}%时长%\{(.+?)}%(分钟|小时|天)""".r("qId", "time", "unit")
     // 展示果酱可以做什么
