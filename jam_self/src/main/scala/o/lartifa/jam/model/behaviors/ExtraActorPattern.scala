@@ -12,7 +12,7 @@ import scala.concurrent.{Future, Promise}
  * Author: sinar
  * 2021/8/9 00:02
  */
-trait ExtraActorPattern {
+trait ExtraActorPattern extends ActorCreator {
   /**
    * 通过 extra actor 发送和接收消息
    *
