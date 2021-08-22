@@ -1,5 +1,6 @@
 package o.lartifa.jam.plugins.trpg.data
 
+import o.lartifa.jam.common.util.TimeUtil
 import o.lartifa.jam.database.temporary.schema.Tables._
 import o.lartifa.jam.plugins.trpg.data.TRPGPlayer.{PlayerConfig, Tags}
 import o.lartifa.jam.plugins.trpg.rule.Attr
@@ -16,6 +17,7 @@ import o.lartifa.jam.plugins.trpg.rule.Attr.Attrs
 case class TRPGPlayer
 (
   gameId: Long,
+  statusId: Long,
   snapshotId: Long,
   qid: Long,
   name: String,
@@ -37,11 +39,14 @@ case class TRPGPlayer
    *
    * @return 状态字符串
    */
-  def statusToSave: TRPGStatus = TRPGStatus(
+  def statusToSave: TrpgStatusRow = TrpgStatusRow(
+    id = statusId,
     snapshotId = snapshotId,
     gameId = gameId,
     attrOverrides = ujson.write(Attr.attrsToJson(attrOverrides)),
-    tags = ujson.write(tags)
+    tags = ujson.write(tags),
+    config = ujson.write(config),
+    updateTime = TimeUtil.currentTimeStamp
   )
 }
 
@@ -56,16 +61,18 @@ object TRPGPlayer {
    *
    * @param actor      角色基本数据
    * @param snapshotId 快照 Id
+   * @param statusId   状态 Id
    * @param gameId     游戏 Id
    * @return 初始化的 Player 数据
    */
-  def apply(actor: TrpgActorRow, snapshotId: Long, gameId: Long): TRPGPlayer = {
+  def apply(actor: TrpgActorRow, snapshotId: Long, statusId: Long, gameId: Long): TRPGPlayer = {
     // 载入默认设置
     val config = ujson.read(actor.defaultConfig).obj.map {
       case (key, value) => key -> value.str
     }.toMap
     new TRPGPlayer(
       gameId = gameId,
+      statusId = statusId,
       snapshotId = snapshotId,
       qid = actor.qid,
       name = actor.name,
@@ -99,6 +106,7 @@ object TRPGPlayer {
     // 构建
     new TRPGPlayer(
       gameId = status.gameId,
+      statusId = status.id,
       snapshotId = snapshot.id,
       qid = snapshot.qid,
       name = snapshot.name,

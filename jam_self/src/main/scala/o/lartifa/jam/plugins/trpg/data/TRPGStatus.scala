@@ -1,13 +1,13 @@
 package o.lartifa.jam.plugins.trpg.data
 
+import slick.jdbc.GetResult
+
 /**
- * TRPG 玩家状态
+ * TRPG 状态
  *
  * Author: sinar
- * 2021/8/15 22:46
+ * 2021/8/22 22:45
  */
-case class TRPGStatus(snapshotId: Long, gameId: Long, attrOverrides: String, tags: String)
-
 object TRPGStatus {
   case class StatusChange
   (
@@ -24,5 +24,26 @@ object TRPGStatus {
     result: String,
     point: Int,
     pass: Boolean
+  )
+
+  case class RollMetric
+  (
+    total: Int,
+    totalPass: Int,
+    totalHardSuccess: Int,
+    totalVeryHardSuccess: Int,
+    totalHugeSuccess: Int,
+    totalHugeFail: Int
+  )
+
+  implicit val getRollMetric: GetResult[RollMetric] = GetResult(r =>
+    RollMetric(
+      total = r.nextInt,
+      totalPass = r.nextInt,
+      totalHardSuccess = r.nextInt,
+      totalVeryHardSuccess = r.nextInt,
+      totalHugeSuccess = r.nextInt,
+      totalHugeFail = r.nextInt
+    )
   )
 }
