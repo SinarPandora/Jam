@@ -31,7 +31,8 @@ create table trpg_game
             primary key,
     name      text      not null,
     rule_name text      not null,
-    kp_list   text      not null
+    kp_list   text      not null,
+    last_chat text
 );
 
 create table trpg_status
