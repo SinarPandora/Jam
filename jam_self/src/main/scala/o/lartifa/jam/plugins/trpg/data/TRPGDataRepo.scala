@@ -2,14 +2,14 @@ package o.lartifa.jam.plugins.trpg.data
 
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.database.temporary.Memory.database.db
-import o.lartifa.jam.database.temporary.schema.Tables._
+import o.lartifa.jam.database.temporary.schema.Tables.*
 import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.plugins.trpg.data.TRPGGameData.{TRPGGameInitData, serialize}
 import o.lartifa.jam.plugins.trpg.data.TRPGStatus.{RollHistory, RollMetric, StatusChange}
 import o.lartifa.jam.plugins.trpg.rule.RuleRepo
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
-import scala.async.Async._
+import scala.async.Async.*
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
@@ -25,7 +25,7 @@ object TRPGDataRepo {
 
   private implicit val threadPool: ExecutionContext = ThreadPools.DB
 
-  import o.lartifa.jam.database.temporary.Memory.database.profile.api._
+  import o.lartifa.jam.database.temporary.Memory.database.profile.api.*
 
   /**
    * 创建游戏
@@ -132,7 +132,7 @@ object TRPGDataRepo {
       .update(attrStr)
   }.map(count => {
     if (count != 1) Left("请确认角色存在，且你是角色拥有者或者本场游戏的KP")
-    else Right()
+    else Right(())
   })
 
   /**

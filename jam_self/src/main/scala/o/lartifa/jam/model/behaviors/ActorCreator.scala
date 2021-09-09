@@ -15,5 +15,7 @@ trait ActorCreator {
    *
    * @param actorProto actor 定义
    */
-  protected def actorOf(actorProto: Actor): ActorRef = JamContext.actorSystem.actorOf(Props(actorProto))
+  def actorOf(actorProto: Actor): ActorRef = JamContext.actorSystem.actorOf(Props(actorProto))
 }
+
+object ActorCreator extends ActorCreator

@@ -6,7 +6,7 @@ import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.protocol.{Data, Done, Fail}
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.model.ChatInfo
-import o.lartifa.jam.plugins.trpg.TRPGInstance._
+import o.lartifa.jam.plugins.trpg.TRPGInstance.*
 import o.lartifa.jam.plugins.trpg.data.{TRPGDataRepo, TRPGGameData}
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
@@ -20,10 +20,10 @@ import scala.concurrent.Future
  */
 class TRPGInstance(val chatInfo: ChatInfo) extends Actor {
   override def receive: Receive = {
-    case Init(sender, data) =>
+    case Init(data, senderRef) =>
       context.become(receive(data))
       logger.debug(s"游戏实例已启动，会话：$chatInfo")
-      sender ! Done
+      senderRef ! Done
   }
 
   /**
@@ -105,6 +105,6 @@ object TRPGInstance {
   case class Exit(sender: ActorRef) extends Request
 
   sealed trait LifeCycle
-  case class Init(sender: ActorRef, data: TRPGGameData) extends LifeCycle
+  case class Init(data: TRPGGameData, senderRef: ActorRef) extends LifeCycle
   case object Stop extends LifeCycle
 }

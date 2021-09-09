@@ -38,12 +38,12 @@ object TRPGStatus {
 
   implicit val getRollMetric: GetResult[RollMetric] = GetResult(r =>
     RollMetric(
-      total = r.nextInt,
-      totalPass = r.nextInt,
-      totalHardSuccess = r.nextInt,
-      totalVeryHardSuccess = r.nextInt,
-      totalHugeSuccess = r.nextInt,
-      totalHugeFail = r.nextInt
+      total = r.nextInt(),
+      totalPass = r.nextInt(),
+      totalHardSuccess = r.nextInt(),
+      totalVeryHardSuccess = r.nextInt(),
+      totalHugeSuccess = r.nextInt(),
+      totalHugeFail = r.nextInt()
     )
   )
 }
