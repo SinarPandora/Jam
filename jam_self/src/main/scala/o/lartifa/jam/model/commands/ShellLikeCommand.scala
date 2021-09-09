@@ -1,6 +1,5 @@
 package o.lartifa.jam.model.commands
 
-import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -11,7 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2021/7/3 19:24
  */
-abstract class ShellLikeCommand(prefixes: List[String]) extends Command[Unit] {
+abstract class ShellLikeCommand(prefixes: Set[String]) extends Command[Unit] {
   /**
    * 执行
    *
@@ -25,21 +24,19 @@ abstract class ShellLikeCommand(prefixes: List[String]) extends Command[Unit] {
     content.split("\\W+").toList match {
       case "help" :: Nil => help()
       case "帮助" :: Nil => help()
-      case prefix :: args => this.execute(prefix, args)
-      case Nil => throw ExecutionException(s"捕获到的指令没有内容，请不要将指令名本身放在前缀中，指令前缀：${prefixes.mkString(",")},消息内容：$msg")
+      case args => this.execute(args)
     }
   }
 
   /**
    * 执行
    *
-   * @param prefix  指令前缀
    * @param args    指令参数
    * @param context 执行上下文
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  def execute(prefix: String, args: List[String])(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit]
+  def execute(args: List[String])(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit]
 
   /**
    * 输出指令帮助信息
