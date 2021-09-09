@@ -24,9 +24,6 @@ distributions {
                 exclude "*test*"
                 exclude "*local*"
             }
-            into("backend") {
-                from "../jam_mirai_backend/mirai_console/backend.jar"
-            }
         }
     }
 }
@@ -115,5 +112,5 @@ dependencies {
     testImplementation("org.scalactic:scalactic_2.13:$scala_test_version")
     testImplementation("org.scalatest:scalatest_2.13:$scala_test_version")
     testImplementation('org.scalamock:scalamock_2.13:5.1.0')
-    testRuntime('com.vladsch.flexmark:flexmark-all:0.62.2')
+    testRuntimeOnly('com.vladsch.flexmark:flexmark-all:0.62.2')
 }
