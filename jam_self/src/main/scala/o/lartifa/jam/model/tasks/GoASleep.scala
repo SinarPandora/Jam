@@ -9,7 +9,7 @@ import o.lartifa.jam.model.tasks.GoASleep.{goASleep, logger}
 import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.pool.JamContext
 
-import scala.collection.parallel.CollectionConverters._
+import scala.collection.parallel.CollectionConverters.*
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
@@ -32,7 +32,9 @@ class GoASleep(name: String) extends JamCronTask(name) {
       })
     }
     logger.log(s"正在清理缓存文件夹...")
-    Try(File(SystemConfig.tempDir).clear()).recover(err => {
+    Try(File(SystemConfig.tempDir).list.foreach(file => {
+      if (file.isDirectory) file.clear() else file.delete()
+    })).recover(err => {
       logger.warning("缓存文件夹清理失败，某些文件可能被占用，清理任务将在下次睡眠后进行")
       err
     })
