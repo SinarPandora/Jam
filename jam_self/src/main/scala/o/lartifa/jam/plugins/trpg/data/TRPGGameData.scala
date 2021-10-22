@@ -1,6 +1,6 @@
 package o.lartifa.jam.plugins.trpg.data
 
-import o.lartifa.jam.database.temporary.schema.Tables._
+import o.lartifa.jam.database.temporary.schema.Tables.*
 import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.plugins.trpg.rule.TRPGRule
 
@@ -18,7 +18,14 @@ case class TRPGGameData
   name: String,
   player: Map[Long, TRPGPlayer],
   chatInfo: ChatInfo
-)
+) {
+  override def toString: String = {
+    s"""$name
+       |游戏ID：$id
+       |KP：${kpList.mkString("，")}
+       |规则：${rule.name}""".stripMargin
+  }
+}
 
 object TRPGGameData {
   case class TRPGGameInitData
