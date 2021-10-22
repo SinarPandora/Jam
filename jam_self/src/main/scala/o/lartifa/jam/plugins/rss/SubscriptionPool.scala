@@ -5,7 +5,7 @@ import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.database.temporary.Memory.database.db
-import o.lartifa.jam.database.temporary.schema.Tables._
+import o.lartifa.jam.database.temporary.schema.Tables.*
 import o.lartifa.jam.model.behaviors.ReplyToFriend
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
@@ -14,7 +14,7 @@ import scala.async.Async.{async, await}
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.AnsiColor
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -25,7 +25,7 @@ import scala.util.{Failure, Success, Try}
  */
 object SubscriptionPool extends ReplyToFriend {
 
-  import o.lartifa.jam.database.temporary.Memory.database.profile.api._
+  import o.lartifa.jam.database.temporary.Memory.database.profile.api.*
 
   private val rssSubscriptions: mutable.Map[String, RSSSubscription] = mutable.Map.empty
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(SubscriptionPool.getClass)
@@ -65,10 +65,10 @@ object SubscriptionPool extends ReplyToFriend {
             if (subscription.subscribers.contains(chatInfo)) {
               context.eventMessage.respond("已经订阅过啦")
             } else onUpdateCallback(subscription, chatInfo)
-          case None => await(createSubscription(_source)).foreach(it => {
+          case None => createSubscription(_source).foreach(_.map(it => {
             rssSubscriptions += _source -> it
             onUpdateCallback(it, chatInfo)
-          })
+          }))
         }
       }
     }
