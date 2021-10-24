@@ -1,9 +1,8 @@
 package o.lartifa.jam.model.behaviors
 
 import akka.actor.ActorRef
-import o.lartifa.jam.cool.qq.listener.fsm.{Continue, Mode, ModeRtnCode}
+import o.lartifa.jam.cool.qq.listener.fsm.{Continue, Mode, ModeRtnCode, ModeSwitcher}
 import o.lartifa.jam.model.CommandExecuteContext
-import o.lartifa.jam.plugins.caiyunai.dream.LinkToDream.become
 
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.concurrent.{ExecutionContext, Future}
@@ -14,7 +13,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2021/2/21 23:18
  */
-trait SendMsgToActorWhenReady {
+trait SendMsgToActorWhenReady extends ModeSwitcher {
   /**
    * 当 actor 准备好后，将当前聊天行为变为向指定 actor 发送消息事件
    * 该方法应该在 become 中使用

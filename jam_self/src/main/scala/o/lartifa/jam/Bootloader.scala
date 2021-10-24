@@ -3,8 +3,8 @@ package o.lartifa.jam
 import better.files.File
 import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.backend.MiraiBackend
+import o.lartifa.jam.common.config.BotConfig.*
 import o.lartifa.jam.common.config.CoolQConfig.{postPort, postUrl}
-import o.lartifa.jam.common.config.JamConfig._
 import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.engine.JamLoader

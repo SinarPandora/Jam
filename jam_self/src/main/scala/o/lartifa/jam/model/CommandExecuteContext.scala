@@ -1,13 +1,13 @@
 package o.lartifa.jam.model
 
 import cc.moecraft.icq.event.events.message.{EventGroupMessage, EventMessage, EventPrivateMessage}
-import o.lartifa.jam.common.config.JamConfig
+import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.cool.qq.listener.base.ExitCodes
 import o.lartifa.jam.cool.qq.listener.base.ExitCodes.ExitCode
 import o.lartifa.jam.cool.qq.listener.event.CQEvent
-import o.lartifa.jam.pool._
+import o.lartifa.jam.pool.*
 
 import java.sql.Timestamp
 import java.time.Instant
@@ -82,7 +82,7 @@ object CommandExecuteContext {
     mockedMessage.setSenderId(event.senderId)
     mockedMessage.setPostType(MessageType.EVENT)
     mockedMessage.setMessageType(MessageType.EVENT)
-    mockedMessage.setSelfId(JamConfig.qID)
+    mockedMessage.setSelfId(BotConfig.qID)
     mockedMessage.setBot(JamContext.bot.get())
     new CommandExecuteContext(
       mockedMessage,

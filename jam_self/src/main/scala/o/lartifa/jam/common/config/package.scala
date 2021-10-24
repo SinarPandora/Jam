@@ -8,4 +8,11 @@ import com.typesafe.config.{Config, ConfigFactory}
  */
 package object config {
   val configFile: Config = ConfigFactory.load()
+
+  trait Reloadable {
+    /**
+     * 重新加载
+     */
+    def reload(): Unit
+  }
 }

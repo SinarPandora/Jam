@@ -3,7 +3,7 @@ package o.lartifa.jam.cool.qq.command
 import cc.moecraft.icq.command.interfaces.IcqCommand
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.icq.user.User
-import o.lartifa.jam.common.config.JamConfig
+import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.util.GlobalConstant
 import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
 import o.lartifa.jam.cool.qq.listener.BanList
@@ -14,7 +14,7 @@ import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
 import java.util
-import scala.async.Async._
+import scala.async.Async.*
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
@@ -275,7 +275,7 @@ object MasterCommands {
      */
     override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = {
       WakeUp.wakeUp()
-      Future.successful(s"${JamConfig.name}已苏醒")
+      Future.successful(s"${BotConfig.name}已苏醒")
     }
   }
 
@@ -291,7 +291,7 @@ object MasterCommands {
      */
     override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = {
       GoASleep.goASleep()
-      Future.successful(s"${JamConfig.name}已休眠")
+      Future.successful(s"${BotConfig.name}已休眠")
     }
   }
 

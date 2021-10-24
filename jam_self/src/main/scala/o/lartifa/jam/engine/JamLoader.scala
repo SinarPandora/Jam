@@ -5,7 +5,7 @@ import cc.moecraft.icq.PicqBotX
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.bionic.BehaviorInitializer
-import o.lartifa.jam.common.config.{JamConfig, JamPluginConfig, SystemConfig}
+import o.lartifa.jam.common.config.{BotConfig, JamPluginConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.cool.qq.command.MasterCommands
@@ -22,10 +22,10 @@ import o.lartifa.jam.plugins.rss.SubscriptionPool
 import o.lartifa.jam.pool.CronTaskPool.TaskDefinition
 import o.lartifa.jam.pool.{CronTaskPool, JamContext, StepPool}
 
-import scala.async.Async._
+import scala.async.Async.*
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.collection.parallel.CollectionConverters._
+import scala.collection.parallel.CollectionConverters.*
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Try
@@ -42,11 +42,11 @@ object JamLoader {
   private val shutdownHookThread: Thread = new Thread(() => {
     val tasks = JamPluginLoader.loadedComponents.shutdownTasks
     if (tasks.nonEmpty) {
-      logger.log(s"[ShutdownTasks] 检测到${JamConfig.name}关闭，正在执行关闭任务...")
+      logger.log(s"[ShutdownTasks] 检测到${BotConfig.name}关闭，正在执行关闭任务...")
       tasks.par.map(it => Try(it()).recover(error =>
         logger.error("[ShutdownTasks] 执行关闭任务时出现错误：", error)
       )).seq
-      logger.log(s"[ShutdownTasks] ${JamConfig.name}正在终止")
+      logger.log(s"[ShutdownTasks] ${BotConfig.name}正在终止")
     }
   })
 
@@ -80,7 +80,7 @@ object JamLoader {
   def reload(): Future[Unit] = async {
     if (!JamContext.initLock.get()) {
       makeSureDirsExist()
-      MasterUtil.notifyAndLog(s"开始重新加载${JamConfig.name}的各个组件")
+      MasterUtil.notifyAndLog(s"开始重新加载${BotConfig.name}的各个组件")
       QMessageListener.reloadPreHandleTasks()
       QMessageListener.reloadPostHandleTasks()
       CoolQQLoader.reloadMasterCommands()
@@ -114,7 +114,7 @@ object JamLoader {
     if (tasks.nonEmpty) {
       logger.log("[BootTasks] 正在依次执行启动任务")
       tasks.par.map(it => Try(it()).recover(error =>
-        logger.error(s"[BootTasks] 执行启动任务时出现错误，${JamConfig.name}可能无法正常运作，" +
+        logger.error(s"[BootTasks] 执行启动任务时出现错误，${BotConfig.name}可能无法正常运作，" +
           "请查看错误信息并尝试禁用相关插件", error)
       )).seq
       logger.log("[BootTasks] 启动任务执行完成")
@@ -306,7 +306,7 @@ object JamLoader {
       JamContext.initLock.set(true)
       context.eventMessage.respond(
         s"""${
-          if (JamConfig.RemoteEditing.enable)
+          if (BotConfig.RemoteEditing.enable)
             "λ> 远程编辑已开启，即将从远程仓库获取最新脚本文件...\n"
           else ""
         }λ> 已连接到解析器实例，正在重新解析SXDL（简易定义语言）脚本...""".stripMargin)

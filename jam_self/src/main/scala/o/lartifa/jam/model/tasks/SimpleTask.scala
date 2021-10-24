@@ -2,7 +2,7 @@ package o.lartifa.jam.model.tasks
 
 import cc.moecraft.icq.event.events.message.{EventGroupMessage, EventMessage, EventPrivateMessage}
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.common.config.JamConfig
+import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.model.tasks.SimpleTask.{logger, unsafeMockContext}
@@ -12,7 +12,7 @@ import o.lartifa.jam.pool.JamContext
 import java.sql.Timestamp
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 /**
  * 简单任务
@@ -73,7 +73,7 @@ object SimpleTask {
     event.setFont(-1)
     event.setMessageId(-1)
     event.setPostType("TASK")
-    event.setSelfId(JamConfig.qID)
+    event.setSelfId(BotConfig.qID)
     event.setTime(System.currentTimeMillis())
     event
   }

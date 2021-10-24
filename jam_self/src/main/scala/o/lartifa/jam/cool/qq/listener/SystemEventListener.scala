@@ -4,7 +4,7 @@ import cc.moecraft.icq.event.events.meta.EventMetaHeartbeat
 import cc.moecraft.icq.event.events.request.{EventFriendRequest, EventGroupInviteRequest}
 import cc.moecraft.icq.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.common.config.JamConfig
+import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.pool.JamContext
 
 import scala.util.Try
@@ -25,7 +25,7 @@ object SystemEventListener extends IcqListener {
    */
   @EventHandler
   def autoAddGroupAlt(event: EventGroupInviteRequest): Unit = {
-    if (JamConfig.autoAcceptGroupRequest) {
+    if (BotConfig.autoAcceptGroupRequest) {
       event.accept()
     }
     event.getBot.getAccountManager.refreshCache()
@@ -38,7 +38,7 @@ object SystemEventListener extends IcqListener {
    */
   @EventHandler
   def autoAddFriends(event: EventFriendRequest): Unit = {
-    if (JamConfig.autoAcceptFriendRequest) {
+    if (BotConfig.autoAcceptFriendRequest) {
       event.accept()
     }
     event.getBot.getAccountManager.refreshCache()

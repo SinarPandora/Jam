@@ -1,11 +1,10 @@
 package o.lartifa.jam.model.commands
 
-import java.security.SecureRandom
-
-import o.lartifa.jam.common.config.JamCharacter.RandomAIReply
+import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.model.CommandExecuteContext
-import o.lartifa.jam.model.commands.RollEveryThing.Mode
+import o.lartifa.jam.model.commands.RollEveryThing.{Mode, config}
 
+import java.security.SecureRandom
 import scala.async.Async.async
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
@@ -98,13 +97,13 @@ case class RollEveryThing(mode: Mode, random: Random) extends Command[Int] {
   private def randomAIReply()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Int] = async {
     val result = random.nextInt(100) + 1
     val message = result match {
-      case 1 => RandomAIReply.replayWhen1
-      case 100 => RandomAIReply.replyWhen100
-      case i if i > 1 && i <= 20 => RandomAIReply.replyFrom2to20
-      case i if i >= 21 && i <= 40 => RandomAIReply.replyFrom21to40
-      case i if i >= 41 && i <= 60 => RandomAIReply.replyFrom41to60
-      case i if i >= 61 && i <= 80 => RandomAIReply.replyFrom61to80
-      case i if i >= 81 && i < 100 => RandomAIReply.replyFrom81to99
+      case 1 => config.replayWhen1
+      case 100 => config.replyWhen100
+      case i if i > 1 && i <= 20 => config.replyFrom2to20
+      case i if i >= 21 && i <= 40 => config.replyFrom21to40
+      case i if i >= 41 && i <= 60 => config.replyFrom41to60
+      case i if i >= 61 && i <= 80 => config.replyFrom61to80
+      case i if i >= 81 && i < 100 => config.replyFrom81to99
       // 不可能的情况
       case _ => "我混乱了。。。"
     }
@@ -126,6 +125,8 @@ object RollEveryThing {
   case object RandomAI extends Mode("伪随机聊天")
 
   private lazy val secureRandom: Random = new SecureRandom()
+
+  private def config: JamConfig.RandomAIReply = JamConfig.config.randomAIReply
 
   def apply(mode: Mode): RollEveryThing = {
     val random = mode match {

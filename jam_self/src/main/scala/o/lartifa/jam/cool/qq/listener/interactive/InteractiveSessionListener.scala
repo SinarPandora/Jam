@@ -1,10 +1,10 @@
 package o.lartifa.jam.cool.qq.listener.interactive
 
-import akka.actor.{Actor, Props}
 import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.common.util.ExtraActor
 import o.lartifa.jam.cool.qq.listener.interactive.InteractiveSessionProtocol.Manage
 import o.lartifa.jam.model.SpecificSender
-import o.lartifa.jam.pool.JamContext
+import o.lartifa.jam.model.behaviors.ActorCreator
 
 import scala.concurrent.{Future, Promise}
 
@@ -23,20 +23,17 @@ object InteractiveSessionListener {
    */
   def blockAndInactiveIfExist(event: EventMessage): Future[Boolean] = {
     val promise: Promise[Boolean] = Promise()
-    JamContext.actorSystem.actorOf(Props(new Actor {
+    ActorCreator.actorOf(new ExtraActor() {
+      override def onStart(): Unit = manager ! Manage.Search(SpecificSender(event), self)
 
-      override def preStart(): Unit = {
-        manager ! Manage.Search(SpecificSender(event), self)
-      }
-
-      override def receive: Receive = {
+      override def handle: Receive = {
         case Manage.Found(ref) =>
           ref ! event
           promise.success(false)
         case Manage.NotFound =>
           promise.success(true)
       }
-    }))
+    })
     promise.future
   }
 }

@@ -4,7 +4,7 @@ import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMe
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch
-import o.lartifa.jam.common.config.JamConfig
+import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.listener.MsgMatchers
 import o.lartifa.jam.cool.qq.listener.base.Break
@@ -104,7 +104,7 @@ object SSDLRuleRunner {
       case _: EventPrivateMessage => MsgMatchers.globalPrivate.get()
     }
     val globalScopeMatchers = MsgMatchers.global.get()
-    if (JamConfig.matchOutOfOrder) {
+    if (BotConfig.matchOutOfOrder) {
       Random.shuffle(chatScopeMatchers) ++ Random.shuffle(chatTypeScopeMatchers) ++ Random.shuffle(globalScopeMatchers)
     } else {
       chatScopeMatchers ++ chatTypeScopeMatchers ++ globalScopeMatchers

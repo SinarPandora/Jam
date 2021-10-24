@@ -4,7 +4,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import cc.moecraft.icq.sender.IcqHttpApi
 import cc.moecraft.icq.{PicqBotX, PicqConfig}
 import glokka.Registry
-import o.lartifa.jam.common.config.{JamConfig, configFile}
+import o.lartifa.jam.common.config.{BotConfig, configFile}
 import o.lartifa.jam.common.util.LoggerFactory
 
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
@@ -27,5 +27,5 @@ object JamContext {
   val clientConfig: AtomicReference[PicqConfig] = new AtomicReference[PicqConfig]()
   val httpApi: AtomicReference[() => IcqHttpApi] = new AtomicReference()
   val actorSystem: ActorSystem = ActorSystem("System", config = configFile)
-  val registry: ActorRef = Registry.start(actorSystem, s"${JamConfig.name} Proxy")
+  val registry: ActorRef = Registry.start(actorSystem, s"${BotConfig.name} Proxy")
 }

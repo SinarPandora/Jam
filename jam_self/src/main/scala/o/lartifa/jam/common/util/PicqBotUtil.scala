@@ -4,7 +4,7 @@ import cc.moecraft.icq.PicqBotX
 import cc.moecraft.icq.accounts.AccountManagerListener
 import cc.moecraft.icq.event.IcqListener
 import cc.moecraft.icq.listeners.HyExpressionListener
-import o.lartifa.jam.common.config.JamCharacter
+import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.cool.qq.listener.{QEventListener, QMessageListener, SleepingStateListener, SystemEventListener}
 import o.lartifa.jam.pool.JamContext
 
@@ -30,9 +30,9 @@ object PicqBotUtil {
      */
     def switchToSleepMode(): Unit = {
       this.deregisterAllListeners()
-      bot.getEventManager.registerListeners(recreateSystemListeners(): _*)
+      bot.getEventManager.registerListeners(recreateSystemListeners()*)
       bot.getEventManager.registerListener(SystemEventListener)
-      if (JamCharacter.balderdash.nonEmpty) {
+      if (JamConfig.config.balderdash.nonEmpty) {
         bot.getEventManager.registerListener(SleepingStateListener)
       }
     }
@@ -42,7 +42,7 @@ object PicqBotUtil {
      */
     def switchToWakeUpMode(): Unit = {
       this.deregisterAllListeners()
-      bot.getEventManager.registerListeners(recreateSystemListeners(): _*)
+      bot.getEventManager.registerListeners(recreateSystemListeners()*)
       bot.getEventManager.registerListeners(QMessageListener, QEventListener, SystemEventListener)
     }
   }

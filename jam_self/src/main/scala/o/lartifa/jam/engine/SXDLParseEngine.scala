@@ -1,10 +1,10 @@
 package o.lartifa.jam.engine
 
 import better.files.File
-import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
+import o.lartifa.jam.common.config.{BotConfig, SystemConfig}
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.engine.proto.Parser
-import o.lartifa.jam.engine.ssdl.parser._
+import o.lartifa.jam.engine.ssdl.parser.*
 import o.lartifa.jam.engine.stdl.parser.{STDLParseResult, STDLParser}
 import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.model.patterns.SSDLParseResult
@@ -13,7 +13,7 @@ import java.nio.charset.Charset
 import java.util.concurrent.atomic.AtomicLong
 import scala.annotation.tailrec
 import scala.async.Async.{async, await}
-import scala.collection.parallel.CollectionConverters._
+import scala.collection.parallel.CollectionConverters.*
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
@@ -53,7 +53,7 @@ object SXDLParseEngine extends Parser {
   def load()(implicit exec: ExecutionContext): Future[Map[Boolean, Seq[Either[SXDLParseFailResult, SXDLParseSuccessResult]]]] = async {
     CommandParser.prepareParsers()
     val scriptPath: File = File(SystemConfig.sxdlPath).createDirectoryIfNotExists()
-    if (JamConfig.RemoteEditing.enable) {
+    if (BotConfig.RemoteEditing.enable) {
       await(RemoteSXDLClient.fetchRemoteScripts(scriptPath))
     }
     loadFiles(scriptPath).flatMap {
@@ -68,7 +68,7 @@ object SXDLParseEngine extends Parser {
    * @return 文件列表
    */
   private def loadFiles(scriptPath: File): List[(List[File], ChatInfo)] = {
-    import SystemConfig._
+    import SystemConfig.*
     scriptPath.list.filterNot(f => f.isRegularFile || f.pathAsString.contains("modes"))
       .filterNot(dir => dir.name.startsWith(".") || "config".equalsIgnoreCase(dir.name))
       .map { dir =>

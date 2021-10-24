@@ -5,7 +5,7 @@ import cc.moecraft.icq.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch
-import o.lartifa.jam.common.config.JamConfig
+import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.listener.base.Break
@@ -78,13 +78,13 @@ object QEventListener extends IcqListener {
    * @return 搜索路径
    */
   private def buildSearchPath(chatInfo: ChatInfo): List[ContentMatcher] = {
-    import EvtMatchers._
+    import EvtMatchers.*
     val customMatchers = custom.get().get(chatInfo.chatType).flatMap(_.get(chatInfo.chatId)).getOrElse(List.empty)
     val chatTypeScopeMatchers = (chatInfo.chatType match {
       case MessageType.PRIVATE => globalPrivate
       case MessageType.GROUP | MessageType.DISCUSS => globalGroup
     }).get()
-    if (JamConfig.matchOutOfOrder) {
+    if (BotConfig.matchOutOfOrder) {
       Random.shuffle(customMatchers) ++ Random.shuffle(chatTypeScopeMatchers) ++ Random.shuffle(global.get())
     } else {
       customMatchers ++ chatTypeScopeMatchers ++ global.get()

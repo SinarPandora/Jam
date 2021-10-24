@@ -3,7 +3,7 @@ package o.lartifa.jam.cool.qq.listener
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.icq.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
+import o.lartifa.jam.common.config.{BotConfig, SystemConfig}
 import o.lartifa.jam.common.util.{MasterUtil, TriBoolValue}
 import o.lartifa.jam.cool.qq.listener.BanList.isAllowed
 import o.lartifa.jam.cool.qq.listener.asking.Questioner
@@ -36,7 +36,7 @@ object QMessageListener extends IcqListener {
   private var postHandleTasks: List[PostHandleTask] = PostHandleTaskInitializer.tasks
 
   // 决定是否响应前置任务和 SSDL 规则
-  private var willResponse: () => Boolean = createFrequencyFunc(JamConfig.responseFrequency)
+  private var willResponse: () => Boolean = createFrequencyFunc(BotConfig.responseFrequency)
 
   /**
    * 监听消息

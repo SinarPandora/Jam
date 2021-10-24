@@ -1,57 +1,85 @@
 package o.lartifa.jam.common.config
 
 import com.typesafe.config.Config
+import o.lartifa.jam.common.config.JamConfig.{Biochronometer, ForMaster, RandomAIReply}
+import o.lartifa.jam.common.exception.ParseFailException
 
-import java.lang
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 /**
- * 果酱配置
+ * 性格配置
  *
  * Author: sinar
- * 2020/1/2 22:01
+ * 2020/9/1 19:52
  */
-object JamConfig {
-  val config: Config = configFile.getConfig("bot")
+case class JamConfig
+(
+  balderdash: List[String],
+  forMaster: ForMaster,
+  randomAIReply: RandomAIReply,
+  biochronometer: Biochronometer
+)
+object JamConfig extends Reloadable {
+  case class ForMaster(name: String, goodMorning: String, goodNight: String)
+  case class RandomAIReply
+  (
+    replayWhen1: String,
+    replyWhen100: String,
+    replyFrom2to20: String,
+    replyFrom21to40: String,
+    replyFrom41to60: String,
+    replyFrom61to80: String,
+    replyFrom81to99: String,
+  )
 
-  // Bot 姓名
-  val name: String = config.getString("name")
+  case class Biochronometer
+  (
+    wakeUpTime: Int,
+    goAsleepTime: Int,
+    activeTimes: List[String],
+    allTimeAtYourService: Boolean,
+  )
 
-  // Bot QQ
-  val qID: Long = config.getLong("jam_qq")
+  private var _config: Option[JamConfig] = None
 
-  // Bot password
-  val password: String = config.getString("password")
+  /**
+   * 获取配置
+   *
+   * @return 配置对象
+   */
+  def config: JamConfig = this._config.getOrElse(throw ParseFailException("在配置尚未初始化前获取了其内容，是 BUG，请上报"))
 
-  // 监护者列表
-  val masterList: List[lang.Long] = config.getLongList("master_list").asScala.toList
 
-  // 响应频率
-  val responseFrequency: Int = config.getInt("response_frequency")
+  /**
+   * 重新加载
+   */
+  override def reload(): Unit = {
+    val config: Config = DynamicConfigLoader.config
 
-  // 自动接受好友申请
-  val autoAcceptFriendRequest: Boolean = config.getBoolean("auto_accept_friend_request")
-
-  // 自动接收群申请
-  val autoAcceptGroupRequest: Boolean = config.getBoolean("auto_accept_group_request")
-
-  // 是否让关键词匹配乱序执行
-  val matchOutOfOrder: Boolean = config.getBoolean("match_out_of_order")
-
-  // 远程编辑
-  object RemoteEditing {
-    private val remote: Config = config.getConfig("remote_editing")
-    // 开启远程编辑
-    val enable: Boolean = remote.getBoolean("enable")
-    // 远程仓库地址（http）
-    val repo: String = remote.getString("repo")
-    // 用户名
-    val username: String = remote.getString("user_name")
-    // Git 邮件地址
-    val email: String = remote.getString("git_email")
-    // 秘钥
-    val secret: String = remote.getString("secret")
-    // 分支名称
-    val branch: String = remote.getString("branch")
+    this._config = Some(
+      new JamConfig(
+        balderdash = config.getStringList("character.balderdash").asScala.toList,
+        forMaster = ForMaster(
+          name = config.getString("character.for_master.name"),
+          goodMorning = config.getString("character.for_master.good_morning"),
+          goodNight = config.getString("character.for_master.good_night")
+        ),
+        randomAIReply = RandomAIReply(
+          replayWhen1 = config.getString("character.random_ai.1"),
+          replyWhen100 = config.getString("character.random_ai.100"),
+          replyFrom2to20 = config.getString("character.random_ai.2-20"),
+          replyFrom21to40 = config.getString("character.random_ai.21-40"),
+          replyFrom41to60 = config.getString("character.random_ai.41-60"),
+          replyFrom61to80 = config.getString("character.random_ai.61-80"),
+          replyFrom81to99 = config.getString("character.random_ai.81-99"),
+        ),
+        biochronometer = Biochronometer(
+          wakeUpTime = config.getInt("biochronometer.wake_up_time"),
+          goAsleepTime = config.getInt("biochronometer.go_asleep_time"),
+          activeTimes = config.getStringList("biochronometer.active_times").asScala.toList,
+          allTimeAtYourService = config.getBoolean("biochronometer.all_time_at_your_service")
+        )
+      )
+    )
   }
 }
