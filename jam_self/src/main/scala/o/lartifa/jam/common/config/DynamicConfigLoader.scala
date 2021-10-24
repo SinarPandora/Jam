@@ -26,5 +26,6 @@ object DynamicConfigLoader extends Reloadable {
       throw ParseFailException("配置文件不存在！")
     }
     this._configFile = Some(ConfigFactory.parseFile(configFile))
+    JamConfig.reload()
   }
 }

@@ -5,7 +5,7 @@ import cc.moecraft.icq.PicqBotX
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.bionic.BehaviorInitializer
-import o.lartifa.jam.common.config.{BotConfig, JamPluginConfig, SystemConfig}
+import o.lartifa.jam.common.config.{BotConfig, DynamicConfigLoader, JamPluginConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.cool.qq.command.MasterCommands
@@ -58,13 +58,14 @@ object JamLoader {
    * @return 异步结果
    */
   def init(client: PicqBotX, args: Array[String]): Future[Unit] = async {
+    DynamicConfigLoader.reload()
     makeSureDirsExist()
     Memory.init(args.contains("--flyway_repair"))
     await(JamPluginLoader.initJamPluginSystems())
     JamContext.cronTaskPool.getAndSet(CronTaskPool().autoRefreshTaskDefinition())
     await(initSXDL())
     client.getEventManager.registerListeners(QMessageListener, QEventListener, SystemEventListener)
-    client.getCommandManager.registerCommands(MasterCommands.commands: _*)
+    client.getCommandManager.registerCommands(MasterCommands.commands*)
     Runtime.getRuntime.addShutdownHook(shutdownHookThread)
     SubscriptionPool.init()
     runBootTasks()
@@ -79,6 +80,7 @@ object JamLoader {
    */
   def reload(): Future[Unit] = async {
     if (!JamContext.initLock.get()) {
+      DynamicConfigLoader.reload()
       makeSureDirsExist()
       MasterUtil.notifyAndLog(s"开始重新加载${BotConfig.name}的各个组件")
       QMessageListener.reloadPreHandleTasks()
