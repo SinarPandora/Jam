@@ -38,6 +38,9 @@ object BotConfig {
   // 是否让关键词匹配乱序执行
   val matchOutOfOrder: Boolean = config.getBoolean("match_out_of_order")
 
+  // 果酱配置文件存放位置
+  val jamConfigFile: String = config.getString("jam_config_file")
+
   // 远程编辑
   object RemoteEditing {
     private val remote: Config = config.getConfig("remote_editing")

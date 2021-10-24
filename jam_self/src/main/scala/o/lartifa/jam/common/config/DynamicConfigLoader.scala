@@ -4,7 +4,8 @@ package o.lartifa.jam.common.config
 import com.typesafe.config.{Config, ConfigFactory}
 import o.lartifa.jam.common.exception.ParseFailException
 
-import java.nio.file.Paths
+import java.io.File
+
 
 /**
  * 动态配置加载器
@@ -21,7 +22,7 @@ object DynamicConfigLoader extends Reloadable {
    * 重新加载
    */
   override def reload(): Unit = {
-    val configFile = Paths.get(SystemConfig.sxdlPath, "config", "jam_config.conf").toFile
+    val configFile = new File(BotConfig.jamConfigFile)
     if (!configFile.exists()) {
       throw ParseFailException("配置文件不存在！")
     }
