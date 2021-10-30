@@ -306,6 +306,7 @@ object JamLoader {
   def reloadSSDL()(implicit context: CommandExecuteContext): Future[Unit] = async {
     if (!JamContext.initLock.get()) {
       JamContext.initLock.set(true)
+      DynamicConfigLoader.reload()
       context.eventMessage.respond(
         s"""${
           if (BotConfig.RemoteEditing.enable)
