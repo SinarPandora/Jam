@@ -1,6 +1,7 @@
 package o.lartifa.jam.common.util
 
-import akka.actor.Actor
+import akka.actor.Actor.Receive
+import akka.actor.{Actor, ActorContext, Props}
 import akka.util.Timeout
 import o.lartifa.jam.pool.ThreadPools
 
@@ -13,7 +14,7 @@ import scala.concurrent.duration.FiniteDuration
  * Author: sinar
  * 2021/9/8 00:02
  */
-abstract class ExtraActor(timeout: Option[FiniteDuration] = None) extends Actor {
+class ExtraActor(onStart: ActorContext => Unit, handle: ActorContext => Receive, timeout: Option[FiniteDuration]) extends Actor {
 
   /**
    * 启动时执行
@@ -25,7 +26,7 @@ abstract class ExtraActor(timeout: Option[FiniteDuration] = None) extends Actor 
         self ! Timeout(timeout)
       }(ThreadPools.DEFAULT)
     })
-    onStart()
+    onStart(context)
   }
 
   /**
@@ -36,13 +37,21 @@ abstract class ExtraActor(timeout: Option[FiniteDuration] = None) extends Actor 
    */
   final override def receive: Receive = {
     case any =>
-      handle(any)
+      handle(context)(any)
       context.stop(self)
   }
+}
 
-  // 启动时操作
-  def onStart(): Unit = {}
-
-  // 处理消息
-  def handle: Receive
+object ExtraActor {
+  /**
+   * 创建 ExtraActor
+   *
+   * @param onStart 启动事件
+   * @param handle  消息处理
+   * @param timeout 处理超时
+   * @return ExtraActor 对象
+   */
+  def apply(onStart: ActorContext => Unit, handle: ActorContext => Receive, timeout: Option[FiniteDuration] = None): Props = {
+    Props(new ExtraActor(onStart, handle, timeout))
+  }
 }

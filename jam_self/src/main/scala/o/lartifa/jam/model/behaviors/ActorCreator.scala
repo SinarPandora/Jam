@@ -1,6 +1,6 @@
 package o.lartifa.jam.model.behaviors
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{ActorRef, Props}
 import o.lartifa.jam.pool.JamContext
 
 /**
@@ -15,7 +15,7 @@ trait ActorCreator {
    *
    * @param actorProto actor 定义
    */
-  def actorOf(actorProto: Actor): ActorRef = JamContext.actorSystem.actorOf(Props(actorProto))
+  def actorOf(actorProto: Props): ActorRef = JamContext.actorSystem.actorOf(actorProto)
 }
 
 object ActorCreator extends ActorCreator
