@@ -2,7 +2,7 @@ package o.lartifa.jam.database.temporary
 
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
-import o.lartifa.jam.common.config.{BotConfig, configFile}
+import o.lartifa.jam.common.config.{BotConfig, botConfigFile}
 import o.lartifa.jam.database.temporary.schema.{password, url, user}
 import o.lartifa.jam.pool.JamContext
 import org.flywaydb.core.Flyway
@@ -16,7 +16,7 @@ import scala.concurrent.ExecutionContext
  * 2019/10/12 22:25
  */
 object Memory {
-  val database: DatabaseConfig[JdbcProfile] = DatabaseConfig.forConfig[JdbcProfile](schema.name, config = configFile)
+  val database: DatabaseConfig[JdbcProfile] = DatabaseConfig.forConfig[JdbcProfile](schema.name, config = botConfigFile)
 
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(Memory.getClass)
 

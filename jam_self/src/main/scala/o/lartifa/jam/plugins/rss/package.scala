@@ -2,9 +2,9 @@ package o.lartifa.jam.plugins
 
 import com.apptastic.rssreader.{Item, RssReader}
 import com.typesafe.config.Config
-import o.lartifa.jam.common.config.configFile
+import o.lartifa.jam.common.config.botConfigFile
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import scala.util.matching.Regex
 
 /**
@@ -16,7 +16,7 @@ package object rss {
   val RSS_HUB_SOURCE: Regex = "(.+)/.+".r("category")
 
   object RSSConfig {
-    private val config: Config = configFile.getConfig("plugin.rss")
+    private val config: Config = botConfigFile.getConfig("plugin.rss")
     val selfDeployedUrl: String = config.getString("deploy_url").toLowerCase
     val customStyleMap: Map[String, String] = config.getConfig("style.custom")
       .entrySet().asScala

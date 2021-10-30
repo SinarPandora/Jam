@@ -1,6 +1,6 @@
 package o.lartifa.jam.plugins
 
-import o.lartifa.jam.common.config.configFile
+import o.lartifa.jam.common.config.botConfigFile
 import o.lartifa.jam.model.VarKey
 
 /**
@@ -12,7 +12,7 @@ import o.lartifa.jam.model.VarKey
 package object picbot {
 
   val apiKey: String = {
-    val key = configFile.getString("plugin.picbot.apikey")
+    val key = botConfigFile.getString("plugin.picbot.apikey")
     if (key.nonEmpty) s"apikey=$key&"
     else ""
   }
