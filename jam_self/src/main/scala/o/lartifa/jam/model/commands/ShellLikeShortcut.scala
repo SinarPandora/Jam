@@ -23,7 +23,7 @@ case class ShellLikeShortcut[T](prefixes: Set[String], command: Command[T], temp
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[T] = {
     val msg = context.eventMessage.message
     val content = prefixes.find(msg.startsWith).map(msg.stripPrefix).getOrElse(msg)
-    val args = content.split("\\W+").toList
+    val args = content.split("\\s+").toList
     val diff = argCount - args.size
     context.eventMessage.setMessage {
       if (diff > 0) {

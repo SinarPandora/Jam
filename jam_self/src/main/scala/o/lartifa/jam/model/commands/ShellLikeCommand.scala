@@ -21,7 +21,7 @@ abstract class ShellLikeCommand(prefixes: Set[String]) extends Command[Unit] {
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = {
     val msg = context.eventMessage.message
     val content = prefixes.find(msg.startsWith).map(msg.stripPrefix).getOrElse(msg)
-    content.split("\\W+").toList match {
+    content.split("\\s+").toList match {
       case "help" :: Nil => help()
       case "帮助" :: Nil => help()
       case args => this.execute(args)
