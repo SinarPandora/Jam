@@ -1,17 +1,18 @@
 package o.lartifa.jam.plugins.caiyunai.dream
 
-import akka.actor.{Actor, ActorRef, Cancellable}
+import akka.actor.{Actor, ActorRef, Cancellable, Props}
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
 import cn.hutool.core.util.NumberUtil
-import o.lartifa.jam.common.config.{BotConfig, PluginConfig}
-import o.lartifa.jam.common.protocol.{Done, Exit, Fail, Data as Resp}
+import o.lartifa.jam.common.config.PluginConfig
+import o.lartifa.jam.common.protocol.{Done, Exit, Fail, IsAlive, Offline, Online, Data as Resp}
 import o.lartifa.jam.common.util.{ExtraActor, MasterUtil}
 import o.lartifa.jam.cool.qq.listener.interactive.Interactive
 import o.lartifa.jam.model.SpecificSender
 import o.lartifa.jam.model.behaviors.ActorCreator
 import o.lartifa.jam.plugins.caiyunai.dream.DreamClient.AICharacter
 import o.lartifa.jam.plugins.caiyunai.dream.DreamingActorProtocol.*
+import o.lartifa.jam.plugins.caiyunai.dream.KeepAliveDreamingActor.*
 import o.lartifa.jam.pool.JamContext
 import requests.Session
 
@@ -26,15 +27,11 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2021/10/23 02:17
  */
-object KeepAliveDreamingActor extends Actor {
+class KeepAliveDreamingActor extends Actor {
   that =>
-  case class Data(session: Session, uid: String, retry: Int = 0, keepAliveTask: Cancellable, models: List[AICharacter])
-  private val logger: HyLogger = JamContext.loggerFactory.get().getLogger(KeepAliveDreamingActor.getClass)
+  case class Data(session: Session, uid: String, failCount: Int = 0, keepAliveTask: Cancellable, models: List[AICharacter])
 
   private def config: PluginConfig.DreamAI = PluginConfig.config.dreamAI
-
-  // 为避免多网络请求阻塞其他消息处理，创建单独线程池
-  implicit val ec: ExecutionContext = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(10))
 
   override def receive: Receive = initStage()
 
@@ -47,9 +44,13 @@ object KeepAliveDreamingActor extends Actor {
     case Login(senderRef, eventMessage) =>
       if (config.mobile.isBlank) {
         senderRef ! Fail("请设置手机号后再尝试登录彩云小梦")
-      } else login(senderRef, eventMessage)
-    case Reply(senderRef, _) =>
-      senderRef ! Fail("尚未登录小梦")
+      } else {
+        login(senderRef, eventMessage)
+        senderRef ! Done
+      }
+    case Reply(senderRef, _) => senderRef ! Fail("尚未登录小梦")
+    case IsAlive(senderRef) => senderRef ! Offline
+    case Exit(senderRef) => senderRef ! Done
   }
 
   /**
@@ -64,27 +65,30 @@ object KeepAliveDreamingActor extends Actor {
       case Left(errMsg) => senderRef ! Fail(errMsg); return
       case Right(value) => value
     }
-    eventMessage.respond("%s，彩云小梦需要手动登录，验证码短信已发送")
+    eventMessage.respond(
+      """彩云小梦需要手动登录，验证码短信已发送
+        |（发送：退出 或 exit 离开登录流程）""".stripMargin)
     eventMessage.respond("请输入验证码")
-    Interactive.interact(SpecificSender.privateOf(BotConfig.qID)) { (s, evt) =>
+    Interactive.interact(SpecificSender(eventMessage)) { (s, evt) =>
+      if (evt.message.trim == "退出" || evt.message.trim.toLowerCase() == "exit") {
+        evt.respond("已退出")
+        s.release()
+        s.break()
+      }
       val codeStr = evt.message.trim
       if (NumberUtil.isNumber(codeStr)) {
         val uid = DreamClient.phoneLogin(config.mobile, codeStr, codeId) match {
-          case Left(errMsg) => senderRef ! Fail(errMsg); return
+          case Left(errMsg) => evt.respond(errMsg); s.break()
           case Right(value) => value
         }
         val models = DreamClient.listModels match {
-          case Left(errMsg) => senderRef ! Fail(errMsg); return
+          case Left(errMsg) => evt.respond(errMsg); s.break()
           case Right(value) => value
         }
-        val keepAliveTask: Cancellable = context.system.scheduler.scheduleAtFixedRate(1.minute, 1.minute, this.self, KeepAlive)
+        val keepAliveTask: Cancellable = context.system.scheduler.scheduleAtFixedRate(1.minute, 3.minutes, that.self, KeepAlive)
         // 切换为登录准备模式
-        that.context.become({
-          case Done =>
-            handleStage(Data(session, uid, 0, keepAliveTask, models))
-          case Exit =>
-            context.become(initStage())
-        })
+        handleStage(Data(session, uid, 0, keepAliveTask, models))
+        evt.respond("登录成功！")
         s.release()
       } else {
         evt.respond("请正确输入验证码")
@@ -99,25 +103,28 @@ object KeepAliveDreamingActor extends Actor {
    * @return 行为
    */
   def handleStage(data: Data): Unit = {
-    if (data.retry > 5) {
+    if (data.failCount > 5) {
       logger.warning("彩云小梦登录已过期")
       MasterUtil.notifyMaster("%s，小梦的登录已过期，请重新登录")
       data.keepAliveTask.cancel()
       that.context.become(initStage())
     } else {
       that.context.become({
+        case IsAlive(senderRef) => senderRef ! Online
+        case Exit(senderRef) =>
+          that.context.become(initStage())
+          senderRef ! Done
         case Reply(senderRef, content) => dreaming(data, content, senderRef)
         case KeepAlive =>
-          ActorCreator.actorOf(new ExtraActor() {
-            override def onStart(): Unit = that.self ! Reply(self, "彩云小梦")
-
-            override def handle: Receive = {
+          ActorCreator.actorOf(ExtraActor(
+            ctx => that.self ! Reply(ctx.self, "彩云小梦"),
+            _ => {
               case Resp(_) => logger.debug("彩云小梦正常运行中")
               case Fail(msg) =>
                 logger.warning(msg)
-                handleStage(data.copy(retry = data.retry + 1))
+                handleStage(data.copy(failCount = data.failCount + 1))
             }
-          })
+          ))
       })
     }
   }
@@ -140,19 +147,30 @@ object KeepAliveDreamingActor extends Actor {
       DreamClient.saveAtFirst(data.uid, content) match {
         case Left(errMsg) =>
           senderRef ! Fail(errMsg)
-          handleStage(data.copy(retry = data.retry + 1))
+          handleStage(data.copy(failCount = data.failCount + 1))
         case Right(meta) =>
-          DreamClient.dreaming(data.uid, content, meta) match {
+          DreamClient.dreaming(data.uid, data.models(modelId).mid, content, meta) match {
             case Left(errMsg) =>
               senderRef ! Fail(errMsg)
-              handleStage(data.copy(retry = data.retry + 1))
+              handleStage(data.copy(failCount = data.failCount + 1))
             case Right(dreams) =>
-              senderRef ! Resp(dreams)
-              if (data.retry != 0) {
-                handleStage(data.copy(retry = 0))
+              if (dreams.isEmpty) {
+                handleStage(data.copy(failCount = data.failCount + 1))
+              } else {
+                senderRef ! Resp(dreams)
+                if (data.failCount != 0) {
+                  handleStage(data.copy(failCount = 0))
+                }
               }
           }
       }
     }
   }
+}
+
+object KeepAliveDreamingActor {
+  private val logger: HyLogger = JamContext.loggerFactory.get().getLogger(KeepAliveDreamingActor.getClass)
+  val instance: ActorRef = ActorCreator.actorOf(Props(new KeepAliveDreamingActor()))
+  // 为避免多网络请求阻塞其他消息处理，创建单独线程池
+  implicit val ec: ExecutionContext = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(10))
 }

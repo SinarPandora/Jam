@@ -71,7 +71,7 @@ object DreamClient {
     } catch {
       case e: Exception =>
         logger.error(e)
-        Left("登录失败，请稍后重试")
+        Left("登录失败，请检查验证码是否正确")
     }
   }
 
@@ -106,7 +106,7 @@ object DreamClient {
     }
   }
 
-  case class NovelMetadata(nid: String, mid: String, lastNode: String, branchId: String, firstNode: String)
+  case class NovelMetadata(nid: String, lastNode: String, branchId: String, firstNode: String)
 
   /**
    * 初次保存
@@ -126,11 +126,10 @@ object DreamClient {
           "ostype" -> "",
           "lang" -> "zh",
           "User-Agent" -> "1231312313"
-        ))
+        )).text()
       }
       Right(NovelMetadata(
         nid = resp("data")("novel")("nid").str,
-        mid = resp("data")("novel")("mid").str,
         lastNode = resp("data")("novel")("lastnode").str,
         branchId = resp("data")("novel")("branchid").str,
         firstNode = resp("data")("novel")("firstnode").str
@@ -148,15 +147,16 @@ object DreamClient {
    * 小云做梦（AI 联想）
    *
    * @param uid      用户 ID
+   * @param mid      模型 Id
    * @param content  内容
    * @param metadata 小说元数据
    * @param session  会话
    * @return 全部梦境
    */
-  def dreaming(uid: String, content: String, metadata: NovelMetadata)(implicit session: Session): Either[String, List[Dream]] = {
+  def dreaming(uid: String, mid: String, content: String, metadata: NovelMetadata)(implicit session: Session): Either[String, List[Dream]] = {
     try {
       metadata match {
-        case NovelMetadata(nid, mid, lastNode, branchId, _) =>
+        case NovelMetadata(nid, lastNode, branchId, _) =>
           val resp = ujson.read {
             session.post(API_V2.novelAI(uid), data = ujson.Obj(
               "nid" -> nid,
@@ -170,7 +170,7 @@ object DreamClient {
               "ostype" -> "",
               "lang" -> "zh",
               "User-Agent" -> "1231312313"
-            ))
+            )).text()
           }
           Right(resp("data")("nodes").arr.map(node => {
             Dream(
