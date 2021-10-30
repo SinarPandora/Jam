@@ -1,9 +1,5 @@
 package o.lartifa.jam.plugins.caiyunai
 
-import o.lartifa.jam.pool.ThreadPools
-
-import scala.concurrent.ExecutionContext
-
 /**
  * 彩云小梦模块通用
  *
@@ -11,10 +7,6 @@ import scala.concurrent.ExecutionContext
  * 2021/2/19 12:00
  */
 package object dream {
-
-  // 内部线程池
-  implicit private[dream] val dreamEC: ExecutionContext = ThreadPools.NETWORK
-
   /**
    * 彩云小梦相关 API
    * <p>
@@ -29,6 +21,7 @@ package object dream {
    * 如果接受结果：realizingDream -> save -> 主要阶段1
    * 如果不接受结果：dream -[循环执行直到有结果]> dreamLoop
    */
+  @deprecated
   object APIs {
     private val host: String = "http://if.caiyunai.com/v1/dream"
     /**
@@ -114,6 +107,35 @@ package object dream {
      * 返回体样例：{"status":0,"msg":"ok"}
      */
     def realizingDream(uid: String): String = s"$host/$uid/add_dream_content"
+  }
+
+  /**
+   * 彩云小梦相关 API
+   * <p>
+   * codeid：登录时使用的临时 id，用于标记验证码的所有人
+   * uid：虚拟用户 id（作者id）
+   * nid：文章 id，使用 save 获得
+   * mid：小梦角色（AI模型）id
+   * xid：梦境（联想内容）id
+   * </p>
+   * 流程：
+   * 初始化：modelList -> sendCaptcha -> phoneLogin
+   * 写作并联想：写下一些内容 -> novelSave -> novelAI
+   * 如果接受结果：addNode -> novelSave -> 主要阶段1
+   */
+  object API_V2 {
+    val modelList: String = "http://if.caiyunai.com/v2/model/model_list"
+
+    val sendCaptcha: String = "http://if.caiyunai.com/v2/user/phone_message"
+
+    val phoneLogin: String = "http://if.caiyunai.com/v2/user/phone_login"
+
+    def novelSave(uid: String): String = s"http://if.caiyunai.com/v2/novel/$uid/novel_save"
+
+    def novelAI(uid: String): String = s"http://if.caiyunai.com/v2/novel/$uid/novel_ai"
+
+    def addNode(uid: String): String = s"http://if.caiyunai.com/v2/novel/$uid/add_node"
+
   }
 
 }

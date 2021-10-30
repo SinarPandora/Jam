@@ -40,15 +40,9 @@ abstract class ExtraActor(timeout: Option[FiniteDuration] = None) extends Actor 
       context.stop(self)
   }
 
-  /**
-   * 启动时操作
-   */
+  // 启动时操作
   def onStart(): Unit = {}
 
-  /**
-   * 处理消息
-   *
-   * @return 接收消息行为函数
-   */
+  // 处理消息
   def handle: Receive
 }
