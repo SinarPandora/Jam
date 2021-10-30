@@ -9,7 +9,7 @@ import com.typesafe.config.Config
  * 2019/9/28 15:19
  */
 object CoolQConfig {
-  private val config: Config = configFile.getConfig("coolQQ")
+  private val config: Config = botConfigFile.getConfig("coolQQ")
 
   // 酷 Q 服务器地址
   val postUrl: String = config.getString("host")

@@ -2,7 +2,7 @@ package o.lartifa.jam.common.config
 
 import com.typesafe.config.Config
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 /**
  * 系统配置
@@ -11,7 +11,7 @@ import scala.jdk.CollectionConverters._
  * 2020/1/4 22:46
  */
 object SystemConfig {
-  private val config: Config = configFile.getConfig("system")
+  private val config: Config = botConfigFile.getConfig("system")
 
   // SXDL 脚本目录
   val sxdlPath: String = config.getString("sxdl_path")

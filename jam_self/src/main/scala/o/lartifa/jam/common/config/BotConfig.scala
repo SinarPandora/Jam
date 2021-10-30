@@ -12,7 +12,7 @@ import scala.jdk.CollectionConverters.*
  * 2020/1/2 22:01
  */
 object BotConfig {
-  val config: Config = configFile.getConfig("bot")
+  val config: Config = botConfigFile.getConfig("bot")
 
   // Bot 姓名
   val name: String = config.getString("name")

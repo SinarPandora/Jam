@@ -21,6 +21,7 @@ case class JamConfig
 )
 object JamConfig extends Reloadable {
   case class ForMaster(name: String, goodMorning: String, goodNight: String)
+
   case class RandomAIReply
   (
     replayWhen1: String,

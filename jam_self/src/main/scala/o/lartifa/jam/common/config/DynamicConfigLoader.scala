@@ -28,5 +28,6 @@ object DynamicConfigLoader extends Reloadable {
     }
     this._configFile = Some(ConfigFactory.parseFile(configFile))
     JamConfig.reload()
+    PluginConfig.reload()
   }
 }
