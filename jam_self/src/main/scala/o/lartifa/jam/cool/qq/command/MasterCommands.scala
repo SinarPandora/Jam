@@ -4,18 +4,22 @@ import cc.moecraft.icq.command.interfaces.IcqCommand
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.icq.user.User
 import o.lartifa.jam.common.config.BotConfig
-import o.lartifa.jam.common.util.GlobalConstant
+import o.lartifa.jam.common.protocol.{Done, Exit, Fail}
+import o.lartifa.jam.common.util.{ExtraActor, GlobalConstant}
 import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
 import o.lartifa.jam.cool.qq.listener.BanList
 import o.lartifa.jam.engine.JamLoader
+import o.lartifa.jam.model.behaviors.ActorCreator
 import o.lartifa.jam.model.tasks.{GoASleep, WakeUp}
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.plugins.JamPluginLoader
+import o.lartifa.jam.plugins.caiyunai.dream.DreamingActorProtocol.Login
+import o.lartifa.jam.plugins.caiyunai.dream.KeepAliveDreamingActor
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
 import java.util
 import scala.async.Async.*
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -32,7 +36,8 @@ object MasterCommands {
     Ping, SessionInfo, Refresh, ReloadSSDL,
     ListVariable, ClearVariableInChat, SetVariable, RemoveVariable,
     ListPlugins, EnablePlugin, DisablePlugin, UninstallPlugin,
-    WakeUpNow, GoASleepNow, ShowRawMessage, BanChat, AllowChat, ShowBanList
+    WakeUpNow, GoASleepNow, ShowRawMessage, BanChat, AllowChat, ShowBanList,
+    DreamClientLogin
   ) ++ JamPluginLoader.loadedComponents.masterCommands
 
   private object Ping extends MasterEverywhereCommand("ping", "在吗") {
@@ -418,4 +423,34 @@ object MasterCommands {
     }
   }
 
+  private object DreamClientLogin extends MasterEverywhereCommand("dream_login", "小梦登录") {
+    /**
+     * 指令操作
+     *
+     * @param event   消息事件
+     * @param sender  发送者
+     * @param command 指令内容
+     * @param args    参数
+     * @return 输出内容
+     */
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = async {
+      val promise = Promise[Boolean]()
+      ActorCreator.actorOf(ExtraActor(
+        ctx => KeepAliveDreamingActor.instance ! Exit(ctx.self),
+        _ => {
+          case Done => promise.success(true)
+        }
+      ))
+      await(promise.future)
+      ActorCreator.actorOf(ExtraActor(
+        ctx => KeepAliveDreamingActor.instance ! Login(ctx.self, event),
+        _ => {
+          case Done => // 什么也不做
+          case Fail(errMsg) => event.respond(errMsg)
+          case _ => event.respond("进入登录流程失败")
+        }
+      ))
+      NO_RESPONSE
+    }
+  }
 }
