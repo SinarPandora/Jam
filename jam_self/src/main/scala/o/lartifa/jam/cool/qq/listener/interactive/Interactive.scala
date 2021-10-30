@@ -29,10 +29,9 @@ trait Interactive {
    */
   def interact(msgSender: SpecificSender)(f: InteractiveFunction): Future[ActorRef] = {
     val promise: Promise[ActorRef] = Promise()
-    ActorCreator.actorOf(new ExtraActor {
-      override def onStart(): Unit = manager ! Manage.Register(msgSender, f, self)
-
-      override def handle: Receive = {
+    ActorCreator.actorOf(ExtraActor(
+      ctx => manager ! Manage.Register(msgSender, f, ctx.self),
+      _ => {
         case Manage.Registered(ref) =>
           promise.success(ref)
         case other =>
@@ -41,7 +40,7 @@ trait Interactive {
             s"在创建交互式会话过程中接收到无法处理的消息内容：$other，类型：${other.getClass.getName}，$msgSender"
           ))
       }
-    })
+    ))
     promise.future
   }
 

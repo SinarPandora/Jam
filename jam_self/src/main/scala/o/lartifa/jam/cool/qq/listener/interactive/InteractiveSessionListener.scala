@@ -23,17 +23,16 @@ object InteractiveSessionListener {
    */
   def blockAndInactiveIfExist(event: EventMessage): Future[Boolean] = {
     val promise: Promise[Boolean] = Promise()
-    ActorCreator.actorOf(new ExtraActor() {
-      override def onStart(): Unit = manager ! Manage.Search(SpecificSender(event), self)
-
-      override def handle: Receive = {
+    ActorCreator.actorOf(ExtraActor(
+      ctx => manager ! Manage.Search(SpecificSender(event), ctx.self),
+      _ => {
         case Manage.Found(ref) =>
           ref ! event
           promise.success(false)
         case Manage.NotFound =>
           promise.success(true)
       }
-    })
+    ))
     promise.future
   }
 }

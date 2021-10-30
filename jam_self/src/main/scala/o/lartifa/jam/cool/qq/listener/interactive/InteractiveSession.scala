@@ -3,7 +3,7 @@ package o.lartifa.jam.cool.qq.listener.interactive
 import akka.actor.{Actor, ActorRef}
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.cool.qq.listener.interactive.InteractiveSession.logger
+import o.lartifa.jam.cool.qq.listener.interactive.InteractiveSession.{Break, logger}
 import o.lartifa.jam.cool.qq.listener.interactive.InteractiveSessionProtocol.Manage
 import o.lartifa.jam.model.SpecificSender
 import o.lartifa.jam.pool.JamContext
@@ -17,7 +17,10 @@ import o.lartifa.jam.pool.JamContext
 class InteractiveSession(f: InteractiveFunction, sender: SpecificSender, manager: ActorRef) extends Actor {
 
   override def receive: Receive = {
-    case event: EventMessage => f(this, event)
+    case event: EventMessage =>
+      try f(this, event) catch {
+        case Break => // 只是跳过
+      }
     case other => logger.warning(s"收到未知消息：$other，类型：${other.getClass.getName}，$sender")
   }
 
@@ -29,6 +32,12 @@ class InteractiveSession(f: InteractiveFunction, sender: SpecificSender, manager
     manager ! Manage.Unregister(sender, self)
     context.become(waitingForRelease())
   }
+
+  /**
+   * 跳过后续逻辑
+   * * 用于代替 Actor 正常逻辑中无法使用的 return 中断
+   */
+  def break[T](): T = throw Break
 
   /**
    * 等待注销
@@ -49,4 +58,5 @@ class InteractiveSession(f: InteractiveFunction, sender: SpecificSender, manager
 
 object InteractiveSession {
   private val logger: HyLogger = JamContext.loggerFactory.get().getLogger(classOf[InteractiveSession])
+  case object Break extends RuntimeException("不需要处理，只是一个占位符")
 }
