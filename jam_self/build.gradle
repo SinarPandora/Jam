@@ -92,7 +92,9 @@ dependencies {
     api(files("./libs/rssreader-2.2.3.jar"))
     api("org.reflections:reflections:0.9.12")
     api("com.typesafe.akka:akka-actor_2.13:$akka_verion")
-    api("tv.cntt:glokka_2.13:2.6.1")
+    api("tv.cntt:glokka_2.13:2.6.1") {
+        exclude group: 'com.typesafe.akka'
+    }
     api("io.reactivex.rxjava3:rxjava:$rx_extension_version")
     api('com.lihaoyi:ammonite-ops_2.13:2.4.0-19-f4790b61')
     api("com.github.pathikrit:better-files_2.13:3.9.1")
