@@ -4,8 +4,8 @@ import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.icq.sender.message.components.ComponentAt
 import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.util.TriBoolValue
-import o.lartifa.jam.model.commands.DreamingReply
-import o.lartifa.jam.model.{CommandExecuteContext, VarKey}
+import o.lartifa.jam.model.CommandExecuteContext
+import o.lartifa.jam.model.commands.{DropInDream, RenderStrTemplate}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -30,7 +30,7 @@ object AssociatedReplyAll extends PostHandleTask("联想回复（匹配后）", 
     implicit val context: CommandExecuteContext = contextOpt.getOrElse(CommandExecuteContext(event))
     val msg = event.message.replaceAll("\\s+", "")
     if (msg.startsWith(atMe)) {
-      DreamingReply(VarKey("$TEMP", VarKey.Mocked, Some(msg.replace(atMe, "")))).execute()
+      DropInDream(RenderStrTemplate(msg)).execute()
     } else {
       Future.unit
     }

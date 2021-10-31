@@ -47,17 +47,21 @@ object CommandParser extends Parser {
     val contains = components.containsModeCommandParsers.map(it => it.parse _)
     val regex = components.regexModeCommandParsers.map(it => it.parse _)
     val highOrder = components.highOrderModeCommandParsers.map(it => it.parse _)
-    List(parseAsk _) ++ highOrder ++ List(
+    List(parseAsk _)
+      ++ highOrder
+      ++ List(
       parseCatchParameters _, parseMessageSend _, parseGoto _, parseOneByOne _, parseParamOpt _,
       parseRandomNumber _, parseRandomGoto _, parseLoopGoto _, parseParamDel _, parseWaiting _,
       parseSetPicFetcherMode _, parseSetPicRating _, parseRunTaskNow _, parseFetchAndSendPic _,
       parseRollEveryThing _, parseBanSomeOneInGroup _, parseSendVideo _, parseShareLocation _,
-      parseShareURL _, parseShareContact _, parseShareMusic _, parsePoke _, parseTTS _) ++ regex ++ List(
+      parseShareURL _, parseShareContact _, parseShareMusic _, parsePoke _, parseTTS _, parseDropInDream _)
+      ++ regex
+      ++ List(
       // 包含类模式放在后边
       parseDoNoting _, parseGroupWholeBan _, parseGroupWholeUnBan _, parseShowPicInfo _,
       parseRSSSubscribe _, parseRSSUnSubscribe _, parseRSSShowAll _, parseWhatICanDo _,
-      parseQQDice _, parseQQRPS _, parseShake _, parseBreakDirectly _, parseBreakAsUnMatched _, parseListAIModels _
-    ) ++ contains
+      parseQQDice _, parseQQRPS _, parseShake _, parseBreakDirectly _, parseBreakAsUnMatched _, parseListAIModels _)
+      ++ contains
   }
 
   /**
@@ -696,4 +700,17 @@ object CommandParser extends Parser {
    */
   private def parseListAIModels(string: String, context: ParseEngineContext): Option[ListAIModels.type] =
     if (string.contains(CommandPattern.listAIModels)) Some(ListAIModels) else None
+
+  /**
+   * 解析坠梦指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseDropInDream(string: String, context: ParseEngineContext): Option[DropInDream] = {
+    CommandPattern.dropInDream.findFirstMatchIn(string).map(result => {
+      DropInDream(context.getTemplate(result.group("dream")))
+    })
+  }
 }
