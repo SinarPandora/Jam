@@ -20,7 +20,7 @@ import scala.concurrent.duration.Duration
  * Author: sinar
  * 2020/9/18 21:44
  */
-@Deprecated(since = "3.1")
+@deprecated(since = "3.1", message = "Please use o.lartifa.jam.cool.qq.listener.interactive")
 case class Question(hit: (EventMessage, Answerer) => Boolean, answerer: Answerer,
                     times: AtomicInteger = new AtomicInteger(1),
                     timeout: Option[Duration],

@@ -24,7 +24,7 @@ import scala.concurrent.duration.{Duration, _}
  * Author: sinar
  * 2020/9/18 21:45
  */
-@Deprecated(since = "3.1")
+@deprecated(since = "3.1", message = "Please use o.lartifa.jam.cool.qq.listener.interactive")
 sealed case class Answerer(qID: Option[Long], groupID: Option[Long]) {
 
   /**

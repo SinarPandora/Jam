@@ -15,7 +15,7 @@ import scala.concurrent.duration.{Duration, _}
  * Author: sinar
  * 2020/9/18 19:48
  */
-@Deprecated(since = "3.1")
+@deprecated(since = "3.1", message = "Please use o.lartifa.jam.cool.qq.listener.interactive")
 object Questioner {
 
   case class QuestionContext(answerer: Answerer, event: EventMessage, question: Question)
