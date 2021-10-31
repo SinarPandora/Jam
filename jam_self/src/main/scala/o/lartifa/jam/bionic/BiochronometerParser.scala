@@ -2,8 +2,8 @@ package o.lartifa.jam.bionic
 
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
+import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.config.JamConfig.Biochronometer
-import o.lartifa.jam.common.config.{BotConfig, JamConfig}
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.engine.proto.Parser
@@ -32,7 +32,7 @@ object BiochronometerParser extends Parser {
       val now = LocalTime.now().getHour
       val wakeAt = parseWakeUp()
       val sleepAt = parseGoASleep()
-      need(wakeAt != sleepAt, s"起床时间不能和就寝时间相同，${BotConfig.name}的行为可能不正常，建议立刻修改并重新启动")
+      need(wakeAt != sleepAt, s"起床时间不能和就寝时间相同，${JamConfig.config.name}的行为可能不正常，建议立刻修改并重新启动")
       // 如果在睡眠期间被重新唤醒，会继续睡
       val continueSleep = if (wakeAt < sleepAt && (wakeAt > now || now >= sleepAt)) true
       else if (sleepAt == 0 && (wakeAt > now || now == 0)) true
@@ -97,7 +97,7 @@ object BiochronometerParser extends Parser {
     need(end >= 0 && end <= 23, "结束时间范围应为 0 - 23")
     need(end > start, "结束时间必须大于起始时间")
     ChangeRespFrequency(100).setUp(s"0 0 $start * * ? ")
-    ChangeRespFrequency(BotConfig.responseFrequency).setUp(s"0 0 $end * * ? ")
+    ChangeRespFrequency(JamConfig.config.responseFrequency).setUp(s"0 0 $end * * ? ")
     pair
   } recoverWith { err =>
     val thr = ParseFailException("'活跃时间模式'设置有误，" + err.getMessage + s"，错误的时间段为：$pair")

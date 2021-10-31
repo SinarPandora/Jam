@@ -14,13 +14,18 @@ import scala.jdk.CollectionConverters.*
  */
 case class JamConfig
 (
+  name: String,
+  responseFrequency: Int,
   balderdash: List[String],
   forMaster: ForMaster,
   randomAIReply: RandomAIReply,
-  biochronometer: Biochronometer
+  biochronometer: Biochronometer,
+  autoAcceptFriendRequest: Boolean,
+  autoAcceptGroupRequest: Boolean,
+  matchOutOfOrder: Boolean
 )
 object JamConfig extends Reloadable {
-  case class ForMaster(name: String, goodMorning: String, goodNight: String)
+  case class ForMaster(masterList: List[Long], name: String, goodMorning: String, goodNight: String)
 
   case class RandomAIReply
   (
@@ -59,8 +64,11 @@ object JamConfig extends Reloadable {
 
     this._config = Some(
       new JamConfig(
+        name = config.getString("character.name"),
+        responseFrequency = config.getInt("character.response_frequency"),
         balderdash = config.getStringList("character.balderdash").asScala.toList,
         forMaster = ForMaster(
+          masterList = config.getLongList("character.for_master.master_list").asScala.map(_.toLong).toList,
           name = config.getString("character.for_master.name"),
           goodMorning = config.getString("character.for_master.good_morning"),
           goodNight = config.getString("character.for_master.good_night")
@@ -79,7 +87,10 @@ object JamConfig extends Reloadable {
           goAsleepTime = config.getInt("biochronometer.go_asleep_time"),
           activeTimes = config.getStringList("biochronometer.active_times").asScala.toList,
           allTimeAtYourService = config.getBoolean("biochronometer.all_time_at_your_service")
-        )
+        ),
+        autoAcceptFriendRequest = config.getBoolean("character.auto_accept_friend_request"),
+        autoAcceptGroupRequest = config.getBoolean("character.auto_accept_group_request"),
+        matchOutOfOrder = config.getBoolean("match_out_of_order")
       )
     )
   }

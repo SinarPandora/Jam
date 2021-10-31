@@ -1,14 +1,13 @@
 package o.lartifa.jam.plugins.rss
 
-import java.time.format.DateTimeFormatter
-import java.time.{Instant, ZoneId}
-import java.util.Locale
-import java.util.regex.Pattern
-
 import cc.moecraft.icq.sender.message.components.ComponentImage
 import com.apptastic.rssreader.Item
 import o.lartifa.jam.common.util.MasterUtil
 
+import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZoneId}
+import java.util.Locale
+import java.util.regex.Pattern
 import scala.util.Try
 
 /**
@@ -61,7 +60,7 @@ object PrettyRSSPrinters {
    * @return 输出样式
    */
   def getByCategory(sourceCategory: String): PrettyRSSPrinter = {
-    val name = RSSConfig.customStyleMap.getOrElse(sourceCategory, RSSConfig.defaultStyle)
+    val name = RssConfig.customStyles.getOrElse(sourceCategory, RssConfig.defaultStyle)
     printers.get(name) match {
       case Some(value) => value
       case None =>

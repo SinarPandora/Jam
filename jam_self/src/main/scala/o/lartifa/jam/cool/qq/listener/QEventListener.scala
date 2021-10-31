@@ -5,7 +5,7 @@ import cc.moecraft.icq.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch
-import o.lartifa.jam.common.config.BotConfig
+import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.listener.base.Break
@@ -25,6 +25,7 @@ import scala.util.Random
  */
 object QEventListener extends IcqListener {
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(QEventListener.getClass)
+
   /**
    * 监听全部通知事件
    *
@@ -84,7 +85,7 @@ object QEventListener extends IcqListener {
       case MessageType.PRIVATE => globalPrivate
       case MessageType.GROUP | MessageType.DISCUSS => globalGroup
     }).get()
-    if (BotConfig.matchOutOfOrder) {
+    if (JamConfig.config.matchOutOfOrder) {
       Random.shuffle(customMatchers) ++ Random.shuffle(chatTypeScopeMatchers) ++ Random.shuffle(global.get())
     } else {
       customMatchers ++ chatTypeScopeMatchers ++ global.get()

@@ -1,7 +1,7 @@
 package o.lartifa.jam.model.tasks
 
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.common.config.{BotConfig, SystemConfig}
+import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.listener.QMessageListener
 import o.lartifa.jam.model.tasks.ChangeRespFrequency.logger
@@ -19,9 +19,9 @@ class ChangeRespFrequency(val freq: Int) extends JamCronTask(name = "回复频�
   override def run()(implicit exec: ExecutionContext): Future[Unit] = {
     QMessageListener.adjustFrequency(freq)
     if (SystemConfig.debugMode) {
-      MasterUtil.notifyMaster(s"${BotConfig.name}的回复频已变更为：$freq%")
+      MasterUtil.notifyMaster(s"${JamConfig.config.name}的回复频已变更为：$freq%")
     }
-    logger.log(s"${BotConfig.name}的回复频率已变更为：$freq%")
+    logger.log(s"${JamConfig.config.name}的回复频率已变更为：$freq%")
     Future.successful(())
   }
 }

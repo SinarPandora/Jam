@@ -2,7 +2,7 @@ package o.lartifa.jam.model.tasks
 
 import better.files.File
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.common.config.{BotConfig, JamConfig, SystemConfig}
+import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.common.util.PicqBotUtil.Helper
 import o.lartifa.jam.model.tasks.GoASleep.{goASleep, logger}
@@ -55,6 +55,6 @@ object GoASleep {
    */
   def goASleep(): Unit = {
     JamContext.bot.get().switchToSleepMode()
-    logger.log(s"${BotConfig.name}已经休眠")
+    logger.log(s"${JamConfig.config.name}已经休眠")
   }
 }

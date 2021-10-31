@@ -2,7 +2,7 @@ package o.lartifa.jam.database.temporary
 
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
-import o.lartifa.jam.common.config.{BotConfig, botConfigFile}
+import o.lartifa.jam.common.config.{JamConfig, botConfigFile}
 import o.lartifa.jam.database.temporary.schema.{password, url, user}
 import o.lartifa.jam.pool.JamContext
 import org.flywaydb.core.Flyway
@@ -26,7 +26,7 @@ object Memory {
    * @return 初始化结果
    */
   def init(repair: Boolean)(implicit exec: ExecutionContext): Unit = {
-    logger.log(s"${AnsiColor.YELLOW}正在构建${BotConfig.name}的记忆...")
+    logger.log(s"${AnsiColor.YELLOW}正在构建${JamConfig.config.name}的记忆...")
     val flyway = Flyway.configure().dataSource(url, user, password).load()
     logger.log(s"${AnsiColor.YELLOW}记忆恢复中...")
     if (repair) flyway.repair()

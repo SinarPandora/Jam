@@ -5,7 +5,7 @@ import cc.moecraft.icq.PicqBotX
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.bionic.BehaviorInitializer
-import o.lartifa.jam.common.config.{BotConfig, DynamicConfigLoader, JamPluginConfig, SystemConfig}
+import o.lartifa.jam.common.config.*
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.cool.qq.command.MasterCommands
@@ -18,6 +18,7 @@ import o.lartifa.jam.model.patterns.{ContentMatcher, MatcherParseGroup}
 import o.lartifa.jam.model.tasks.SimpleTask
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext, Step}
 import o.lartifa.jam.plugins.JamPluginLoader
+import o.lartifa.jam.plugins.caiyunai.dream.KeepAliveDreamingActor
 import o.lartifa.jam.plugins.rss.SubscriptionPool
 import o.lartifa.jam.pool.CronTaskPool.TaskDefinition
 import o.lartifa.jam.pool.{CronTaskPool, JamContext, StepPool}
@@ -42,11 +43,11 @@ object JamLoader {
   private val shutdownHookThread: Thread = new Thread(() => {
     val tasks = JamPluginLoader.loadedComponents.shutdownTasks
     if (tasks.nonEmpty) {
-      logger.log(s"[ShutdownTasks] 检测到${BotConfig.name}关闭，正在执行关闭任务...")
+      logger.log(s"[ShutdownTasks] 检测到${JamConfig.config.name}关闭，正在执行关闭任务...")
       tasks.par.map(it => Try(it()).recover(error =>
         logger.error("[ShutdownTasks] 执行关闭任务时出现错误：", error)
       )).seq
-      logger.log(s"[ShutdownTasks] ${BotConfig.name}正在终止")
+      logger.log(s"[ShutdownTasks] ${JamConfig.config.name}正在终止")
     }
   })
 
@@ -58,19 +59,19 @@ object JamLoader {
    * @return 异步结果
    */
   def init(client: PicqBotX, args: Array[String]): Future[Unit] = async {
-    DynamicConfigLoader.reload()
     makeSureDirsExist()
     Memory.init(args.contains("--flyway_repair"))
     await(JamPluginLoader.initJamPluginSystems())
     JamContext.cronTaskPool.getAndSet(CronTaskPool().autoRefreshTaskDefinition())
     await(initSXDL())
     client.getEventManager.registerListeners(QMessageListener, QEventListener, SystemEventListener)
-    client.getCommandManager.registerCommands(MasterCommands.commands*)
+    client.getCommandManager.registerCommands(MasterCommands.commands *)
     Runtime.getRuntime.addShutdownHook(shutdownHookThread)
     SubscriptionPool.init()
     runBootTasks()
     await(BehaviorInitializer.init())
     await(BanList.loadBanList())
+    KeepAliveDreamingActor.showBootMessage()
   }
 
   /**
@@ -82,7 +83,7 @@ object JamLoader {
     if (!JamContext.initLock.get()) {
       DynamicConfigLoader.reload()
       makeSureDirsExist()
-      MasterUtil.notifyAndLog(s"开始重新加载${BotConfig.name}的各个组件")
+      MasterUtil.notifyAndLog(s"开始重新加载${JamConfig.config.name}的各个组件")
       QMessageListener.reloadPreHandleTasks()
       QMessageListener.reloadPostHandleTasks()
       CoolQQLoader.reloadMasterCommands()
@@ -94,6 +95,37 @@ object JamLoader {
       MasterUtil.notifyAndLog("加载完毕！")
     } else {
       MasterUtil.notifyMaster("重新加载进行中...")
+    }
+  }
+
+  /**
+   * R 指令刷新范围
+   *
+   * @param context 指令解析上下文
+   * @return
+   */
+  def rCommand()(implicit context: CommandExecuteContext): Future[Unit] = async {
+    if (!JamContext.initLock.get()) {
+      context.eventMessage.respond(
+        s"""${
+          if (BotConfig.RemoteEditing.enable)
+            "λ> 📥 远程编辑已开启，即将从远程仓库获取最新脚本及资源文件\n"
+          else ""
+        }λ> 🛠 已连接到解析器实例，正在重新解析SXDL（简易定义语言）脚本
+        |λ> ⏰ 注册的定时任务也将被刷新
+        |λ> 🧬 当前解析器版本：v4.0-ARC""".stripMargin)
+      DynamicConfigLoader.reload()
+      QMessageListener.reloadPreHandleTasks()
+      QMessageListener.reloadPostHandleTasks()
+      JamContext.cronTaskPool.get().autoRefreshTaskDefinition()
+      await(BehaviorInitializer.init())
+      await(loadSXDL()).foreach {
+        _.sliding(10, 10).foreach(lines => context.eventMessage.respond(lines.map(it => s"λ> $it").mkString("\n")))
+      }
+      context.eventMessage.respond("λ> 🎉 动态配置和定时任务已全部刷新完毕！")
+      JamContext.initLock.getAndSet(false)
+    } else {
+      context.eventMessage.respond("重新加载已在进行...")
     }
   }
 
@@ -116,7 +148,7 @@ object JamLoader {
     if (tasks.nonEmpty) {
       logger.log("[BootTasks] 正在依次执行启动任务")
       tasks.par.map(it => Try(it()).recover(error =>
-        logger.error(s"[BootTasks] 执行启动任务时出现错误，${BotConfig.name}可能无法正常运作，" +
+        logger.error(s"[BootTasks] 执行启动任务时出现错误，${JamConfig.config.name}可能无法正常运作，" +
           "请查看错误信息并尝试禁用相关插件", error)
       )).seq
       logger.log("[BootTasks] 启动任务执行完成")
@@ -295,30 +327,5 @@ object JamLoader {
       matcherMap.getOrElse(ContentMatcher.STARTS_WITH, List.empty).sortBy(_.stepId * -1) ++
       matcherMap.getOrElse(ContentMatcher.ENDS_WITH, List.empty).sortBy(_.stepId * -1) ++
       matcherMap.getOrElse(ContentMatcher.CONTAINS, List.empty).sortBy(_.stepId * -1)
-  }
-
-  /**
-   * 重新解析 SSDL
-   *
-   * @param context 指令上下文
-   * @return 异步结果
-   */
-  def reloadSSDL()(implicit context: CommandExecuteContext): Future[Unit] = async {
-    if (!JamContext.initLock.get()) {
-      JamContext.initLock.set(true)
-      DynamicConfigLoader.reload()
-      context.eventMessage.respond(
-        s"""${
-          if (BotConfig.RemoteEditing.enable)
-            "λ> 远程编辑已开启，即将从远程仓库获取最新脚本文件...\n"
-          else ""
-        }λ> 已连接到解析器实例，正在重新解析SXDL（简易定义语言）脚本...""".stripMargin)
-      await(loadSXDL()).foreach {
-        _.sliding(10, 10).foreach(lines => context.eventMessage.respond(lines.map(it => s"λ> $it").mkString("\n")))
-      }
-      JamContext.initLock.set(false)
-    } else {
-      context.eventMessage.respond("重新解析正在进行中，请稍后再试...")
-    }
   }
 }

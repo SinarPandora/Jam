@@ -43,7 +43,7 @@ object CoolQQLoader {
   def reloadMasterCommands(): Unit = {
     Option(JamContext.bot.get()).foreach(bot => {
       bot.getCommandManager.getCommands.clear()
-      bot.getCommandManager.registerCommands(MasterCommands.commands: _*)
+      bot.getCommandManager.registerCommands(MasterCommands.commands*)
     })
   }
 }

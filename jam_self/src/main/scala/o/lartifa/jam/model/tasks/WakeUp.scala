@@ -1,7 +1,7 @@
 package o.lartifa.jam.model.tasks
 
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.common.config.{BotConfig, JamConfig}
+import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.common.util.PicqBotUtil.Helper
 import o.lartifa.jam.model.tasks.WakeUp.wakeUp
@@ -31,6 +31,6 @@ object WakeUp {
    */
   def wakeUp(): Unit = {
     JamContext.bot.get().switchToWakeUpMode()
-    logger.log(s"${BotConfig.name}已苏醒")
+    logger.log(s"${JamConfig.config.name}已苏醒")
   }
 }

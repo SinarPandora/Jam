@@ -4,7 +4,7 @@ import cc.moecraft.icq.command.CommandProperties
 import cc.moecraft.icq.command.interfaces.EverywhereCommand
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.icq.user.User
-import o.lartifa.jam.common.config.BotConfig
+import o.lartifa.jam.common.config.JamConfig
 
 import java.util
 import scala.concurrent.duration.Duration
@@ -19,7 +19,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 abstract class MasterEverywhereCommand(prefix: String*)(implicit exec: ExecutionContext) extends EverywhereCommand with MasterCommand {
 
   override final def run(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): String = {
-    if (BotConfig.masterList.contains(sender.getId)) {
+    if (JamConfig.config.forMaster.masterList.contains(sender.getId)) {
       Await.result(task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]), Duration.Inf)
     } else NO_RESPONSE
   }

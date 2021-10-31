@@ -8,7 +8,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.common.util.{MasterUtil, TimeUtil}
 import o.lartifa.jam.database.temporary.Memory.database.db
-import o.lartifa.jam.database.temporary.schema.Tables._
+import o.lartifa.jam.database.temporary.schema.Tables.*
 import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.plugins.rss.PrettyRSSPrinters.PrettyRSSPrinter
 import o.lartifa.jam.plugins.rss.RSSSubscription.{getSourceUrl, logger, scheduler}
@@ -28,7 +28,7 @@ import scala.util.Try
 class RSSSubscription(val source: String, private var _channelName: String, val sourceCategory: String, prettyRSSPrinter: PrettyRSSPrinter,
                       private var _subscribers: Set[ChatInfo]) {
 
-  import o.lartifa.jam.database.temporary.Memory.database.profile.api._
+  import o.lartifa.jam.database.temporary.Memory.database.profile.api.*
 
   private val errorTimes: AtomicInteger = new AtomicInteger(0)
   private var subscription: Option[Disposable] = None
@@ -161,9 +161,9 @@ object RSSSubscription {
    * @param source 源名称
    * @return 源地址
    */
-  private[rss] def getSourceUrl(source: String): String = if (RSSConfig.selfDeployedUrl.nonEmpty) {
-    if (RSSConfig.selfDeployedUrl.endsWith("/")) s"${RSSConfig.selfDeployedUrl}$source"
-    else s"${RSSConfig.selfDeployedUrl}/$source"
+  private[rss] def getSourceUrl(source: String): String = if (RssConfig.deployUrl.nonEmpty) {
+    if (RssConfig.deployUrl.endsWith("/")) s"${RssConfig.deployUrl}$source"
+    else s"${RssConfig.deployUrl}/$source"
   } else s"https://rsshub.app/$source"
 
   def apply(source: String, channel: String, sourceCategory: String, subscribers: Set[ChatInfo] = Set.empty): RSSSubscription = {

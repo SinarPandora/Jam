@@ -3,7 +3,7 @@ package o.lartifa.jam.cool.qq.listener
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.icq.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.common.config.{BotConfig, SystemConfig}
+import o.lartifa.jam.common.config.{JamConfig, PluginConfig}
 import o.lartifa.jam.common.util.{MasterUtil, TriBoolValue}
 import o.lartifa.jam.cool.qq.listener.BanList.isAllowed
 import o.lartifa.jam.cool.qq.listener.asking.Questioner
@@ -36,7 +36,7 @@ object QMessageListener extends IcqListener {
   private var postHandleTasks: List[PostHandleTask] = PostHandleTaskInitializer.tasks
 
   // 决定是否响应前置任务和 SSDL 规则
-  private var willResponse: () => Boolean = createFrequencyFunc(BotConfig.responseFrequency)
+  private var willResponse: () => Boolean = createFrequencyFunc(JamConfig.config.responseFrequency)
 
   /**
    * 监听消息
@@ -85,7 +85,7 @@ object QMessageListener extends IcqListener {
    * @return 是否继续执行剩余步骤
    */
   def preHandleMessage(eventMessage: EventMessage): Future[Boolean] = async {
-    val result: Iterable[Boolean] = if (SystemConfig.MessageListenerConfig.PreHandleTask.runTaskAsync) {
+    val result: Iterable[Boolean] = if (PluginConfig.config.preHandle.runTaskAsync) {
       await(Future.sequence(preHandleTasks.map(_.execute(eventMessage))))
     } else {
       preHandleTasks.map(it => Await.result(it.execute(eventMessage), Duration.Inf))
@@ -108,7 +108,7 @@ object QMessageListener extends IcqListener {
       val tasks = postHandleTasks.filter(it => it.handleOnProcessed == TriBoolValue.Both ||
         ((it.handleOnProcessed == TriBoolValue.True) == contextOpt.isDefined))
       if (tasks.nonEmpty) {
-        val fu = if (SystemConfig.MessageListenerConfig.PostHandleTask.runTaskAsync) {
+        val fu = if (PluginConfig.config.postHandle.runTaskAsync) {
           Future.sequence(tasks.map(_.execute(eventMessage, contextOpt))).map(_ => ())
         } else {
           Future { tasks.foreach(it => Await.result(it.execute(eventMessage, contextOpt), Duration.Inf)) }

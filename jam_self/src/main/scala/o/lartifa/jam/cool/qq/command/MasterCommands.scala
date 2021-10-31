@@ -3,7 +3,7 @@ package o.lartifa.jam.cool.qq.command
 import cc.moecraft.icq.command.interfaces.IcqCommand
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.icq.user.User
-import o.lartifa.jam.common.config.BotConfig
+import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.protocol.{Done, Exit, Fail}
 import o.lartifa.jam.common.util.{ExtraActor, GlobalConstant}
 import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
@@ -144,7 +144,7 @@ object MasterCommands {
      * @return 输出内容
      */
     override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = async {
-      await(JamLoader.reloadSSDL()(CommandExecuteContext(event)))
+      await(JamLoader.rCommand()(CommandExecuteContext(event)))
       NO_RESPONSE
     }
   }
@@ -280,7 +280,7 @@ object MasterCommands {
      */
     override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = {
       WakeUp.wakeUp()
-      Future.successful(s"${BotConfig.name}已苏醒")
+      Future.successful(s"${JamConfig.config.name}已苏醒")
     }
   }
 
@@ -296,7 +296,7 @@ object MasterCommands {
      */
     override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = {
       GoASleep.goASleep()
-      Future.successful(s"${BotConfig.name}已休眠")
+      Future.successful(s"${JamConfig.config.name}已休眠")
     }
   }
 

@@ -3,7 +3,7 @@ package o.lartifa.jam.plugins
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.format.AnsiColor
 import cc.moecraft.logger.{HyLogger, LogLevel}
-import o.lartifa.jam.common.config.{BotConfig, JamPluginConfig}
+import o.lartifa.jam.common.config.{JamConfig, JamPluginConfig}
 import o.lartifa.jam.common.util.{MasterUtil, TimeUtil}
 import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
 import o.lartifa.jam.cool.qq.listener.posthandle.PostHandleTask
@@ -127,7 +127,7 @@ object JamPluginLoader {
     }.getOrElse(0)
 
     if (!insertSuccess) {
-      MasterUtil.notifyAndLog(s"插件安装数量与预期不符，这很可能是一个 bug，若${BotConfig.name}无法正常运作，请联系作者",
+      MasterUtil.notifyAndLog(s"插件安装数量与预期不符，这很可能是一个 bug，若${JamConfig.config.name}无法正常运作，请联系作者",
         LogLevel.WARNING)
     }
 
@@ -329,7 +329,7 @@ object JamPluginLoader {
             await {
               JamLoader.reload().recover(err => {
                 logger.error(s"重新加载过程中出现错误！", err)
-                event.respond(s"重新加载过程中出现错误！请检查${BotConfig.name}的日志")
+                event.respond(s"重新加载过程中出现错误！请检查${JamConfig.config.name}的日志")
                 err
               })
             }

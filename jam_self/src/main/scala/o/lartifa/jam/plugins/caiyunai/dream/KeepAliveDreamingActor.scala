@@ -18,7 +18,6 @@ import requests.Session
 
 import java.util.concurrent.Executors
 import scala.async.Async.{async, await}
-import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -85,9 +84,11 @@ class KeepAliveDreamingActor extends Actor {
           case Left(errMsg) => evt.respond(errMsg); s.break()
           case Right(value) => value
         }
-        val keepAliveTask: Cancellable = context.system.scheduler.scheduleAtFixedRate(1.minute, 3.minutes, that.self, KeepAlive)
+        // TODO 暂时关闭健康检查，用以观察小梦多长时间会掉线
+        // val keepAliveTask: Cancellable = context.system.scheduler
+        //    .scheduleAtFixedRate(1.minute, 3.minutes, that.self, KeepAlive)
         // 切换为登录准备模式
-        handleStage(Data(session, uid, 0, keepAliveTask, models))
+        handleStage(Data(session, uid, 0, null, models))
         evt.respond("登录成功！")
         s.release()
       } else {
@@ -106,7 +107,7 @@ class KeepAliveDreamingActor extends Actor {
     if (data.failCount > 5) {
       logger.warning("彩云小梦登录已过期")
       MasterUtil.notifyMaster("%s，小梦的登录已过期，请重新登录")
-      data.keepAliveTask.cancel()
+      // data.keepAliveTask.cancel()
       that.context.become(initStage())
     } else {
       that.context.become({
@@ -173,4 +174,11 @@ object KeepAliveDreamingActor {
   val instance: ActorRef = ActorCreator.actorOf(Props(new KeepAliveDreamingActor()))
   // 为避免多网络请求阻塞其他消息处理，创建单独线程池
   implicit val ec: ExecutionContext = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(10))
+
+  /**
+   * 输出启动信息
+   */
+  def showBootMessage(): Unit = {
+    MasterUtil.notifyMaster("%s，联想回复需要登录才能使用，请发送：！小梦登录 进行登录")
+  }
 }
