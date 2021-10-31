@@ -114,7 +114,6 @@ object JamLoader {
         }λ> 🛠 已连接到解析器实例，正在重新解析SXDL（简易定义语言）脚本
         |λ> ⏰ 注册的定时任务也将被刷新
         |λ> 🧬 当前解析器版本：v4.0-ARC""".stripMargin)
-      DynamicConfigLoader.reload()
       QMessageListener.reloadPreHandleTasks()
       QMessageListener.reloadPostHandleTasks()
       JamContext.cronTaskPool.get().autoRefreshTaskDefinition()

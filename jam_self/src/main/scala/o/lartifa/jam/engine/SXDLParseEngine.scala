@@ -1,7 +1,7 @@
 package o.lartifa.jam.engine
 
 import better.files.File
-import o.lartifa.jam.common.config.{BotConfig, SystemConfig}
+import o.lartifa.jam.common.config.{BotConfig, DynamicConfigLoader, SystemConfig}
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.engine.proto.Parser
 import o.lartifa.jam.engine.ssdl.parser.*
@@ -56,6 +56,7 @@ object SXDLParseEngine extends Parser {
     if (BotConfig.RemoteEditing.enable) {
       await(RemoteSXDLClient.fetchRemoteScripts(scriptPath))
     }
+    DynamicConfigLoader.reload()
     loadFiles(scriptPath).flatMap {
       case (ssdlFiles, chatInfo) => parseFiles(ssdlFiles, chatInfo)
     }.groupBy(_.isRight)
