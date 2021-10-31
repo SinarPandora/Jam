@@ -1,7 +1,7 @@
 package o.lartifa.jam.common.config
 
 import com.typesafe.config.Config
-import o.lartifa.jam.common.config.PluginConfig.*
+import o.lartifa.jam.common.config.PluginConfig.{DreamAI, PicBot, PostHandle, PreHandle, Rss}
 import o.lartifa.jam.common.exception.ParseFailException
 
 import scala.jdk.CollectionConverters.*
