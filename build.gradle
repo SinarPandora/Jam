@@ -9,5 +9,5 @@ allprojects {
     }
 
     group = "lartifa.o"
-    version = "3.0.7"
+    version = "4.0"
 }
