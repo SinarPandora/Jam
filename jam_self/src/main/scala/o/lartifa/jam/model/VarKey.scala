@@ -10,7 +10,8 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2020/7/18 00:21
  */
-case class VarKey(name: String, category: Category, defaultValue: Option[String] = None) {
+case class VarKey(name: String, category: Category, private var _defaultValue: Option[String] = None) {
+  def defaultValue: Option[String] = _defaultValue
 
   /**
    * 更新变量
@@ -23,6 +24,9 @@ case class VarKey(name: String, category: Category, defaultValue: Option[String]
     category match {
       case VarKey.DB => context.vars.update(name, value)
       case VarKey.Temp => context.tempVars.update(name, value)
+      case VarKey.Mocked =>
+        this._defaultValue = Some(value)
+        Future.successful(value)
     }
   }
 
@@ -37,6 +41,9 @@ case class VarKey(name: String, category: Category, defaultValue: Option[String]
     category match {
       case VarKey.DB => context.vars.updateOrElseSet(name, value)
       case VarKey.Temp => context.tempVars.updateOrElseSet(name, value)
+      case VarKey.Mocked =>
+        this._defaultValue = Some(value)
+        Future.successful(value)
     }
   }
 
@@ -51,6 +58,9 @@ case class VarKey(name: String, category: Category, defaultValue: Option[String]
     category match {
       case VarKey.DB => context.vars.updateOrElseUse(name, value)
       case VarKey.Temp => context.tempVars.updateOrElseUse(name, value)
+      case VarKey.Mocked =>
+        this._defaultValue = Some(value)
+        Future.successful(value)
     }
   }
 
@@ -65,6 +75,7 @@ case class VarKey(name: String, category: Category, defaultValue: Option[String]
     category match {
       case VarKey.DB => context.vars.get(name).map(_.orElse(defaultValue))
       case VarKey.Temp => context.tempVars.get(name).map(_.orElse(defaultValue))
+      case VarKey.Mocked => Future.successful(this._defaultValue)
     }
   }
 
@@ -79,6 +90,9 @@ case class VarKey(name: String, category: Category, defaultValue: Option[String]
     category match {
       case VarKey.DB => context.vars.getOrElseUpdate(name, orElse)
       case VarKey.Temp => context.tempVars.getOrElseUpdate(name, orElse)
+      case VarKey.Mocked =>
+        this._defaultValue = Some(orElse)
+        Future.successful(orElse)
     }
   }
 
@@ -92,6 +106,7 @@ case class VarKey(name: String, category: Category, defaultValue: Option[String]
     category match {
       case VarKey.DB => context.vars.delete(name)
       case VarKey.Temp => context.tempVars.delete(name)
+      case VarKey.Mocked => Future.successful(true)
     }
   }
 }
@@ -103,6 +118,8 @@ object VarKey {
   case object DB extends Category("变量")
 
   case object Temp extends Category("临时变量")
+
+  case object Mocked extends Category("模拟变量")
 
   object Type {
     val temp: Set[String] = Set("临时变量", "*变量", "*$")

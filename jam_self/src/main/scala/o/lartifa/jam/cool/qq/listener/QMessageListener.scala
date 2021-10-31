@@ -3,12 +3,13 @@ package o.lartifa.jam.cool.qq.listener
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.icq.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
+import o.lartifa.jam.common.config.{JamConfig, PluginConfig}
 import o.lartifa.jam.common.util.{MasterUtil, TriBoolValue}
 import o.lartifa.jam.cool.qq.listener.BanList.isAllowed
 import o.lartifa.jam.cool.qq.listener.asking.Questioner
 import o.lartifa.jam.cool.qq.listener.base.ExitCodes
 import o.lartifa.jam.cool.qq.listener.handle.SSDLRuleRunner
+import o.lartifa.jam.cool.qq.listener.interactive.InteractiveSessionListener
 import o.lartifa.jam.cool.qq.listener.posthandle.PostHandleTask
 import o.lartifa.jam.cool.qq.listener.prehandle.PreHandleTask
 import o.lartifa.jam.model.CommandExecuteContext
@@ -35,7 +36,7 @@ object QMessageListener extends IcqListener {
   private var postHandleTasks: List[PostHandleTask] = PostHandleTaskInitializer.tasks
 
   // 决定是否响应前置任务和 SSDL 规则
-  private var willResponse: () => Boolean = createFrequencyFunc(JamConfig.responseFrequency)
+  private var willResponse: () => Boolean = createFrequencyFunc(JamConfig.config.responseFrequency)
 
   /**
    * 监听消息
@@ -46,6 +47,7 @@ object QMessageListener extends IcqListener {
   def listenEventMessage(eventMessage: EventMessage): Unit = {
     if (!JamContext.initLock.get() && isAllowed(eventMessage)) { // 在当前没有锁并且聊天没被禁止的情况下
       recordMessage(eventMessage) // 记录消息
+        .flatMap(it => if (it) InteractiveSessionListener.blockAndInactiveIfExist(eventMessage) else Future.successful(false)) // 处理交互式会话
         .flatMap(it => if (it) Questioner.tryAnswerer(eventMessage) else Future.successful(false)) // 处理存在的询问
         .flatMap(it => if (it && willResponse()) preHandleMessage(eventMessage) else Future.successful(false)) // 处理前置任务
         .foreach(it => if (it) SSDLRuleRunner.executeIfFound(eventMessage) // 执行 SSDL 规则解析
@@ -83,7 +85,7 @@ object QMessageListener extends IcqListener {
    * @return 是否继续执行剩余步骤
    */
   def preHandleMessage(eventMessage: EventMessage): Future[Boolean] = async {
-    val result: Iterable[Boolean] = if (SystemConfig.MessageListenerConfig.PreHandleTask.runTaskAsync) {
+    val result: Iterable[Boolean] = if (PluginConfig.config.preHandle.runTaskAsync) {
       await(Future.sequence(preHandleTasks.map(_.execute(eventMessage))))
     } else {
       preHandleTasks.map(it => Await.result(it.execute(eventMessage), Duration.Inf))
@@ -106,7 +108,7 @@ object QMessageListener extends IcqListener {
       val tasks = postHandleTasks.filter(it => it.handleOnProcessed == TriBoolValue.Both ||
         ((it.handleOnProcessed == TriBoolValue.True) == contextOpt.isDefined))
       if (tasks.nonEmpty) {
-        val fu = if (SystemConfig.MessageListenerConfig.PostHandleTask.runTaskAsync) {
+        val fu = if (PluginConfig.config.postHandle.runTaskAsync) {
           Future.sequence(tasks.map(_.execute(eventMessage, contextOpt))).map(_ => ())
         } else {
           Future { tasks.foreach(it => Await.result(it.execute(eventMessage, contextOpt), Duration.Inf)) }

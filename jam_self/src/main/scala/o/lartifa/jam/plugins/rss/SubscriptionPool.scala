@@ -1,21 +1,20 @@
 package o.lartifa.jam.plugins.rss
 
-import java.util.stream.Collectors
-
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.database.temporary.Memory.database.db
-import o.lartifa.jam.database.temporary.schema.Tables._
+import o.lartifa.jam.database.temporary.schema.Tables.*
 import o.lartifa.jam.model.behaviors.ReplyToFriend
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
-import o.lartifa.jam.pool.JamContext
+import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
 import scala.async.Async.{async, await}
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.AnsiColor
+import scala.jdk.CollectionConverters.*
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -26,7 +25,7 @@ import scala.util.{Failure, Success, Try}
  */
 object SubscriptionPool extends ReplyToFriend {
 
-  import o.lartifa.jam.database.temporary.Memory.database.profile.api._
+  import o.lartifa.jam.database.temporary.Memory.database.profile.api.*
 
   private val rssSubscriptions: mutable.Map[String, RSSSubscription] = mutable.Map.empty
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(SubscriptionPool.getClass)
@@ -35,18 +34,17 @@ object SubscriptionPool extends ReplyToFriend {
    * 在果酱苏醒后重新建立 RSS 订阅
    */
   def init(): Unit = {
-    import RSSSubscription.rssRecordPool
     db.run(RssSubscription.result).map(list => {
       rssSubscriptions ++= list.map(RSSSubscription.applyAndStart).toMap
       logger.log(s"${AnsiColor.GREEN}RSS订阅已恢复，已导入${rssSubscriptions.size}个源，监听中...")
-    }).onComplete {
+    })(ThreadPools.DB).onComplete {
       case Failure(exception) =>
         logger.error("从数据库恢复源时出错", exception)
         MasterUtil.notifyMaster("%s，自动恢复订阅失败，目前订阅功能无法使用，请检查数据源是否正常")
       case Success(_) => if (SystemConfig.debugMode && rssSubscriptions.nonEmpty) {
         MasterUtil.notifyMaster(s"%s，RSS订阅已恢复，已导入${rssSubscriptions.size}个源")
       }
-    }
+    }(ThreadPools.DEFAULT)
   }
 
   /**
@@ -67,10 +65,10 @@ object SubscriptionPool extends ReplyToFriend {
             if (subscription.subscribers.contains(chatInfo)) {
               context.eventMessage.respond("已经订阅过啦")
             } else onUpdateCallback(subscription, chatInfo)
-          case None => await(createSubscription(_source)).foreach(it => {
+          case None => createSubscription(_source).foreach(_.map(it => {
             rssSubscriptions += _source -> it
             onUpdateCallback(it, chatInfo)
-          })
+          }))
         }
       }
     }
@@ -209,7 +207,7 @@ object SubscriptionPool extends ReplyToFriend {
       if (prefix.isEmpty) content
       else prefix
     }
-    Try(rss.read(RSSSubscription.getSourceUrl(source)).limit(1).collect(Collectors.toList())) match {
+    Try(rss.read(RSSSubscription.getSourceUrl(source)).limit(1).iterator().asScala) match {
       case Failure(exception) =>
         logger.error(s"获取源数据时失败，该源可能不属于 RSSHUB，源名称：$source", exception)
         context.eventMessage.respond("订阅失败，请检查源是否属于 RSSHUB")
@@ -220,13 +218,14 @@ object SubscriptionPool extends ReplyToFriend {
           context.eventMessage.respond("源没有响应，稍后再试试？")
           None
         } else {
-          val channelName = items.get(0).getChannel.getTitle
+          val channelName = items.next().getChannel.getTitle
           val subscription = RSSSubscription(source, channelName, sourceCategory)
           await {
             db.run {
               RssSubscription
-                .map(row => (row.source, row.channel, row.sourceCategory, row.subscribers)) += (
-                source, channelName, sourceCategory, "")
+                .map(row => (row.source, row.channel, row.sourceCategory, row.subscribers)) += ((
+                source, channelName, sourceCategory, ""
+              ))
             }
           }
           Some(subscription)

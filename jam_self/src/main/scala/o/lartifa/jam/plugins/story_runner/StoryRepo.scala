@@ -4,8 +4,8 @@ import o.lartifa.jam.common.util.TimeUtil
 import o.lartifa.jam.database.temporary.schema.Tables
 import o.lartifa.jam.database.temporary.schema.Tables._
 import o.lartifa.jam.model.ChatInfo
+import o.lartifa.jam.pool.ThreadPools
 
-import java.util.concurrent.Executors
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -21,8 +21,7 @@ object StoryRepo {
   import o.lartifa.jam.database.temporary.Memory.database.db
   import o.lartifa.jam.database.temporary.Memory.database.profile.api._
 
-  private implicit val repoScopedDataTransformEC: ExecutionContext =
-    ExecutionContext.fromExecutor(Executors.newWorkStealingPool(Runtime.getRuntime.availableProcessors() * 2))
+  private implicit val repoScopedDataTransformEC: ExecutionContext = ThreadPools.DEFAULT
 
   /**
    * 列出全部故事

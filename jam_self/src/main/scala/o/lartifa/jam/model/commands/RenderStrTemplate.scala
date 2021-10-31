@@ -3,7 +3,7 @@ package o.lartifa.jam.model.commands
 import o.lartifa.jam.common.exception.VarNotFoundException
 import o.lartifa.jam.model.{CommandExecuteContext, VarKey}
 
-import scala.async.Async._
+import scala.async.Async.*
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -23,7 +23,7 @@ case class RenderStrTemplate(template: String, varKeys: Seq[VarKey] = Seq()) ext
     else {
       val vars: Seq[String] = await(Future.sequence(varKeys.map(x => x.query.map(x -> _))))
         .map { case (name, opt) => opt.getOrElse(throw VarNotFoundException(name)) }
-      template.format(vars: _*)
+      template.format(vars*)
     }
   }
 

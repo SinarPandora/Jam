@@ -16,8 +16,8 @@ dependencies {
     // Scala
     api("org.scala-lang:scala-library:$scala_version")
     api("org.scala-lang:scala-reflect:$scala_version")
-    api("org.scala-lang.modules:scala-async_2.13:0.10.0")
-    api("org.scala-lang.modules:scala-parallel-collections_2.13:0.2.0")
+    api('org.scala-lang.modules:scala-async_2.13:1.0.0')
+    api('org.scala-lang.modules:scala-parallel-collections_2.13:1.0.3')
 
     // Scala extension
     api("org.typelevel:cats-core_2.13:$cats_version")
@@ -31,5 +31,5 @@ dependencies {
     testImplementation("org.scalactic:scalactic_2.13:$scala_test_version")
     testImplementation("org.scalatest:scalatest_2.13:$scala_test_version")
     testImplementation("org.scalamock:scalamock_2.13:4.4.0")
-    testRuntime("com.vladsch.flexmark:flexmark-all:0.35.10")
+    testImplementation("com.vladsch.flexmark:flexmark-all:0.35.10")
 }

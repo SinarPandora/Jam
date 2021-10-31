@@ -19,7 +19,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 abstract class MasterEverywhereCommand(prefix: String*)(implicit exec: ExecutionContext) extends EverywhereCommand with MasterCommand {
 
   override final def run(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): String = {
-    if (JamConfig.masterList.contains(sender.getId)) {
+    if (JamConfig.config.forMaster.masterList.contains(sender.getId)) {
       Await.result(task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]), Duration.Inf)
     } else NO_RESPONSE
   }

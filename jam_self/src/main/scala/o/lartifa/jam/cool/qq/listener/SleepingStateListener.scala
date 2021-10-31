@@ -4,7 +4,7 @@ import ammonite.ops.PipeableImplicit
 import cc.moecraft.icq.event.events.message.{EventMessage, EventPrivateMessage}
 import cc.moecraft.icq.event.{EventHandler, IcqListener}
 import cc.moecraft.icq.sender.message.components.ComponentAt
-import o.lartifa.jam.common.config.{JamCharacter, JamConfig}
+import o.lartifa.jam.common.config.{BotConfig, JamConfig}
 
 import scala.util.Random
 
@@ -15,8 +15,8 @@ import scala.util.Random
  * 2020/9/19 10:45
  */
 object SleepingStateListener extends IcqListener {
-  private val balderdash: List[String] = JamCharacter.balderdash
-  private lazy val atMyself: String = new ComponentAt(JamConfig.qID).toString
+  private def balderdash: List[String] = JamConfig.config.balderdash
+  private lazy val atMyself: String = new ComponentAt(BotConfig.qID).toString
 
   /**
    * 监听消息

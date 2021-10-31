@@ -1,14 +1,13 @@
 package o.lartifa.jam.backend
 
-import java.io.{BufferedReader, File, FileReader}
-import java.nio.file.Paths
-
 import cc.moecraft.logger.format.AnsiColor
+import o.lartifa.jam.common.config.BotConfig.{password, qID}
 import o.lartifa.jam.common.config.CoolQConfig
-import o.lartifa.jam.common.config.JamConfig.{password, qID}
 import o.lartifa.jam.pool.JamContext
 
-import scala.sys.process._
+import java.io.{BufferedReader, File, FileReader}
+import java.nio.file.Paths
+import scala.sys.process.*
 import scala.util.control.Breaks.{break, breakable}
 
 /**

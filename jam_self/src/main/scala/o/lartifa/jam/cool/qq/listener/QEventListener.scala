@@ -25,6 +25,7 @@ import scala.util.Random
  */
 object QEventListener extends IcqListener {
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(QEventListener.getClass)
+
   /**
    * 监听全部通知事件
    *
@@ -32,12 +33,14 @@ object QEventListener extends IcqListener {
    */
   @EventHandler
   def handleNoticeEvent(event: EventNotice): Unit = {
-    val evt = event match {
-      case evt: EventNoticeFriendPoke => PokeEvent(evt)
-      case evt: EventNoticeGroupPoke => PokeInGroupEvent(evt)
-      case _ => return // 其他事件直接忽略
+    if (!JamContext.initLock.get()) {
+      val evt = event match {
+        case evt: EventNoticeFriendPoke => PokeEvent(evt)
+        case evt: EventNoticeGroupPoke => PokeInGroupEvent(evt)
+        case _ => return // 其他事件直接忽略
+      }
+      handleEvent(evt)
     }
-    handleEvent(evt)
   }
 
   /**
@@ -47,6 +50,7 @@ object QEventListener extends IcqListener {
    */
   private def handleEvent(event: CQEvent): Unit = {
     implicit val context: CommandExecuteContext = CommandExecuteContext(event)
+    if (!BanList.isAllowed(event.chatInfo)) return
     buildSearchPath(event.chatInfo).find(matcher => matcher.isMatched(event.name)).foreach {
       case ContentMatcher(stepId, _, _, _) =>
         val handleCost = new StopWatch()
@@ -75,13 +79,13 @@ object QEventListener extends IcqListener {
    * @return 搜索路径
    */
   private def buildSearchPath(chatInfo: ChatInfo): List[ContentMatcher] = {
-    import EvtMatchers._
+    import EvtMatchers.*
     val customMatchers = custom.get().get(chatInfo.chatType).flatMap(_.get(chatInfo.chatId)).getOrElse(List.empty)
     val chatTypeScopeMatchers = (chatInfo.chatType match {
       case MessageType.PRIVATE => globalPrivate
       case MessageType.GROUP | MessageType.DISCUSS => globalGroup
     }).get()
-    if (JamConfig.matchOutOfOrder) {
+    if (JamConfig.config.matchOutOfOrder) {
       Random.shuffle(customMatchers) ++ Random.shuffle(chatTypeScopeMatchers) ++ Random.shuffle(global.get())
     } else {
       customMatchers ++ chatTypeScopeMatchers ++ global.get()

@@ -2,14 +2,14 @@ package o.lartifa.jam.model.tasks
 
 import better.files.File
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.common.config.{JamCharacter, JamConfig, SystemConfig}
+import o.lartifa.jam.common.config.{JamConfig, SystemConfig}
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.common.util.PicqBotUtil.Helper
 import o.lartifa.jam.model.tasks.GoASleep.{goASleep, logger}
 import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.pool.JamContext
 
-import scala.collection.parallel.CollectionConverters._
+import scala.collection.parallel.CollectionConverters.*
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
@@ -21,7 +21,7 @@ import scala.util.Try
  */
 class GoASleep(name: String) extends JamCronTask(name) {
   override def run()(implicit exec: ExecutionContext): Future[Unit] = {
-    MasterUtil.notifyMaster(JamCharacter.ForMaster.goodNight)
+    MasterUtil.notifyMaster(JamConfig.config.forMaster.goodNight)
     goASleep()
     // 清理消息记录
     val period = SystemConfig.cleanUpMessagePeriod
@@ -32,7 +32,9 @@ class GoASleep(name: String) extends JamCronTask(name) {
       })
     }
     logger.log(s"正在清理缓存文件夹...")
-    Try(File(SystemConfig.tempDir).clear()).recover(err => {
+    Try(File(SystemConfig.tempDir).list.foreach(file => {
+      if (file.isDirectory) file.clear() else file.delete()
+    })).recover(err => {
       logger.warning("缓存文件夹清理失败，某些文件可能被占用，清理任务将在下次睡眠后进行")
       err
     })
@@ -53,6 +55,6 @@ object GoASleep {
    */
   def goASleep(): Unit = {
     JamContext.bot.get().switchToSleepMode()
-    logger.log(s"${JamConfig.name}已经休眠")
+    logger.log(s"${JamConfig.config.name}已经休眠")
   }
 }

@@ -1,9 +1,9 @@
 package o.lartifa.jam.model.commands
 
-import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventPrivateMessage}
-import o.lartifa.jam.cool.qq.listener.asking.{Answerer, Result}
+import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.cool.qq.listener.interactive.{Interactive, InteractiveSession}
 import o.lartifa.jam.model.CommandExecuteContext
-import o.lartifa.jam.model.commands.Ask.AnswererType
+import o.lartifa.jam.model.commands.Ask.{AnswererType, AnyBody}
 
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
@@ -15,7 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * 2020/9/27 10:26
  */
 case class Ask(question: RenderStrTemplate, answererType: AnswererType, askMatchers: Map[String, Command[_]], defaultCallback: Option[Command[_]])
-  extends Command[Unit] {
+  extends Command[Unit] with Interactive {
   /**
    * 执行
    *
@@ -26,33 +26,30 @@ case class Ask(question: RenderStrTemplate, answererType: AnswererType, askMatch
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
     val result = await(question.execute())
     reply(result)
-    answerer ? { ctx =>
-      askMatchers.get(ctx.event.message.trim) match {
-        case Some(command) => command.execute().map(_ => Result.Complete)
-        case None => defaultCallback.map(it => {
-          it.execute().map(_ => Result.Complete)
-        }).getOrElse(Future.successful(Result.KeepCountAndContinueAsking))
+    interact(context.msgSender) { (session, event) =>
+      if (answererType == AnyBody || event.getSenderId == context.eventMessage.getSenderId) {
+        answer(session, event)
       }
     }
   }
 
   /**
-   * 获取回答者
+   * 提问与问答
    *
+   * @param session 交互式会话
+   * @param event   消息对象
    * @param context 执行上下文
-   * @return 回答者
+   * @param exec    异步上下文
    */
-  private def answerer(implicit context: CommandExecuteContext): Answerer = {
-    answererType match {
-      case Ask.CurrentSender =>
-        Answerer.sender
-      case Ask.AnyBody =>
-        context.eventMessage match {
-          case _: EventGroupOrDiscussMessage =>
-            Answerer.anyInThisSession
-          case _: EventPrivateMessage =>
-            Answerer.sender
-        }
+  private def answer(session: InteractiveSession, event: EventMessage)(implicit context: CommandExecuteContext, exec: ExecutionContext): Unit = {
+    askMatchers.find {
+      case (key, _) => key.equalsIgnoreCase(event.message.trim)
+    } match {
+      case Some((_, command)) => command.execute().foreach(_ => session.release())
+      case None => defaultCallback.map(_.execute().foreach(_ => session.release())) match {
+        case None => session.release()
+        case _ =>
+      }
     }
   }
 }

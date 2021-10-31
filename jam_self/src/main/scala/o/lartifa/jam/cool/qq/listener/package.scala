@@ -1,12 +1,13 @@
 package o.lartifa.jam.cool.qq
 
 import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
+import o.lartifa.jam.common.util.GlobalConstant.MessageType
+import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.model.patterns.MatcherGroup
-import o.lartifa.jam.pool.JamContext
+import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
-import java.util.concurrent.Executors
 import scala.collection.mutable
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Listener 包对象
@@ -15,8 +16,7 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future}
  * 2020/9/18 21:26
  */
 package object listener {
-  private[listener] implicit val listenerCommonPool: ExecutionContextExecutor =
-    ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
+  private[listener] implicit val listenerCommonPool: ExecutionContext = ThreadPools.DEFAULT
 
   /**
    * 消息捕获器组
@@ -71,6 +71,19 @@ package object listener {
         case msg: EventGroupOrDiscussMessage =>
           !(BanList.group.contains(msg.getGroup.getId) || BanList.user.contains(msg.getSenderId))
         case msg: EventPrivateMessage => !BanList.user.contains(msg.getSenderId)
+      }
+    }
+
+    /**
+     * 检查消息是否允许处理
+     *
+     * @param chatInfo 会话信息
+     * @return 是否允许
+     */
+    def isAllowed(chatInfo: ChatInfo): Boolean = {
+      chatInfo.chatType match {
+        case MessageType.GROUP | MessageType.DISCUSS => !BanList.group.contains(chatInfo.chatId)
+        case MessageType.PRIVATE => !BanList.user.contains(chatInfo.chatId)
       }
     }
   }

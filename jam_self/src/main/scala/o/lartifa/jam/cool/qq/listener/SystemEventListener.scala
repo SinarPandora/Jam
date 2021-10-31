@@ -24,8 +24,8 @@ object SystemEventListener extends IcqListener {
    * @param event 加群事件
    */
   @EventHandler
-  def autoAddGroupAlt(event: EventGroupInviteRequest): Unit = {
-    if (JamConfig.autoAcceptGroupRequest) {
+  def autoAddGroup(event: EventGroupInviteRequest): Unit = {
+    if (JamConfig.config.autoAcceptGroupRequest) {
       event.accept()
     }
     event.getBot.getAccountManager.refreshCache()
@@ -38,7 +38,7 @@ object SystemEventListener extends IcqListener {
    */
   @EventHandler
   def autoAddFriends(event: EventFriendRequest): Unit = {
-    if (JamConfig.autoAcceptFriendRequest) {
+    if (JamConfig.config.autoAcceptFriendRequest) {
       event.accept()
     }
     event.getBot.getAccountManager.refreshCache()

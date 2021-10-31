@@ -6,6 +6,7 @@ package o.lartifa.jam.cool.qq.listener.asking
  * Author: sinar
  * 2020/9/18 21:46
  */
+@deprecated(since = "3.1", message = "Please use o.lartifa.jam.cool.qq.listener.interactive")
 sealed abstract class Result
 
 object Result {

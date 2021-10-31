@@ -1,8 +1,5 @@
 package o.lartifa.jam.cool.qq.listener.asking
 
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.{Executors, ScheduledExecutorService, ScheduledFuture, TimeUnit}
-
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.util.MasterUtil
@@ -11,6 +8,8 @@ import o.lartifa.jam.cool.qq.listener.asking.Questioner.QuestionContext
 import o.lartifa.jam.cool.qq.listener.listenerCommonPool
 import o.lartifa.jam.pool.JamContext
 
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.{Executors, ScheduledExecutorService, ScheduledFuture, TimeUnit}
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
@@ -21,6 +20,7 @@ import scala.concurrent.duration.Duration
  * Author: sinar
  * 2020/9/18 21:44
  */
+@deprecated(since = "3.1", message = "Please use o.lartifa.jam.cool.qq.listener.interactive")
 case class Question(hit: (EventMessage, Answerer) => Boolean, answerer: Answerer,
                     times: AtomicInteger = new AtomicInteger(1),
                     timeout: Option[Duration],

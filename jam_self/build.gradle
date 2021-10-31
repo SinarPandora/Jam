@@ -24,11 +24,12 @@ distributions {
                 exclude "*test*"
                 exclude "*local*"
             }
-            into("backend") {
-                from "../jam_mirai_backend/mirai_console/backend.jar"
-            }
         }
     }
+}
+
+tasks.withType(ScalaCompile) {
+    scalaCompileOptions.additionalParameters = ['-Xsource:3', '-Xasync']
 }
 
 [distZip, distTar]*.dependsOn tasks.findByPath(':jam_mirai_backend:downloadBackend')
@@ -63,17 +64,17 @@ dependencies {
     api("org.scala-lang:scala-library:$scala_version")
 
     // Language extensions
-    api("com.chuusai:shapeless_2.13:2.3.3")
+    api('com.chuusai:shapeless_2.13:2.3.7')
     api("org.scala-lang:scala-reflect:$scala_version")
-    api("org.scala-lang.modules:scala-async_2.13:0.10.0")
-    api("org.scala-lang.modules:scala-parallel-collections_2.13:0.2.0")
+    api('org.scala-lang.modules:scala-async_2.13:1.0.0')
+    api('org.scala-lang.modules:scala-parallel-collections_2.13:1.0.3')
 
     // Core
     api(project(":picq_bot_x_fork"))
     api(project(":jam_utils"))
 
     // Meta
-    api("com.jayway.jsonpath:json-path:2.4.0")
+    api('com.jayway.jsonpath:json-path:2.6.0')
     api("org.codehaus.groovy:groovy-all:$groovy_version")
 
     // Database
@@ -81,35 +82,37 @@ dependencies {
     api("com.typesafe.slick:slick-codegen_2.13:$slick_version")
     api("com.typesafe.slick:slick-hikaricp_2.13:$slick_version")
     api("com.h2database:h2:1.4.200")
-    api("org.postgresql:postgresql:42.2.14")
-    api("org.flywaydb:flyway-core:6.5.5")
+    api('org.postgresql:postgresql:42.2.23')
+    api('org.flywaydb:flyway-core:7.14.1')
 
     // Tools
-    api("org.eclipse.jgit:org.eclipse.jgit:5.10.0.202012080955-r")
+    api('org.eclipse.jgit:org.eclipse.jgit:5.12.0.202106070339-r')
     // 暂时修复因为 JCenter 关闭而无法导入的包
     // 原始导入：api("com.apptastic:rssreader:2.5.0")
     api(files("./libs/rssreader-2.2.3.jar"))
     api("org.reflections:reflections:0.9.12")
     api("com.typesafe.akka:akka-actor_2.13:$akka_verion")
-    api("tv.cntt:glokka_2.13:2.6.1")
+    api("tv.cntt:glokka_2.13:2.6.1") {
+        exclude group: 'com.typesafe.akka'
+    }
     api("io.reactivex.rxjava3:rxjava:$rx_extension_version")
-    api("com.lihaoyi:ammonite-ops_2.13:2.1.4")
+    api('com.lihaoyi:ammonite-ops_2.13:2.4.0-19-f4790b61')
     api("com.github.pathikrit:better-files_2.13:3.9.1")
-    api("com.lihaoyi:requests_2.13:0.6.5")
-    api("com.lihaoyi:upickle_2.13:1.2.2")
-    api("com.lihaoyi:ujson_2.13:1.2.2")
-    api("org.jsoup:jsoup:1.13.1")
+    api('com.lihaoyi:requests_2.13:0.6.9')
+    api('com.lihaoyi:upickle_2.13:1.4.1')
+    api('com.lihaoyi:ujson_2.13:1.4.1')
+    api('org.jsoup:jsoup:1.14.2')
     api("net.redhogs.cronparser:cron-parser-core:3.5")
     api("com.bladecoder.ink:blade-ink:1.0.0")
-    api("com.sksamuel.scrimage:scrimage-core:4.0.17") {
+    api('com.sksamuel.scrimage:scrimage-core:4.0.22') {
         exclude group: "ch.qos.logback", module: "logback-classic"
     }
-    api("com.github.kokorin.jaffree:jaffree:2021-05-02")
-    implementation("org.slf4j:slf4j-simple:1.7.30")
+    api('com.github.kokorin.jaffree:jaffree:2021.08.31')
+    implementation('org.slf4j:slf4j-simple:1.7.32')
 
     // Test
     testImplementation("org.scalactic:scalactic_2.13:$scala_test_version")
     testImplementation("org.scalatest:scalatest_2.13:$scala_test_version")
-    testImplementation("org.scalamock:scalamock_2.13:4.4.0")
-    testRuntime("com.vladsch.flexmark:flexmark-all:0.35.10")
+    testImplementation('org.scalamock:scalamock_2.13:5.1.0')
+    testRuntimeOnly('com.vladsch.flexmark:flexmark-all:0.62.2')
 }

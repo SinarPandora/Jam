@@ -19,9 +19,9 @@ class ChangeRespFrequency(val freq: Int) extends JamCronTask(name = "回复频�
   override def run()(implicit exec: ExecutionContext): Future[Unit] = {
     QMessageListener.adjustFrequency(freq)
     if (SystemConfig.debugMode) {
-      MasterUtil.notifyMaster(s"${JamConfig.name}的回复频已变更为：$freq%")
+      MasterUtil.notifyMaster(s"${JamConfig.config.name}的回复频已变更为：$freq%")
     }
-    logger.log(s"${JamConfig.name}的回复频率已变更为：$freq%")
+    logger.log(s"${JamConfig.config.name}的回复频率已变更为：$freq%")
     Future.successful(())
   }
 }

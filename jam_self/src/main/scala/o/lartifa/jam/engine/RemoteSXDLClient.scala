@@ -2,7 +2,7 @@ package o.lartifa.jam.engine
 
 import better.files.File
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.common.config.JamConfig.RemoteEditing
+import o.lartifa.jam.common.config.BotConfig.RemoteEditing
 import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.common.util.MasterUtil
@@ -12,7 +12,7 @@ import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.ResetCommand.ResetType
 import org.eclipse.jgit.transport.{URIish, UsernamePasswordCredentialsProvider}
 
-import java.io.{File => JFile}
+import java.io.File as JFile
 import java.nio.file.Paths
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success, Try}

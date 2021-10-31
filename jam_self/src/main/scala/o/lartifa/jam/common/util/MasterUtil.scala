@@ -2,7 +2,7 @@ package o.lartifa.jam.common.util
 
 import cc.moecraft.icq.sender.IcqHttpApi
 import cc.moecraft.logger.{HyLogger, LogLevel}
-import o.lartifa.jam.common.config.{JamCharacter, JamConfig}
+import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.pool.JamContext
 
 /**
@@ -21,9 +21,9 @@ object MasterUtil {
    *
    * @param message 信息
    */
-def notifyMaster(message: String): Unit = {
-    JamConfig.masterList.foreach(qid =>
-      httpApi.sendPrivateMsg(qid, message.format(JamCharacter.ForMaster.name))
+  def notifyMaster(message: String): Unit = {
+    JamConfig.config.forMaster.masterList.foreach(qid =>
+      httpApi.sendPrivateMsg(qid, message.format(JamConfig.config.forMaster.name))
     )
   }
 
@@ -36,8 +36,8 @@ def notifyMaster(message: String): Unit = {
    * @param error    错误内容
    */
   def notifyAndLog(message: String, logLevel: LogLevel = LogLevel.LOG, error: Option[Throwable] = None): Unit = {
-    JamConfig.masterList.foreach(qid =>
-      httpApi.sendPrivateMsg(qid, message.format(JamCharacter.ForMaster.name))
+    JamConfig.config.forMaster.masterList.foreach(qid =>
+      httpApi.sendPrivateMsg(qid, message.format(JamConfig.config.forMaster.name))
     )
     if (logLevel == LogLevel.ERROR) {
       error match {
@@ -54,8 +54,8 @@ def notifyMaster(message: String): Unit = {
    * @param e       错误
    */
   def notifyAndLogError(message: String, e: Throwable): Unit = {
-    JamConfig.masterList.foreach(qid =>
-      httpApi.sendPrivateMsg(qid, message.format(JamCharacter.ForMaster.name))
+    JamConfig.config.forMaster.masterList.foreach(qid =>
+      httpApi.sendPrivateMsg(qid, message.format(JamConfig.config.forMaster.name))
     )
     logger.error(message, e)
   }

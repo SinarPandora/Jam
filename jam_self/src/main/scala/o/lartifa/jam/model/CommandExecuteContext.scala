@@ -1,13 +1,13 @@
 package o.lartifa.jam.model
 
 import cc.moecraft.icq.event.events.message.{EventGroupMessage, EventMessage, EventPrivateMessage}
-import o.lartifa.jam.common.config.JamConfig
+import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.cool.qq.listener.base.ExitCodes
 import o.lartifa.jam.cool.qq.listener.base.ExitCodes.ExitCode
 import o.lartifa.jam.cool.qq.listener.event.CQEvent
-import o.lartifa.jam.pool._
+import o.lartifa.jam.pool.*
 
 import java.sql.Timestamp
 import java.time.Instant
@@ -31,6 +31,11 @@ case class CommandExecuteContext(eventMessage: EventMessage, vars: DBVarPool,
    * 当前聊天会话的信息
    */
   val chatInfo: ChatInfo = ChatInfo(eventMessage)
+
+  /**
+   * 当前聊天的发送者
+   */
+  val msgSender: SpecificSender = SpecificSender(this.chatInfo, eventMessage.getSenderId)
 }
 
 object CommandExecuteContext {
@@ -70,14 +75,14 @@ object CommandExecuteContext {
         mocked
       case MessageType.PRIVATE =>
         val mocked = new EventPrivateMessage()
-        mocked.setSenderId(event.chatInfo.chatId)
         mocked.setSubType(MessageType.EVENT)
         mocked
       case _ => throw ExecutionException("不支持的消息类型")
     }
+    mockedMessage.setSenderId(event.senderId)
     mockedMessage.setPostType(MessageType.EVENT)
     mockedMessage.setMessageType(MessageType.EVENT)
-    mockedMessage.setSelfId(JamConfig.qID)
+    mockedMessage.setSelfId(BotConfig.qID)
     mockedMessage.setBot(JamContext.bot.get())
     new CommandExecuteContext(
       mockedMessage,

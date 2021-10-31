@@ -10,10 +10,10 @@ import o.lartifa.jam.cool.qq.listener.posthandle.PostHandleTask
 import o.lartifa.jam.cool.qq.listener.prehandle.PreHandleTask
 import o.lartifa.jam.database.temporary.Memory.database.db
 import o.lartifa.jam.database.temporary.schema.Tables
-import o.lartifa.jam.database.temporary.schema.Tables._
+import o.lartifa.jam.database.temporary.schema.Tables.*
 import o.lartifa.jam.engine.JamLoader
 import o.lartifa.jam.engine.ssdl.parser.SSDLCommandParser
-import o.lartifa.jam.engine.ssdl.parser.SSDLCommandParser._
+import o.lartifa.jam.engine.ssdl.parser.SSDLCommandParser.*
 import o.lartifa.jam.model.tasks.LifeCycleTask
 import o.lartifa.jam.plugins.api.JamPluginInstaller
 import o.lartifa.jam.pool.CronTaskPool.TaskDefinition
@@ -23,7 +23,7 @@ import org.reflections.Reflections
 import scala.async.Async.{async, await}
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -36,7 +36,7 @@ object JamPluginLoader {
 
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(JamPluginLoader.getClass)
 
-  import o.lartifa.jam.database.temporary.Memory.database.profile.api._
+  import o.lartifa.jam.database.temporary.Memory.database.profile.api.*
 
   case class LoadedComponents
   (
@@ -127,7 +127,7 @@ object JamPluginLoader {
     }.getOrElse(0)
 
     if (!insertSuccess) {
-      MasterUtil.notifyAndLog(s"插件安装数量与预期不符，这很可能是一个 bug，若${JamConfig.name}无法正常运作，请联系作者",
+      MasterUtil.notifyAndLog(s"插件安装数量与预期不符，这很可能是一个 bug，若${JamConfig.config.name}无法正常运作，请联系作者",
         LogLevel.WARNING)
     }
 
@@ -329,7 +329,7 @@ object JamPluginLoader {
             await {
               JamLoader.reload().recover(err => {
                 logger.error(s"重新加载过程中出现错误！", err)
-                event.respond(s"重新加载过程中出现错误！请检查${JamConfig.name}的日志")
+                event.respond(s"重新加载过程中出现错误！请检查${JamConfig.config.name}的日志")
                 err
               })
             }

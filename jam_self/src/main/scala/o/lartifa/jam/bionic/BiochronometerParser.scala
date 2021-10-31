@@ -2,8 +2,8 @@ package o.lartifa.jam.bionic
 
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
-import com.typesafe.config.Config
-import o.lartifa.jam.common.config.{JamCharacter, JamConfig}
+import o.lartifa.jam.common.config.JamConfig
+import o.lartifa.jam.common.config.JamConfig.Biochronometer
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.engine.proto.Parser
@@ -11,7 +11,6 @@ import o.lartifa.jam.model.tasks.{ChangeRespFrequency, GoASleep}
 import o.lartifa.jam.pool.JamContext
 
 import java.time.LocalTime
-import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Try}
 
 /**
@@ -21,7 +20,7 @@ import scala.util.{Failure, Try}
  * 2020/1/23 15:19
  */
 object BiochronometerParser extends Parser {
-  private val config: Config = JamConfig.config.getConfig("biochronometer")
+  private def config: Biochronometer = JamConfig.config.biochronometer
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(BiochronometerParser.getClass)
 
   /**
@@ -29,20 +28,18 @@ object BiochronometerParser extends Parser {
    */
   @throws[ParseFailException]
   def parse(): Unit = {
-    val isAllTimeMode = Try(config.getBoolean("all_time_at_your_service"))
-      .getOrElse(throw ParseFailException("'全天候模式'需设置为 true 或者 false（没有引号）"))
-    if (!isAllTimeMode) {
+    if (!config.allTimeAtYourService) {
       val now = LocalTime.now().getHour
       val wakeAt = parseWakeUp()
       val sleepAt = parseGoASleep()
-      need(wakeAt != sleepAt, s"起床时间不能和就寝时间相同，${JamConfig.name}的行为可能不正常，建议立刻修改并重新启动")
+      need(wakeAt != sleepAt, s"起床时间不能和就寝时间相同，${JamConfig.config.name}的行为可能不正常，建议立刻修改并重新启动")
       // 如果在睡眠期间被重新唤醒，会继续睡
       val continueSleep = if (wakeAt < sleepAt && (wakeAt > now || now >= sleepAt)) true
       else if (sleepAt == 0 && (wakeAt > now || now == 0)) true
       else if (now >= sleepAt && now < wakeAt) true
       else false
       if (continueSleep) {
-        MasterUtil.notifyMaster(JamCharacter.ForMaster.goodNight)
+        MasterUtil.notifyMaster(JamConfig.config.forMaster.goodNight)
         GoASleep.goASleep()
       }
     }
@@ -53,8 +50,7 @@ object BiochronometerParser extends Parser {
    * 解析起床时间
    */
   private def parseWakeUp(): Int = {
-    val wakeUpTime = Try(config.getInt("wake_up_time"))
-      .getOrElse(throw ParseFailException("起床时间必须设置为数字"))
+    val wakeUpTime = config.wakeUpTime
     need(wakeUpTime >= 0 && wakeUpTime <= 23, "起床时间范围需要为 0 - 23")
     JamContext.cronTaskPool.get().getActiveTasks("起床").left
       .getOrElse(throw ParseFailException("起床任务尚未初始化"))
@@ -67,8 +63,7 @@ object BiochronometerParser extends Parser {
    * 解析睡眠时间
    */
   private def parseGoASleep(): Int = {
-    val goASleepTime = Try(config.getInt("go_asleep_time"))
-      .getOrElse(throw ParseFailException("就寝时间必须设置为数字"))
+    val goASleepTime = config.goAsleepTime
     need(goASleepTime >= 0 && goASleepTime <= 23, "就寝时间范围应为 0 - 23")
     JamContext.cronTaskPool.get().getActiveTasks("睡眠").left
       .getOrElse(throw ParseFailException("睡眠任务尚未初始化"))
@@ -81,8 +76,7 @@ object BiochronometerParser extends Parser {
    * 解析活跃模式
    */
   private def parseActiveTimes(): Unit = {
-    val activeTimes = Try(config.getStringList("active_times").asScala)
-      .getOrElse(throw ParseFailException("'活跃时间模式'设置有误，如需设置为不使用，请填写为 [\"None\"]（包括所有符号）"))
+    val activeTimes = config.activeTimes
     need(activeTimes.lengthIs > 0, "'活跃时间模式'设置有误，如需设置为不使用，请填写为 [\"None\"]（包括所有符号）")
     if (activeTimes.lengthIs == 1 && activeTimes.head == "None") return
     activeTimes.foreach(pair => logger.log(s"${AnsiColor.GREEN}活跃时间段添加：${parseActiveTime(pair).recover(throw _).get}时"))
@@ -103,7 +97,7 @@ object BiochronometerParser extends Parser {
     need(end >= 0 && end <= 23, "结束时间范围应为 0 - 23")
     need(end > start, "结束时间必须大于起始时间")
     ChangeRespFrequency(100).setUp(s"0 0 $start * * ? ")
-    ChangeRespFrequency(JamConfig.responseFrequency).setUp(s"0 0 $end * * ? ")
+    ChangeRespFrequency(JamConfig.config.responseFrequency).setUp(s"0 0 $end * * ? ")
     pair
   } recoverWith { err =>
     val thr = ParseFailException("'活跃时间模式'设置有误，" + err.getMessage + s"，错误的时间段为：$pair")

@@ -5,16 +5,15 @@ import cc.moecraft.icq.sender.message.components.ComponentContact.ContactType
 import cc.moecraft.icq.sender.message.components.ComponentMusic.MusicSourceType
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.engine.proto.Parser
+import o.lartifa.jam.model.commands.*
 import o.lartifa.jam.model.commands.Ask.{AnyBody, CurrentSender}
-import o.lartifa.jam.model.commands._
 import o.lartifa.jam.plugins.JamPluginLoader
-import o.lartifa.jam.plugins.caiyunai.dream.{LinkToDream, StartDreaming}
-import o.lartifa.jam.plugins.picbot._
+import o.lartifa.jam.plugins.picbot.*
 import o.lartifa.jam.plugins.rss.{RSSShowAll, RSSSubscribe, RSSUnSubscribe}
 import o.lartifa.jam.pool.JamContext
 
 import java.util.concurrent.TimeUnit
-import scala.collection.parallel.CollectionConverters._
+import scala.collection.parallel.CollectionConverters.*
 import scala.util.Try
 
 /**
@@ -25,7 +24,7 @@ import scala.util.Try
  */
 object CommandParser extends Parser {
 
-  type LineParser = (String, ParseEngineContext) => Option[Command[_]]
+  type LineParser = (String, ParseEngineContext) => Option[Command[?]]
 
   import Patterns.CommandPattern
 
@@ -48,18 +47,21 @@ object CommandParser extends Parser {
     val contains = components.containsModeCommandParsers.map(it => it.parse _)
     val regex = components.regexModeCommandParsers.map(it => it.parse _)
     val highOrder = components.highOrderModeCommandParsers.map(it => it.parse _)
-    List(parseAsk _) ++ highOrder ++ List(
+    List(parseAsk _)
+      ++ highOrder
+      ++ List(
       parseCatchParameters _, parseMessageSend _, parseGoto _, parseOneByOne _, parseParamOpt _,
       parseRandomNumber _, parseRandomGoto _, parseLoopGoto _, parseParamDel _, parseWaiting _,
       parseSetPicFetcherMode _, parseSetPicRating _, parseRunTaskNow _, parseFetchAndSendPic _,
       parseRollEveryThing _, parseBanSomeOneInGroup _, parseSendVideo _, parseShareLocation _,
-      parseShareURL _, parseShareContact _, parseShareMusic _, parsePoke _, parseTTS _) ++ regex ++ List(
+      parseShareURL _, parseShareContact _, parseShareMusic _, parsePoke _, parseTTS _, parseDropInDream _)
+      ++ regex
+      ++ List(
       // 包含类模式放在后边
       parseDoNoting _, parseGroupWholeBan _, parseGroupWholeUnBan _, parseShowPicInfo _,
       parseRSSSubscribe _, parseRSSUnSubscribe _, parseRSSShowAll _, parseWhatICanDo _,
-      parseQQDice _, parseQQRPS _, parseShake _, parseStartDreaming _, parseLinkToDream _,
-      parseBreakDirectly _, parseBreakAsUnMatched _, parseListAIModels _
-    ) ++ contains
+      parseQQDice _, parseQQRPS _, parseShake _, parseBreakDirectly _, parseBreakAsUnMatched _, parseListAIModels _)
+      ++ contains
   }
 
   /**
@@ -69,7 +71,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 指令对象（Optional）
    */
-  def parseCommand(string: String, context: ParseEngineContext): Option[Command[_]] = {
+  def parseCommand(string: String, context: ParseEngineContext): Option[Command[?]] = {
     parseExecuteCommand(string, context) match {
       case Some(executableCommand) =>
         Some(executableCommand)
@@ -259,7 +261,7 @@ object CommandParser extends Parser {
    * @return 解析结果
    */
   private def parseLoopGoto(string: String, context: ParseEngineContext): Option[LoopGoto] = {
-    import LoopGoto._
+    import LoopGoto.*
     CommandPattern.loopGoto.findFirstMatchIn(string).map(result => {
       val stepIds = Try(
         result
@@ -406,7 +408,7 @@ object CommandParser extends Parser {
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseThenSaveTo(string: String, command: Command[_], context: ParseEngineContext): Option[ThenSaveTo] = {
+  private def parseThenSaveTo(string: String, command: Command[?], context: ParseEngineContext): Option[ThenSaveTo] = {
     Patterns.thenSaveTo.findFirstMatchIn(string).map(result => {
       val varKey = result.group("name") |> context.getVar
       ThenSaveTo(command, varKey)
@@ -420,7 +422,7 @@ object CommandParser extends Parser {
    * @param command 目标指令
    * @return 解析结果
    */
-  private def parseIgnoreError(string: String, command: Command[_]): Option[IgnoreError] =
+  private def parseIgnoreError(string: String, command: Command[?]): Option[IgnoreError] =
     Patterns.ignoreError.findFirstMatchIn(string).map(_ => IgnoreError(command))
 
   /**
@@ -494,7 +496,7 @@ object CommandParser extends Parser {
           else Some(answer.stripPrefix("若答案为{").stripSuffix("}")) -> command
         }.seq.toMap
       val defaultCallback = matchers.get(None)
-      val answerMatcher: Map[String, Command[_]] = (matchers - None).map {
+      val answerMatcher: Map[String, Command[?]] = (matchers - None).map {
         case (Some(key), value) => key -> value
         case _ => throw ParseFailException("解析答案过程中出现错误")
       }
@@ -644,26 +646,6 @@ object CommandParser extends Parser {
   }
 
   /**
-   * 解析启动彩云小梦模式指令
-   *
-   * @param string  待解析字符串
-   * @param context 解析引擎上下文
-   * @return 解析结果
-   */
-  private def parseStartDreaming(string: String, context: ParseEngineContext): Option[StartDreaming.type] =
-    if (string.contains(CommandPattern.startDreaming)) Some(StartDreaming) else None
-
-  /**
-   * 解析链接到梦境指令
-   *
-   * @param string  待解析字符串
-   * @param context 解析引擎上下文
-   * @return 解析结果
-   */
-  private def parseLinkToDream(string: String, context: ParseEngineContext): Option[LinkToDream.type] =
-    if (string.contains(CommandPattern.linkToDream)) Some(LinkToDream) else None
-
-  /**
    * 解析真·戳一戳指令
    *
    * @param string  待解析字符串
@@ -718,4 +700,17 @@ object CommandParser extends Parser {
    */
   private def parseListAIModels(string: String, context: ParseEngineContext): Option[ListAIModels.type] =
     if (string.contains(CommandPattern.listAIModels)) Some(ListAIModels) else None
+
+  /**
+   * 解析坠梦指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseDropInDream(string: String, context: ParseEngineContext): Option[DropInDream] = {
+    CommandPattern.dropInDream.findFirstMatchIn(string).map(result => {
+      DropInDream(context.getTemplate(result.group("dream")))
+    })
+  }
 }

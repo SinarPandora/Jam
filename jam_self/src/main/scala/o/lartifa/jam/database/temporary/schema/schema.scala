@@ -1,7 +1,7 @@
 package o.lartifa.jam.database.temporary
 
 import com.typesafe.config.Config
-import o.lartifa.jam.common.config.configFile
+import o.lartifa.jam.common.config.botConfigFile
 import slick.jdbc.{H2Profile, PostgresProfile}
 
 /**
@@ -9,7 +9,7 @@ import slick.jdbc.{H2Profile, PostgresProfile}
  * 2019/10/13 19:38
  */
 package object schema {
-  private val config: Config = configFile.getConfig("databases")
+  private val config: Config = botConfigFile.getConfig("databases")
   val (databaseType, name, url, user, password) =
     config.getString("use") match {
       case "PGSQL" =>

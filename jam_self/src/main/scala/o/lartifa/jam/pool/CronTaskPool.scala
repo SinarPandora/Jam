@@ -10,8 +10,8 @@ import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.plugins.picbot.FetchPictureTask
 import o.lartifa.jam.pool.CronTaskPool.{TaskDefinition, logger}
 
+import java.util.concurrent.Semaphore
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.{Executors, Semaphore}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
@@ -205,7 +205,7 @@ object CronTaskPool {
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(CronTaskPool.getClass)
 
   // 用于定时任务的转换操作
-  implicit val cronTaskWaitingPool: ExecutionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
+  implicit val cronTaskWaitingPool: ExecutionContext = ThreadPools.SCHEDULE_TASK
 
   def apply(): CronTaskPool = {
     CronUtil.setMatchSecond(false)

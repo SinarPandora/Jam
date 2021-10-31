@@ -19,6 +19,6 @@ dependencies {
 
     testImplementation("org.scalactic:scalactic_2.13:$scala_test_version")
     testImplementation("org.scalatest:scalatest_2.13:$scala_test_version")
-    testImplementation("org.scalamock:scalamock_2.13:4.4.0")
-    testRuntime("com.vladsch.flexmark:flexmark-all:0.35.10")
+    testImplementation('org.scalamock:scalamock_2.13:5.1.0')
+    testRuntimeOnly('com.vladsch.flexmark:flexmark-all:0.62.2')
 }

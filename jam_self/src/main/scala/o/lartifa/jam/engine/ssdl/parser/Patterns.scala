@@ -29,7 +29,7 @@ object Patterns {
    * 基本模式匹配
    * 返回结果：id content
    */
-  val basePattern: Regex = """^(-?[0-9]+)[：:](.+)""".r("id", "content")
+  val basePattern: Regex = """^(auto|@|[0-9]+)[：:](.+)""".r("id", "content")
   // 2
   /**
    * TODO 立即执行！
@@ -129,9 +129,9 @@ object Patterns {
     // 源列出
     val rssShowAll: String = "列出当前会话订阅的源"
     // 询问
-    val ask: Regex = """询问(发送者|任何人)[:：]%\{(.+?)}%[，,]((若答案为\{.+?}|其他答案)则(.+)[;；]?)+""".r("questioner", "question", "answerMatchers")
+    val ask: Regex = """询问(发送者|任何人)[:：]%\{(.+?)}%[，,]((若答案为\{.+?}|其他答案)[，,]则(.+)[;；]?)+""".r("questioner", "question", "answerMatchers")
     // 答案匹配器
-    val answerMatcher: Regex = """(若答案为\{.+?}|其他答案)则([^;；]+)[;；]?""".r("answer", "command")
+    val answerMatcher: Regex = """(若答案为\{.+?}|其他答案)[，,]则([^;；]+)[;；]?""".r("answer", "command")
     // 禁言某人
     val banSomeOneInGroup: Regex = """禁言%\{(.+?)}%时长%\{(.+?)}%(分钟|小时|天)""".r("qId", "time", "unit")
     // 展示果酱可以做什么
@@ -156,10 +156,6 @@ object Patterns {
         .r("url", "title", "content", "image")
     // 分享音乐
     val shareMusic: Regex = """分享(网易|QQ|虾米)音乐%\{(.+?)}%""".r("type", "mId")
-    // 彩云小梦模式
-    val startDreaming: String = "在当前会话开启坠梦模式"
-    // 链接到指定梦境
-    val linkToDream: String = "链接到消息中的梦境"
     // 真·戳一戳指令
     val poke: Regex = """戳%\{(.+?)}%""".r("qId")
     // TTS（文本转语音）指令
@@ -170,6 +166,8 @@ object Patterns {
     val breakAsUnMatched: String = "打断视为未捕获"
     // 列出可用模型指令
     val listAIModels: String = "列出可用模型"
+    // 坠梦指令
+    val dropInDream: Regex = """(坠入梦境|联想回复)%\{(.+?)}%""".r("name", "dream")
   }
 
 }

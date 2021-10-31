@@ -104,7 +104,7 @@ object SSDLRuleRunner {
       case _: EventPrivateMessage => MsgMatchers.globalPrivate.get()
     }
     val globalScopeMatchers = MsgMatchers.global.get()
-    if (JamConfig.matchOutOfOrder) {
+    if (JamConfig.config.matchOutOfOrder) {
       Random.shuffle(chatScopeMatchers) ++ Random.shuffle(chatTypeScopeMatchers) ++ Random.shuffle(globalScopeMatchers)
     } else {
       chatScopeMatchers ++ chatTypeScopeMatchers ++ globalScopeMatchers

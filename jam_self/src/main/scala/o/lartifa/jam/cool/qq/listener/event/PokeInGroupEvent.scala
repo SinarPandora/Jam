@@ -6,7 +6,7 @@ import o.lartifa.jam.model.ChatInfo
 import java.sql.Timestamp
 
 /**
- * 群内戳一戳事件
+ * 群聊拍一拍事件
  *
  * Example: 在群 935752317 中，1211402231 戳 1580265059
  * {
@@ -24,7 +24,7 @@ import java.sql.Timestamp
  * Author: sinar
  * 2021/7/9 22:25
  */
-case class PokeInGroupEvent(event: EventNoticeGroupPoke) extends CQEvent("群聊戳一戳") {
+case class PokeInGroupEvent(event: EventNoticeGroupPoke) extends CQEvent("群聊拍一拍", event.getUserId) {
   /**
    * 会话信息
    */
@@ -39,16 +39,16 @@ case class PokeInGroupEvent(event: EventNoticeGroupPoke) extends CQEvent("群聊
     "目标QQ" -> event.getTargetId.toString,
     "目标群昵称" -> event.getTargetGroupUser.getInfo.getNickname,
     // 发送者信息
-    "发送者QQ" -> event.getSenderGroupUser.getId.toString,
+    "发送者QQ" -> event.getUserId.toString,
     "发送者群昵称" -> event.getSenderGroupUser.getInfo.getNickname,
     // 群信息
-    "群号" -> event.getGroup.getId.toString,
+    "群号" -> event.getGroupId.toString,
     "群名" -> event.getGroup.getInfo.getGroupName,
     // Metadata
     "事件类型" -> event.getPostType,
     "通知类型" -> event.getNoticeType,
     "事件子类型" -> event.getSubType,
-    "会话ID" -> event.getUserId.toString,
+    "会话ID" -> event.getGroupId.toString,
     "发送时间" -> new Timestamp(event.getTime * 100).toString
   )
 }

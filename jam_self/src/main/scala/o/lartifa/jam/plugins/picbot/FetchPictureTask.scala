@@ -1,21 +1,20 @@
 package o.lartifa.jam.plugins.picbot
 
-import java.util.Base64
-import java.util.concurrent.ForkJoinPool
-
 import ammonite.ops.PipeableImplicit
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.database.temporary.Memory.database.db
-import o.lartifa.jam.database.temporary.schema.Tables._
+import o.lartifa.jam.database.temporary.schema.Tables.*
 import o.lartifa.jam.model.tasks.JamCronTask
-import o.lartifa.jam.plugins.picbot.APIResponse._
+import o.lartifa.jam.plugins.picbot.APIResponse.*
 import o.lartifa.jam.plugins.picbot.FetchPictureTask.logger
 import o.lartifa.jam.pool.JamContext
-import upickle.default._
+import upickle.default.*
 
+import java.util.Base64
+import java.util.concurrent.ForkJoinPool
 import scala.annotation.tailrec
-import scala.async.Async._
+import scala.async.Async.*
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
@@ -27,9 +26,9 @@ import scala.util.{Failure, Success, Try}
  */
 class FetchPictureTask(name: String) extends JamCronTask(name) {
 
-  import o.lartifa.jam.database.temporary.Memory.database.profile.api._
+  import o.lartifa.jam.database.temporary.Memory.database.profile.api.*
 
-  val API: String = s"https://api.lolicon.app/setu/?${apiKey}r18=2&num=10"
+  def API: String = s"https://api.lolicon.app/setu/?${apiKey}r18=2&num=10"
 
   private val encoder: Base64.Encoder = Base64.getEncoder
 
