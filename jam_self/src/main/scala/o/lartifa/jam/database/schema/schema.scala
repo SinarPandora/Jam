@@ -1,4 +1,4 @@
-package o.lartifa.jam.database.temporary
+package o.lartifa.jam.database
 
 import com.typesafe.config.Config
 import o.lartifa.jam.common.config.botConfigFile

@@ -1,14 +1,14 @@
-package o.lartifa.jam.database.temporary.schema
+package o.lartifa.jam.database.schema
 
 // AUTO-GENERATED Slick data model for table StoryInstance
 trait StoryInstanceTable {
 
   self:Tables  =>
 
-  import profile.api._
+  import profile.api.*
   import slick.model.ForeignKeyAction
   // NOTE: GetResult mappers for plain SQL are only generated for tables where Slick knows how to map the types of all columns.
-  import slick.jdbc.{GetResult => GR}
+  import slick.jdbc.GetResult as GR
   /** Entity class storing rows of table StoryInstance
    *  @param id Database column id SqlType(bigserial), AutoInc, PrimaryKey
    *  @param storyId Database column story_id SqlType(int8)
@@ -21,14 +21,14 @@ trait StoryInstanceTable {
   case class StoryInstanceRow(id: Long, storyId: Long, data: Option[String] = None, autoSave: String = "", config: String, chatType: String, chatId: Long, lastUpdate: java.sql.Timestamp)
   /** GetResult implicit for fetching StoryInstanceRow objects using plain SQL queries */
   implicit def GetResultStoryInstanceRow(implicit e0: GR[Long], e1: GR[Option[String]], e2: GR[String], e3: GR[java.sql.Timestamp]): GR[StoryInstanceRow] = GR{
-    prs => import prs._
+    prs => import prs.*
     StoryInstanceRow.tupled((<<[Long], <<[Long], <<?[String], <<[String], <<[String], <<[String], <<[Long], <<[java.sql.Timestamp]))
   }
   /** Table description of table story_instance. Objects of this class serve as prototypes for rows in queries. */
   class StoryInstance(_tableTag: Tag) extends profile.api.Table[StoryInstanceRow](_tableTag, "story_instance") {
     def * = (id, storyId, data, autoSave, config, chatType, chatId, lastUpdate) <> (StoryInstanceRow.tupled, StoryInstanceRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(storyId), data, Rep.Some(autoSave), Rep.Some(config), Rep.Some(chatType), Rep.Some(chatId), Rep.Some(lastUpdate)).shaped.<>({ r=>import r._; _1.map(_=> StoryInstanceRow.tupled((_1.get, _2.get, _3, _4.get, _5.get, _6.get, _7.get, _8.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(storyId), data, Rep.Some(autoSave), Rep.Some(config), Rep.Some(chatType), Rep.Some(chatId), Rep.Some(lastUpdate)).shaped.<>({ r=>import r.*; _1.map(_=> StoryInstanceRow.tupled((_1.get, _2.get, _3, _4.get, _5.get, _6.get, _7.get, _8.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)

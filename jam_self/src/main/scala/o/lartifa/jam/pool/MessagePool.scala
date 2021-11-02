@@ -3,13 +3,13 @@ package o.lartifa.jam.pool
 import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
-import o.lartifa.jam.database.temporary.Memory.database.db
-import o.lartifa.jam.database.temporary.schema.Tables._
+import o.lartifa.jam.database.Memory.database.db
+import o.lartifa.jam.database.schema.Tables.*
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.plugins.filppic.QQImg
 
 import java.util.UUID
-import scala.async.Async._
+import scala.async.Async.*
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -20,7 +20,7 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 class MessagePool {
 
-  import o.lartifa.jam.database.temporary.Memory.database.profile.api._
+  import o.lartifa.jam.database.Memory.database.profile.api.*
 
   private implicit val exec: ExecutionContext = ThreadPools.DB
 

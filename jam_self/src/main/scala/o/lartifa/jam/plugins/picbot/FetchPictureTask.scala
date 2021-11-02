@@ -3,8 +3,8 @@ package o.lartifa.jam.plugins.picbot
 import ammonite.ops.PipeableImplicit
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.util.MasterUtil
-import o.lartifa.jam.database.temporary.Memory.database.db
-import o.lartifa.jam.database.temporary.schema.Tables.*
+import o.lartifa.jam.database.Memory.database.db
+import o.lartifa.jam.database.schema.Tables.*
 import o.lartifa.jam.model.tasks.JamCronTask
 import o.lartifa.jam.plugins.picbot.APIResponse.*
 import o.lartifa.jam.plugins.picbot.FetchPictureTask.logger
@@ -26,7 +26,7 @@ import scala.util.{Failure, Success, Try}
  */
 class FetchPictureTask(name: String) extends JamCronTask(name) {
 
-  import o.lartifa.jam.database.temporary.Memory.database.profile.api.*
+  import o.lartifa.jam.database.Memory.database.profile.api.*
 
   def API: String = s"https://api.lolicon.app/setu/?${apiKey}r18=2&num=10"
 

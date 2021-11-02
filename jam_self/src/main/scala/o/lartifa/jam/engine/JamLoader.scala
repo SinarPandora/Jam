@@ -10,7 +10,7 @@ import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.cool.qq.command.MasterCommands
 import o.lartifa.jam.cool.qq.listener.{BanList, EvtMatchers, MsgMatchers, QEventListener, QMessageListener, SystemEventListener}
-import o.lartifa.jam.database.temporary.Memory
+import o.lartifa.jam.database.Memory
 import o.lartifa.jam.engine.SXDLParseEngine.{SSDLParseSuccessResult, STDLParseSuccessResult, SXDLParseFailResult, SXDLParseSuccessResult}
 import o.lartifa.jam.engine.stdl.ast.DTExpInterpreter.InterpreterResult
 import o.lartifa.jam.engine.stdl.parser.STDLParseResult.Succ

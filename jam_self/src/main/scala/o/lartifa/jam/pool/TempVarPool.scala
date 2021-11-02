@@ -2,8 +2,8 @@ package o.lartifa.jam.pool
 
 import cc.moecraft.icq.event.events.message.EventMessage
 import o.lartifa.jam.common.exception.{ExecutionException, VarNotFoundException}
-import o.lartifa.jam.common.util.EventMessageHelper._
-import o.lartifa.jam.database.temporary.schema.Tables
+import o.lartifa.jam.common.util.EventMessageHelper.*
+import o.lartifa.jam.database.schema.Tables
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 
 import java.sql.Timestamp

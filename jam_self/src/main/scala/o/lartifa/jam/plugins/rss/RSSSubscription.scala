@@ -7,8 +7,8 @@ import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.common.util.{MasterUtil, TimeUtil}
-import o.lartifa.jam.database.temporary.Memory.database.db
-import o.lartifa.jam.database.temporary.schema.Tables.*
+import o.lartifa.jam.database.Memory.database.db
+import o.lartifa.jam.database.schema.Tables.*
 import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.plugins.rss.PrettyRSSPrinters.PrettyRSSPrinter
 import o.lartifa.jam.plugins.rss.RSSSubscription.{getSourceUrl, logger, scheduler}
@@ -28,7 +28,7 @@ import scala.util.Try
 class RSSSubscription(val source: String, private var _channelName: String, val sourceCategory: String, prettyRSSPrinter: PrettyRSSPrinter,
                       private var _subscribers: Set[ChatInfo]) {
 
-  import o.lartifa.jam.database.temporary.Memory.database.profile.api.*
+  import o.lartifa.jam.database.Memory.database.profile.api.*
 
   private val errorTimes: AtomicInteger = new AtomicInteger(0)
   private var subscription: Option[Disposable] = None

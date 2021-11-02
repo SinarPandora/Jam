@@ -8,9 +8,9 @@ import o.lartifa.jam.common.util.{MasterUtil, TimeUtil}
 import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
 import o.lartifa.jam.cool.qq.listener.posthandle.PostHandleTask
 import o.lartifa.jam.cool.qq.listener.prehandle.PreHandleTask
-import o.lartifa.jam.database.temporary.Memory.database.db
-import o.lartifa.jam.database.temporary.schema.Tables
-import o.lartifa.jam.database.temporary.schema.Tables.*
+import o.lartifa.jam.database.Memory.database.db
+import o.lartifa.jam.database.schema.Tables
+import o.lartifa.jam.database.schema.Tables.*
 import o.lartifa.jam.engine.JamLoader
 import o.lartifa.jam.engine.ssdl.parser.SSDLCommandParser
 import o.lartifa.jam.engine.ssdl.parser.SSDLCommandParser.*
@@ -36,7 +36,7 @@ object JamPluginLoader {
 
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(JamPluginLoader.getClass)
 
-  import o.lartifa.jam.database.temporary.Memory.database.profile.api.*
+  import o.lartifa.jam.database.Memory.database.profile.api.*
 
   case class LoadedComponents
   (

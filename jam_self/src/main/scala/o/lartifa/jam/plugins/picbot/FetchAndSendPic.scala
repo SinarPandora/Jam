@@ -2,15 +2,15 @@ package o.lartifa.jam.plugins.picbot
 
 import cc.moecraft.icq.sender.message.components.ComponentImageBase64
 import cc.moecraft.logger.HyLogger
-import o.lartifa.jam.common.util.EventMessageHelper._
+import o.lartifa.jam.common.util.EventMessageHelper.*
 import o.lartifa.jam.common.util.MasterUtil
-import o.lartifa.jam.database.temporary.schema.Tables
+import o.lartifa.jam.database.schema.Tables
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.Command
 import o.lartifa.jam.plugins.picbot.FetchAndSendPic.logger
 import o.lartifa.jam.pool.JamContext
 
-import scala.async.Async._
+import scala.async.Async.*
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Try}
 

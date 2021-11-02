@@ -1,6 +1,6 @@
 package o.lartifa.jam.pool
 import cc.moecraft.icq.event.events.message.EventMessage
-import o.lartifa.jam.database.temporary.schema.Tables
+import o.lartifa.jam.database.schema.Tables
 import o.lartifa.jam.model.CommandExecuteContext
 
 import scala.concurrent.Future

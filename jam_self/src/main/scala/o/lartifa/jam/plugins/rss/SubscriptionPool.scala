@@ -4,8 +4,8 @@ import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.MasterUtil
-import o.lartifa.jam.database.temporary.Memory.database.db
-import o.lartifa.jam.database.temporary.schema.Tables.*
+import o.lartifa.jam.database.Memory.database.db
+import o.lartifa.jam.database.schema.Tables.*
 import o.lartifa.jam.model.behaviors.ReplyToFriend
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
@@ -25,7 +25,7 @@ import scala.util.{Failure, Success, Try}
  */
 object SubscriptionPool extends ReplyToFriend {
 
-  import o.lartifa.jam.database.temporary.Memory.database.profile.api.*
+  import o.lartifa.jam.database.Memory.database.profile.api.*
 
   private val rssSubscriptions: mutable.Map[String, RSSSubscription] = mutable.Map.empty
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(SubscriptionPool.getClass)

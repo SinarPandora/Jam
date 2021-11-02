@@ -1,4 +1,4 @@
-package o.lartifa.jam.database.temporary.schema
+package o.lartifa.jam.database.schema
 
 /**
  * Author: sinar
@@ -9,10 +9,10 @@ trait TrpgStatusChangeHistoryTable {
 
   self: Tables =>
 
-  import profile.api._
+  import profile.api.*
   import slick.model.ForeignKeyAction
   // NOTE: GetResult mappers for plain SQL are only generated for tables where Slick knows how to map the types of all columns.
-  import slick.jdbc.{GetResult => GR}
+  import slick.jdbc.GetResult as GR
 
   /** Entity class storing rows of table TrpgStatusChangeHistory
    *
@@ -28,7 +28,7 @@ trait TrpgStatusChangeHistoryTable {
   /** GetResult implicit for fetching TrpgStatusChangeHistoryRow objects using plain SQL queries */
   implicit def GetResultTrpgStatusChangeHistoryRow(implicit e0: GR[Long], e1: GR[String], e2: GR[Int], e3: GR[java.sql.Timestamp]): GR[TrpgStatusChangeHistoryRow] = GR {
     prs =>
-      import prs._
+      import prs.*
       TrpgStatusChangeHistoryRow.tupled((<<[Long], <<[Long], <<[String], <<[String], <<[Int], <<[Int], <<[java.sql.Timestamp]))
   }
 
@@ -37,7 +37,7 @@ trait TrpgStatusChangeHistoryTable {
     def * = (id, statusId, name, adjustExpr, originValue, afterValue, createTime) <> (TrpgStatusChangeHistoryRow.tupled, TrpgStatusChangeHistoryRow.unapply)
 
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(statusId), Rep.Some(name), Rep.Some(adjustExpr), Rep.Some(originValue), Rep.Some(afterValue), Rep.Some(createTime)).shaped.<>({ r => import r._; _1.map(_ => TrpgStatusChangeHistoryRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(statusId), Rep.Some(name), Rep.Some(adjustExpr), Rep.Some(originValue), Rep.Some(afterValue), Rep.Some(createTime)).shaped.<>({ r => import r.*; _1.map(_ => TrpgStatusChangeHistoryRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)

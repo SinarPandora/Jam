@@ -1,13 +1,13 @@
-package o.lartifa.jam.database.temporary.schema
+package o.lartifa.jam.database.schema
 
 // AUTO-GENERATED Slick data model for table WebPictures
 trait WebPicturesTable {
 
   self:Tables  =>
 
-  import profile.api._
+  import profile.api.*
   // NOTE: GetResult mappers for plain SQL are only generated for tables where Slick knows how to map the types of all columns.
-  import slick.jdbc.{GetResult => GR}
+  import slick.jdbc.GetResult as GR
   /** Entity class storing rows of table WebPictures
    *  @param pid Database column pid SqlType(int8), PrimaryKey, Default(-1)
    *  @param uid Database column uid SqlType(int8), Default(-1)
@@ -22,14 +22,14 @@ trait WebPicturesTable {
   case class WebPicturesRow(pid: Long = -1L, uid: Long = -1L, title: String = "无标题", author: String = "未知作者", url: String = "", isR18: Boolean = false, width: Int = -1, height: Int = -1, tags: String = "", base64Data: Option[String] = None)
   /** GetResult implicit for fetching WebPicturesRow objects using plain SQL queries */
   implicit def GetResultWebPicturesRow(implicit e0: GR[Long], e1: GR[String], e2: GR[Boolean], e3: GR[Int], e4: GR[Option[String]]): GR[WebPicturesRow] = GR{
-    prs => import prs._
+    prs => import prs.*
     WebPicturesRow.tupled((<<[Long], <<[Long], <<[String], <<[String], <<[String], <<[Boolean], <<[Int], <<[Int], <<[String], <<?[String]))
   }
   /** Table description of table web_pictures. Objects of this class serve as prototypes for rows in queries. */
   class WebPictures(_tableTag: Tag) extends profile.api.Table[WebPicturesRow](_tableTag, "web_pictures") {
     def * = (pid, uid, title, author, url, isR18, width, height, tags, base64Data) <> (WebPicturesRow.tupled, WebPicturesRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(pid), Rep.Some(uid), Rep.Some(title), Rep.Some(author), Rep.Some(url), Rep.Some(isR18), Rep.Some(width), Rep.Some(height), Rep.Some(tags), base64Data).shaped.<>({ r=>import r._; _1.map(_=> WebPicturesRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(pid), Rep.Some(uid), Rep.Some(title), Rep.Some(author), Rep.Some(url), Rep.Some(isR18), Rep.Some(width), Rep.Some(height), Rep.Some(tags), base64Data).shaped.<>({ r=>import r.*; _1.map(_=> WebPicturesRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column pid SqlType(int8), PrimaryKey, Default(-1) */
     val pid: Rep[Long] = column[Long]("pid", O.PrimaryKey, O.Default(-1L))

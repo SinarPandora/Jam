@@ -1,13 +1,13 @@
-package o.lartifa.jam.database.temporary.schema
+package o.lartifa.jam.database.schema
 
 // AUTO-GENERATED Slick data model for table Story
 trait StoryTable {
 
   self:Tables  =>
 
-  import profile.api._
+  import profile.api.*
   // NOTE: GetResult mappers for plain SQL are only generated for tables where Slick knows how to map the types of all columns.
-  import slick.jdbc.{GetResult => GR}
+  import slick.jdbc.GetResult as GR
   /** Entity class storing rows of table Story
    *  @param id Database column id SqlType(bigserial), AutoInc, PrimaryKey
    *  @param path Database column path SqlType(varchar)
@@ -22,14 +22,14 @@ trait StoryTable {
   case class StoryRow(id: Long, path: String, name: String, checksum: String, keyword: String = "", author: String = "无名氏", script: String, status: String = "使用中", loadDate: java.sql.Timestamp, defaultConfig: String)
   /** GetResult implicit for fetching StoryRow objects using plain SQL queries */
   implicit def GetResultStoryRow(implicit e0: GR[Long], e1: GR[String], e2: GR[java.sql.Timestamp]): GR[StoryRow] = GR{
-    prs => import prs._
+    prs => import prs.*
     StoryRow.tupled((<<[Long], <<[String], <<[String], <<[String], <<[String], <<[String], <<[String], <<[String], <<[java.sql.Timestamp], <<[String]))
   }
   /** Table description of table story. Objects of this class serve as prototypes for rows in queries. */
   class Story(_tableTag: Tag) extends profile.api.Table[StoryRow](_tableTag, "story") {
     def * = (id, path, name, checksum, keyword, author, script, status, loadDate, defaultConfig) <> (StoryRow.tupled, StoryRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(path), Rep.Some(name), Rep.Some(checksum), Rep.Some(keyword), Rep.Some(author), Rep.Some(script), Rep.Some(status), Rep.Some(loadDate), Rep.Some(defaultConfig)).shaped.<>({ r=>import r._; _1.map(_=> StoryRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(path), Rep.Some(name), Rep.Some(checksum), Rep.Some(keyword), Rep.Some(author), Rep.Some(script), Rep.Some(status), Rep.Some(loadDate), Rep.Some(defaultConfig)).shaped.<>({ r=>import r.*; _1.map(_=> StoryRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)

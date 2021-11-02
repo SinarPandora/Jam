@@ -1,9 +1,9 @@
-package o.lartifa.jam.database.temporary
+package o.lartifa.jam.database
 
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.common.config.{JamConfig, botConfigFile}
-import o.lartifa.jam.database.temporary.schema.{password, url, user}
+import o.lartifa.jam.database.schema.{password, url, user}
 import o.lartifa.jam.pool.JamContext
 import org.flywaydb.core.Flyway
 import slick.basic.DatabaseConfig

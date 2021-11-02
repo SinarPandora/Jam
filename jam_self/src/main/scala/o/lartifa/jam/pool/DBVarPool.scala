@@ -4,13 +4,13 @@ import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.TimeUtil
-import o.lartifa.jam.database.temporary.Memory.database.db
-import o.lartifa.jam.database.temporary.schema.Tables
-import o.lartifa.jam.database.temporary.schema.Tables._
+import o.lartifa.jam.database.Memory.database.db
+import o.lartifa.jam.database.schema.Tables
+import o.lartifa.jam.database.schema.Tables.*
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.pool.DBVarPool.logger
 
-import scala.async.Async._
+import scala.async.Async.*
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -21,7 +21,7 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
 
-  import o.lartifa.jam.database.temporary.Memory.database.profile.api._
+  import o.lartifa.jam.database.Memory.database.profile.api.*
 
   /**
    * 更新变量，不存在时报错
