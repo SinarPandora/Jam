@@ -1,7 +1,10 @@
 package o.lartifa.jam.common.config
 
 import com.typesafe.config.Config
+// @format:off
+// 不使用全部导入以避免循环依赖
 import o.lartifa.jam.common.config.PluginConfig.*
+// @format:on
 import o.lartifa.jam.common.exception.ParseFailException
 
 import scala.jdk.CollectionConverters.*
