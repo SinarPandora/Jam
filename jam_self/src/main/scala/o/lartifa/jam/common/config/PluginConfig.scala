@@ -1,7 +1,7 @@
 package o.lartifa.jam.common.config
 
 import com.typesafe.config.Config
-import o.lartifa.jam.common.config.PluginConfig.{DreamAI, PicBot, PostHandle, PreHandle, Rss}
+import o.lartifa.jam.common.config.PluginConfig.*
 import o.lartifa.jam.common.exception.ParseFailException
 
 import scala.jdk.CollectionConverters.*
@@ -21,7 +21,7 @@ case class PluginConfig
 
 object PluginConfig extends Reloadable {
   case class DreamAI(mobile: String)
-  case class PicBot(apiKey: String)
+  case class PicBot(pixivProxy: String, apiBatchSize: Int)
   case class Rss(deployUrl: String, defaultStyle: String, customStyles: Map[String, String])
   case class FlipRepeatPicture(useFFMpeg: Boolean, ffmpegPath: String)
   case class PreHandle
@@ -49,7 +49,10 @@ object PluginConfig extends Reloadable {
     this._config = Some(
       PluginConfig(
         dreamAI = DreamAI(mobile = config.getString("dream_ai.mobile")),
-        picBot = PicBot(apiKey = config.getString("picbot.apikey")),
+        picBot = PicBot(
+          pixivProxy = config.getString("picbot.pixiv_proxy"),
+          apiBatchSize = config.getInt("picbot.api_batch_size")
+        ),
         rss = Rss(
           deployUrl = config.getString("rss.deploy_url"),
           defaultStyle = config.getString("rss.style.default"),

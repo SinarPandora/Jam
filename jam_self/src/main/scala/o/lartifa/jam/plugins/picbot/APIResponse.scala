@@ -1,6 +1,6 @@
 package o.lartifa.jam.plugins.picbot
 
-import upickle.default._
+import upickle.default.*
 
 /**
  * 图片 API 返回体
@@ -10,7 +10,7 @@ import upickle.default._
  */
 object APIResponse {
 
-  case class Response(code: Int, msg: String, count: Int, data: List[PicData])
+  case class Response(error: String, data: List[PicData])
 
   case class PicData
   (
@@ -18,11 +18,11 @@ object APIResponse {
     uid: Long,
     title: String,
     author: String,
-    url: String,
     r18: Boolean,
     width: Int,
     height: Int,
-    tags: List[String]
+    tags: List[String],
+    urls: Map[String, String]
   )
 
   implicit val responseRw: ReadWriter[Response] = macroRW

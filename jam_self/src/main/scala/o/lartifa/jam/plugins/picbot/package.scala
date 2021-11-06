@@ -1,6 +1,5 @@
 package o.lartifa.jam.plugins
 
-import o.lartifa.jam.common.config.PluginConfig
 import o.lartifa.jam.model.VarKey
 
 /**
@@ -10,13 +9,6 @@ import o.lartifa.jam.model.VarKey
  * 2020/7/12 15:03
  */
 package object picbot {
-
-  def apiKey: String = {
-    val key = PluginConfig.config.picBot.apiKey
-    if (key.nonEmpty) s"apikey=$key&"
-    else ""
-  }
-
   object PatternMode {
     val ONLY: String = "仅当前"
     val RANGE: String = "范围内"

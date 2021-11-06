@@ -2,6 +2,8 @@ package o.lartifa.jam.plugins.picbot
 
 import ammonite.ops.PipeableImplicit
 import cc.moecraft.logger.HyLogger
+import cn.hutool.core.util.StrUtil
+import o.lartifa.jam.common.config.PluginConfig
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.database.Memory.database.db
 import o.lartifa.jam.database.schema.Tables.*
@@ -28,7 +30,9 @@ class FetchPictureTask(name: String) extends JamCronTask(name) {
 
   import o.lartifa.jam.database.Memory.database.profile.api.*
 
-  def API: String = s"https://api.lolicon.app/setu/?${apiKey}r18=2&num=10"
+  def API: String = s"https://api.lolicon.app/setu/v2?r18=2" +
+    s"&num=${PluginConfig.config.picBot.apiBatchSize}" +
+    s"&proxy=${PluginConfig.config.picBot.pixivProxy}"
 
   private val encoder: Base64.Encoder = Base64.getEncoder
 
@@ -43,10 +47,9 @@ class FetchPictureTask(name: String) extends JamCronTask(name) {
     MasterUtil.notifyMaster("图片更新任务开始")
     val (pool, content) = startWorkingPool()
     currentPool = Some(pool)
-    // 每次更新（下载） 100 张图片
     val result = await(Future.sequence((1 to 10)
       .map(_ => doDownload()(content)
-        .recover { case _ => logger.warning("本次API调用失败"); 0 })))
+        .recover { case e => logger.error("API调用出现未知错误", e); 0 })))
       .tapEach(count => logger.log(s"已添加：${count}张图片"))
       .sum
     logger.log(s"已添加：${result}张图片")
@@ -81,17 +84,23 @@ class FetchPictureTask(name: String) extends JamCronTask(name) {
    * @return 影响行数
    */
   private def doDownload()(implicit exec: ExecutionContext): Future[Int] = async {
-    val response = requests.get(API, check = false)
-    if (response.statusCode == 429) {
+    val rawResponse = requests.get(API, check = false)
+    if (rawResponse.statusCode == 429) {
       logger.warning("API请求次数已达上限")
       0
-    } else if (response.statusCode == 200) {
-      val dataList = read[Response](response.text()).data
-      val inserts = await(Future.sequence(dataList.map(createSingleInsertTask))).flatten
-      // Bulk insert
-      await(db.run(DBIO.sequence(inserts))).sum
+    } else if (rawResponse.statusCode == 200) {
+      val resp = read[Response](rawResponse.text())
+      if (!StrUtil.isBlank(resp.error)) {
+        logger.warning("本次API调用失败，错误：{}", resp.error)
+        0
+      } else {
+        val dataList = read[Response](rawResponse.text()).data.filter(_.urls.contains("original"))
+        val inserts = await(Future.sequence(dataList.map(createSingleInsertTask))).flatten
+        // Bulk insert
+        await(db.run(DBIO.sequence(inserts))).sum
+      }
     } else {
-      logger.warning("本次API调用失败")
+      logger.warning("本次API调用失败，错误码：{}，响应：{}", rawResponse.statusCode, rawResponse.text())
       0
     }
   }
@@ -104,14 +113,14 @@ class FetchPictureTask(name: String) extends JamCronTask(name) {
    * @return 插入操作
    */
   private def createSingleInsertTask(data: PicData)(implicit exec: ExecutionContext) = Future {
-    downloadPicture(data.url).map(base64Data => {
+    downloadPicture(data.urls("original")).map(base64Data => {
       WebPictures.insertOrUpdate {
         WebPicturesRow(
           pid = data.pid,
           uid = data.uid,
           title = data.title,
           author = data.author,
-          url = data.url,
+          url = data.urls("original"),
           isR18 = data.r18,
           width = data.width,
           height = data.height,
