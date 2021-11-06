@@ -15,6 +15,7 @@ import scala.annotation.tailrec
 import scala.async.Async.{async, await}
 import scala.collection.parallel.CollectionConverters.*
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.matching.Regex
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -34,6 +35,8 @@ object SXDLParseEngine extends Parser {
   case class SXDLParseFailResult(lineId: Long, filepath: String, message: String)
 
   implicit val charset: Charset = Charset.forName("UTF-8")
+
+  private def FOLDER_PATTERN: Regex = """^([(（].+?[）)])?((global(_private|_group)?)|(private|group)_[0-9]+)$""".stripMargin.r
 
   type RawLine = (Option[String], String)
   type RawLinePair = (RawLine, Int)
@@ -71,10 +74,8 @@ object SXDLParseEngine extends Parser {
   private def loadFiles(scriptPath: File): List[(List[File], ChatInfo)] = {
     import SystemConfig.*
     scriptPath.list
-      .filterNot(f => f.isRegularFile || f.pathAsString.contains("modes"))
-      .filter(dir => dir.name.startsWith("global")
-        || dir.name.startsWith("private")
-        || dir.name.startsWith("group"))
+      .filter(f => f.isDirectory)
+      .filter(dir => FOLDER_PATTERN.matches(dir.name))
       .map { dir =>
         // 忽略备注 + 获取会话格式
         val dirName = dir.name.split("[）)]").last
@@ -83,9 +84,7 @@ object SXDLParseEngine extends Parser {
           case "global_private" => ChatInfo.Private
           case "global_group" => ChatInfo.Group
           case _ =>
-            val split = dirName.split("_")
-            need(split.length == 2, s"文件夹名：${dir.pathAsString}格式不正确（起名格式：global，global_private, global_group，private_xxx, group_xxx）")
-            val Array(tp, id) = split.take(2)
+            val Array(tp, id) = dirName.split("_").take(2)
             ChatInfo(tp, id.toLong)
         }
         dir.listRecursively.filter(file => sxdlFileExtension.contains(file.extension.getOrElse(""))).toList -> chatInfo
