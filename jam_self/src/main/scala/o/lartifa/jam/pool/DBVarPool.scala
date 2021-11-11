@@ -167,7 +167,7 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
   }
 
   /**
-   * 清除全部变量
+   * 列出全部变量
    *
    * @return 全部变量
    */
@@ -176,7 +176,7 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
   }
 
   /**
-   * 清除全部变量
+   * 列出全部变量
    *
    * @param eventMessage 消息事件
    * @return 全部变量

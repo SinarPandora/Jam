@@ -85,14 +85,14 @@ trait VariablePool {
   def cleanAll(): Future[Boolean]
 
   /**
-   * 清除全部变量
+   * 列出全部变量
    *
    * @return 全部变量
    */
   def listAll(): Future[Seq[Tables.VariablesRow]]
 
   /**
-   * 清除全部变量
+   * 列出当前会话中的变量
    *
    * @param eventMessage 消息事件
    * @return 全部变量

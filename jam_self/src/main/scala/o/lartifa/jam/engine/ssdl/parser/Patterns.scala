@@ -168,6 +168,10 @@ object Patterns {
     val listAIModels: String = "列出可用模型"
     // 坠梦指令
     val dropInDream: Regex = """(坠入梦境|联想回复)%\{(.+?)}%""".r("name", "dream")
+    // 运行 Lambda 指令
+    val runLambda: Regex = """([Ll]ambda|λ|=>)<(.+?)>([(（].+?[)）])?""".r("lambda", "scriptPath", "args")
+    // Lambda 参数
+    var lambdaArgs: Regex = """,?%\{(.+?)}%""".r("template")
   }
 
 }

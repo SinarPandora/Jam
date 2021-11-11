@@ -3,11 +3,13 @@ package o.lartifa.jam.engine.ssdl.parser
 import ammonite.ops.PipeableImplicit
 import cc.moecraft.icq.sender.message.components.ComponentContact.ContactType
 import cc.moecraft.icq.sender.message.components.ComponentMusic.MusicSourceType
+import cn.hutool.core.util.StrUtil
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.engine.proto.Parser
 import o.lartifa.jam.model.commands.*
 import o.lartifa.jam.model.commands.Ask.{AnyBody, CurrentSender}
 import o.lartifa.jam.plugins.JamPluginLoader
+import o.lartifa.jam.plugins.lambda.RunLambda
 import o.lartifa.jam.plugins.picbot.*
 import o.lartifa.jam.plugins.rss.{RSSShowAll, RSSSubscribe, RSSUnSubscribe}
 import o.lartifa.jam.pool.JamContext
@@ -54,7 +56,8 @@ object CommandParser extends Parser {
       parseRandomNumber _, parseRandomGoto _, parseLoopGoto _, parseParamDel _, parseWaiting _,
       parseSetPicFetcherMode _, parseSetPicRating _, parseRunTaskNow _, parseFetchAndSendPic _,
       parseRollEveryThing _, parseBanSomeOneInGroup _, parseSendVideo _, parseShareLocation _,
-      parseShareURL _, parseShareContact _, parseShareMusic _, parsePoke _, parseTTS _, parseDropInDream _)
+      parseShareURL _, parseShareContact _, parseShareMusic _, parsePoke _, parseTTS _, parseDropInDream _,
+      parseRunLambda _)
       ++ regex
       ++ List(
       // 包含类模式放在后边
@@ -711,6 +714,23 @@ object CommandParser extends Parser {
   private def parseDropInDream(string: String, context: ParseEngineContext): Option[DropInDream] = {
     CommandPattern.dropInDream.findFirstMatchIn(string).map(result => {
       DropInDream(context.getTemplate(result.group("dream")))
+    })
+  }
+
+  /**
+   * 解析运行 Lambda 指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseRunLambda(string: String, context: ParseEngineContext): Option[RunLambda] = {
+    CommandPattern.runLambda.findFirstMatchIn(string).map(result => {
+      val scriptPath = result.group("scriptPath")
+      val args = if (StrUtil.isNotBlank(result.group("args"))) {
+        CommandPattern.lambdaArgs.findAllMatchIn(result.group("args")).map(result => context.getTemplate(result.group("template"))).toSeq
+      } else Seq()
+      RunLambda(scriptPath, args)
     })
   }
 }

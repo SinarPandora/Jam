@@ -19,6 +19,7 @@ import o.lartifa.jam.model.tasks.SimpleTask
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext, Step}
 import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.plugins.caiyunai.dream.KeepAliveDreamingActor
+import o.lartifa.jam.plugins.lambda.runner.ScriptRunner
 import o.lartifa.jam.plugins.rss.SubscriptionPool
 import o.lartifa.jam.pool.CronTaskPool.TaskDefinition
 import o.lartifa.jam.pool.{CronTaskPool, JamContext, StepPool}
@@ -72,6 +73,7 @@ object JamLoader {
     await(BehaviorInitializer.init())
     await(BanList.loadBanList())
     KeepAliveDreamingActor.showBootMessage()
+    ScriptRunner.init()
   }
 
   /**
