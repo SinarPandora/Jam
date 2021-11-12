@@ -54,6 +54,7 @@ object SXDLParseEngine extends Parser {
    */
   @throws[ParseFailException]
   def load()(implicit exec: ExecutionContext): Future[Map[Boolean, Seq[Either[SXDLParseFailResult, SXDLParseSuccessResult]]]] = async {
+    val autoIdCounter = new AtomicLong(-1)
     CommandParser.prepareParsers()
     val scriptPath: File = File(SystemConfig.sxdlPath).createDirectoryIfNotExists()
     if (BotConfig.RemoteEditing.enable) {
@@ -61,7 +62,7 @@ object SXDLParseEngine extends Parser {
     }
     DynamicConfigLoader.reload()
     loadFiles(scriptPath).flatMap {
-      case (ssdlFiles, chatInfo) => parseFiles(ssdlFiles, chatInfo)
+      case (ssdlFiles, chatInfo) => parseFiles(ssdlFiles, chatInfo, autoIdCounter)
     }.groupBy(_.isRight)
   }
 
@@ -84,7 +85,7 @@ object SXDLParseEngine extends Parser {
           case "global_private" => ChatInfo.Private
           case "global_group" => ChatInfo.Group
           case _ =>
-            val Array(tp, id) = dirName.split("_").take(2)
+            val Array(tp, id) = dirName.split("\\s*_\\s*").take(2)
             ChatInfo(tp, id.toLong)
         }
         dir.listRecursively.filter(file => sxdlFileExtension.contains(file.extension.getOrElse(""))).toList -> chatInfo
@@ -94,12 +95,12 @@ object SXDLParseEngine extends Parser {
   /**
    * 并行解析文本内容
    *
-   * @param ssdlFiles 文件列表
-   * @param chatInfo  会话信息（针对非全局步骤）
+   * @param ssdlFiles     文件列表
+   * @param chatInfo      会话信息（针对非全局步骤）
+   * @param autoIdCounter 自动 Id 计数器
    * @return 解析结果
    */
-  private def parseFiles(ssdlFiles: List[File], chatInfo: ChatInfo): Seq[Either[SXDLParseFailResult, SXDLParseSuccessResult]] = {
-    val autoIdCounter = new AtomicLong(-1)
+  private def parseFiles(ssdlFiles: List[File], chatInfo: ChatInfo, autoIdCounter: AtomicLong): Seq[Either[SXDLParseFailResult, SXDLParseSuccessResult]] = {
     ssdlFiles.par.flatMap(parseFileContent(_, chatInfo, autoIdCounter)).seq
   }
 
