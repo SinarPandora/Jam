@@ -14,6 +14,10 @@ import requests.Session
  */
 object DreamClient {
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(DreamClient.getClass)
+  private val commonHeader = Map(
+    "Origin" -> "https://if.caiyunai.com",
+    "Referer" -> "https://if.caiyunai.com/dream/"
+  )
 
   /**
    * 发送短信验证码
@@ -25,7 +29,7 @@ object DreamClient {
   def sendCaptcha(phoneNumber: String)(implicit session: Session): Either[String, String] = {
     try {
       val resp = ujson.read {
-        session.post(API_V2.sendCaptcha, data = ujson.Obj(
+        session.post(API_V2.sendCaptcha, headers = commonHeader, data = ujson.Obj(
           "type" -> "login",
           "phone" -> phoneNumber,
           "callcode" -> 86,
@@ -56,7 +60,7 @@ object DreamClient {
   def phoneLogin(phoneNumber: String, code: String, codeId: String)(implicit session: Session): Either[String, String] = {
     try {
       val resp = ujson.read {
-        session.post(API_V2.phoneLogin, data = ujson.Obj(
+        session.post(API_V2.phoneLogin, headers = commonHeader, data = ujson.Obj(
           "code" -> code,
           "phone" -> phoneNumber,
           "codeid" -> codeId,
@@ -91,7 +95,7 @@ object DreamClient {
    */
   def listModels(implicit session: Session): Either[String, List[AICharacter]] = {
     try {
-      val resp = ujson.read(session.get(API_V2.modelList).text())
+      val resp = ujson.read(session.get(API_V2.modelList, headers = commonHeader).text())
       Right {
         resp("data")("models").arr.flatMap { v =>
           val name = v("name").str.trim
@@ -119,7 +123,7 @@ object DreamClient {
   def saveAtFirst(uid: String, content: String)(implicit session: Session): Either[String, NovelMetadata] = {
     try {
       val resp = ujson.read {
-        session.post(API_V2.novelSave(uid), data = ujson.Obj(
+        session.post(API_V2.novelSave(uid), headers = commonHeader, data = ujson.Obj(
           "title" -> "",
           "nodes" -> List(),
           "text" -> content,
@@ -158,7 +162,7 @@ object DreamClient {
       metadata match {
         case NovelMetadata(nid, lastNode, branchId, _) =>
           val resp = ujson.read {
-            session.post(API_V2.novelAI(uid), data = ujson.Obj(
+            session.post(API_V2.novelAI(uid), headers = commonHeader, data = ujson.Obj(
               "nid" -> nid,
               "content" -> content,
               "uid" -> uid,

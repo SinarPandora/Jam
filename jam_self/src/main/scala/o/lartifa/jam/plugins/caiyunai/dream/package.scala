@@ -124,17 +124,17 @@ package object dream {
    * 如果接受结果：addNode -> novelSave -> 主要阶段1
    */
   object API_V2 {
-    val modelList: String = "http://if.caiyunai.com/v2/model/model_list"
+    val modelList: String = "https://if.caiyunai.com/v2/model/model_list"
 
-    val sendCaptcha: String = "http://if.caiyunai.com/v2/user/phone_message"
+    val sendCaptcha: String = "https://if.caiyunai.com/v2/user/phone_message"
 
-    val phoneLogin: String = "http://if.caiyunai.com/v2/user/phone_login"
+    val phoneLogin: String = "https://if.caiyunai.com/v2/user/phone_login"
 
-    def novelSave(uid: String): String = s"http://if.caiyunai.com/v2/novel/$uid/novel_save"
+    def novelSave(uid: String): String = s"https://if.caiyunai.com/v2/novel/$uid/novel_save"
 
-    def novelAI(uid: String): String = s"http://if.caiyunai.com/v2/novel/$uid/novel_ai"
+    def novelAI(uid: String): String = s"https://if.caiyunai.com/v2/novel/$uid/novel_ai"
 
-    def addNode(uid: String): String = s"http://if.caiyunai.com/v2/novel/$uid/add_node"
+    def addNode(uid: String): String = s"https://if.caiyunai.com/v2/novel/$uid/add_node"
 
   }
 
