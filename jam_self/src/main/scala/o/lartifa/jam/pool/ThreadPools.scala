@@ -59,4 +59,11 @@ object ThreadPools {
   val DEFAULT: ExecutionContext = ExecutionContext.fromExecutor(
     Executors.newWorkStealingPool(Runtime.getRuntime.availableProcessors() * 2)
   )
+
+  /**
+   * Lambda 线程池
+   */
+  val LAMBDA: ExecutionContext = ExecutionContext.fromExecutor(
+    Executors.newWorkStealingPool(10)
+  )
 }

@@ -8,10 +8,10 @@ import o.lartifa.jam.common.config.botConfigFile
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.plugins.lambda.context.LambdaContext
-import o.lartifa.jam.plugins.lambda.wrapper.DBVarPoolWrapper
-import o.lartifa.jam.pool.JamContext
+import o.lartifa.jam.plugins.lambda.wrapper.{DBVarPoolWrapper, LambdaDSL}
+import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 import scala.jdk.CollectionConverters.*
 
 /**
@@ -38,20 +38,24 @@ object ScriptRunner {
    *
    * @param scriptPath 脚本路径
    * @param ctx        指令执行上下文
-   * @param exec       运行上下文
    * @param args       用户输入参数
    */
   @throws[ExecutionException]
-  def eval(scriptPath: String, ctx: CommandExecuteContext, args: Seq[String])(implicit exec: ExecutionContext): Future[Unit] = Future {
+  def eval(scriptPath: String, ctx: CommandExecuteContext, args: Map[String, Any]): Future[Object] = Future {
     if ((scriptRootPath / scriptPath.stripPrefix("/")).notExists()) throw ExecutionException(s"Lambda 脚本不存在：$scriptPath")
     val binding = new Binding()
     binding.setVariable("ctx", new LambdaContext(ctx))
-    binding.setVariable("ec", exec)
-    binding.setVariable("props", new DBVarPoolWrapper(ctx.vars, ctx.eventMessage))
+    binding.setVariable("ec", ThreadPools.LAMBDA)
+    binding.setVariable("props", new DBVarPoolWrapper(ctx.vars, ctx.eventMessage)(ThreadPools.LAMBDA))
     binding.setVariable("vars", ctx.tempVars._CommandScopeParameters.asJava)
     binding.setVariable("msg", ctx.eventMessage)
     binding.setVariable("log", logger)
-    binding.setVariable("args", args.asJava)
+    binding.setVariable("$bot", JamContext.bot.get())
+    binding.setVariable("$api", JamContext.httpApi.get()())
+    args.foreach {
+      case (key, value) => binding.setVariable(key, value)
+    }
+    new LambdaDSL(ctx).setUp(binding)
     try {
       groovyEngine.run(scriptPath, binding)
     } catch {
@@ -59,5 +63,5 @@ object ScriptRunner {
         logger.error("执行脚本过程中出错", e)
         throw ExecutionException(s"执行脚本过程中出错：${e.getMessage}")
     }
-  }
+  }(ThreadPools.LAMBDA)
 }
