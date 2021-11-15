@@ -13,6 +13,7 @@ import scala.jdk.FutureConverters
 
 import java.util.concurrent.CompletionStage
 import java.util.function.BiConsumer
+
 /**
  * Lambda DSL
  *
@@ -73,6 +74,11 @@ class LambdaDSL implements Interactive {
         })).asJava()
     }
 
+    /**
+     * 装配 DSL
+     *
+     * @param binding 脚本绑定
+     */
     void setUp(Binding binding) {
         binding.setVariable("setTimeout", LambdaDSL::setTimeout)
         binding.setVariable("clearTimeout", LambdaDSL::clearTimeout)
