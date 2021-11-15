@@ -1,6 +1,6 @@
-package o.lartifa.jam.utils
+package o.lartifa.jam.common.util
 
-import better.files._
+import better.files.*
 
 import java.io.File
 

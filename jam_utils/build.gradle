@@ -20,10 +20,10 @@ dependencies {
     // Scala
     api("org.scala-lang:scala-library:$scala_version")
     api("org.scala-lang:scala-reflect:$scala_version")
-    api('org.scala-lang.modules:scala-async_2.13:1.0.0')
-    api('org.scala-lang.modules:scala-parallel-collections_2.13:1.0.3')
+    api('org.scala-lang.modules:scala-async_2.13:1.0.1')
+    api('org.scala-lang.modules:scala-parallel-collections_2.13:1.0.4')
     api("com.github.pathikrit:better-files_2.13:3.9.1")
-    api('org.eclipse.jgit:org.eclipse.jgit:5.12.0.202106070339-r')
+    api('org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r')
 
     // Test
     testImplementation("org.scalactic:scalactic_2.13:$scala_test_version")

@@ -5,9 +5,8 @@ import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.BotConfig.RemoteEditing
 import o.lartifa.jam.common.config.SystemConfig
 import o.lartifa.jam.common.exception.ParseFailException
-import o.lartifa.jam.common.util.MasterUtil
+import o.lartifa.jam.common.util.{GitUtil, MasterUtil}
 import o.lartifa.jam.pool.JamContext
-import o.lartifa.jam.utils.GitUtil
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.ResetCommand.ResetType
 import org.eclipse.jgit.transport.{URIish, UsernamePasswordCredentialsProvider}

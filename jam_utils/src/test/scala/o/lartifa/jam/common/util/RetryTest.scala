@@ -1,4 +1,4 @@
-package o.lartifa.jam.utils
+package o.lartifa.jam.common.util
 
 import org.scalatest.flatspec.AnyFlatSpec
 
@@ -10,7 +10,7 @@ import org.scalatest.flatspec.AnyFlatSpec
  */
 class RetryTest extends AnyFlatSpec {
 
-  import Retry._
+  import Retry.*
 
   behavior of "对 Retry（重试工具）进行测试"
 

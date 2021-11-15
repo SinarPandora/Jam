@@ -1,4 +1,4 @@
-package o.lartifa.jam.utils
+package o.lartifa.jam.common.util
 
 import scala.annotation.tailrec
 
