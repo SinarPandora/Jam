@@ -3,9 +3,10 @@ package o.lartifa.jam.common.config
 import com.typesafe.config.Config
 // 不使用全部导入以避免循环依赖
 // @formatter:off
-import o.lartifa.jam.common.config.PluginConfig.{DreamAI, PicBot, Rss, PreHandle, PostHandle}
+import o.lartifa.jam.common.config.PluginConfig.*
 // @formatter:on
 import o.lartifa.jam.common.exception.ParseFailException
+import o.lartifa.jam.common.util.BetterConfig.*
 
 import scala.jdk.CollectionConverters.*
 
@@ -53,12 +54,12 @@ object PluginConfig extends Reloadable {
       PluginConfig(
         dreamAI = DreamAI(mobile = config.getString("dream_ai.mobile")),
         picBot = PicBot(
-          pixivProxy = config.getString("picbot.pixiv_proxy"),
-          apiBatchSize = config.getInt("picbot.api_batch_size")
+          pixivProxy = config.getString("picbot.pixiv_proxy", "i.pixiv.re"),
+          apiBatchSize = config.getInt("picbot.api_batch_size", 100)
         ),
         rss = Rss(
-          deployUrl = config.getString("rss.deploy_url"),
-          defaultStyle = config.getString("rss.style.default"),
+          deployUrl = config.getString("rss.deploy_url", ""),
+          defaultStyle = config.getString("rss.style.default", "图文混排"),
           customStyles = config.getConfig("rss.style.custom")
             .entrySet().asScala
             .map(it => it.getKey.replace("\"", "") ->
@@ -66,16 +67,16 @@ object PluginConfig extends Reloadable {
             .toMap
         ),
         preHandle = PreHandle(
-          runTaskAsync = config.getBoolean("pre_handle.run_task_async"),
-          enabledTasks = config.getStringList("pre_handle.enabled_tasks").asScala.toList,
+          runTaskAsync = config.getBoolean("pre_handle.run_task_async", default = true),
+          enabledTasks = config.getStringList("pre_handle.enabled_tasks", List("反向复读图片", "替换小程序跳转")),
           flipRepeatPicture = FlipRepeatPicture(
-            useFFMpeg = config.getBoolean("pre_handle.flip_repeat_picture.use_ffmpeg"),
-            ffmpegPath = config.getString("pre_handle.flip_repeat_picture.ffmpeg_path")
+            useFFMpeg = config.getBoolean("pre_handle.flip_repeat_picture.use_ffmpeg", default = false),
+            ffmpegPath = config.getString("pre_handle.flip_repeat_picture.ffmpeg_path", "")
           )
         ),
         postHandle = PostHandle(
-          runTaskAsync = config.getBoolean("post_handle.run_task_async"),
-          enabledTasks = config.getStringList("post_handle.enabled_tasks").asScala.toList
+          runTaskAsync = config.getBoolean("post_handle.run_task_async", default = true),
+          enabledTasks = config.getStringList("post_handle.enabled_tasks", List())
         )
       ))
   }

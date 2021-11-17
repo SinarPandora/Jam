@@ -1,6 +1,7 @@
 package o.lartifa.jam.common.config
 
 import com.typesafe.config.Config
+import o.lartifa.jam.common.util.BetterConfig.*
 
 /**
  * 果酱配置
@@ -18,7 +19,7 @@ object BotConfig {
   val password: String = config.getString("password")
 
   // 果酱配置文件存放位置
-  val jamConfigFile: String = config.getString("jam_config_file")
+  val jamConfigFile: String = config.getString("jam_config_file", "../conf/sxdl")
 
   // 远程编辑
   object RemoteEditing {
