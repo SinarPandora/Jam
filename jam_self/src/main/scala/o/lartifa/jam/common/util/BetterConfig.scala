@@ -19,7 +19,7 @@ object BetterConfig {
      * @param default 默认值
      * @return 字符串
      */
-    def getString(path: String, default: String): String =
+    def getStringOrElse(path: String, default: String): String =
       if (config.hasPath(path)) config.getString(path) else default
 
     /**
@@ -29,7 +29,7 @@ object BetterConfig {
      * @param default 默认值
      * @return 整数
      */
-    def getInt(path: String, default: Int): Int =
+    def getIntOrElse(path: String, default: Int): Int =
       if (config.hasPath(path)) config.getInt(path) else default
 
     /**
@@ -39,7 +39,7 @@ object BetterConfig {
      * @param default 默认值
      * @return 长整数
      */
-    def getLong(path: String, default: Long): Long =
+    def getLongOrElse(path: String, default: Long): Long =
       if (config.hasPath(path)) config.getLong(path) else default
 
     /**
@@ -49,7 +49,7 @@ object BetterConfig {
      * @param default 默认值
      * @return 布尔值
      */
-    def getBoolean(path: String, default: Boolean): Boolean =
+    def getBooleanOrElse(path: String, default: Boolean): Boolean =
       if (config.hasPath(path)) config.getBoolean(path) else default
 
     /**
@@ -59,7 +59,7 @@ object BetterConfig {
      * @param default 默认值
      * @return 字符串列表
      */
-    def getStringList(path: String, default: List[String]): List[String] =
+    def getStringListOrElse(path: String, default: List[String]): List[String] =
       if (config.hasPath(path)) config.getStringList(path).asScala.toList else default
 
     /**
@@ -69,7 +69,7 @@ object BetterConfig {
      * @param default 默认值
      * @return 整数列表
      */
-    def getIntList(path: String, default: List[Int]): List[Int] =
+    def getIntListOrElse(path: String, default: List[Int]): List[Int] =
       if (config.hasPath(path)) config.getIntList(path).asScala.map(_.toInt).toList else default
 
     /**
@@ -79,7 +79,7 @@ object BetterConfig {
      * @param default 默认值
      * @return 长整数列表
      */
-    def getLongList(path: String, default: List[Long]): List[Long] =
+    def getLongListOrElse(path: String, default: List[Long]): List[Long] =
       if (config.hasPath(path)) config.getLongList(path).asScala.map(_.toLong).toList else default
   }
 }

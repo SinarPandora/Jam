@@ -1,6 +1,8 @@
 package o.lartifa.jam.plugins.lambda.runner
 
 import better.files.*
+
+import java.io.File as JFile
 import cc.moecraft.logger.HyLogger
 import groovy.lang.Binding
 import groovy.util.GroovyScriptEngine
@@ -8,9 +10,10 @@ import o.lartifa.jam.common.config.botConfigFile
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.plugins.lambda.context.LambdaContext
-import o.lartifa.jam.plugins.lambda.wrapper.{DBVarPoolWrapper, LambdaDSL}
+import o.lartifa.jam.plugins.lambda.wrapper.DBVarPoolWrapper
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
+import java.lang.reflect.{Constructor, Method}
 import scala.concurrent.Future
 import scala.jdk.CollectionConverters.*
 
@@ -24,11 +27,18 @@ object ScriptRunner {
   private lazy val scriptRootPath: File = botConfigFile.getString("lambda.script_root_path").toFile.createDirectoryIfNotExists()
   private lazy val groovyEngine: GroovyScriptEngine = new GroovyScriptEngine(Array(scriptRootPath.url), ClassLoader.getSystemClassLoader)
   private val logger: HyLogger = JamContext.loggerFactory.get().getLogger(ScriptRunner.getClass)
+  private var dslWrapper: Method = _
 
   /**
    * 初始化
    */
   def init(): Unit = {
+    dslWrapper = groovyEngine.getGroovyClassLoader
+      .parseClass(new JFile(this
+        .getClass
+        .getResource("/wrapper/LambdaDSLWrapper.groovy")
+        .getPath))
+      .getMethod("setUp", classOf[Binding], classOf[CommandExecuteContext])
     logger.log(s"""Jam Lambda 脚本引擎初始化完成，将识别并执行${scriptRootPath.pathAsString}下的脚本""")
     logger.log("脚本会随着更改自动更新，无需重启 Bot")
   }
@@ -55,7 +65,7 @@ object ScriptRunner {
     args.foreach {
       case (key, value) => binding.setVariable(key, value)
     }
-    new LambdaDSL(ctx).setUp(binding)
+    dslWrapper.invoke(null, binding, ctx)
     try {
       groovyEngine.run(scriptPath, binding)
     } catch {

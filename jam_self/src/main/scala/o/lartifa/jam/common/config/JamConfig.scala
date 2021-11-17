@@ -64,33 +64,33 @@ object JamConfig extends Reloadable {
     val config: Config = DynamicConfigLoader.config
 
     this._config = Option(new JamConfig(
-      name = config.getString("character.name", "果酱"),
-      responseFrequency = config.getInt("character.response_frequency", 100),
-      balderdash = config.getStringList("character.balderdash", List("睡着了……")),
+      name = config.getStringOrElse("character.name", "果酱"),
+      responseFrequency = config.getIntOrElse("character.response_frequency", 100),
+      balderdash = config.getStringListOrElse("character.balderdash", List("睡着了……")),
       forMaster = ForMaster(
         masterList = config.getLongList("character.for_master.master_list").asScala.map(_.toLong).toList,
-        name = config.getString("character.for_master.name", "主人"),
-        goodMorning = config.getString("character.for_master.good_morning", "早上好！%s！"),
-        goodNight = config.getString("character.for_master.good_night", "晚安~ %s")
+        name = config.getStringOrElse("character.for_master.name", "主人"),
+        goodMorning = config.getStringOrElse("character.for_master.good_morning", "早上好！%s！"),
+        goodNight = config.getStringOrElse("character.for_master.good_night", "晚安~ %s")
       ),
       randomAIReply = RandomAIReply(
-        replayWhen1 = config.getString("character.random_ai.1", "未配置"),
-        replyWhen100 = config.getString("character.random_ai.100", "未配置"),
-        replyFrom2to20 = config.getString("character.random_ai.2-20", "未配置"),
-        replyFrom21to40 = config.getString("character.random_ai.21-40", "未配置"),
-        replyFrom41to60 = config.getString("character.random_ai.41-60", "未配置"),
-        replyFrom61to80 = config.getString("character.random_ai.61-80", "未配置"),
-        replyFrom81to99 = config.getString("character.random_ai.81-99", "未配置"),
+        replayWhen1 = config.getStringOrElse("character.random_ai.1", "未配置"),
+        replyWhen100 = config.getStringOrElse("character.random_ai.100", "未配置"),
+        replyFrom2to20 = config.getStringOrElse("character.random_ai.2-20", "未配置"),
+        replyFrom21to40 = config.getStringOrElse("character.random_ai.21-40", "未配置"),
+        replyFrom41to60 = config.getStringOrElse("character.random_ai.41-60", "未配置"),
+        replyFrom61to80 = config.getStringOrElse("character.random_ai.61-80", "未配置"),
+        replyFrom81to99 = config.getStringOrElse("character.random_ai.81-99", "未配置"),
       ),
       biochronometer = Biochronometer(
-        wakeUpTime = config.getInt("biochronometer.wake_up_time", 8),
-        goAsleepTime = config.getInt("biochronometer.go_asleep_time", 1),
-        activeTimes = config.getStringList("biochronometer.active_times", List("None")),
-        allTimeAtYourService = config.getBoolean("biochronometer.all_time_at_your_service", default = false)
+        wakeUpTime = config.getIntOrElse("biochronometer.wake_up_time", 8),
+        goAsleepTime = config.getIntOrElse("biochronometer.go_asleep_time", 1),
+        activeTimes = config.getStringListOrElse("biochronometer.active_times", List("None")),
+        allTimeAtYourService = config.getBooleanOrElse("biochronometer.all_time_at_your_service", default = false)
       ),
-      autoAcceptFriendRequest = config.getBoolean("character.auto_accept_friend_request", default = true),
-      autoAcceptGroupRequest = config.getBoolean("character.auto_accept_group_request", default = true),
-      matchOutOfOrder = config.getBoolean("match_out_of_order", default = false)
+      autoAcceptFriendRequest = config.getBooleanOrElse("character.auto_accept_friend_request", default = true),
+      autoAcceptGroupRequest = config.getBooleanOrElse("character.auto_accept_group_request", default = true),
+      matchOutOfOrder = config.getBooleanOrElse("match_out_of_order", default = false)
     ))
   }
 }

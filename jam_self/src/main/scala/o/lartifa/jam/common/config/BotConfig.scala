@@ -19,7 +19,7 @@ object BotConfig {
   val password: String = config.getString("password")
 
   // 果酱配置文件存放位置
-  val jamConfigFile: String = config.getString("jam_config_file", "../conf/sxdl")
+  val jamConfigFile: String = config.getStringOrElse("jam_config_file", "../conf/sxdl")
 
   // 远程编辑
   object RemoteEditing {
