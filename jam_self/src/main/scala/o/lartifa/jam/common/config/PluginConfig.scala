@@ -3,7 +3,7 @@ package o.lartifa.jam.common.config
 import com.typesafe.config.Config
 // 不使用全部导入以避免循环依赖
 // @formatter:off
-import o.lartifa.jam.common.config.PluginConfig.*
+import o.lartifa.jam.common.config.PluginConfig.{DreamAI, PicBot, Rss, PreHandle, PostHandle}
 // @formatter:on
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.common.util.BetterConfig.*
