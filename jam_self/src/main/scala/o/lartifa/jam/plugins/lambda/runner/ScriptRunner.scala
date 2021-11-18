@@ -4,6 +4,7 @@ import better.files.*
 
 import java.io.File as JFile
 import cc.moecraft.logger.HyLogger
+import cn.hutool.core.io.resource.ResourceUtil
 import groovy.lang.Binding
 import groovy.util.GroovyScriptEngine
 import o.lartifa.jam.common.config.botConfigFile
@@ -34,10 +35,7 @@ object ScriptRunner {
    */
   def init(): Unit = {
     dslWrapper = groovyEngine.getGroovyClassLoader
-      .parseClass(new JFile(this
-        .getClass
-        .getResource("/wrapper/LambdaDSLWrapper.groovy")
-        .getPath))
+      .parseClass(ResourceUtil.readUtf8Str("wrapper/LambdaDSLWrapper.groovy"))
       .getMethod("setUp", classOf[Binding], classOf[CommandExecuteContext])
     logger.log(s"""Jam Lambda 脚本引擎初始化完成，将识别并执行${scriptRootPath.pathAsString}下的脚本""")
     logger.log("脚本会随着更改自动更新，无需重启 Bot")
