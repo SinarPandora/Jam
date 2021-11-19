@@ -5,6 +5,7 @@ import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
+import o.lartifa.jam.cool.qq.listener.BanList
 import o.lartifa.jam.model.tasks.SimpleTask.{logger, unsafeMockContext}
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext, Executable}
 import o.lartifa.jam.pool.JamContext
@@ -20,7 +21,7 @@ import scala.jdk.CollectionConverters.*
  * Author: sinar
  * 2021/1/3 13:18
  */
-class SimpleTask(id: Long, name: String, val cronExp: String, chatInfo: ChatInfo, executable: Executable[_])
+class SimpleTask(id: Long, name: String, val cronExp: String, chatInfo: ChatInfo, executable: Executable[?])
   extends JamCronTask(id = id.toString, name = name, chatInfo = chatInfo, onlyOnce = false) {
   /**
    * 执行定时任务内容
@@ -30,16 +31,16 @@ class SimpleTask(id: Long, name: String, val cronExp: String, chatInfo: ChatInfo
    */
   override def run()(implicit exec: ExecutionContext): Future[Unit] = {
     if (chatInfo.chatId == -1) {
+      lazy val friends = JamContext.bot.get().getUserManager.userCache.keySet().asScala
+        .map(_.toLong).diff(BanList.user)
+        .map(qId => chatInfo.copy(chatId = qId)).toSet
+      lazy val groups = JamContext.bot.get().getGroupManager.groupCache.keySet().asScala
+        .map(_.toLong).diff(BanList.group)
+        .map(qId => chatInfo.copy(chatId = qId)).toSet
       val qIDs: Set[ChatInfo] = chatInfo.chatType match {
-        case MessageType.PRIVATE => JamContext.bot.get().getUserManager.userCache.keySet().asScala
-          .map(qId => chatInfo.copy(chatId = qId)).toSet
-        case MessageType.GROUP => JamContext.bot.get().getGroupManager.groupCache.keySet().asScala
-          .map(qId => chatInfo.copy(chatId = qId)).toSet
-        case MessageType.NONE =>
-          JamContext.bot.get().getGroupManager.groupCache.keySet().asScala
-            .map(qId => chatInfo.copy(chatId = qId)).toSet ++
-            JamContext.bot.get().getUserManager.userCache.keySet().asScala
-              .map(qId => chatInfo.copy(chatId = qId)).toSet
+        case MessageType.PRIVATE => friends
+        case MessageType.GROUP => groups
+        case MessageType.NONE => friends ++ groups
         case MessageType.DISCUSS => throw ExecutionException("STDL任务暂不支持讨论组")
       }
       Future.sequence(
@@ -113,7 +114,7 @@ object SimpleTask {
     )
   }
 
-  def apply(id: Long, name: Option[String], cronExp: String, chatInfo: ChatInfo, executable: Executable[_]): SimpleTask = {
+  def apply(id: Long, name: Option[String], cronExp: String, chatInfo: ChatInfo, executable: Executable[?]): SimpleTask = {
     new SimpleTask(id, name.getOrElse(id.toString), cronExp, chatInfo, executable)
   }
 }
