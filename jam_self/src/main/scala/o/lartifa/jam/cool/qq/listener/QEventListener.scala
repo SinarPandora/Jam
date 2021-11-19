@@ -50,6 +50,7 @@ object QEventListener extends IcqListener {
    */
   private def handleEvent(event: CQEvent): Unit = {
     implicit val context: CommandExecuteContext = CommandExecuteContext(event)
+    context.tempVars._CommandScopeParameters ++= event.data
     if (!BanList.isAllowed(event.chatInfo)) return
     buildSearchPath(event.chatInfo).find(matcher => matcher.isMatched(event.name)).foreach {
       case ContentMatcher(stepId, _, _, _) =>
