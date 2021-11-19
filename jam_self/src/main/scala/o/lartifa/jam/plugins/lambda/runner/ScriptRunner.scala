@@ -1,8 +1,6 @@
 package o.lartifa.jam.plugins.lambda.runner
 
 import better.files.*
-
-import java.io.File as JFile
 import cc.moecraft.logger.HyLogger
 import cn.hutool.core.io.resource.ResourceUtil
 import groovy.lang.Binding
@@ -14,7 +12,7 @@ import o.lartifa.jam.plugins.lambda.context.LambdaContext
 import o.lartifa.jam.plugins.lambda.wrapper.DBVarPoolWrapper
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
-import java.lang.reflect.{Constructor, Method}
+import java.lang.reflect.Method
 import scala.concurrent.Future
 import scala.jdk.CollectionConverters.*
 
@@ -37,7 +35,7 @@ object ScriptRunner {
     dslWrapper = groovyEngine.getGroovyClassLoader
       .parseClass(ResourceUtil.readUtf8Str("wrapper/LambdaDSLWrapper.groovy"))
       .getMethod("setUp", classOf[Binding], classOf[CommandExecuteContext])
-    logger.log(s"""Jam Lambda 脚本引擎初始化完成，将识别并执行${scriptRootPath.pathAsString}下的脚本""")
+    logger.log(s"""Jam Lambda 脚本引擎初始化完成""")
     logger.log("脚本会随着更改自动更新，无需重启 Bot")
   }
 
