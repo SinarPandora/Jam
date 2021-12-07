@@ -27,7 +27,7 @@ case class RunLambda(scriptPath: String, vars: Seq[RenderStrTemplate]) extends C
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Object] = {
     Future.sequence(vars.map(_.execute())).flatMap(args => ScriptRunner.eval(scriptPath, context, Map(
-      "args" -> args.asJava,
+      "$args" -> args.asJava,
       "$scope" -> scopedVars(context.chatInfo),
       "$rootScope" -> rootScopedVars
     )))
