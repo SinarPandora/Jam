@@ -107,7 +107,9 @@ dependencies {
     api('com.sksamuel.scrimage:scrimage-core:4.0.22') {
         exclude group: "ch.qos.logback", module: "logback-classic"
     }
-    api('com.sksamuel.scrimage:scrimage-filters:4.0.22')
+    api('com.sksamuel.scrimage:scrimage-filters:4.0.22') {
+        exclude group: "ch.qos.logback", module: "logback-classic"
+    }
     api('com.github.kokorin.jaffree:jaffree:2021.08.31')
     implementation('org.slf4j:slf4j-simple:1.7.32')
 

@@ -2,9 +2,11 @@ package o.lartifa.jam.plugins.filppic
 
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.angles.Degrees
+import com.sksamuel.scrimage.color.X11Colorlist
 import com.sksamuel.scrimage.filter.MotionBlurFilter
 import com.sksamuel.scrimage.nio.GifSequenceWriter
 
+import java.awt
 import scala.util.Random
 
 /**
@@ -17,6 +19,7 @@ object ImageFilter {
   private val gifWriter: GifSequenceWriter = new GifSequenceWriter()
     .withFrameDelay(100)
     .withInfiniteLoop(true)
+  private val BLACK: awt.Color = X11Colorlist.Black.toAWT
 
   /**
    * 随机过滤
@@ -53,8 +56,16 @@ object ImageFilter {
    * @return gif 数据
    */
   def loop(image: ImmutableImage): Array[Byte] = {
-    val side = if (image.height > image.width) image.width else image.height
-    val scaleImage = image.copy().cover(side, side)
+    val (side, rate) = if (image.height > image.width) {
+      (image.height, image.width / image.height)
+    } else {
+      (image.width, image.height / image.width)
+    }
+    val scaleImage = if (rate >= 0.6) {
+      image.cover(side, side)
+    } else {
+      image.copy().fit(side, side, BLACK)
+    }
     gifWriter.bytes(Array(
       scaleImage.flipX().flipY(),
       scaleImage.rotate(new Degrees(-90)),
@@ -71,11 +82,11 @@ object ImageFilter {
    */
   def motionBlur(image: ImmutableImage): Array[Byte] = {
     gifWriter.bytes(Array(
-      image.filter(new MotionBlurFilter(0, 10)),
-      image.filter(new MotionBlurFilter(0, 20)),
-      image.filter(new MotionBlurFilter(0, 30)),
-      image.filter(new MotionBlurFilter(0, 40)),
-      image.filter(new MotionBlurFilter(0, 50))
+      image.filter(new MotionBlurFilter(0, 2)),
+      image.filter(new MotionBlurFilter(0, 4)),
+      image.filter(new MotionBlurFilter(0, 6)),
+      image.filter(new MotionBlurFilter(0, 8)),
+      image.filter(new MotionBlurFilter(0, 10))
     ))
   }
 
@@ -87,14 +98,14 @@ object ImageFilter {
    */
   def motionBlurXY(image: ImmutableImage): Array[Byte] = {
     gifWriter.bytes(Array(
-      image.filter(new MotionBlurFilter(0, 10)),
-      image.filter(new MotionBlurFilter(45, 10)),
-      image.filter(new MotionBlurFilter(90, 10)),
-      image.filter(new MotionBlurFilter(135, 10)),
-      image.filter(new MotionBlurFilter(180, 10)),
-      image.filter(new MotionBlurFilter(225, 10)),
-      image.filter(new MotionBlurFilter(270, 10)),
-      image.filter(new MotionBlurFilter(315, 10))
+      image.filter(new MotionBlurFilter(0, 8)),
+      image.filter(new MotionBlurFilter(45, 8)),
+      image.filter(new MotionBlurFilter(90, 8)),
+      image.filter(new MotionBlurFilter(135, 8)),
+      image.filter(new MotionBlurFilter(180, 8)),
+      image.filter(new MotionBlurFilter(225, 8)),
+      image.filter(new MotionBlurFilter(270, 8)),
+      image.filter(new MotionBlurFilter(315, 8))
     ))
   }
 }
