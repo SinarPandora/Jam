@@ -1,10 +1,6 @@
 package o.lartifa.jam.common.config
 
 import com.typesafe.config.Config
-// 不使用全部导入以避免循环依赖
-// @formatter:off
-import o.lartifa.jam.common.config.PluginConfig.*
-// @formatter:on
 import o.lartifa.jam.common.exception.ParseFailException
 
 import scala.jdk.CollectionConverters.*
@@ -13,15 +9,6 @@ import scala.jdk.CollectionConverters.*
  * Author: sinar
  * 2021/10/25 00:08
  */
-case class PluginConfig
-(
-  dreamAI: DreamAI,
-  picBot: PicBot,
-  rss: Rss,
-  preHandle: PreHandle,
-  postHandle: PostHandle
-)
-
 object PluginConfig extends Reloadable {
   case class DreamAI(mobile: String)
   case class PicBot(pixivProxy: String, apiBatchSize: Int)
@@ -82,3 +69,14 @@ object PluginConfig extends Reloadable {
       ))
   }
 }
+
+import o.lartifa.jam.common.config.PluginConfig.*
+
+case class PluginConfig
+(
+  dreamAI: DreamAI,
+  picBot: PicBot,
+  rss: Rss,
+  preHandle: PreHandle,
+  postHandle: PostHandle
+)
