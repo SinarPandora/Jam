@@ -22,7 +22,7 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
     "发送者昵称", "对方昵称", "发送者群昵称", "对方群昵称", "发送者QQ昵称", "对方QQ昵称", "发送者QQ", "对方QQ", "QQ号",
     "发送者年龄", "对方年龄", "发送者性别", "对方性别", "会话类型", "是否为好友", "对方管理状态")
 
-  val _CommandScopeParameters: mutable.Map[String, String] = mutable.Map.empty
+  val _commandScopeParameters: mutable.Map[String, String] = mutable.Map.empty
 
   /**
    * 更新变量，不存在时报错
@@ -34,8 +34,8 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    */
   override def update(name: String, value: String)(implicit context: CommandExecuteContext): Future[String] = {
     if (checkOverridable(name)) {
-      if (_CommandScopeParameters.contains(name)) {
-        _CommandScopeParameters += name -> value
+      if (_commandScopeParameters.contains(name)) {
+        _commandScopeParameters += name -> value
         Future.successful(value)
       } else Future.failed(VarNotFoundException(name, "临时变量"))
     } else Future.failed(ExecutionException(s"临时变量 $name 不可被覆盖！"))
@@ -51,7 +51,7 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    */
   override def updateOrElseSet(name: String, value: String)(implicit context: CommandExecuteContext): Future[String] = {
     if (checkOverridable(name)) {
-      _CommandScopeParameters += name -> value
+      _commandScopeParameters += name -> value
       Future.successful(value)
     } else Future.failed(ExecutionException(s"临时变量 $name 不可被覆盖！"))
   }
@@ -66,8 +66,8 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    */
   override def updateOrElseUse(name: String, value: String)(implicit context: CommandExecuteContext): Future[String] = {
     if (checkOverridable(name)) {
-      if (_CommandScopeParameters.contains(name)) {
-        _CommandScopeParameters += name -> value
+      if (_commandScopeParameters.contains(name)) {
+        _commandScopeParameters += name -> value
       }
       Future.successful(value)
     } else Future.failed(ExecutionException(s"临时变量 $name 不可被覆盖！"))
@@ -94,7 +94,7 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    */
   override def getOrElseUpdate(name: String, orElse: String)(implicit context: CommandExecuteContext): Future[String] = Future {
     getVar(name).getOrElse {
-      _CommandScopeParameters += name -> orElse
+      _commandScopeParameters += name -> orElse
       orElse
     }
   }
@@ -107,7 +107,7 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    * @return true：删除成功
    */
   override def delete(name: String)(implicit context: CommandExecuteContext): Future[Boolean] = {
-    _CommandScopeParameters.remove(name)
+    _commandScopeParameters.remove(name)
     Future.successful(true)
   }
 
@@ -125,7 +125,7 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    * @return true：删除成功
    */
   override def cleanAll(): Future[Boolean] = {
-    _CommandScopeParameters.clear()
+    _commandScopeParameters.clear()
     Future.successful(true)
   }
 
@@ -136,7 +136,7 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    */
   override def listAll(): Future[Seq[Tables.VariablesRow]] = Future {
     val chatInfo = ChatInfo(eventMessage)
-    _CommandScopeParameters.map {
+    _commandScopeParameters.map {
       case (key, value) => Tables.VariablesRow(-1, key, chatInfo.chatType, chatInfo.chatId, value, "TEXT", commandStartTime)
     }.toSeq
   }
@@ -169,7 +169,7 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
       case "会话类型" => if (eventMessage.chatInfo.chatType == "private") "私聊" else "群聊"
       case "是否为好友" => if (eventMessage.toGroupMessage.getGroupSender.getInfo.getUnfriendly) "否" else "是"
       case "对方管理状态" => if (eventMessage.isSenderManager) "是" else "否"
-      case other => return _CommandScopeParameters.get(other)
+      case other => return _commandScopeParameters.get(other)
     }
   }
 

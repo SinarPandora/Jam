@@ -49,10 +49,20 @@ object QMessageListener extends IcqListener {
       recordMessage(eventMessage) // 记录消息
         .flatMap(it => if (it) InteractiveSessionListener.blockAndInactiveIfExist(eventMessage) else Future.successful(false)) // 处理交互式会话
         .flatMap(it => if (it) Questioner.tryAnswerer(eventMessage) else Future.successful(false)) // 处理存在的询问
-        .flatMap(it => if (it && willResponse()) preHandleMessage(eventMessage) else Future.successful(false)) // 处理前置任务
-        .foreach(it => if (it) SSDLRuleRunner.executeIfFound(eventMessage) // 执行 SSDL 规则解析
-          .flatMap(postHandleMessage(eventMessage, _)) // 执行后置任务
-        )
+        .foreach(it => if (it) processMessage(eventMessage)) // 执行后置任务
+    }
+  }
+
+  /**
+   * 处理消息
+   *
+   * @param eventMessage 消息对象
+   */
+  def processMessage(eventMessage: EventMessage): Unit = {
+    if (willResponse()) {
+      preHandleMessage(eventMessage)
+        .foreach(it => if (it) SSDLRuleRunner.executeIfFound(eventMessage)
+          .flatMap(postHandleMessage(eventMessage, _)))
     }
   }
 

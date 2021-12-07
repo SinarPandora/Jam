@@ -3,6 +3,7 @@ package o.lartifa.jam.cool.qq.listener.interactive
 import akka.actor.{Actor, ActorRef}
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
+import o.lartifa.jam.cool.qq.listener.QMessageListener
 import o.lartifa.jam.cool.qq.listener.interactive.InteractiveSession.{Break, logger}
 import o.lartifa.jam.cool.qq.listener.interactive.InteractiveSessionProtocol.Manage
 import o.lartifa.jam.model.SpecificSender
@@ -38,6 +39,16 @@ class InteractiveSession(f: InteractiveFunction, sender: SpecificSender, manager
    * * 用于代替 Actor 正常逻辑中无法使用的 return 中断
    */
   def break[T](): T = throw Break
+
+  /**
+   * 继续处理消息事件
+   * * 将消息事件传递给消息监听器，继续进行 SXDL 捕获
+   *
+   * @param event 消息事件
+   */
+  def continue(event: EventMessage): Unit = {
+    QMessageListener.processMessage(event)
+  }
 
   /**
    * 等待注销
