@@ -11,7 +11,7 @@ import scala.util.matching.Regex
  */
 package object rss {
   val rss: RssReader = new RssReader()
-  val RSS_HUB_SOURCE: Regex = "(.+)/.+".r("category")
+  val RSS_HUB_SOURCE: Regex = "(?<category>.+)/.+".r
 
   def RssConfig: PluginConfig.Rss = PluginConfig.config.rss
 

@@ -40,7 +40,7 @@ object QQImg {
   case object GIF extends ImageType(List("gif"))
 
   // Example [CQ:image,file=40A.jpg,url=https://gchat.qpic.cn/gchatpic_new/39/70-A/0?term=2]整个人都是麻的
-  private val CQ_IMAGE_PATTERN: Regex = """\[CQ:image,file=(.+?),url=(.+?)]""".r("filename", "url")
+  private val CQ_IMAGE_PATTERN: Regex = """\[CQ:image,file=(?<filename>.+?),url=(?<url>.+?)]""".r
 
   /**
    * 从消息对象解析聊天图片

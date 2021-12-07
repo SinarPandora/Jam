@@ -46,7 +46,7 @@ package object listener {
         List("Private_Ban_List", "Group_Ban_List")
           .map {
             JamContext.variablePool.getOrElseUpdate(_, "")
-              .map(_.split(",").filterNot(_ == "").map(_.toLong).toIterable)
+              .map(_.split(",").filterNot(_ == "").map(_.toLong).toSeq)
           }
       }.flatMap {
         case priBan :: groupBan :: Nil =>

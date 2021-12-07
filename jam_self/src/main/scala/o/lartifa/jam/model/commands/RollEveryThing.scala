@@ -18,7 +18,7 @@ import scala.util.matching.Regex
  */
 case class RollEveryThing(mode: Mode, random: Random) extends Command[Int] {
 
-  lazy val TRPG_ROLL: Regex = """(\d+)\s*?d\s*?(\d+)""".r("times", "size")
+  lazy val TRPG_ROLL: Regex = """(?<times>\d+)\s*?d\s*?(?<size>\d+)""".r
 
   /**
    * 执行

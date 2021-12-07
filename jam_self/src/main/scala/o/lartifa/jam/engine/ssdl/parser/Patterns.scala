@@ -18,88 +18,88 @@ object Patterns {
    * 变量匹配
    * 返回结果：type name
    */
-  val varKeyPattern: Regex = """\{(临时变量|\*变量|变量|\*[@#&P图$]|[@#&P图$])(.+?)(\|.+?)?}""".r("type", "name", "default")
+  val varKeyPattern: Regex = """\{(?<type>临时变量|\*变量|变量|\*[@#&P图$]|[@#&P图$])(?<name>.+?)(?<default>\|.+?)?}""".r
   /**
    * 字符串模板匹配
    * 返回结果：template
    */
-  val stringTemplatePattern: Regex = """(?s)%\{(.+?)}%""".r("template")
+  val stringTemplatePattern: Regex = """(?s)%\{(?<template>.+?)}%""".r
   // 1
   /**
    * 基本模式匹配
    * 返回结果：id content
    */
-  val basePattern: Regex = """^(auto|@|[0-9]+)[：:](.+)""".r("id", "content")
+  val basePattern: Regex = """^(?<id>auto|@|[0-9]+)[：:](?<content>.+)""".r
   // 2
   /**
    * TODO 立即执行！
    * 返回结果：command
    */
-  val immediately: Regex = """^(解析后|启动后)立刻(.+)""".r("ignored", "command")
+  val immediately: Regex = """^(?<stage>解析后|启动后)立刻(?<command>.+)""".r
   // 3
   /**
    * 消息捕获器匹配
    * 返回结果：type keyword command
    */
-  val matcherPattern: Regex = """^(当|如果)(句中出现|句首出现|句末出现|内容为|匹配)%\{(.+?)}%时?[,，](.+)""".r("ignored", "type", "template", "command")
-  val commandMatcherPattern: Regex = """注册前缀为[\[【]([^{}【】\[\]]+)[】\]]的指令%\{(.+?)}%[:：](.+)""".r("prefixes", "template", "command")
-  val eventMatcherPattern: Regex = """当接收到(.+?)事件时?[,，](.+)""".r("event", "command")
+  val matcherPattern: Regex = """^(当|如果)(?<type>句中出现|句首出现|句末出现|内容为|匹配)%\{(?<template>.+?)}%时?[,，](?<command>.+)""".r
+  val commandMatcherPattern: Regex = """注册前缀为[\[【](?<prefixes>[^{}【】\[\]]+)[】\]]的指令%\{(?<template>.+?)}%[:：](?<command>.+)""".r
+  val eventMatcherPattern: Regex = """当接收到(?<event>.+?)事件时?[,，](?<command>.+)""".r
 
   // 4 -> STDL 解析
 
   // 平行 5
   object ConditionPattern {
     // 6
-    val paramCondition: Regex = """\{(.+?)}的值(等于|大于|小于|不大于|不小于|不等于)%\{(.+?)}%""".r("var", "op", "template")
+    val paramCondition: Regex = """\{(?<var>.+?)}的值(?<op>等于|大于|小于|不大于|不小于|不等于)%\{(?<template>.+?)}%""".r
   }
 
   // 平行 5
   object LogicStructurePattern {
     // 3
-    val `if`: Regex = """^(如果|若|当)(.+?)时[，,](.+)""".r("ignored", "condition", "command")
+    val `if`: Regex = """^(如果|若|当)(?<condition>.+?)时[，,](?<command>.+)""".r
     // 2
-    val or: Regex = """([，,]或([^或]+)[，,]?)|(或([^或]+))""".r("command")
-    val and: Regex = """([，,][且并]([^且并]+)[，,]?)|([且并]([^且并]+))""".r("command")
+    val or: Regex = new Regex("""([，,]或([^或]+)[，,]?)|(或([^或]+))""", "command")
+    val and: Regex = new Regex("""([，,][且并]([^且并]+)[，,]?)|([且并]([^且并]+))""", "command")
     // 1
-    val `else`: Regex = """[，,]否则(.+)""".r("command")
-    val loopPattern: Regex = """循环\{(.+?)}([0-9]+)次""".r("command", "times")
+    val `else`: Regex = """[，,]否则(?<command>.+)""".r
+    val loopPattern: Regex = """循环\{(?<command>.+?)}(?<times>[0-9]+)次""".r
   }
 
   // 6
   /**
    * 保存解析到的指令的执行结果
    */
-  val thenSaveTo: Regex = """(.+?)之后将结果保存到\{(.+?)}""".r("command", "name")
+  val thenSaveTo: Regex = """(?<command>.+?)之后将结果保存到\{(?<name>.+?)}""".r
   /**
    * 忽略错误
    */
-  val ignoreError: Regex = """(.+?)忽略错误""".r("command")
+  val ignoreError: Regex = """(?<command>.+?)忽略错误""".r
 
   // 7
   object CommandPattern {
     // no
     // 频率
-    val frequencyPattern: Regex = """(总是|偶尔|很少|极少)(.+)""".r("frequency", "command")
+    val frequencyPattern: Regex = """(?<frequency>总是|偶尔|很少|极少)(?<command>.+)""".r
     // 随机
-    val randomNumber: Regex = """随机[(（]([0-9]+)-([0-9]*)[)）]""".r("down", "up")
+    val randomNumber: Regex = """随机[(（](?<down>[0-9]+)-(?<up>[0-9]*)[)）]""".r
     // 捕获参数
-    val catchParameters: Regex = """用\{(.+?)}匹配捕获内容之后注册临时变量[\[【]([0-9A-Za-z一-龥,，]+)[】\]]""".r("regex", "names")
+    val catchParameters: Regex = """用\{(?<regex>.+?)}匹配捕获内容之后注册临时变量[\[【](?<names>[0-9A-Za-z一-龥,，]+)[】\]]""".r
     // 消息发送
-    val messageSend: Regex = """(回复|发送|说)%\{(.+?)}%""".r("type", "template")
+    val messageSend: Regex = """(?<type>回复|发送|说)%\{(?<template>.+?)}%""".r
     // 变量删除
-    val paramDel: Regex = """将\{(.+?)}删除""".r("name")
+    val paramDel: Regex = """将\{(?<name>.+?)}删除""".r
     // 变量操作
-    val paramOpt: Regex = """将\{(.+?)}(增加|减少|乘以|除以|取余|设置为)%\{(.+?)}%""".r("name", "opt", "template")
+    val paramOpt: Regex = """将\{(?<name>.+?)}(?<opt>增加|减少|乘以|除以|取余|设置为)%\{(?<template>.+?)}%""".r
     // 跳转执行
-    val goto: Regex = """(执行步骤|跳转至)([0-9]+)""".r("ignored", "stepId")
+    val goto: Regex = """(执行步骤|跳转至)(?<stepId>[0-9]+)""".r
     // 依次执行
-    val oneByOne: Regex = """依次执行[\[【]([0-9,，]+)[】\]]""".r("stepIds")
+    val oneByOne: Regex = """依次执行[\[【](?<stepIds>[0-9,，]+)[】\]]""".r
     // 随机执行
-    val randomGoto: Regex = """随机从[\[【]([0-9,，]+)[】\]]中选择([0-9]+)个执行""".r("stepIds", "amount")
+    val randomGoto: Regex = """随机从[\[【](?<stepIds>[0-9,，]+)[】\]]中选择(?<amount>[0-9]+)个执行""".r
     // 循环执行
-    val loopGoto: Regex = """(循环顺序|循环)执行[\[【]([0-9,，]+)[】\]]([0-9]+)次""".r("inOrder", "stepIds", "times")
+    val loopGoto: Regex = """(?<inOrder>循环顺序|循环)执行[\[【](?<stepIds>[0-9,，]+)[】\]](?<times>[0-9]+)次""".r
     // 等待
-    val waiting: Regex = """等待([0-9]+)秒""".r("sec")
+    val waiting: Regex = """等待(?<sec>[0-9]+)秒""".r
     // 什么也不做
     val noting: String = "什么也不做"
     // 全体禁言
@@ -107,21 +107,21 @@ object Patterns {
     // 解除全体禁言
     val groupWholeUnBan: String = "解除全体禁言"
     // 发送"色图"
-    val fetchAndSendPic: Regex = """发送([0-9]+)张色图""".r("amount")
+    val fetchAndSendPic: Regex = """发送(?<amount>[0-9]+)张色图""".r
     // 设置"色图"等级
-    val setPicRating: Regex = """设置图片(允许|禁止)R18""".r("enableR18")
+    val setPicRating: Regex = """设置图片(?<enableR18>允许|禁止)R18""".r
     // 设置"色图"模式
-    val setPicFetcherMode: Regex = """设置图片模式为(仅当前|范围内)""".r("mode")
+    val setPicFetcherMode: Regex = """设置图片模式为(?<mode>仅当前|范围内)""".r
     // 获取图片信息
     val showPicInfo: String = "显示上一张图片的信息"
     // 高级随机
-    val rollEveryThing: Regex = """(跑团Roll点|普通投掷|抛硬币决策|伪随机聊天)""".r("mode")
+    val rollEveryThing: Regex = """(?<mode>跑团Roll点|普通投掷|抛硬币决策|伪随机聊天)""".r
     // TODO 注册定时任务
-    val registerCronTask: Regex = """注册定时任务\{([0-9]+)}为\{变量(.+?)}""".r("stepId", "value")
+    val registerCronTask: Regex = """注册定时任务\{(?<stepId>[0-9]+)}为\{变量(?<value>.+?)}""".r
     // TODO 取消定时任务
-    val deregisterCronTask: Regex = """取消定时任务\{变量(.+?)}""".r("value")
+    val deregisterCronTask: Regex = """取消定时任务\{变量(?<value>.+?)}""".r
     // 立即执行任务
-    val runTaskNow: Regex = """立即执行任务\{([0-9A-Za-z一-龥,，]+)}""".r("task")
+    val runTaskNow: Regex = """立即执行任务\{(?<task>[0-9A-Za-z一-龥,，]+)}""".r
     // 源订阅
     val rssSubscribe: String = "订阅消息中的源"
     // 源退订
@@ -129,11 +129,11 @@ object Patterns {
     // 源列出
     val rssShowAll: String = "列出当前会话订阅的源"
     // 询问
-    val ask: Regex = """询问(发送者|任何人)[:：]%\{(.+?)}%[，,]((若答案为\{.+?}|其他答案)[，,]则(.+)[;；]?)+""".r("questioner", "question", "answerMatchers")
+    val ask: Regex = """询问(?<questioner>发送者|任何人)[:：]%\{(?<question>.+?)}%[，,](?<answerMatchers>(若答案为\{.+?}|其他答案)[，,]则(.+)[;；]?)+""".r
     // 答案匹配器
-    val answerMatcher: Regex = """(若答案为\{.+?}|其他答案)[，,]则([^;；]+)[;；]?""".r("answer", "command")
+    val answerMatcher: Regex = """(?<answer>若答案为\{.+?}|其他答案)[，,]则(?<command>[^;；]+)[;；]?""".r
     // 禁言某人
-    val banSomeOneInGroup: Regex = """禁言%\{(.+?)}%时长%\{(.+?)}%(分钟|小时|天)""".r("qId", "time", "unit")
+    val banSomeOneInGroup: Regex = """禁言%\{(?<qId>.+?)}%时长%\{(?<time>.+?)}%(?<unit>分钟|小时|天)""".r
     // 展示果酱可以做什么
     val whatICanDo: String = "展示一条可用的触发词"
     // QQ 骰子
@@ -143,23 +143,21 @@ object Patterns {
     // 抖一抖
     val shake: String = "发送抖一抖"
     // 发送视频
-    val sendVideo: Regex = """发送视频%\{(.+?)}%""".r("file")
+    val sendVideo: Regex = """发送视频%\{(?<file>.+?)}%""".r
     // 分享聊天
-    val shareContact: Regex = """分享(群聊|好友)%\{(.+?)}%""".r("type", "qId")
+    val shareContact: Regex = """分享(?<type>群聊|好友)%\{(?<qId>.+?)}%""".r
     // 分享地理位置
     val shareLocation: Regex =
-      """分享地理位置[：:]经度%\{(.+?)}%纬度%\{(.+?)}%标题%\{(.+?)}%内容%\{(.+?)}%"""
-        .r("lat", "lon", "title", "content")
+      """分享地理位置[：:]经度%\{(?<lat>.+?)}%纬度%\{(?<lon>.+?)}%标题%\{(?<title>.+?)}%内容%\{(?<content>.+?)}%""".r
     // 分享链接
     val shareURL: Regex =
-      """分享链接[：:]地址%\{(.+?)}%标题%\{(.+?)}%内容%\{(.+?)}%图片%\{(.+?)}%"""
-        .r("url", "title", "content", "image")
+      """分享链接[：:]地址%\{(?<url>.+?)}%标题%\{(?<title>.+?)}%内容%\{(?<content>.+?)}%图片%\{(?<image>.+?)}%""".r
     // 分享音乐
-    val shareMusic: Regex = """分享(网易|QQ|虾米)音乐%\{(.+?)}%""".r("type", "mId")
+    val shareMusic: Regex = """分享(?<type>网易|QQ|虾米)音乐%\{(?<mId>.+?)}%""".r
     // 真·戳一戳指令
-    val poke: Regex = """戳%\{(.+?)}%""".r("qId")
+    val poke: Regex = """戳%\{(?<qId>.+?)}%""".r
     // TTS（文本转语音）指令
-    val tts: Regex = """朗读%\{(.+?)}%""".r("message")
+    val tts: Regex = """朗读%\{(?<message>.+?)}%""".r
     // 打断指令
     val breakDirectly: String = "立刻打断"
     // 视为未捕获指令
@@ -167,11 +165,11 @@ object Patterns {
     // 列出可用模型指令
     val listAIModels: String = "列出可用模型"
     // 坠梦指令
-    val dropInDream: Regex = """(坠入梦境|联想回复)%\{(.+?)}%""".r("name", "dream")
+    val dropInDream: Regex = """(坠入梦境|联想回复)%\{(?<dream>.+?)}%""".r
     // 运行 Lambda 指令
-    val runLambda: Regex = """([Ll]ambda|λ|=>)<(.+?)>([(（].+?[)）])?""".r("lambda", "scriptPath", "args")
+    val runLambda: Regex = """([Ll]ambda|λ|=>)<(?<scriptPath>.+?)>(?<args>[(（].+?[)）])?""".r
     // Lambda 参数
-    var lambdaArgs: Regex = """,?%\{(.+?)}%""".r("template")
+    var lambdaArgs: Regex = """,?%\{(?<template>.+?)}%""".r
   }
 
 }
