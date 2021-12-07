@@ -5,7 +5,7 @@ import cc.moecraft.icq.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch
-import o.lartifa.jam.common.config.JamConfig
+import o.lartifa.jam.common.config.{BotConfig, JamConfig}
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.listener.base.Break
@@ -33,7 +33,7 @@ object QEventListener extends IcqListener {
    */
   @EventHandler
   def handleNoticeEvent(event: EventNotice): Unit = {
-    if (!JamContext.initLock.get()) {
+    if (!JamContext.initLock.get() && event.getUserId != BotConfig.qID) {
       val evt = event match {
         case evt: EventNoticeFriendPoke => PokeEvent(evt)
         case evt: EventNoticeGroupPoke => PokeInGroupEvent(evt)
@@ -50,9 +50,9 @@ object QEventListener extends IcqListener {
    */
   private def handleEvent(event: CQEvent): Unit = {
     implicit val context: CommandExecuteContext = CommandExecuteContext(event)
-    context.tempVars._CommandScopeParameters ++= event.data
-    if (!BanList.isAllowed(event.chatInfo)) return
-    buildSearchPath(event.chatInfo).find(matcher => matcher.isMatched(event.name)).foreach {
+    context.tempVars._commandScopeParameters ++= event.data
+    if (!BanList.isAllowed(event.chatInfo) || event.willNotResponse) return
+    buildSearchPath(event.chatInfo).find(_.isMatched(event.name)).foreach {
       case ContentMatcher(stepId, _, _, _) =>
         val handleCost = new StopWatch()
         handleCost.start()

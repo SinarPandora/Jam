@@ -13,4 +13,9 @@ abstract class CQEvent(val name: String, val senderId: Long) extends Extractable
    * 会话信息
    */
   val chatInfo: ChatInfo
+
+  /**
+   * 该事件是否将不会被响应
+   */
+  val willNotResponse: Boolean = false
 }

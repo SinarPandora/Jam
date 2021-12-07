@@ -1,6 +1,7 @@
 package o.lartifa.jam.cool.qq.listener.event
 
 import cc.moecraft.icq.event.events.notice.EventNoticeFriendPoke
+import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.model.ChatInfo
 
@@ -11,25 +12,29 @@ import java.sql.Timestamp
  *
  * Example: 1211402231 戳 2062406606
  * {
- *  "notice_type": "notify", [Support]
- *  "post_type": "notice",   [Support]
- *  "self_id": 2062406606,   [Support]
- *  "sender_id": 1211402231, [Support]
- *  "sub_type": "poke",      [Support]
- *  "target_id": 2062406606, [Support]
- *  "time": 1625586248,      [Partially]
- *  "user_id": 1211402231    [Support]
+ * "notice_type": "notify", [Support]
+ * "post_type": "notice",   [Support]
+ * "self_id": 2062406606,   [Support]
+ * "sender_id": 1211402231, [Support]
+ * "sub_type": "poke",      [Support]
+ * "target_id": 2062406606, [Support]
+ * "time": 1625586248,      [Partially]
+ * "user_id": 1211402231    [Support]
  * }
  *
  * Author: sinar
  * 2021/7/6 22:29
  */
 case class PokeEvent(event: EventNoticeFriendPoke) extends CQEvent("私聊拍一拍", event.getUserId) {
-
   /**
    * 会话信息
    */
   override val chatInfo: ChatInfo = ChatInfo(MessageType.PRIVATE, event.getUserId)
+
+  /**
+   * 该事件是否将不会被响应
+   */
+  override val willNotResponse: Boolean = event.getUserId == BotConfig.qID
 
   /**
    * 事件中的数据

@@ -1,5 +1,7 @@
 package o.lartifa.jam.cool.qq.listener.event
+
 import cc.moecraft.icq.event.events.notice.EventNoticeGroupPoke
+import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.model.ChatInfo
 
@@ -10,15 +12,15 @@ import java.sql.Timestamp
  *
  * Example: 在群 935752317 中，1211402231 戳 1580265059
  * {
- *   "group_id": 935752317,    [Support]
- *   "notice_type": "notify",  [Support]
- *   "post_type": "notice",    [Support]
- *   "self_id": 2062406606,    [Useless]
- *   "sender_id": 1211402231,  [Support]
- *   "sub_type": "poke",       [Support]
- *   "target_id": 1580265059,  [Support]
- *   "time": 1625890531,       [Partially]
- *   "user_id": 1211402231     [Support]
+ * "group_id": 935752317,    [Support]
+ * "notice_type": "notify",  [Support]
+ * "post_type": "notice",    [Support]
+ * "self_id": 2062406606,    [Useless]
+ * "sender_id": 1211402231,  [Support]
+ * "sub_type": "poke",       [Support]
+ * "target_id": 1580265059,  [Support]
+ * "time": 1625890531,       [Partially]
+ * "user_id": 1211402231     [Support]
  * }
  *
  * Author: sinar
@@ -29,6 +31,12 @@ case class PokeInGroupEvent(event: EventNoticeGroupPoke) extends CQEvent("群聊
    * 会话信息
    */
   override val chatInfo: ChatInfo = ChatInfo(MessageType.GROUP, event.getGroupId)
+
+  /**
+   * 该事件是否将不会被响应
+   */
+  override val willNotResponse: Boolean = event.getUserId == BotConfig.qID
+
   /**
    * 事件中的数据
    *
