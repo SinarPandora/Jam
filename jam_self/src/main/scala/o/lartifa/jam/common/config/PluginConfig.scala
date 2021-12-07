@@ -3,7 +3,7 @@ package o.lartifa.jam.common.config
 import com.typesafe.config.Config
 // 不使用全部导入以避免循环依赖
 // @formatter:off
-import o.lartifa.jam.common.config.PluginConfig.{DreamAI, PicBot, Rss, PreHandle, PostHandle}
+import o.lartifa.jam.common.config.PluginConfig.*
 // @formatter:on
 import o.lartifa.jam.common.exception.ParseFailException
 
@@ -26,7 +26,7 @@ object PluginConfig extends Reloadable {
   case class DreamAI(mobile: String)
   case class PicBot(pixivProxy: String, apiBatchSize: Int)
   case class Rss(deployUrl: String, defaultStyle: String, customStyles: Map[String, String])
-  case class FlipRepeatPicture(useFFMpeg: Boolean, ffmpegPath: String)
+  case class FlipRepeatPicture(useFFMpeg: Boolean, ffmpegPath: String, useRandomFilter: Boolean)
   case class PreHandle
   (
     runTaskAsync: Boolean,
@@ -71,7 +71,8 @@ object PluginConfig extends Reloadable {
           enabledTasks = config.getStringListOrElse("pre_handle.enabled_tasks", List("反向复读图片", "替换小程序跳转")),
           flipRepeatPicture = FlipRepeatPicture(
             useFFMpeg = config.getBooleanOrElse("pre_handle.flip_repeat_picture.use_ffmpeg", default = false),
-            ffmpegPath = config.getStringOrElse("pre_handle.flip_repeat_picture.ffmpeg_path", "")
+            ffmpegPath = config.getStringOrElse("pre_handle.flip_repeat_picture.ffmpeg_path", ""),
+            useRandomFilter = config.getBooleanOrElse("pre_handle.flip_repeat_picture.use_random_filter", default = false)
           )
         ),
         postHandle = PostHandle(

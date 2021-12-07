@@ -44,7 +44,9 @@ object MessageImageUtil {
    * @return 处理后的图片对象
    */
   private def flipImage(image: QQImg): Option[Array[Byte]] = image.imageType match {
-    case QQImg.JPEG | QQImg.PNG => flipStaticImage(image)
+    case QQImg.JPEG | QQImg.PNG =>
+      if (useRandomFilter) Some(ImageFilter.randomFilter(ImmutableImage.loader().fromBytes(image.bytes)))
+      else flipStaticImage(image)
     case QQImg.GIF => if (useFFMpeg) FFMpegGifFlipper.flip(image) else flipGIFImage(image)
   }
 

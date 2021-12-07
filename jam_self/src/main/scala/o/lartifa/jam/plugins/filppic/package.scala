@@ -11,4 +11,5 @@ import o.lartifa.jam.common.config.PluginConfig
 package object filppic {
   def useFFMpeg: Boolean = PluginConfig.config.preHandle.flipRepeatPicture.useFFMpeg
   def ffmpegPath: String = PluginConfig.config.preHandle.flipRepeatPicture.ffmpegPath
+  def useRandomFilter: Boolean = PluginConfig.config.preHandle.flipRepeatPicture.useRandomFilter
 }
