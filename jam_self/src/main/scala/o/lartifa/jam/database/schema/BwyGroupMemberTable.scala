@@ -2,7 +2,7 @@ package o.lartifa.jam.database.schema
 
 /**
  * Author: sinar
- * 2021/12/20 21:41
+ * 2021/12/20 22:19
  */
 // AUTO-GENERATED Slick data model for table BwyGroupMember
 trait BwyGroupMemberTable {

@@ -22,6 +22,8 @@ trait Tables extends MessageRecordsTable
   with BwyGroupMemberTable
   with BwyNotificationTable
   with BwyProjectTable
+  with BwyGroupProjectTable
+  with BwySessionHistoryTable
 {
   val profile: slick.jdbc.JdbcProfile
   import profile.api.*

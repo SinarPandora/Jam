@@ -2,7 +2,7 @@ package o.lartifa.jam.database.schema
 
 /**
  * Author: sinar
- * 2021/12/20 21:41
+ * 2021/12/20 22:19
  */
 // AUTO-GENERATED Slick data model for table BwyNotification
 trait BwyNotificationTable {
@@ -19,17 +19,17 @@ trait BwyNotificationTable {
    * @param content    Database column content SqlType(text)
    * @param cron       Database column cron SqlType(text)
    * @param scope      Database column scope SqlType(text)
-   * @param scopeType  Database column scope_type SqlType(text)
+   * @param scopeType  Database column scope_type SqlType(int4)
    * @param createTime Database column create_time SqlType(timestamp)
    * @param creatorQid Database column creator_qid SqlType(int8)
    * @param isActive   Database column is_active SqlType(bool), Default(true) */
-  case class BwyNotificationRow(id: Long, content: String, cron: String, scope: String, scopeType: String, createTime: java.sql.Timestamp, creatorQid: Long, isActive: Boolean = true)
+  case class BwyNotificationRow(id: Long, content: String, cron: String, scope: String, scopeType: Int, createTime: java.sql.Timestamp, creatorQid: Long, isActive: Boolean = true)
 
   /** GetResult implicit for fetching BwyNotificationRow objects using plain SQL queries */
-  implicit def GetResultBwyNotificationRow(implicit e0: GR[Long], e1: GR[String], e2: GR[java.sql.Timestamp], e3: GR[Boolean]): GR[BwyNotificationRow] = GR {
+  implicit def GetResultBwyNotificationRow(implicit e0: GR[Long], e1: GR[String], e2: GR[Int], e3: GR[java.sql.Timestamp], e4: GR[Boolean]): GR[BwyNotificationRow] = GR {
     prs =>
       import prs.*
-      BwyNotificationRow.tupled((<<[Long], <<[String], <<[String], <<[String], <<[String], <<[java.sql.Timestamp], <<[Long], <<[Boolean]))
+      BwyNotificationRow.tupled((<<[Long], <<[String], <<[String], <<[String], <<[Int], <<[java.sql.Timestamp], <<[Long], <<[Boolean]))
   }
 
   /** Table description of table bwy_notification. Objects of this class serve as prototypes for rows in queries. */
@@ -47,8 +47,8 @@ trait BwyNotificationTable {
     val cron: Rep[String] = column[String]("cron")
     /** Database column scope SqlType(text) */
     val scope: Rep[String] = column[String]("scope")
-    /** Database column scope_type SqlType(text) */
-    val scopeType: Rep[String] = column[String]("scope_type")
+    /** Database column scope_type SqlType(int4) */
+    val scopeType: Rep[Int] = column[Int]("scope_type")
     /** Database column create_time SqlType(timestamp) */
     val createTime: Rep[java.sql.Timestamp] = column[java.sql.Timestamp]("create_time")
     /** Database column creator_qid SqlType(int8) */

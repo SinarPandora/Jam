@@ -33,6 +33,15 @@ create table bwy_group_member
     create_time timestamp not null default current_timestamp
 );
 
+create table bwy_group_project
+(
+    id         bigserial not null
+        constraint bwy_group_project_pkey
+            primary key,
+    group_id   bigint    not null references bwy_group (id),
+    project_id bigint    not null references bwy_project (id)
+);
+
 create table bwy_notification
 (
     id          bigserial not null
@@ -41,9 +50,20 @@ create table bwy_notification
     content     text      not null,
     cron        text      not null,
     scope       text      not null,
-    scope_type  text      not null,
+    scope_type  int       not null,
     create_time timestamp not null default current_timestamp,
     creator_qid bigint    not null,
     is_active   boolean   not null default true
 );
 
+create table bwy_session_history
+(
+    id           bigserial not null
+        constraint bwy_session_pkey
+            primary key,
+    member_qid   bigint    not null,
+    session_id   bigint    not null,
+    session_type int       not null,
+    start_time   timestamp not null default current_timestamp,
+    end_time     timestamp
+);
