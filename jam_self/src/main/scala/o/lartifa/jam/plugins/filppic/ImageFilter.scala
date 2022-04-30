@@ -28,11 +28,13 @@ object ImageFilter {
    * @return gif 数据
    */
   def randomFilter(image: ImmutableImage): Array[Byte] = {
-    val filter = Random.nextInt(4) match {
+    val filter = Random.nextInt(6) match {
       case 0 => flip _
       case 1 => loop _
       case 2 => motionBlur _
       case 3 => motionBlurXY _
+      case 4 => faceToFace _
+      case 5 => headToFoot _
     }
     filter(image)
   }
@@ -106,6 +108,32 @@ object ImageFilter {
       image.filter(new MotionBlurFilter(225, 8)),
       image.filter(new MotionBlurFilter(270, 8)),
       image.filter(new MotionBlurFilter(315, 8))
+    ))
+  }
+
+  /**
+   * 滤镜：脸对脸
+   *
+   * @param image 原图
+   * @return gif 数据
+   */
+  def faceToFace(image: ImmutableImage): Array[Byte] = {
+    gifWriter.bytes(Array(
+      image,
+      image.flipX(),
+    ))
+  }
+
+  /**
+   * 滤镜：头对脚
+   *
+   * @param image 原图
+   * @return gif 数据
+   */
+  def headToFoot(image: ImmutableImage): Array[Byte] = {
+    gifWriter.bytes(Array(
+      image,
+      image.flipY(),
     ))
   }
 }
