@@ -49,10 +49,7 @@ public class TestBot
             new CommandDecode(),
             new CommandSay(),
             new CommandSayRaw(),
-
-            new CommandJS() // TODO: 做权限管理
-
-            , new CommandTestSleep()
+            new CommandTestSleep()
     };
 
     /**

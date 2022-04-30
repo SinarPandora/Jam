@@ -3,7 +3,6 @@ plugins {
     id "scala"
     id "distribution"
     id "java-library"
-    id "com.github.maiflai.scalatest" version "$scala_test_plugin_version"
 }
 
 sourceCompatibility = "11"
@@ -24,10 +23,4 @@ dependencies {
     api('org.scala-lang.modules:scala-parallel-collections_2.13:1.0.4')
     api("com.github.pathikrit:better-files_2.13:3.9.1")
     api('org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r')
-
-    // Test
-    testImplementation("org.scalactic:scalactic_2.13:$scala_test_version")
-    testImplementation("org.scalatest:scalatest_2.13:$scala_test_version")
-    testImplementation('org.scalamock:scalamock_2.13:5.1.0')
-    testRuntimeOnly('com.vladsch.flexmark:flexmark-all:0.62.2')
 }

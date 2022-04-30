@@ -2,7 +2,6 @@ plugins {
     id "idea"
     id "scala"
     id "distribution"
-    id "com.github.maiflai.scalatest" version "0.29"
 }
 
 group 'lartifa.o'
@@ -16,9 +15,4 @@ scala {
 
 dependencies {
     implementation(project(":jam_self"))
-
-    testImplementation("org.scalactic:scalactic_2.13:$scala_test_version")
-    testImplementation("org.scalatest:scalatest_2.13:$scala_test_version")
-    testImplementation('org.scalamock:scalamock_2.13:5.1.0')
-    testRuntimeOnly('com.vladsch.flexmark:flexmark-all:0.62.2')
 }

@@ -3,7 +3,6 @@ plugins {
     id "scala"
     id "distribution"
     id "java-library"
-    id "com.github.maiflai.scalatest" version "$scala_test_plugin_version"
 }
 
 sourceCompatibility = "11"
@@ -26,10 +25,4 @@ dependencies {
     api("org.typelevel:cats-free_2.13:$cats_version")
     api("org.typelevel:cats-testkit_2.13:$cats_version")
     api("com.lihaoyi:ammonite-ops_2.13:2.1.4")
-
-    // Test
-    testImplementation("org.scalactic:scalactic_2.13:$scala_test_version")
-    testImplementation("org.scalatest:scalatest_2.13:$scala_test_version")
-    testImplementation("org.scalamock:scalamock_2.13:4.4.0")
-    testImplementation("com.vladsch.flexmark:flexmark-all:0.35.10")
 }
