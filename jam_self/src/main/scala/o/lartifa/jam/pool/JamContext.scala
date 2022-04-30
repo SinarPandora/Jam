@@ -25,7 +25,12 @@ object JamContext {
   val loggerFactory: AtomicReference[LoggerFactory] = new AtomicReference[LoggerFactory]()
   val messagePool: MessagePool = new MessagePool()
   val clientConfig: AtomicReference[PicqConfig] = new AtomicReference[PicqConfig]()
-  val httpApi: AtomicReference[() => IcqHttpApi] = new AtomicReference()
   val actorSystem: ActorSystem = ActorSystem("System", config = botConfigFile)
   val registry: ActorRef = Registry.start(actorSystem, s"${JamConfig.config.name} Proxy")
+
+  private var httpApi: () => IcqHttpApi = _
+
+  def setAPIClient(generator: () => IcqHttpApi): Unit = this.httpApi = generator
+
+  def apiClient: IcqHttpApi = this.httpApi.apply()
 }

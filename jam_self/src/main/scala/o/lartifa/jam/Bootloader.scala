@@ -26,7 +26,7 @@ object Bootloader {
     File(SystemConfig.tempDir).createDirectoryIfNotExists()
     val client = CoolQQLoader.createCoolQQClient()
     JamContext.bot.set(client)
-    JamContext.httpApi.getAndSet(() => client.getAccountManager.getNonAccountSpecifiedApi)
+    JamContext.setAPIClient(() => client.getAccountManager.getNonAccountSpecifiedApi)
     JamContext.clientConfig.getAndSet(client.getConfig)
     client.getHttpServer.start()
     val afterBoot = () => {

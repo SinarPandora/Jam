@@ -55,7 +55,7 @@ class RSSSubscription(val source: String, private var _channelName: String, val 
             _channelName = item.getChannel.getTitle
             val message = prettyRSSPrinter(item)
             logger.debug(s"推送信息预览：$message")
-            val output = JamContext.httpApi.get()()
+            val output = JamContext.apiClient
             _subscribers.foreach { case ChatInfo(chatType, id) =>
               // TODO 发送失败时重试
               chatType match {

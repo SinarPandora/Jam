@@ -57,7 +57,7 @@ object ScriptRunner {
     binding.setVariable("$msg", ctx.eventMessage)
     binding.setVariable("log", logger)
     binding.setVariable("$bot", JamContext.bot.get())
-    binding.setVariable("$api", JamContext.httpApi.get()())
+    binding.setVariable("$api", JamContext.apiClient)
     args.foreach {
       case (key, value) => binding.setVariable(key, value)
     }

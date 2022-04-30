@@ -10,7 +10,7 @@ import o.lartifa.jam.pool.JamContext
 
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
 
 /**
@@ -53,7 +53,7 @@ trait ReplyToFriend {
    * @return 群员列表
    */
   protected def groupMembers(groupId: Long)(implicit exec: ExecutionContext): Future[Option[List[RGroupMemberInfo]]] = Future {
-    val result = JamContext.httpApi.get()().getGroupMemberList(groupId)
+    val result = JamContext.apiClient.getGroupMemberList(groupId)
     if (result.status == ReturnStatus.ok) Some(result.data.asScala.toList)
     else None
   }
@@ -68,7 +68,7 @@ trait ReplyToFriend {
   protected def groupMembers(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Option[List[RGroupMemberInfo]]] = Future {
     context.eventMessage match {
       case message: EventGroupOrDiscussMessage =>
-        val result = JamContext.httpApi.get()().getGroupMemberList(message.getGroup.getId)
+        val result = JamContext.apiClient.getGroupMemberList(message.getGroup.getId)
         if (result.status == ReturnStatus.ok) Some(result.data.asScala.toList)
         else None
       case _: EventPrivateMessage => None

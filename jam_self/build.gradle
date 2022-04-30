@@ -91,7 +91,7 @@ dependencies {
     api('org.flywaydb:flyway-core:8.0.1')
 
     // Tools
-    api("com.apptastic:rssreader:2.5.0")
+    api('com.github.w3stling:rssreader:v2.5.0')
     api('org.reflections:reflections:0.10.1')
     api("com.typesafe.akka:akka-actor_2.13:$akka_version")
     api("tv.cntt:glokka_2.13:2.6.1") {
