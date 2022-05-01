@@ -1,11 +1,13 @@
 package jam.plugins.cool.apis.commands
 
 import cc.moecraft.logger.HyLogger
+import o.lartifa.jam.common.config.JSONConfig.formats
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.engine.ssdl.parser.{ParseEngineContext, SSDLCommandParser}
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.Command
 import o.lartifa.jam.pool.JamContext
+import org.json4s.jackson.JsonMethods.{parse => jParse}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -38,9 +40,9 @@ object AntiMotivationalQuotes extends AntiMotivationalQuotes {
    * @return 异步返回执行结果
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[String] = Future {
-    val resp = ujson.read(requests.get("https://www.iowen.cn/jitang/api/").text())
-    if (resp("status").num != 1) throw ExecutionException("毒鸡汤 API 暂时不可用")
-    val amq = resp("data")("content")("content").str
+    val resp = jParse(requests.get("https://www.iowen.cn/jitang/api/").text())
+    if ((resp \ "status").extract[Int] != 1) throw ExecutionException("毒鸡汤 API 暂时不可用")
+    val amq = (resp \ "data" \ "content" \ "content").extract[String]
     reply(amq)
     amq
   }.recover {

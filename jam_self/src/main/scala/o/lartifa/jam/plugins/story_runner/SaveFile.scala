@@ -1,6 +1,9 @@
 package o.lartifa.jam.plugins.story_runner
 
-import upickle.default.{macroRW, ReadWriter => RW, read => uRead, write => uWrite}
+import o.lartifa.jam.common.config.JSONConfig.formats
+import org.json4s.*
+import org.json4s.jackson.JsonMethods.*
+import org.json4s.jackson.Serialization.{read as jRead, write as jWrite}
 
 /**
  * 故事存档
@@ -18,17 +21,16 @@ case class SaveFile
 ) {
   def choicesAsList: List[String] = choices.split(",").toList
 
-  def dataAsMap: Option[Map[String, String]] = data.map(data => ujson.read(data).obj.view.mapValues(_.str).toMap)
+  def dataAsMap: Option[Map[String, String]] = data.map(data => parse(data).extract[Map[String, String]])
 }
 
 object SaveFile {
   def apply(name: String, playerName: String, data: Option[String], choices: String, create_date: Long): SaveFile = new SaveFile(name, playerName, data, choices, create_date)
 
   def apply(name: String, playerName: String, data: Map[String, String], choices: List[Int], create_date: Long): SaveFile = {
-    new SaveFile(name, playerName, if (data.isEmpty) None else Some(uWrite(data)), choices.mkString(","), create_date)
+    new SaveFile(name, playerName, if (data.isEmpty) None else Some(jWrite(data)), choices.mkString(","), create_date)
   }
 
-  implicit val rw: RW[SaveFile] = macroRW
 
   /**
    * 从字符串读取存档
@@ -36,7 +38,7 @@ object SaveFile {
    * @param string 字符串
    * @return 存档
    */
-  def read(string: String): SaveFile = uRead[SaveFile](string)
+  def read(string: String): SaveFile = jRead[SaveFile](string)
 
   /**
    * 从字符串读取存档列表
@@ -44,7 +46,7 @@ object SaveFile {
    * @param string 字符串
    * @return 存档
    */
-  def readAsList(string: String): List[SaveFile] = uRead[List[SaveFile]](string)
+  def readAsList(string: String): List[SaveFile] = jRead[List[SaveFile]](string)
 
   /**
    * 将存档写入字符串
@@ -52,7 +54,7 @@ object SaveFile {
    * @param saveFile 存档对象
    * @return 字符串
    */
-  def write(saveFile: SaveFile): String = uWrite[SaveFile](saveFile)
+  def write(saveFile: SaveFile): String = jWrite[SaveFile](saveFile)
 
   /**
    * 将存档列表写入字符串
@@ -60,6 +62,6 @@ object SaveFile {
    * @param saveFiles 存档列表
    * @return 字符串
    */
-  def writeList(saveFiles: List[SaveFile]): String = uWrite[List[SaveFile]](saveFiles)
+  def writeList(saveFiles: List[SaveFile]): String = jWrite[List[SaveFile]](saveFiles)
 }
 

@@ -3,7 +3,7 @@ package o.lartifa.jam.engine.ssdl.parser
 import ammonite.ops.PipeableImplicit
 import cc.moecraft.icq.sender.message.components.ComponentContact.ContactType
 import cc.moecraft.icq.sender.message.components.ComponentMusic.MusicSourceType
-import cn.hutool.core.util.StrUtil
+import cn.hutool.core.text.CharSequenceUtil
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.engine.proto.Parser
 import o.lartifa.jam.model.commands.*
@@ -727,7 +727,7 @@ object CommandParser extends Parser {
   private def parseRunLambda(string: String, context: ParseEngineContext): Option[RunLambda] = {
     CommandPattern.runLambda.findFirstMatchIn(string).map(result => {
       val scriptPath = result.group("scriptPath")
-      val args = if (StrUtil.isNotBlank(result.group("args"))) {
+      val args = if (CharSequenceUtil.isNotBlank(result.group("args"))) {
         CommandPattern.lambdaArgs.findAllMatchIn(result.group("args")).map(result => context.getTemplate(result.group("template"))).toSeq
       } else Seq()
       RunLambda(scriptPath, args)

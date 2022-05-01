@@ -1,6 +1,7 @@
 package jam.plugins.meme_maker.v1.engine
 
-import upickle.default._
+import o.lartifa.jam.common.config.JSONConfig.formats
+import org.json4s.jackson.Serialization.write
 
 /**
  * API 请求生成器

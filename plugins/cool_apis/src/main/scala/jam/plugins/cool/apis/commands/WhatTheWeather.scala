@@ -1,12 +1,14 @@
 package jam.plugins.cool.apis.commands
 
 import cc.moecraft.logger.HyLogger
+import o.lartifa.jam.common.config.JSONConfig.formats
 import o.lartifa.jam.cool.qq.listener.asking.{Answerer, Result}
 import o.lartifa.jam.engine.ssdl.parser.{ParseEngineContext, SSDLCommandParser}
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.Command
 import o.lartifa.jam.pool.JamContext
-import ujson.Value.Value
+import org.json4s.JValue
+import org.json4s.jackson.JsonMethods.{parse => jParse}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -46,14 +48,14 @@ object WhatTheWeather extends WhatTheWeather {
         case "退出" => Future.successful(Result.Complete)
         case city =>
           Try {
-            val resp = ujson.read {
+            val resp = jParse {
               requests.get(s"http://wthrcdn.etouch.cn/weather_mini?city=$city").text()
             }
-            if (resp("status").num != 1000) {
+            if ((resp \ "status").extract[Int] != 1000) {
               reply(s"找不到${city}的天气信息")
               Future.successful(Result.Complete)
             } else {
-              val json = resp("data")
+              val json: JValue = resp \ "data"
               showToday(json)
               startAsking(json)
               Future.successful(Result.Complete)
@@ -75,7 +77,7 @@ object WhatTheWeather extends WhatTheWeather {
    * @param context 指令上下文
    * @param exec    异步上下文
    */
-  private def startAsking(json: Value)(implicit context: CommandExecuteContext, exec: ExecutionContext): Unit = {
+  private def startAsking(json: JValue)(implicit context: CommandExecuteContext, exec: ExecutionContext): Unit = {
     Answerer.sender ? { ctx =>
       ctx.event.message match {
         case "未来几天" | "未来几日" =>
@@ -98,14 +100,14 @@ object WhatTheWeather extends WhatTheWeather {
    * @param json    返回数据
    * @param context 指令上下文
    */
-  private def showYesterday(json: Value)(implicit context: CommandExecuteContext): Unit = Try {
-    val yesterday = json("yesterday")
+  private def showYesterday(json: JValue)(implicit context: CommandExecuteContext): Unit = Try {
+    val yesterday = json \ "yesterday"
     reply {
-      s"""${json("city").str}昨日的天气 < ${yesterday("type").str} >
-         |最高气温：${yesterday("high").str.stripPrefix("高温").trim}
-         |最低气温：${yesterday("low").str.stripPrefix("低温").trim}
-         |${yesterday("fx").str}${yesterday("fl").str.stripPrefix("<![CDATA[").stripSuffix("]]>")}
-         |${yesterday("date").str}
+      s"""${(json \ "city").extract[String]}昨日的天气 < ${(yesterday \ "type").extract[String]} >
+         |最高气温：${(yesterday \ "high").extract[String].stripPrefix("高温").trim}
+         |最低气温：${(yesterday \ "low").extract[String].stripPrefix("低温").trim}
+         |${(yesterday \ "fx").extract[String]}${(yesterday \ "fl").extract[String].stripPrefix("<![CDATA[").stripSuffix("]]>")}
+         |${(yesterday \ "date").extract[String]}
          |------------------
          |可以输入："明天"，"未来几天"查看对应的天气
          |任意其他内容会自动退出""".stripMargin
@@ -122,18 +124,18 @@ object WhatTheWeather extends WhatTheWeather {
    * @param json    返回数据
    * @param context 指令上下文
    */
-  private def showForecast(json: Value)(implicit context: CommandExecuteContext): Unit = Try {
-    val forecast = json("forecast").arr
+  private def showForecast(json: JValue)(implicit context: CommandExecuteContext): Unit = Try {
+    val forecast = (json \ "forecast").extract[Seq[JValue]]
     if (forecast.sizeIs < 2) {
       reply("没有找到未来几天的天气 :/")
       return
     }
-    reply(s"${json("city").str}近日天气：")
+    reply(s"${(json \ "city").extract[String]}近日天气：")
     forecast.drop(1).sliding(2, 2).map(days =>
       days.map(day =>
-        s"""${day("date").str} < ${day("type").str} >
-           |${day("low").str.stripPrefix("低温").trim} ~ ${day("high").str.stripPrefix("高温").trim}
-           |${day("fengxiang").str}${day("fengli").str.stripPrefix("<![CDATA[").stripSuffix("]]>")}
+        s"""${(day \ "date").extract[String]} < ${(day \ "type").extract[String]} >
+           |${(day \ "low").extract[String].stripPrefix("低温").trim} ~ ${(day \ "high").extract[String].stripPrefix("高温").trim}
+           |${(day \ "fengxiang").extract[String]}${(day \ "fengli").extract[String].stripPrefix("<![CDATA[").stripSuffix("]]>")}
            |------------------""".stripMargin)
         .mkString("\n"))
       .foreach(reply(_))
@@ -153,18 +155,18 @@ object WhatTheWeather extends WhatTheWeather {
    * @param json    返回数据
    * @param context 指令上下文
    */
-  private def showTomorrow(json: Value)(implicit context: CommandExecuteContext): Unit = Try {
-    val forecast = json("forecast").arr
+  private def showTomorrow(json: JValue)(implicit context: CommandExecuteContext): Unit = Try {
+    val forecast = (json \ "forecast").extract[Seq[JValue]]
     val tomorrow = if (forecast.sizeIs < 2) {
       reply("没有找到明天的天气 :/")
       return
     } else forecast(1)
     reply {
-      s"""${json("city").str}明日的天气 < ${tomorrow("type").str} >
-         |最高气温：${tomorrow("high").str.stripPrefix("高温").trim}
-         |最低气温：${tomorrow("low").str.stripPrefix("低温").trim}
-         |${tomorrow("fengxiang").str}${tomorrow("fengli").str.stripPrefix("<![CDATA[").stripSuffix("]]>")}
-         |${tomorrow("date").str}
+      s"""${(json \ "city").extract[String]}明日的天气 < ${(tomorrow \ "type").extract[String]} >
+         |最高气温：${(tomorrow \ "high").extract[String].stripPrefix("高温").trim}
+         |最低气温：${(tomorrow \ "low").extract[String].stripPrefix("低温").trim}
+         |${(tomorrow \ "fengxiang").extract[String]}${(tomorrow \ "fengli").extract[String].stripPrefix("<![CDATA[").stripSuffix("]]>")}
+         |${(tomorrow \ "date").extract[String]}
          |------------------
          |可以输入："未来几天"，"昨天"查看对应的天气
          |任意其他内容会自动退出""".stripMargin
@@ -181,18 +183,18 @@ object WhatTheWeather extends WhatTheWeather {
    * @param json    返回数据
    * @param context 指令上下文
    */
-  private def showToday(json: Value)(implicit context: CommandExecuteContext): Unit = Try {
-    val today = json("forecast").arr.headOption.getOrElse {
+  private def showToday(json: JValue)(implicit context: CommandExecuteContext): Unit = Try {
+    val today = (json \ "forecast").extract[Seq[JValue]].headOption.getOrElse {
       reply("没有找到今天的天气 :/")
       return
     }
     reply {
-      s"""${json("city").str}今日的天气 < ${today("type").str} >
-         |最高气温：${today("high").str.stripPrefix("高温").trim}
-         |最低气温：${today("low").str.stripPrefix("低温").trim}
-         |${today("fengxiang").str}${today("fengli").str.stripPrefix("<![CDATA[").stripSuffix("]]>")}
-         |${today("date").str}
-         |${json("ganmao").str}
+      s"""${(json \ "city").extract[String]}今日的天气 < ${(today \ "type").extract[String]} >
+         |最高气温：${(today \ "high").extract[String].stripPrefix("高温").trim}
+         |最低气温：${(today \ "low").extract[String].stripPrefix("低温").trim}
+         |${(today \ "fengxiang").extract[String]}${(today \ "fengli").extract[String].stripPrefix("<![CDATA[").stripSuffix("]]>")}
+         |${(today \ "date").extract[String]}
+         |${(json \ "ganmao").extract[String]}
          |------------------
          |可以输入："明天"，"未来几天"，"昨天"查看对应的天气
          |任意其他内容会自动退出""".stripMargin

@@ -1,15 +1,15 @@
 package jam.plugins.meme_maker.engine
 
-import java.time.LocalDateTime
-import java.util.Base64
-import java.util.concurrent.{SynchronousQueue, ThreadPoolExecutor, TimeUnit}
-
 import cc.moecraft.icq.sender.message.components.ComponentImageBase64
 import cc.moecraft.logger.HyLogger
 import jam.plugins.meme_maker.engine.MemeAPIResponse._
+import o.lartifa.jam.common.config.JSONConfig.formats
 import o.lartifa.jam.pool.JamContext
-import upickle.default._
+import org.json4s.jackson.Serialization.read
 
+import java.time.LocalDateTime
+import java.util.Base64
+import java.util.concurrent.{SynchronousQueue, ThreadPoolExecutor, TimeUnit}
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.util.{Failure, Success, Try}
 

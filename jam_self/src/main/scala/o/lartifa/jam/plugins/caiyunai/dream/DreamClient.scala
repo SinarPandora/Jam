@@ -1,7 +1,11 @@
 package o.lartifa.jam.plugins.caiyunai.dream
 
 import cc.moecraft.logger.HyLogger
+import o.lartifa.jam.common.config.JSONConfig.formats
 import o.lartifa.jam.pool.JamContext
+import org.json4s.JValue
+import org.json4s.JsonDSL.*
+import org.json4s.jackson.JsonMethods.*
 import requests.Session
 
 /**
@@ -14,9 +18,10 @@ import requests.Session
  */
 object DreamClient {
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(DreamClient.getClass)
-  private val commonHeader = Map(
+  private val commonHeader: Map[String, String] = Map(
     "Origin" -> "https://if.caiyunai.com",
-    "Referer" -> "https://if.caiyunai.com/dream/"
+    "Referer" -> "https://if.caiyunai.com/dream/",
+    "Content-Type" -> "application/json;charset=UTF-8"
   )
 
   /**
@@ -28,18 +33,18 @@ object DreamClient {
    */
   def sendCaptcha(phoneNumber: String)(implicit session: Session): Either[String, String] = {
     try {
-      val resp = ujson.read {
-        session.post(API_V2.sendCaptcha, headers = commonHeader, data = ujson.Obj(
-          "type" -> "login",
-          "phone" -> phoneNumber,
-          "callcode" -> 86,
-          "uid" -> "",
-          "ostype" -> "",
-          "lang" -> "zh",
-          "User-Agent" -> "1231312313"
-        )).text()
+      val resp = parse {
+        session.post(API_V2.sendCaptcha, headers = commonHeader, data = compact {
+          ("type" -> "login") ~
+            ("phone" -> phoneNumber) ~
+            ("callcode" -> 86) ~
+            ("uid" -> "") ~
+            ("ostype" -> "") ~
+            ("lang" -> "zh") ~
+            ("User-Agent" -> "1231312313")
+        }).text()
       }
-      Right(resp("data")("codeid").str)
+      Right((resp \ "data" \ "codeid").extract[String])
     } catch {
       case e: Exception =>
         logger.error(e)
@@ -59,19 +64,19 @@ object DreamClient {
    */
   def phoneLogin(phoneNumber: String, code: String, codeId: String)(implicit session: Session): Either[String, String] = {
     try {
-      val resp = ujson.read {
-        session.post(API_V2.phoneLogin, headers = commonHeader, data = ujson.Obj(
-          "code" -> code,
-          "phone" -> phoneNumber,
-          "codeid" -> codeId,
-          "uid" -> "",
-          "callcode" -> 86,
-          "ostype" -> "",
-          "lang" -> "zh",
-          "User-Agent" -> "1231312313"
-        )).text()
+      val resp = parse {
+        session.post(API_V2.phoneLogin, headers = commonHeader, data = compact {
+          ("code" -> code) ~
+            ("phone" -> phoneNumber) ~
+            ("codeid" -> codeId) ~
+            ("uid" -> "") ~
+            ("callcode" -> 86) ~
+            ("ostype" -> "") ~
+            ("lang" -> "zh") ~
+            ("User-Agent" -> "1231312313")
+        }).text()
       }
-      Right(resp("data")("_id").str)
+      Right((resp \ "data" \ "_id").extract[String])
     } catch {
       case e: Exception =>
         logger.error(e)
@@ -95,11 +100,11 @@ object DreamClient {
    */
   def listModels(implicit session: Session): Either[String, List[AICharacter]] = {
     try {
-      val resp = ujson.read(session.get(API_V2.modelList, headers = commonHeader).text())
+      val resp = parse(session.get(API_V2.modelList, headers = commonHeader).text())
       Right {
-        resp("data")("models").arr.flatMap { v =>
-          val name = v("name").str.trim
-          val mid = v("mid").str.trim
+        (resp \ "data" \ "models").extract[Seq[JValue]].flatMap { v =>
+          val name = (v \ "name").extract[String].trim
+          val mid = (v \ "mid").extract[String].trim
           if (name != "" && mid != "") Some(AICharacter(name, mid)) else None
         }.toList
       }
@@ -122,21 +127,21 @@ object DreamClient {
    */
   def saveAtFirst(uid: String, content: String)(implicit session: Session): Either[String, NovelMetadata] = {
     try {
-      val resp = ujson.read {
-        session.post(API_V2.novelSave(uid), headers = commonHeader, data = ujson.Obj(
-          "title" -> "",
-          "nodes" -> List(),
-          "text" -> content,
-          "ostype" -> "",
-          "lang" -> "zh",
-          "User-Agent" -> "1231312313"
-        )).text()
+      val resp = parse {
+        session.post(API_V2.novelSave(uid), headers = commonHeader, data = compact {
+          ("title" -> "") ~
+            ("nodes" -> List()) ~
+            ("text" -> content) ~
+            ("ostype" -> "") ~
+            ("lang" -> "zh") ~
+            ("User-Agent" -> "1231312313")
+        }).text()
       }
       Right(NovelMetadata(
-        nid = resp("data")("novel")("nid").str,
-        lastNode = resp("data")("novel")("lastnode").str,
-        branchId = resp("data")("novel")("branchid").str,
-        firstNode = resp("data")("novel")("firstnode").str
+        nid = (resp \ "data" \ "novel" \ "nid").extract[String],
+        lastNode = (resp \ "data" \ "novel" \ "lastnode").extract[String],
+        branchId = (resp \ "data" \ "novel" \ "branchid").extract[String],
+        firstNode = (resp \ "data" \ "novel" \ "firstnode").extract[String]
       ))
     } catch {
       case e: Exception =>
@@ -161,27 +166,27 @@ object DreamClient {
     try {
       metadata match {
         case NovelMetadata(nid, lastNode, branchId, _) =>
-          val resp = ujson.read {
-            session.post(API_V2.novelAI(uid), headers = commonHeader, data = ujson.Obj(
-              "nid" -> nid,
-              "content" -> content,
-              "uid" -> uid,
-              "mid" -> mid,
-              "title" -> "",
-              "status" -> "http",
-              "lastnode" -> lastNode,
-              "branchid" -> branchId,
-              "ostype" -> "",
-              "lang" -> "zh",
-              "User-Agent" -> "1231312313"
-            )).text()
+          val resp = parse {
+            session.post(API_V2.novelAI(uid), headers = commonHeader, data = compact {
+              ("nid" -> nid) ~
+                ("content" -> content) ~
+                ("uid" -> uid) ~
+                ("mid" -> mid) ~
+                ("title" -> "") ~
+                ("status" -> "http") ~
+                ("lastnode" -> lastNode) ~
+                ("branchid" -> branchId) ~
+                ("ostype" -> "") ~
+                ("lang" -> "zh") ~
+                ("User-Agent" -> "1231312313")
+            }).text()
           }
-          Right(resp("data")("nodes").arr.map(node => {
+          Right((resp \ "data" \ "nodes").extract[Seq[JValue]].map(node => {
             Dream(
-              content = node("content").str,
-              xid = node("xid").str,
-              nodeId = node("nodeid").str,
-              parentId = node("parentid").str)
+              content = (node \ "content").extract[String],
+              xid = (node \ "xid").extract[String],
+              nodeId = (node \ "nodeid").extract[String],
+              parentId = (node \ "parentid").extract[String])
           }).toList)
       }
     } catch {

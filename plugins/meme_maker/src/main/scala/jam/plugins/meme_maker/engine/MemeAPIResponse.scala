@@ -1,6 +1,7 @@
 package jam.plugins.meme_maker.engine
 
-import upickle.default._
+import o.lartifa.jam.common.config.JSONConfig.formats
+import org.json4s.jackson.Serialization.read
 
 /**
  * Meme API 响应体
@@ -56,10 +57,4 @@ object MemeAPIResponse {
   case class Response[T](ok: Boolean, body: T, msg: String)
 
   case class Template(id: Int, name: String, cover: String, uploader: String, like: Int)
-
-  implicit val generateResponseRW: ReadWriter[Response[PicData]] = macroRW[Response[PicData]]
-  implicit val infoResponseRW: ReadWriter[Response[TemplateInfo]] = macroRW[Response[TemplateInfo]]
-  implicit val infoListResponseRW: ReadWriter[Response[List[TemplateInfo]]] = macroRW[Response[List[TemplateInfo]]]
-  implicit val picDataRW: ReadWriter[PicData] = macroRW[PicData]
-  implicit val templateInfoRW: ReadWriter[TemplateInfo] = macroRW[TemplateInfo]
 }

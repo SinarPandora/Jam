@@ -9,13 +9,12 @@ group 'lartifa.o'
 sourceCompatibility = "11"
 
 repositories {
-    jcenter()
     mavenCentral()
 }
 
 dependencies {
-    api("cn.hutool:hutool-all:5.1.0")
+    api('cn.hutool:hutool-all:5.8.0.M4')
     api("com.github.hydevelop:HyLogger:4.0.254")
 
-    testImplementation("junit:junit:4.13.1")
+    testImplementation('junit:junit:4.13.2')
 }

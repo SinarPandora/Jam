@@ -1,6 +1,7 @@
 package jam.plugins.meme_maker.engine
 
-import upickle.default._
+import o.lartifa.jam.common.config.JSONConfig.formats
+import org.json4s.jackson.Serialization.write
 
 /**
  * API 请求生成器
@@ -10,7 +11,6 @@ import upickle.default._
  */
 case class MemeAPIRequest(id: Long, fillings: Map[String, String])
 object MemeAPIRequest {
-  implicit val rw: ReadWriter[MemeAPIRequest] = macroRW
 
   /**
    * 构建请求体
