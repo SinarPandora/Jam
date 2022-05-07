@@ -18,12 +18,12 @@ trait Tables extends MessageRecordsTable
   with StoryInstanceTable
   with StorySaveFileTable
   with StorySaveInheritTable
-  with TrpgActorTable
-  with TrpgGameTable
-  with TrpgStatusTable
-  with TrpgRollHistoryTable
-  with TrpgActorSnapshotTable
-  with TrpgStatusChangeHistoryTable
+  with BwyGroupTable
+  with BwyGroupMemberTable
+  with BwyNotificationTable
+  with BwyProjectTable
+  with BwyGroupProjectTable
+  with BwySessionHistoryTable
 {
   val profile: slick.jdbc.JdbcProfile
   import profile.api.*
