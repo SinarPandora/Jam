@@ -6,6 +6,8 @@ import o.lartifa.jam.common.exception.ParseFailException
 import scala.jdk.CollectionConverters.*
 
 /**
+ * 插件配置
+ *
  * Author: sinar
  * 2021/10/25 00:08
  */
@@ -14,6 +16,7 @@ object PluginConfig extends Reloadable {
   case class PicBot(pixivProxy: String, apiBatchSize: Int)
   case class Rss(deployUrl: String, defaultStyle: String, customStyles: Map[String, String])
   case class FlipRepeatPicture(useFFMpeg: Boolean, ffmpegPath: String, useRandomFilter: Boolean)
+  case class SourcePush(templateDir: String, templateMapping: Map[String, String])
   case class PreHandle
   (
     runTaskAsync: Boolean,
@@ -65,6 +68,14 @@ object PluginConfig extends Reloadable {
         postHandle = PostHandle(
           runTaskAsync = config.getBooleanOrElse("post_handle.run_task_async", default = true),
           enabledTasks = config.getStringListOrElse("post_handle.enabled_tasks", List())
+        ),
+        sourcePush = SourcePush(
+          templateDir = config.getStringOrElse("source_push.template_dir", "../conf/sxdl/template"),
+          templateMapping = config.getConfig("source_push.template_mapping")
+            .entrySet().asScala
+            .map(it => it.getKey.replace("\"", "") ->
+              it.getValue.render().replace("\"", ""))
+            .toMap
         )
       ))
   }
@@ -78,5 +89,6 @@ case class PluginConfig
   picBot: PicBot,
   rss: Rss,
   preHandle: PreHandle,
-  postHandle: PostHandle
+  postHandle: PostHandle,
+  sourcePush: SourcePush
 )
