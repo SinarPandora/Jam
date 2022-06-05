@@ -1,27 +1,35 @@
-plugins {
-    id "idea"
-    id "java"
-    id "scala"
-    id "distribution"
-    id "application"
-    id "java-library"
-    id "io.freefair.lombok" version "5.3.0"
+buildscript {
+    dependencies {
+        classpath 'org.flywaydb:flyway-core:8.5.11'
+        classpath 'mysql:mysql-connector-java:8.0.28'
+    }
 }
 
-sourceCompatibility = "11"
+plugins {
+    id 'idea'
+    id 'java'
+    id 'scala'
+    id 'distribution'
+    id 'application'
+    id 'java-library'
+    id 'io.freefair.lombok' version '5.3.0'
+    id 'org.flywaydb.flyway' version '8.5.11'
+}
+
+sourceCompatibility = '11'
 
 scala {
-    zincVersion = "1.3.5"
+    zincVersion = '1.3.5'
 }
 
 distributions {
     main {
-        distributionBaseName = "jam_self"
+        distributionBaseName = 'jam_self'
         contents {
-            into("conf") {
-                from "conf/."
-                exclude "*test*"
-                exclude "*local*"
+            into('conf') {
+                from 'conf/.'
+                exclude '*test*'
+                exclude '*local*'
             }
         }
     }
@@ -35,7 +43,7 @@ tasks.withType(ScalaCompile) {
 
 application {
     mainClass = 'o.lartifa.jam.Bootloader'
-    applicationDefaultJvmArgs = ["-Xmx1025m", "-Xms512m", "-ea", "-server", "-Dfile.encoding=UTF-8"]
+    applicationDefaultJvmArgs = ['-Xmx1024m', '-Xms512m', '-ea', '-server', '-Dfile.encoding=UTF-8']
 }
 
 startScripts {
@@ -53,7 +61,7 @@ startScripts {
 }
 
 repositories {
-    maven { url "https://jitpack.io" }
+    maven { url 'https://jitpack.io' }
     maven { url 'https://maven.aliyun.com/repository/jcenter/' }
     mavenCentral()
 }
@@ -63,7 +71,32 @@ tasks.withType(Jar) {
 }
 
 configurations.all {
-    exclude group: "ch.qos.logback", module: "logback-classic"
+    exclude group: 'ch.qos.logback', module: 'logback-classic'
+}
+
+flyway {
+    url = 'jdbc:postgresql://localhost:5432/jam_bot'
+    user = 'sinar'
+    password = '12345678'
+    locations = ["filesystem:$projectDir/src/main/resources/db/migration"]
+}
+
+/**
+ * 执行 Flyway 脚本重新创建数据库
+ */
+task recreateDatabase(type: GradleBuild) {
+    group = 'database'
+    description = 'Recreate database using flyway'
+    tasks = ['flywayClean', 'flywayMigrate']
+}
+
+/**
+ * 执行 Flyway 脚本更新数据库
+ */
+task migrateDatabase(type: GradleBuild) {
+    group = 'database'
+    description = 'Migrate database using flyway'
+    tasks = ['flywayMigrate']
 }
 
 dependencies {
@@ -88,7 +121,7 @@ dependencies {
     api("com.typesafe.slick:slick-hikaricp_2.13:$slick_version")
     api('com.h2database:h2:2.1.212')
     api('org.postgresql:postgresql:42.3.4')
-    api('org.flywaydb:flyway-core:8.5.9')
+    api('org.flywaydb:flyway-core:8.5.11')
 
     // Tools
     api('org.freemarker:freemarker:2.3.31')
