@@ -1,7 +1,5 @@
 package o.lartifa.jam.plugins.picbot
 
-import upickle.default.*
-
 /**
  * 图片 API 返回体
  *
@@ -24,8 +22,4 @@ object APIResponse {
     tags: List[String],
     urls: Map[String, String]
   )
-
-  implicit val responseRw: ReadWriter[Response] = macroRW
-  implicit val picDataRw: ReadWriter[PicData] = macroRW
-
 }

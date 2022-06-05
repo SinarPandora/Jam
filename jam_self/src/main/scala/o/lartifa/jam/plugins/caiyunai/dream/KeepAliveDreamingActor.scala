@@ -5,7 +5,7 @@ import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
 import cn.hutool.core.util.NumberUtil
 import o.lartifa.jam.common.config.PluginConfig
-import o.lartifa.jam.common.protocol.{Done, Exit, Fail, IsAlive, Offline, Online, Data as Resp}
+import o.lartifa.jam.common.protocol.CommonProtocol.{Done, Exit, Fail, IsAlive_?, Offline, Online, Data as Resp}
 import o.lartifa.jam.common.util.{ExtraActor, MasterUtil}
 import o.lartifa.jam.cool.qq.listener.interactive.Interactive
 import o.lartifa.jam.model.SpecificSender
@@ -48,7 +48,7 @@ class KeepAliveDreamingActor extends Actor {
         senderRef ! Done
       }
     case Reply(senderRef, _) => senderRef ! Fail("尚未登录小梦")
-    case IsAlive(senderRef) => senderRef ! Offline
+    case IsAlive_?(senderRef) => senderRef ! Offline
     case Exit(senderRef) => senderRef ! Done
   }
 
@@ -111,7 +111,7 @@ class KeepAliveDreamingActor extends Actor {
       that.context.become(initStage())
     } else {
       that.context.become({
-        case IsAlive(senderRef) => senderRef ! Online
+        case IsAlive_?(senderRef) => senderRef ! Online
         case Exit(senderRef) =>
           that.context.become(initStage())
           senderRef ! Done

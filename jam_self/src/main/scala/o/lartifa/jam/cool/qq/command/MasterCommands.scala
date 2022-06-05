@@ -4,7 +4,7 @@ import cc.moecraft.icq.command.interfaces.IcqCommand
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.icq.user.User
 import o.lartifa.jam.common.config.JamConfig
-import o.lartifa.jam.common.protocol.{Done, Exit, Fail}
+import o.lartifa.jam.common.protocol.CommonProtocol.{Done, Exit, Fail}
 import o.lartifa.jam.common.util.{ExtraActor, GlobalConstant}
 import o.lartifa.jam.cool.qq.command.base.MasterEverywhereCommand
 import o.lartifa.jam.cool.qq.listener.BanList

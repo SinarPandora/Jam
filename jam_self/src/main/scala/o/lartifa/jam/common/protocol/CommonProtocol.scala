@@ -3,18 +3,30 @@ package o.lartifa.jam.common.protocol
 import akka.actor.ActorRef
 
 /**
- * 公共返回协议
+ * 公共协议
  *
  * Author: sinar
  * 2021/8/22 01:53
  */
-sealed trait Response
-case object Done extends Response
-case class Fail(msg: String) extends Response
-case class Data[T](data: T) extends Response
-case class Retry(time: Int) extends Response
-case object Online extends Response
-case object Offline extends Response
-sealed trait Request
-case class IsAlive(senderRef: ActorRef) extends Request
-case class Exit(senderRef: ActorRef) extends Response
+object CommonProtocol {
+  // 请求
+  sealed trait Request
+  // 健康检查
+  case class IsAlive_?(fromRef: ActorRef) extends Request
+  // 请求退出
+  case class Exit(fromRef: ActorRef) extends Response
+  // 响应
+  sealed trait Response
+  // 操作完毕
+  case object Done extends Response
+  // 操作失败
+  case class Fail(msg: String) extends Response
+  // 返回数据
+  case class Data[T](data: T) extends Response
+  // 已重试
+  case class Retry(time: Int) extends Response
+  // 在线
+  case object Online extends Response
+  // 离线
+  case object Offline extends Response
+}

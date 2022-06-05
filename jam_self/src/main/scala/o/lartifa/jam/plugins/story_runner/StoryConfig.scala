@@ -1,6 +1,7 @@
 package o.lartifa.jam.plugins.story_runner
 
-import upickle.default.{macroRW, ReadWriter => RW, _}
+import o.lartifa.jam.common.config.JSONConfig.formats
+import org.json4s.jackson.Serialization.{read, write}
 
 /**
  * 故事配置
@@ -30,7 +31,6 @@ case class StoryConfig
 }
 
 object StoryConfig {
-  implicit val rw: RW[StoryConfig] = macroRW
 
   def apply(breakTime: Double, showEachChose: Boolean, everyOneCanJoin: Boolean, autoPlayStep: List[Int], enablePainlessMigration: Boolean): StoryConfig =
     new StoryConfig(breakTime, showEachChose, everyOneCanJoin, autoPlayStep, enablePainlessMigration)

@@ -2,7 +2,8 @@ package o.lartifa.jam.plugins.picbot
 
 import ammonite.ops.PipeableImplicit
 import cc.moecraft.logger.HyLogger
-import cn.hutool.core.util.StrUtil
+import cn.hutool.core.text.CharSequenceUtil
+import o.lartifa.jam.common.config.JSONConfig.formats
 import o.lartifa.jam.common.config.PluginConfig
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.database.Memory.database.db
@@ -11,7 +12,7 @@ import o.lartifa.jam.model.tasks.JamCronTask
 import o.lartifa.jam.plugins.picbot.APIResponse.*
 import o.lartifa.jam.plugins.picbot.FetchPictureTask.logger
 import o.lartifa.jam.pool.JamContext
-import upickle.default.*
+import org.json4s.jackson.Serialization.read
 
 import java.util.Base64
 import java.util.concurrent.ForkJoinPool
@@ -90,7 +91,7 @@ class FetchPictureTask(name: String) extends JamCronTask(name) {
       0
     } else if (rawResponse.statusCode == 200) {
       val resp = read[Response](rawResponse.text())
-      if (!StrUtil.isBlank(resp.error)) {
+      if (CharSequenceUtil.isNotBlank(resp.error)) {
         logger.warning("本次API调用失败，错误：{}", resp.error)
         0
       } else {

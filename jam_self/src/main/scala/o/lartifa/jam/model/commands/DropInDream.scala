@@ -1,7 +1,7 @@
 package o.lartifa.jam.model.commands
 
 import cc.moecraft.logger.{HyLogger, LogLevel}
-import o.lartifa.jam.common.protocol.{Data, Fail}
+import o.lartifa.jam.common.protocol.CommonProtocol.{Data, Fail}
 import o.lartifa.jam.common.util.{ExtraActor, MasterUtil}
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.behaviors.ActorCreator
