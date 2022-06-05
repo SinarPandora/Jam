@@ -29,24 +29,27 @@ import scala.util.{Failure, Success}
  */
 abstract class SourceObserver(initData: SourceObserverRow) extends Actor {
   that =>
+  protected val source: SourceIdentity = SourceIdentity(
+    sourceType = initData.sourceType,
+    sourceIdentity = initData.sourceIdentity
+  )
+  protected val logger: HyLogger = JamContext.loggerFactory.get().getLogger(classOf[SourceObserver])
 
-  private val logger: HyLogger = JamContext.loggerFactory.get().getLogger(classOf[SourceObserver])
-
-  override def preStart(): Unit = async {
+  final override def preStart(): Unit = async {
     val subscribers = await(db.run(SourceSubscriber.filter(_.sourceId === initData.id).result))
     that.context.become(
       waitingForInitStage(
         subscribers
           .map(it => {
             val chatInfo = ChatInfo(it.chatType, it.chatId)
-            chatInfo -> that.context.actorOf(Props(new SourceSubscriberProto(it.id, chatInfo)))
+            chatInfo -> that.context.actorOf(Props(new SourceSubscriberProto(it.id, chatInfo, source, it.isPaused, it.lastKey)))
           })
           .toMap
       )
     )
   }(ThreadPools.DB)
 
-  override def receive: Receive = waitingForInitStage()
+  final override def receive: Receive = waitingForInitStage()
 
   /**
    * 等待初始化阶段
@@ -55,17 +58,13 @@ abstract class SourceObserver(initData: SourceObserverRow) extends Actor {
    * @param inited      初始化数量
    * @return 行为
    */
-  def waitingForInitStage(subscribers: Map[ChatInfo, ActorRef] = Map(), inited: Int = 0): Receive = {
+  final def waitingForInitStage(subscribers: Map[ChatInfo, ActorRef] = Map(), inited: Int = 0): Receive = {
     case CommonProtocol.Online =>
       if (subscribers.sizeIs == inited + 1) {
         that.context.become(listenStage(
           SourceObserverData(
             subscribers = subscribers,
             sourceRender = RenderRegistry.get(initData.sourceIdentity),
-            source = SourceIdentity(
-              sourceType = initData.sourceType,
-              sourceIdentity = initData.sourceIdentity
-            ),
             scanTask = that.context.system.scheduler.scheduleAtFixedRate(
               initialDelay = 1 second,
               interval = 3 minutes,
@@ -86,7 +85,7 @@ abstract class SourceObserver(initData: SourceObserverRow) extends Actor {
    * @param data 源观察者数据
    * @return 行为
    */
-  def listenStage(data: SourceObserverData): Receive = {
+  final def listenStage(data: SourceObserverData): Receive = {
     case SourceObserverProtocol.AddSubscriber(chatInfo, fromRef) =>
       if (data.subscribers.contains(chatInfo)) {
         fromRef ! CommonProtocol.Fail("该订阅源已被订阅")
@@ -99,19 +98,19 @@ abstract class SourceObserver(initData: SourceObserverRow) extends Actor {
               += (chatInfo.chatId, chatInfo.chatType, initData.id)
           }
           .onComplete {
-            case Failure(err) =>
+            case Failure(exception) =>
               fromRef ! CommonProtocol.Fail("创建订阅失败，请稍后重试")
-              logger.error(s"订阅取消失败，请检数据库，订阅信息：${data.source}，聊天信息：$chatInfo", err)
+              logger.error(s"订阅取消失败，请检数据库，订阅信息：$source，聊天信息：$chatInfo", exception)
             case Success(id: Long) =>
               that.context.actorOf(ExtraActor(
-                _ => that.context.actorOf(Props(new SourceSubscriberProto(id, chatInfo))),
+                _ => that.context.actorOf(Props(new SourceSubscriberProto(id, chatInfo, source))),
                 _ => {
                   case CommonProtocol.Online =>
 
                     fromRef ! CommonProtocol.Done
                 },
               ))
-          }(ThreadPools.DEFAULT)
+          }(ThreadPools.SCHEDULE_TASK)
       }
     case SourceObserverProtocol.CancelSubscriber(chatInfo, fromRef) =>
       data.subscribers.get(chatInfo) match {
@@ -127,33 +126,32 @@ abstract class SourceObserver(initData: SourceObserverRow) extends Actor {
                 .delete
             }
             .onComplete {
-              case Failure(err) =>
+              case Failure(exception) =>
                 fromRef ! CommonProtocol.Fail("取消订阅失败，请稍后重试")
-                logger.error(s"订阅取消失败，请检数据库，订阅信息：${data.source}，聊天信息：$chatInfo", err)
+                logger.error(s"订阅取消失败，请检数据库，订阅信息：$source，聊天信息：$chatInfo", exception)
               case Success(_) =>
                 if (data.subscribers.sizeIs == 1) {
-                  logger.log(s"订阅源已无人订阅，订阅进程即将结束，订阅源：${data.source}")
+                  logger.log(s"订阅源已无人订阅，订阅进程即将结束，订阅源：$source")
                   that.self ! PoisonPill
                 } else {
-                  logger.log(s"已添加订阅源到：$chatInfo，订阅源信息：${data.source}")
+                  logger.log(s"已添加订阅源到：$chatInfo，订阅源信息：$source")
                   that.context.become(listenStage(data.copy(subscribers = data.subscribers - chatInfo)))
                 }
                 fromRef ! CommonProtocol.Done
-            }(ThreadPools.DEFAULT)
-        case None => CommonProtocol.Fail(
+            }(ThreadPools.SCHEDULE_TASK)
+        case None => fromRef ! CommonProtocol.Fail(
           s"""当前聊天并没有订阅这个订阅源：
-             |${data.source}""".stripMargin)
+             |$source""".stripMargin)
       }
     case SourceObserverProtocol.SourceScan => async {
       pull(data.sourceRender).foreach { it =>
-        data.subscribers.values
-          .foreach(sr => sr ! SourceSubscriberProtocol.SourcePush(it, that.self))
+        data.subscribers.values.foreach(sr => sr ! SourceSubscriberProtocol.SourcePush(it))
       }
     }(ThreadPools.SCHEDULE_TASK)
     case SourceObserverProtocol.Pause(fromRef) =>
       that.context.become(pauseStage(data))
       fromRef ! CommonProtocol.Done
-
+    case msg: SourceObserverProtocol.GetSubscriber => handleGetSubscriber(msg, data)
   }
 
   /**
@@ -162,11 +160,29 @@ abstract class SourceObserver(initData: SourceObserverRow) extends Actor {
    * @param data 源观察者数据
    * @return 行为
    */
-  def pauseStage(data: SourceObserverData): Receive = {
-    case SourceObserver.SourceObserverProtocol.Resume(fromRef) =>
+  final def pauseStage(data: SourceObserverData): Receive = {
+    case SourceObserverProtocol.Resume(fromRef) =>
       that.context.become(listenStage(data))
       fromRef ! CommonProtocol.Done
+    case msg: SourceObserverProtocol.GetSubscriber => handleGetSubscriber(msg, data)
   }
+
+  /**
+   * 获取订阅者
+   *
+   * @param message 消息
+   * @param data    源观察者数据
+   */
+  private def handleGetSubscriber(message: SourceObserverProtocol.GetSubscriber, data: SourceObserverData): Unit =
+    message match {
+      case SourceObserverProtocol.GetSubscriber(fromRef, chatInfo) =>
+        data.subscribers.get(chatInfo) match {
+          case Some(ref) => fromRef ! CommonProtocol.Data(ref)
+          case None => fromRef ! CommonProtocol.Fail(
+            s"""当前聊天并没有订阅这个订阅源：
+               |$source""".stripMargin)
+        }
+    }
 
   /**
    * 拉取消息
@@ -182,13 +198,14 @@ object SourceObserver {
   (
     subscribers: Map[ChatInfo, ActorRef],
     sourceRender: TemplateRender,
-    source: SourceIdentity,
     scanTask: Cancellable
   )
   case class SourceContent(messageKey: String, renderResult: RenderResult)
   // 协议
   object SourceObserverProtocol {
     sealed trait Request
+    // 获取指定订阅者
+    case class GetSubscriber(fromRef: ActorRef, chatInfo: ChatInfo) extends Request
     // 添加订阅者
     case class AddSubscriber(chatInfo: ChatInfo, fromRef: ActorRef) extends Request
     // 取消订阅者

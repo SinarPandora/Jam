@@ -12,5 +12,5 @@ trait TemplateRender {
 
 
 object TemplateRender {
-  case class RenderResult()
+  case class RenderResult(message: String)
 }
