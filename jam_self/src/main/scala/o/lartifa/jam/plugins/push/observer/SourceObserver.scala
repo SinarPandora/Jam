@@ -8,12 +8,11 @@ import o.lartifa.jam.database.Memory.database.*
 import o.lartifa.jam.database.Memory.database.profile.api.*
 import o.lartifa.jam.database.schema.Tables.*
 import o.lartifa.jam.model.ChatInfo
-import o.lartifa.jam.plugins.push.observer.SourceObserver.{SourceContent, SourceObserverData, SourceObserverProtocol}
+import o.lartifa.jam.plugins.push.observer.SourceObserver.{SourceObserverData, SourceObserverProtocol}
 import o.lartifa.jam.plugins.push.source.SourceIdentity
 import o.lartifa.jam.plugins.push.subscriber.SourceSubscriber as SourceSubscriberProto
 import o.lartifa.jam.plugins.push.subscriber.SourceSubscriber.SourceSubscriberProtocol
-import o.lartifa.jam.plugins.push.template.TemplateRender.RenderResult
-import o.lartifa.jam.plugins.push.template.{RenderRegistry, TemplateRender}
+import o.lartifa.jam.plugins.push.template.SourceContent
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
 import scala.async.Async.{async, await}
@@ -64,7 +63,6 @@ abstract class SourceObserver(initData: SourceObserverRow) extends Actor {
         that.context.become(listenStage(
           SourceObserverData(
             subscribers = subscribers,
-            sourceRender = RenderRegistry.get(initData.sourceIdentity),
             scanTask = that.context.system.scheduler.scheduleAtFixedRate(
               initialDelay = 1 second,
               interval = 3 minutes,
@@ -144,7 +142,7 @@ abstract class SourceObserver(initData: SourceObserverRow) extends Actor {
              |$source""".stripMargin)
       }
     case SourceObserverProtocol.SourceScan => async {
-      pull(data.sourceRender).foreach { it =>
+      pull().foreach { it =>
         data.subscribers.values.foreach(sr => sr ! SourceSubscriberProtocol.SourcePush(it))
       }
     }(ThreadPools.SCHEDULE_TASK)
@@ -187,20 +185,17 @@ abstract class SourceObserver(initData: SourceObserverRow) extends Actor {
   /**
    * 拉取消息
    *
-   * @param render 模板渲染器
    * @return 拉取结果
    */
-  def pull(render: TemplateRender): Option[SourceContent]
+  def pull(): Option[SourceContent]
 }
 
 object SourceObserver {
   case class SourceObserverData
   (
     subscribers: Map[ChatInfo, ActorRef],
-    sourceRender: TemplateRender,
     scanTask: Cancellable
   )
-  case class SourceContent(messageKey: String, renderResult: RenderResult)
   // 协议
   object SourceObserverProtocol {
     sealed trait Request

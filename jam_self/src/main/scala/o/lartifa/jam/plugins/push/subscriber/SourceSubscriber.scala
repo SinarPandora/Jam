@@ -8,9 +8,9 @@ import o.lartifa.jam.database.Memory.database.*
 import o.lartifa.jam.database.Memory.database.profile.api.*
 import o.lartifa.jam.database.schema.Tables.SourceSubscriber as SourceSubscriberTable
 import o.lartifa.jam.model.ChatInfo
-import o.lartifa.jam.plugins.push.observer.SourceObserver.SourceContent
 import o.lartifa.jam.plugins.push.source.SourceIdentity
 import o.lartifa.jam.plugins.push.subscriber.SourceSubscriber.{SourceSubscriberData, SourceSubscriberProtocol}
+import o.lartifa.jam.plugins.push.template.SourceContent
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
 import scala.concurrent.Future
