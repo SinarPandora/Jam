@@ -1,4 +1,4 @@
-package o.lartifa.jam.plugins.push.source
+package o.lartifa.jam.plugins.push.source.bilibili
 
 import o.lartifa.jam.common.config.JSONConfig.formats
 import org.json4s.*
