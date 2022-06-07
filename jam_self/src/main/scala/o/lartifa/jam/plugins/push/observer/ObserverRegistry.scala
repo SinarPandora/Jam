@@ -17,6 +17,7 @@ import o.lartifa.jam.plugins.push.source.bilibili.BiliDynamicObserver
 import o.lartifa.jam.plugins.push.source.{SourceIdentity, SupportedSource}
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
+import java.sql.Timestamp
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future, Promise}
 
@@ -28,7 +29,9 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
  */
 class ObserverRegistry(creatorRef: ActorRef) extends Actor with Stash {
   that =>
-  override def receive: Receive = waitingObserversInitStage(Map.empty)
+  override def receive: Receive = {
+    case unknown => logger.warning(s"初始化期间收到未知消息：$unknown")
+  }
 
   override def preStart(): Unit = that.init(creatorRef)
 
@@ -41,7 +44,7 @@ class ObserverRegistry(creatorRef: ActorRef) extends Actor with Stash {
    */
   def waitingObserversInitStage(registry: Map[SourceIdentity, ActorRef], inited: Int = 0): Receive = {
     case CommonProtocol.Online =>
-      if (registry.sizeIs == (inited + 1)) {
+      if (registry.sizeIs == inited) {
         that.context.become(listenStage(registry))
         creatorRef ! CommonProtocol.Online
       } else {
@@ -70,7 +73,7 @@ class ObserverRegistry(creatorRef: ActorRef) extends Actor with Stash {
         case None => that.createObserver(identity, fromRef, registry, creating)
       }
     case ObserverRegistryProtocol.PauseAll(from) =>
-      (registry ++ creating).values.foreach(ref => ref ! SourceObserverProtocol.Resume(from))
+      (registry ++ creating).values.foreach(ref => ref ! SourceObserverProtocol.Pause(from))
     case ObserverRegistryProtocol.ResumeAll(from) =>
       (registry ++ creating).values.foreach(ref => ref ! SourceObserverProtocol.Resume(from))
   }
@@ -82,20 +85,25 @@ class ObserverRegistry(creatorRef: ActorRef) extends Actor with Stash {
    */
   def init(fromRef: ActorRef): Unit = async {
     val observers = await(db.run(SourceObserver.result))
-    stash()
-    val registry = observers.flatMap { it =>
-      observerPrototypes.get(it.sourceType).map { proto =>
-        SourceIdentity(it.sourceType, it.sourceIdentity) -> that.context.actorOf(Props(
-          proto.getDeclaredConstructor(classOf[ActorRef], classOf[SourceObserverRow]).newInstance(that.self, it)
-        ))
-      }.orElse {
-        MasterUtil.notifyAndLog(s"%s，检测到未知的订阅类型：${it.sourceType}，请确认软件是否为最新版本",
-          logLevel = LogLevel.WARNING)
-        None
-      }
-    }.toMap
-    that.context.become(waitingObserversInitStage(registry))
-    unstashAll()
+    if (observers.isEmpty) {
+      that.context.become(listenStage(Map.empty))
+      creatorRef ! CommonProtocol.Online
+    } else {
+      stash()
+      val registry = observers.flatMap { it =>
+        observerPrototypes.get(it.sourceType).map { proto =>
+          SourceIdentity(it.sourceType, it.sourceIdentity) -> that.context.actorOf(Props(
+            proto.getDeclaredConstructor(classOf[ActorRef], classOf[SourceObserverRow]).newInstance(that.self, it)
+          ))
+        }.orElse {
+          MasterUtil.notifyAndLog(s"%s，检测到未知的订阅类型：${it.sourceType}，请确认软件是否为最新版本",
+            logLevel = LogLevel.WARNING)
+          None
+        }
+      }.toMap
+      that.context.become(waitingObserversInitStage(registry))
+      unstashAll()
+    }
   }(ThreadPools.DB)
 
   /**
@@ -106,8 +114,8 @@ class ObserverRegistry(creatorRef: ActorRef) extends Actor with Stash {
    * @param registry 源注册表
    * @param creating 创建中的 Observer
    */
-  def createObserver(identity: SourceIdentity, fromRef: ActorRef, registry: Map[SourceIdentity, ActorRef], creating: Map[SourceIdentity, ActorRef]): Unit = {
-    val proto = observerPrototypes.getOrElse(identity.sourceIdentity, {
+  def createObserver(identity: SourceIdentity, fromRef: ActorRef, registry: Map[SourceIdentity, ActorRef], creating: Map[SourceIdentity, ActorRef]): Unit = async {
+    val proto: Class[? <: SourceObserverProto] = observerPrototypes.getOrElse(identity.sourceIdentity, {
       fromRef ! CommonProtocol.Fail("该订阅类型不存在")
       return
     })
@@ -115,27 +123,37 @@ class ObserverRegistry(creatorRef: ActorRef) extends Actor with Stash {
       fromRef ! CommonProtocol.Fail("源正在创建中")
       return
     }
-    val observer = that.context.actorOf(Props(proto))
+    val (id, createTime, isActive): (Long, Timestamp, Boolean) = await(
+      db.run {
+        SourceObserver.map(row => (row.sourceType, row.sourceIdentity))
+          .returning(SourceObserver.map(row => (row.id, row.createTime, row.isActive)))
+          += ((identity.sourceType, identity.sourceIdentity))
+      }
+    )
+    var observer: ActorRef = null
     that.context.become(this.listenStage(registry, creating + (identity -> observer)))
     that.context.actorOf(ExtraActor(
       ctx => {
-        observer ! CommonProtocol.IsAlive_?(ctx.self)
+        observer = that.context.actorOf(Props(proto, ctx.self, SourceObserverRow(
+          id = id,
+          sourceIdentity = identity.sourceIdentity,
+          sourceType = identity.sourceType,
+          createTime = createTime,
+          isActive = isActive
+        )))
       },
       _ => {
         case CommonProtocol.Online =>
-          that.context.become(
-            that.listenStage(registry + (identity -> observer))
-          )
           logger.log(s"新源已创建：${identity.info}")
-          fromRef ! ObserverRegistryProtocol.Created(observer)
           that.context.become(that.listenStage(registry + (identity -> observer), creating - identity))
+          fromRef ! ObserverRegistryProtocol.Created(observer)
         case SourceObserverProtocol.Fail(identity, msg) =>
           logger.error(s"资源观察者启动失败，${identity.info}，错误信息：$msg")
           fromRef ! CommonProtocol.Fail("订阅启动失败，请稍后重试")
           MasterUtil.notifyAndLog(s"%s，源订阅初始化失败，${identity.info}，${JamConfig.config.name}将忽略该订阅源", LogLevel.ERROR)
       }
     ))
-  }
+  }(ThreadPools.SCHEDULE_TASK)
 }
 
 object ObserverRegistry {
@@ -176,7 +194,7 @@ object ObserverRegistry {
       logger.log(s"${AnsiColor.YELLOW} [源订阅] 发现旧的订阅源注册表实例，正在清理...")
       JamContext.actorSystem.stop(oldRef)
       JamContext.observerRegistry.set(null)
-      logger.log(s"${AnsiColor.YELLOW} [源订阅] ${AnsiColor.GREEN} 旧实例清理完毕！")
+      logger.log(s"${AnsiColor.YELLOW} [源订阅] ${AnsiColor.GREEN}旧实例清理完毕！")
     }
     logger.log(s"${AnsiColor.YELLOW} [源订阅] 正在初始化...")
     val result = Promise[Unit]()
@@ -188,11 +206,11 @@ object ObserverRegistry {
       _ => {
         case CommonProtocol.Online =>
           JamContext.observerRegistry.set(registry)
-          logger.log(s"${AnsiColor.YELLOW} [源订阅] ${AnsiColor.GREEN} 初始化成功！")
-          result.success()
+          logger.log(s"${AnsiColor.YELLOW} [源订阅] ${AnsiColor.GREEN}初始化成功！")
+          result.success(())
         case other =>
           MasterUtil.notifyAndLog(s"%s，源订阅启动失败，启动过程中收到未知消息：$other，这将导致订阅功能无法使用，请检查日志", LogLevel.ERROR)
-          result.success() // 返回 Success 使 Bot 可以正常初始化其他功能
+          result.success(()) // 返回 Success 使 Bot 可以正常初始化其他功能
       }
     ))
     result.future

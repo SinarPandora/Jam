@@ -59,6 +59,12 @@ class SourceSubscriber(id: Long, chatInfo: ChatInfo, source: SourceIdentity, isP
       }
     case SourceSubscriberProtocol.Pause(fromRef) =>
       that.context.become(pauseStage(data))
+      db.run {
+        SourceSubscriberTable
+          .filter(_.id === id)
+          .map(_.isActive)
+          .update(false)
+      }
       fromRef ! CommonProtocol.Done
     case CommonProtocol.IsAlive_?(fromRef) =>
       fromRef ! CommonProtocol.Online
@@ -73,6 +79,12 @@ class SourceSubscriber(id: Long, chatInfo: ChatInfo, source: SourceIdentity, isP
   def pauseStage(data: SourceSubscriberData): Receive = {
     case SourceSubscriberProtocol.Resume(fromRef) =>
       that.context.become(listenStage(data))
+      db.run {
+        SourceSubscriberTable
+          .filter(_.id === id)
+          .map(_.isActive)
+          .update(true)
+      }
       fromRef ! CommonProtocol.Done
   }
 }

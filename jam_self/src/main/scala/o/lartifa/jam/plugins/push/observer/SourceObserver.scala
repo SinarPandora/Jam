@@ -6,7 +6,7 @@ import o.lartifa.jam.common.protocol.CommonProtocol
 import o.lartifa.jam.common.util.ExtraActor
 import o.lartifa.jam.database.Memory.database.*
 import o.lartifa.jam.database.Memory.database.profile.api.*
-import o.lartifa.jam.database.schema.Tables.*
+import o.lartifa.jam.database.schema.Tables.{SourceObserver as SourceObserverTable, *}
 import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.plugins.push.observer.SourceObserver.{SourceObserverData, SourceObserverProtocol}
 import o.lartifa.jam.plugins.push.source.SourceIdentity
@@ -139,6 +139,12 @@ abstract class SourceObserver(creatorRef: ActorRef, initData: SourceObserverRow)
       }(ThreadPools.SCHEDULE_TASK)
     case SourceObserverProtocol.Pause(fromRef) =>
       that.context.become(pauseStage(data))
+      db.run {
+        SourceObserverTable
+          .filter(_.id === initData.id)
+          .map(_.isActive)
+          .update(false)
+      }
       fromRef ! CommonProtocol.Done
     case msg: SourceObserverProtocol.GetSubscriber => handleGetSubscriber(msg, data)
   }
@@ -152,6 +158,12 @@ abstract class SourceObserver(creatorRef: ActorRef, initData: SourceObserverRow)
   final def pauseStage(data: SourceObserverData): Receive = {
     case SourceObserverProtocol.Resume(fromRef) =>
       that.context.become(listenStage(data))
+      db.run {
+        SourceObserverTable
+          .filter(_.id === initData.id)
+          .map(_.isActive)
+          .update(true)
+      }
       fromRef ! CommonProtocol.Done
     case msg: SourceObserverProtocol.GetSubscriber => handleGetSubscriber(msg, data)
   }

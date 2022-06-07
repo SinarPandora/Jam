@@ -3,8 +3,6 @@ create table source_observer
     id              bigserial not null primary key,
     source_identity text      not null,
     source_type     text      not null,
-    chat_id         bigint    not null,
-    chat_type       text      not null,
     create_time     timestamp not null default current_timestamp,
     is_active       boolean   not null default true
 );

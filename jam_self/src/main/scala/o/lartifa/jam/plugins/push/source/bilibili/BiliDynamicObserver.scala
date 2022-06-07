@@ -1,5 +1,6 @@
 package o.lartifa.jam.plugins.push.source.bilibili
 
+import akka.actor.ActorRef
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.database.schema.Tables.SourceObserverRow
 import o.lartifa.jam.plugins.push.observer.SourceObserver
@@ -20,7 +21,7 @@ import scala.util.{Failure, Success}
  * Author: sinar
  * 2022/6/7 01:04
  */
-class BiliDynamicObserver(initData: SourceObserverRow) extends SourceObserver(initData) {
+class BiliDynamicObserver(creatorRef: ActorRef, initData: SourceObserverRow) extends SourceObserver(creatorRef, initData) {
   private val uid: Long = source.sourceIdentity.toLong
   private val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.CHINA)
 
@@ -36,7 +37,7 @@ class BiliDynamicObserver(initData: SourceObserverRow) extends SourceObserver(in
         val renderResult = if (TemplateRender.isRendered(source, messageKey)) {
           TemplateRender.render(source, messageKey)
         } else {
-          val imageData = await(pullImages(dynamic.face ++: dynamic.pictures.take(9)))
+          val imageData = await(pullImages(dynamic.face +: dynamic.pictures.take(9)))
           val templateData = Map(
             "timestamp" -> formatter.format(dynamic.timestamp.toInstant),
             "username" -> dynamic.uname,
