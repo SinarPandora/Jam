@@ -22,7 +22,7 @@ object BiliClient {
       val TEXT: Int = 4
       val VIDEO: Int = 8
     }
-    case class Dynamic
+    case class DynamicContent
     (
       dynamicId: Long,
       `type`: Int,
@@ -35,7 +35,7 @@ object BiliClient {
       cardDecorate: Option[String],
       emojiInfo: EmojiInfo
     )
-    case class DynamicContent(uname: String, face: String, content: String, pictures: Seq[String] = Seq.empty)
+    case class DynamicDetail(uname: String, face: String, content: String, pictures: Seq[String] = Seq.empty)
 
     /**
      * 通过 UID 获取用户动态（前 20 条）
@@ -43,14 +43,15 @@ object BiliClient {
      * @param uid     用户 ID
      * @param offset  偏移量（默认为 0）
      * @param needTop 是否获取置顶动态（默认为否）
+     * @param limit   单次解析条数（默认 1）
      * @return 用户动态（一次最多 20 条）
      */
-    def getUserDynamic(uid: Long, offset: Int = 0, needTop: Boolean = false): Seq[Dynamic] = {
+    def getUserDynamic(uid: Long, offset: Int = 0, needTop: Boolean = false, limit: Int = 1): Seq[DynamicContent] = {
       val resp = parse {
         requests.get(s"https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/space_history?host_uid=$uid&need_top=$needTop&offset_dynamic_id=$offset")
           .text()
       }
-      (resp \ "data" \ "cards").extractOrElse[Seq[JValue]](Seq.empty).map(extractDynamic)
+      (resp \ "data" \ "cards").extractOrElse[Seq[JValue]](Seq.empty).take(limit).map(extractDynamic)
     }
 
     /**
@@ -59,7 +60,7 @@ object BiliClient {
      * @param json JSON 值对象
      * @return 提取结果
      */
-    private def extractDynamic(json: JValue): Dynamic = {
+    private def extractDynamic(json: JValue): DynamicContent = {
       val emojiInfo = (json \ "display" \ "emoji_info" \ "emoji_details")
         .extractOrElse[Seq[JValue]](Seq())
         .map(j => (j \ "text").extract[String] -> (j \ "url").extract[String])
@@ -69,7 +70,7 @@ object BiliClient {
       val `type` = (json \ "desc" \ "type").extract[Int]
       val content = extractDynamicContent(`type`, dynamicCard)
 
-      Dynamic(
+      DynamicContent(
         dynamicId = (json \ "desc" \ "dynamic_id").extract[Long],
         `type` = `type`,
         uid = (json \ "desc" \ "dynamic_id").extract[Long],
@@ -89,7 +90,7 @@ object BiliClient {
      * @param dynamicId 动态 ID
      * @return 动态信息
      */
-    private def getDynamic(dynamicId: Long): Option[Dynamic] = {
+    def getDynamic(dynamicId: Long): Option[DynamicContent] = {
       val resp = parse {
         requests.get(s"https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/get_dynamic_detail?dynamic_id=$dynamicId")
           .text()
@@ -104,7 +105,7 @@ object BiliClient {
      * @param dynamicCard 动态卡片 json
      * @return 动态内容
      */
-    private def extractDynamicContent(`type`: Int, dynamicCard: JValue): DynamicContent = {
+    private def extractDynamicContent(`type`: Int, dynamicCard: JValue): DynamicDetail = {
       `type` match {
         case Type.FORWARD => extractForwardDynamic(dynamicCard)
         case Type.ALBUM => extractAlbumDynamic(dynamicCard)
@@ -120,12 +121,12 @@ object BiliClient {
      * @param card 动态卡片 json
      * @return 动态内容
      */
-    private def extractForwardDynamic(card: JValue): DynamicContent = {
+    private def extractForwardDynamic(card: JValue): DynamicDetail = {
       val oriContent = extractDynamicContent(
         `type` = (card \ "item" \ "orig_type").extract[Int],
         dynamicCard = card \ "origin"
       )
-      DynamicContent(
+      DynamicDetail(
         uname = (card \ "user" \ "uname").extract[String],
         face = (card \ "user" \ "face").extract[String],
         content =
@@ -142,8 +143,8 @@ object BiliClient {
      * @param card 动态卡片 json
      * @return 动态内容
      */
-    private def extractAlbumDynamic(card: JValue): DynamicContent = {
-      DynamicContent(
+    private def extractAlbumDynamic(card: JValue): DynamicDetail = {
+      DynamicDetail(
         uname = (card \ "user" \ "name").extract[String],
         face = (card \ "user" \ "head_url").extract[String],
         content = (card \ "item" \ "description").extract[String],
@@ -157,8 +158,8 @@ object BiliClient {
      * @param card 动态卡片 json
      * @return 动态内容
      */
-    private def extractTextDynamic(card: JValue): DynamicContent = {
-      DynamicContent(
+    private def extractTextDynamic(card: JValue): DynamicDetail = {
+      DynamicDetail(
         uname = (card \ "user" \ "uname").extract[String],
         face = (card \ "user" \ "face").extract[String],
         content = (card \ "item" \ "content").extract[String]
@@ -171,8 +172,8 @@ object BiliClient {
      * @param card 动态卡片 json
      * @return 动态内容
      */
-    private def extractVideoDynamic(card: JValue): DynamicContent = {
-      DynamicContent(
+    private def extractVideoDynamic(card: JValue): DynamicDetail = {
+      DynamicDetail(
         uname = (card \ "owner" \ "name").extract[String],
         face = (card \ "owner" \ "face").extract[String],
         content =

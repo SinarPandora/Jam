@@ -26,12 +26,12 @@ object TemplateRender {
   /**
    * @return 全部模板配置
    */
-  def templates: Map[String, String] = PluginConfig.config.sourcePush.templateMapping
+  private def templates: Map[String, String] = PluginConfig.config.sourcePush.templateMapping
 
   /**
    * @return 模板文件夹
    */
-  def templateDir: File = PluginConfig.config.sourcePush.templateDir.toFile
+  private def templateDir: File = PluginConfig.config.sourcePush.templateDir.toFile
 
   // 渲染工具
   private val renderApp: String = "npx --registry=https://registry.npmmirror.com --yes node-html-to-image-cli"
@@ -43,14 +43,24 @@ object TemplateRender {
   private val processLogger: ProcessLogger = ProcessLogger(logger.log, logger.error)
 
   /**
-   * 模板渲染
+   * 通过文件是否存在判断是否渲染过
    *
-   * @param data       模板数据
    * @param source     订阅源
    * @param messageKey 消息唯一标识
+   * @return 是否渲染过
+   */
+  def isRendered(source: SourceIdentity, messageKey: String): Boolean =
+    (tmp / s"${source.sourceType}_${source.sourceIdentity}" / messageKey / "rendered.png").exists
+
+  /**
+   * 模板渲染
+   *
+   * @param source     订阅源
+   * @param messageKey 消息唯一标识
+   * @param data       模板数据
    * @return 渲染结果
    */
-  def render(data: Map[String, Any], source: SourceIdentity, messageKey: String): Try[RenderResult] = {
+  def render(source: SourceIdentity, messageKey: String, data: Map[String, Any] = Map.empty): Try[RenderResult] = {
     val tmpDir = (tmp / s"${source.sourceType}_${source.sourceIdentity}").createDirectoryIfNotExists()
     val workDir = (tmpDir / messageKey).createDirectoryIfNotExists()
     val renderImage = workDir / "rendered.png"

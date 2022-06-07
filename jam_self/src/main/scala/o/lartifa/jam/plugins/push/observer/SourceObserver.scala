@@ -16,6 +16,7 @@ import o.lartifa.jam.plugins.push.template.SourceContent
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
 import scala.async.Async.{async, await}
+import scala.concurrent.Future
 import scala.concurrent.duration.*
 import scala.language.postfixOps
 import scala.util.{Failure, Success}
@@ -141,11 +142,12 @@ abstract class SourceObserver(initData: SourceObserverRow) extends Actor {
           s"""当前聊天并没有订阅这个订阅源：
              |$source""".stripMargin)
       }
-    case SourceObserverProtocol.SourceScan => async {
+    case SourceObserverProtocol.SourceScan =>
       pull().foreach { it =>
-        data.subscribers.values.foreach(sr => sr ! SourceSubscriberProtocol.SourcePush(it))
-      }
-    }(ThreadPools.SCHEDULE_TASK)
+        it.foreach { result =>
+          data.subscribers.values.foreach(sr => sr ! SourceSubscriberProtocol.SourcePush(result))
+        }
+      }(ThreadPools.SCHEDULE_TASK)
     case SourceObserverProtocol.Pause(fromRef) =>
       that.context.become(pauseStage(data))
       fromRef ! CommonProtocol.Done
@@ -187,7 +189,7 @@ abstract class SourceObserver(initData: SourceObserverRow) extends Actor {
    *
    * @return 拉取结果
    */
-  def pull(): Option[SourceContent]
+  def pull(): Future[Option[SourceContent]]
 }
 
 object SourceObserver {
