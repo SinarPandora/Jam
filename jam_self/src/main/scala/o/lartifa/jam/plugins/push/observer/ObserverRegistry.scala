@@ -1,6 +1,7 @@
 package o.lartifa.jam.plugins.push.observer
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorRef, Props, Stash}
+import cc.moecraft.logger.format.AnsiColor
 import cc.moecraft.logger.{HyLogger, LogLevel}
 import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.protocol.CommonProtocol
@@ -8,13 +9,16 @@ import o.lartifa.jam.common.util.{ExtraActor, MasterUtil}
 import o.lartifa.jam.database.Memory.database.*
 import o.lartifa.jam.database.Memory.database.profile.api.*
 import o.lartifa.jam.database.schema.Tables.*
+import o.lartifa.jam.model.behaviors.ActorCreator
 import o.lartifa.jam.plugins.push.observer.ObserverRegistry.{ObserverRegistryProtocol, logger, observerPrototypes}
 import o.lartifa.jam.plugins.push.observer.SourceObserver as SourceObserverProto
 import o.lartifa.jam.plugins.push.observer.SourceObserver.SourceObserverProtocol
-import o.lartifa.jam.plugins.push.source.SourceIdentity
+import o.lartifa.jam.plugins.push.source.bilibili.BiliDynamicObserver
+import o.lartifa.jam.plugins.push.source.{SourceIdentity, SupportedSource}
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
 import scala.async.Async.{async, await}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 
 /**
  * 订阅源注册
@@ -22,11 +26,11 @@ import scala.async.Async.{async, await}
  * Author: sinar
  * 2022/5/7 12:10
  */
-class ObserverRegistry(parentRef: ActorRef) extends Actor {
+class ObserverRegistry(creatorRef: ActorRef) extends Actor with Stash {
   that =>
   override def receive: Receive = waitingObserversInitStage(Map.empty)
 
-  override def preStart(): Unit = that.init(parentRef)
+  override def preStart(): Unit = that.init(creatorRef)
 
   /**
    * 等待订阅者初始化阶段
@@ -39,12 +43,12 @@ class ObserverRegistry(parentRef: ActorRef) extends Actor {
     case CommonProtocol.Online =>
       if (registry.sizeIs == (inited + 1)) {
         that.context.become(listenStage(registry))
-        parentRef ! CommonProtocol.Done
+        creatorRef ! CommonProtocol.Online
       } else {
         that.context.become(waitingObserversInitStage(registry, inited + 1))
       }
     case SourceObserverProtocol.Fail(identity, msg) =>
-      MasterUtil.notifyAndLog(s"%s，源订阅初始化失败，${identity.info}，${JamConfig.config.name}将忽略该订阅源，错误信息：$msg", LogLevel.ERROR)
+      MasterUtil.notifyAndLog(s"%s，源订阅初始化失败，${identity.info}，${JamConfig.config.name}将忽略该订阅源，请检查数据库，错误信息：$msg", LogLevel.ERROR)
       that.context.become(waitingObserversInitStage(registry, inited + 1))
   }
 
@@ -78,10 +82,11 @@ class ObserverRegistry(parentRef: ActorRef) extends Actor {
    */
   def init(fromRef: ActorRef): Unit = async {
     val observers = await(db.run(SourceObserver.result))
+    stash()
     val registry = observers.flatMap { it =>
       observerPrototypes.get(it.sourceType).map { proto =>
         SourceIdentity(it.sourceType, it.sourceIdentity) -> that.context.actorOf(Props(
-          proto.getDeclaredConstructor(SourceObserverRow.getClass).newInstance(it)
+          proto.getDeclaredConstructor(classOf[ActorRef], classOf[SourceObserverRow]).newInstance(that.self, it)
         ))
       }.orElse {
         MasterUtil.notifyAndLog(s"%s，检测到未知的订阅类型：${it.sourceType}，请确认软件是否为最新版本",
@@ -90,7 +95,7 @@ class ObserverRegistry(parentRef: ActorRef) extends Actor {
       }
     }.toMap
     that.context.become(waitingObserversInitStage(registry))
-    registry.values.foreach(_ ! CommonProtocol.IsAlive_?(self))
+    unstashAll()
   }(ThreadPools.DB)
 
   /**
@@ -102,7 +107,10 @@ class ObserverRegistry(parentRef: ActorRef) extends Actor {
    * @param creating 创建中的 Observer
    */
   def createObserver(identity: SourceIdentity, fromRef: ActorRef, registry: Map[SourceIdentity, ActorRef], creating: Map[SourceIdentity, ActorRef]): Unit = {
-    val proto = observerPrototypes.getOrElse(identity.sourceIdentity, return fromRef ! CommonProtocol.Fail("该订阅类型不存在"))
+    val proto = observerPrototypes.getOrElse(identity.sourceIdentity, {
+      fromRef ! CommonProtocol.Fail("该订阅类型不存在")
+      return
+    })
     if (creating.contains(identity)) {
       fromRef ! CommonProtocol.Fail("源正在创建中")
       return
@@ -132,12 +140,12 @@ class ObserverRegistry(parentRef: ActorRef) extends Actor {
 
 object ObserverRegistry {
   private val logger: HyLogger = JamContext.loggerFactory.get().getLogger(classOf[ObserverRegistry])
-  val observerPrototypes: Map[String, Class[? <: SourceObserverProto]] = Map()
+  val observerPrototypes: Map[String, Class[? <: SourceObserverProto]] = Map(
+    SupportedSource.BILI_DYNAMIC -> classOf[BiliDynamicObserver]
+  )
   object ObserverRegistryProtocol {
     // 请求
     sealed trait Request
-    // 初始化
-    case class Init(fromRef: ActorRef) extends Request
     // 搜索订阅源
     case class Search(identity: SourceIdentity, fromRef: ActorRef) extends Request
     // 搜索或创建
@@ -155,5 +163,38 @@ object ObserverRegistry {
     // 未找到
     case object NotFound extends Response
     // 其他引用 CommonProtocol.scala
+  }
+
+  /**
+   * 初始化
+   *
+   * @param ec 异步上下文
+   */
+  def init()(implicit ec: ExecutionContext): Future[Unit] = {
+    val oldRef = JamContext.observerRegistry.get()
+    if (oldRef != null) {
+      logger.log(s"${AnsiColor.YELLOW} [源订阅] 发现旧的订阅源注册表实例，正在清理...")
+      JamContext.actorSystem.stop(oldRef)
+      JamContext.observerRegistry.set(null)
+      logger.log(s"${AnsiColor.YELLOW} [源订阅] ${AnsiColor.GREEN} 旧实例清理完毕！")
+    }
+    logger.log(s"${AnsiColor.YELLOW} [源订阅] 正在初始化...")
+    val result = Promise[Unit]()
+    var registry: ActorRef = null
+    ActorCreator.actorOf(ExtraActor(
+      ctx => {
+        registry = ActorCreator.actorOf(Props(new ObserverRegistry(ctx.self)))
+      },
+      _ => {
+        case CommonProtocol.Online =>
+          JamContext.observerRegistry.set(registry)
+          logger.log(s"${AnsiColor.YELLOW} [源订阅] ${AnsiColor.GREEN} 初始化成功！")
+          result.success()
+        case other =>
+          MasterUtil.notifyAndLog(s"%s，源订阅启动失败，启动过程中收到未知消息：$other，这将导致订阅功能无法使用，请检查日志", LogLevel.ERROR)
+          result.success() // 返回 Success 使 Bot 可以正常初始化其他功能
+      }
+    ))
+    result.future
   }
 }

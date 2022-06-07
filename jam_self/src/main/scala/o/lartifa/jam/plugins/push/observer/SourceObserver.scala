@@ -1,6 +1,6 @@
 package o.lartifa.jam.plugins.push.observer
 
-import akka.actor.{Actor, ActorRef, Cancellable, PoisonPill, Props}
+import akka.actor.{Actor, ActorRef, Cancellable, PoisonPill, Props, Stash}
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.protocol.CommonProtocol
 import o.lartifa.jam.common.util.ExtraActor
@@ -15,7 +15,6 @@ import o.lartifa.jam.plugins.push.subscriber.SourceSubscriber.SourceSubscriberPr
 import o.lartifa.jam.plugins.push.template.SourceContent
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
-import scala.async.Async.{async, await}
 import scala.concurrent.Future
 import scala.concurrent.duration.*
 import scala.language.postfixOps
@@ -27,7 +26,7 @@ import scala.util.{Failure, Success}
  * Author: sinar
  * 2022/5/7 12:06
  */
-abstract class SourceObserver(initData: SourceObserverRow) extends Actor {
+abstract class SourceObserver(creatorRef: ActorRef, initData: SourceObserverRow) extends Actor with Stash {
   that =>
   protected val source: SourceIdentity = SourceIdentity(
     sourceType = initData.sourceType,
@@ -35,35 +34,21 @@ abstract class SourceObserver(initData: SourceObserverRow) extends Actor {
   )
   protected val logger: HyLogger = JamContext.loggerFactory.get().getLogger(classOf[SourceObserver])
 
-  final override def preStart(): Unit = async {
-    val subscribers = await(db.run(SourceSubscriber.filter(_.sourceId === initData.id).result))
-    that.context.become(
-      waitingForInitStage(
-        subscribers
-          .map(it => {
-            val chatInfo = ChatInfo(it.chatType, it.chatId)
-            chatInfo -> that.context.actorOf(Props(new SourceSubscriberProto(it.id, chatInfo, source, it.isPaused, it.lastKey)))
-          })
-          .toMap
-      )
-    )
-  }(ThreadPools.DB)
-
-  final override def receive: Receive = waitingForInitStage()
-
-  /**
-   * 等待初始化阶段
-   *
-   * @param subscribers 订阅者
-   * @param inited      初始化数量
-   * @return 行为
-   */
-  final def waitingForInitStage(subscribers: Map[ChatInfo, ActorRef] = Map(), inited: Int = 0): Receive = {
-    case CommonProtocol.Online =>
-      if (subscribers.sizeIs == inited + 1) {
+  final override def preStart(): Unit = {
+    stash()
+    db.run(SourceSubscriber.filter(_.sourceId === initData.id).result).onComplete {
+      case Failure(exception) =>
+        logger.error(exception)
+        creatorRef ! SourceObserverProtocol.Fail(source, exception.getMessage)
+      case Success(subscribers) =>
         that.context.become(listenStage(
           SourceObserverData(
-            subscribers = subscribers,
+            subscribers = subscribers
+              .map(it => {
+                val chatInfo = ChatInfo(it.chatType, it.chatId)
+                chatInfo -> that.context.actorOf(Props(new SourceSubscriberProto(it.id, chatInfo, source, it.isPaused, it.lastKey)))
+              })
+              .toMap,
             scanTask = that.context.system.scheduler.scheduleAtFixedRate(
               initialDelay = 1 second,
               interval = 3 minutes,
@@ -72,10 +57,14 @@ abstract class SourceObserver(initData: SourceObserverRow) extends Actor {
             )(ThreadPools.SCHEDULE_TASK),
           )
         ))
+        unstashAll()
         logger.log("订阅源：[%s] 加载完成", initData.sourceType)
-      } else {
-        that.context.become(waitingForInitStage(subscribers, inited + 1))
-      }
+        creatorRef ! CommonProtocol.Online
+    }(ThreadPools.DB)
+  }
+
+  final override def receive: Receive = {
+    case unknown => logger.warning(s"初始化期间收到未知消息：$unknown")
   }
 
   /**

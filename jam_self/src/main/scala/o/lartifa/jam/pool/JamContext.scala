@@ -23,6 +23,7 @@ object JamContext {
   val cronTaskPool: AtomicReference[CronTaskPool] = new AtomicReference[CronTaskPool]()
   val variablePool: DBVarPool = DBVarPool()
   val loggerFactory: AtomicReference[LoggerFactory] = new AtomicReference[LoggerFactory]()
+  val observerRegistry: AtomicReference[ActorRef] = new AtomicReference[ActorRef]()
   val messagePool: MessagePool = new MessagePool()
   val clientConfig: AtomicReference[PicqConfig] = new AtomicReference[PicqConfig]()
   val actorSystem: ActorSystem = ActorSystem("System", config = botConfigFile)
