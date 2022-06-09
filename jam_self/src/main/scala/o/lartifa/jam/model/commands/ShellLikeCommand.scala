@@ -10,7 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2021/7/3 19:24
  */
-abstract class ShellLikeCommand(prefixes: Set[String]) extends Command[Unit] {
+abstract class ShellLikeCommand(prefixes: String*) extends Command[Unit] {
   /**
    * 执行
    *
