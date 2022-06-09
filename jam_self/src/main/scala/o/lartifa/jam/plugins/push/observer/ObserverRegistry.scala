@@ -50,8 +50,8 @@ class ObserverRegistry(creatorRef: ActorRef) extends Actor with Stash {
       } else {
         that.context.become(waitingObserversInitStage(registry, inited + 1))
       }
-    case SourceObserverProtocol.Fail(identity, msg) =>
-      MasterUtil.notifyAndLog(s"%s，源订阅初始化失败，${identity.info}，${JamConfig.config.name}将忽略该订阅源，请检查数据库，错误信息：$msg", LogLevel.ERROR)
+    case SourceObserverProtocol.InitFail(identity, msg) =>
+      MasterUtil.notifyAndLog(s"%s，源订阅初始化失败，$identity，${JamConfig.config.name}将忽略该订阅源，请检查数据库，错误信息：$msg", LogLevel.ERROR)
       that.context.become(waitingObserversInitStage(registry, inited + 1))
   }
 
@@ -123,10 +123,10 @@ class ObserverRegistry(creatorRef: ActorRef) extends Actor with Stash {
       fromRef ! CommonProtocol.Fail("源正在创建中")
       return
     }
-    val (id, createTime, isActive): (Long, Timestamp, Boolean) = await(
+    val (id, createTime, isPaused): (Long, Timestamp, Boolean) = await(
       db.run {
         SourceObserver.map(row => (row.sourceType, row.sourceIdentity))
-          .returning(SourceObserver.map(row => (row.id, row.createTime, row.isActive)))
+          .returning(SourceObserver.map(row => (row.id, row.createTime, row.isPaused)))
           += ((identity.sourceType, identity.sourceIdentity))
       }
     )
@@ -139,18 +139,18 @@ class ObserverRegistry(creatorRef: ActorRef) extends Actor with Stash {
           sourceIdentity = identity.sourceIdentity,
           sourceType = identity.sourceType,
           createTime = createTime,
-          isActive = isActive
+          isPaused = isPaused
         )))
       },
       _ => {
         case CommonProtocol.Online =>
-          logger.log(s"新源已创建：${identity.info}")
+          logger.log(s"新源已创建：$identity")
           that.context.become(that.listenStage(registry + (identity -> observer), creating - identity))
           fromRef ! ObserverRegistryProtocol.Created(observer)
-        case SourceObserverProtocol.Fail(identity, msg) =>
-          logger.error(s"资源观察者启动失败，${identity.info}，错误信息：$msg")
+        case SourceObserverProtocol.InitFail(identity, msg) =>
+          logger.error(s"资源观察者启动失败，$identity，错误信息：$msg")
           fromRef ! CommonProtocol.Fail("订阅启动失败，请稍后重试")
-          MasterUtil.notifyAndLog(s"%s，源订阅初始化失败，${identity.info}，${JamConfig.config.name}将忽略该订阅源", LogLevel.ERROR)
+          MasterUtil.notifyAndLog(s"%s，源订阅初始化失败，$identity，${JamConfig.config.name}将忽略该订阅源", LogLevel.ERROR)
       }
     ))
   }(ThreadPools.SCHEDULE_TASK)

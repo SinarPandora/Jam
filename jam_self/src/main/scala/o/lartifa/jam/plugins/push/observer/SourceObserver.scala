@@ -39,30 +39,47 @@ abstract class SourceObserver(creatorRef: ActorRef, initData: SourceObserverRow)
     db.run(SourceSubscriber.filter(_.sourceId === initData.id).result).onComplete {
       case Failure(exception) =>
         logger.error(exception)
-        creatorRef ! SourceObserverProtocol.Fail(source, exception.getMessage)
+        creatorRef ! SourceObserverProtocol.InitFail(source, exception.getMessage)
       case Success(subscribers) =>
-        that.context.become(listenStage(
-          SourceObserverData(
-            subscribers = subscribers
-              .map(it => {
-                val chatInfo = ChatInfo(it.chatType, it.chatId)
-                chatInfo -> that.context.actorOf(Props(new SourceSubscriberProto(it.id, chatInfo, source, it.isPaused, it.lastKey)))
-              })
-              .toMap,
-            scanTask = that.context.system.scheduler.scheduleAtFixedRate(
-              initialDelay = 1 second,
-              interval = 3 minutes,
-              receiver = that.self,
-              message = SourceObserver.SourceObserverProtocol.SourceScan,
-            )(ThreadPools.SCHEDULE_TASK),
-          )
-        ))
+        val data = SourceObserverData(
+          subscribers = subscribers
+            .map(it => {
+              val chatInfo = ChatInfo(it.chatType, it.chatId)
+              chatInfo -> that.context.actorOf(Props(new SourceSubscriberProto(it.id, chatInfo, source, it.isPaused, it.lastKey)))
+            })
+            .toMap,
+          scanTask = None
+        )
+        if (initData.isPaused) {
+          that.context.become(pauseStage(data))
+        } else {
+          that.context.become(listenStage(data.copy(scanTask = Some(createScanTask()))))
+        }
         unstashAll()
         logger.log("订阅源：[%s] 加载完成", initData.sourceType)
         creatorRef ! CommonProtocol.Online
     }(ThreadPools.DB)
   }
 
+  /**
+   * 创建扫描任务
+   *
+   * @return 扫描任务
+   */
+  final def createScanTask(): Cancellable = {
+    that.context.system.scheduler.scheduleAtFixedRate(
+      initialDelay = 1 second,
+      interval = 3 minutes,
+      receiver = that.self,
+      message = SourceObserver.SourceObserverProtocol.SourceScan,
+    )(ThreadPools.SCHEDULE_TASK)
+  }
+
+  /**
+   * 默认行为
+   *
+   * @return 默认行为
+   */
   final override def receive: Receive = {
     case unknown => logger.warning(s"初始化期间收到未知消息：$unknown")
   }
@@ -76,7 +93,7 @@ abstract class SourceObserver(creatorRef: ActorRef, initData: SourceObserverRow)
   final def listenStage(data: SourceObserverData): Receive = {
     case SourceObserverProtocol.AddSubscriber(chatInfo, fromRef) =>
       if (data.subscribers.contains(chatInfo)) {
-        fromRef ! CommonProtocol.Fail("该订阅源已被订阅")
+        fromRef ! CommonProtocol.Fail("该源已被订阅")
       } else {
         db
           .run {
@@ -88,13 +105,13 @@ abstract class SourceObserver(creatorRef: ActorRef, initData: SourceObserverRow)
           .onComplete {
             case Failure(exception) =>
               fromRef ! CommonProtocol.Fail("创建订阅失败，请稍后重试")
-              logger.error(s"订阅取消失败，请检数据库，订阅信息：$source，聊天信息：$chatInfo", exception)
+              logger.error(s"订阅创建失败，请检数据库，订阅信息：$source，聊天信息：$chatInfo", exception)
             case Success(id: Long) =>
               that.context.actorOf(ExtraActor(
                 _ => that.context.actorOf(Props(new SourceSubscriberProto(id, chatInfo, source))),
                 _ => {
                   case CommonProtocol.Online =>
-
+                    logger.log(s"订阅创建成功，请检数据库，订阅信息：$source，聊天信息：$chatInfo")
                     fromRef ! CommonProtocol.Done
                 },
               ))
@@ -127,9 +144,7 @@ abstract class SourceObserver(creatorRef: ActorRef, initData: SourceObserverRow)
                 }
                 fromRef ! CommonProtocol.Done
             }(ThreadPools.SCHEDULE_TASK)
-        case None => fromRef ! CommonProtocol.Fail(
-          s"""当前聊天并没有订阅这个订阅源：
-             |$source""".stripMargin)
+        case None => fromRef ! CommonProtocol.Fail(s"订阅不存在：$source".stripMargin)
       }
     case SourceObserverProtocol.SourceScan =>
       pull().foreach { it =>
@@ -138,13 +153,14 @@ abstract class SourceObserver(creatorRef: ActorRef, initData: SourceObserverRow)
         }
       }(ThreadPools.SCHEDULE_TASK)
     case SourceObserverProtocol.Pause(fromRef) =>
-      that.context.become(pauseStage(data))
       db.run {
         SourceObserverTable
           .filter(_.id === initData.id)
-          .map(_.isActive)
-          .update(false)
+          .map(_.isPaused)
+          .update(true)
       }
+      data.scanTask.filterNot(_.isCancelled).foreach(_.cancel())
+      that.context.become(pauseStage(data.copy(scanTask = None)))
       fromRef ! CommonProtocol.Done
     case msg: SourceObserverProtocol.GetSubscriber => handleGetSubscriber(msg, data)
   }
@@ -157,13 +173,13 @@ abstract class SourceObserver(creatorRef: ActorRef, initData: SourceObserverRow)
    */
   final def pauseStage(data: SourceObserverData): Receive = {
     case SourceObserverProtocol.Resume(fromRef) =>
-      that.context.become(listenStage(data))
       db.run {
         SourceObserverTable
           .filter(_.id === initData.id)
-          .map(_.isActive)
-          .update(true)
+          .map(_.isPaused)
+          .update(false)
       }
+      that.context.become(listenStage(data.copy(scanTask = Some(createScanTask()))))
       fromRef ! CommonProtocol.Done
     case msg: SourceObserverProtocol.GetSubscriber => handleGetSubscriber(msg, data)
   }
@@ -176,12 +192,10 @@ abstract class SourceObserver(creatorRef: ActorRef, initData: SourceObserverRow)
    */
   private def handleGetSubscriber(message: SourceObserverProtocol.GetSubscriber, data: SourceObserverData): Unit =
     message match {
-      case SourceObserverProtocol.GetSubscriber(fromRef, chatInfo) =>
+      case SourceObserverProtocol.GetSubscriber(chatInfo, fromRef) =>
         data.subscribers.get(chatInfo) match {
-          case Some(ref) => fromRef ! CommonProtocol.Data(ref)
-          case None => fromRef ! CommonProtocol.Fail(
-            s"""当前聊天并没有订阅这个订阅源：
-               |$source""".stripMargin)
+          case Some(ref) => fromRef ! SourceObserverProtocol.Found(ref)
+          case None => fromRef ! SourceObserverProtocol.NotFound
         }
     }
 
@@ -197,13 +211,13 @@ object SourceObserver {
   case class SourceObserverData
   (
     subscribers: Map[ChatInfo, ActorRef],
-    scanTask: Cancellable
+    scanTask: Option[Cancellable]
   )
   // 协议
   object SourceObserverProtocol {
     sealed trait Request
     // 获取指定订阅者
-    case class GetSubscriber(fromRef: ActorRef, chatInfo: ChatInfo) extends Request
+    case class GetSubscriber(chatInfo: ChatInfo, fromRef: ActorRef) extends Request
     // 添加订阅者
     case class AddSubscriber(chatInfo: ChatInfo, fromRef: ActorRef) extends Request
     // 取消订阅者
@@ -215,6 +229,8 @@ object SourceObserver {
     // 恢复扫描
     case class Resume(fromRef: ActorRef) extends Request
     sealed trait Response
-    case class Fail(identity: SourceIdentity, msg: String) extends Response
+    case class InitFail(identity: SourceIdentity, msg: String) extends Response
+    case class Found(ref: ActorRef) extends Response
+    case object NotFound extends Response
   }
 }

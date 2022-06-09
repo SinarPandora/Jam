@@ -6,14 +6,14 @@ import o.lartifa.jam.common.protocol.CommonProtocol
 import o.lartifa.jam.common.util.TimeUtil
 import o.lartifa.jam.database.Memory.database.*
 import o.lartifa.jam.database.Memory.database.profile.api.*
-import o.lartifa.jam.database.schema.Tables.SourceSubscriber as SourceSubscriberTable
+import o.lartifa.jam.database.schema.Tables.{SourcePushHistory, SourceSubscriber as SourceSubscriberTable}
 import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.plugins.push.source.SourceIdentity
-import o.lartifa.jam.plugins.push.subscriber.SourceSubscriber.{SourceSubscriberData, SourceSubscriberProtocol}
+import o.lartifa.jam.plugins.push.subscriber.SourceSubscriber.SourceSubscriberProtocol
 import o.lartifa.jam.plugins.push.template.SourceContent
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
-import scala.concurrent.Future
+import scala.async.Async.{async, await}
 import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
@@ -27,44 +27,52 @@ class SourceSubscriber(id: Long, chatInfo: ChatInfo, source: SourceIdentity, isP
   that =>
   private val logger: HyLogger = JamContext.loggerFactory.get().getLogger(this.getClass)
 
-  override def receive: Receive = listenStage(SourceSubscriberData(isPaused, lastKey))
+  override def receive: Receive = if (isPaused) pauseStage(lastKey) else listenStage(lastKey)
 
   /**
    * 监听阶段
    *
-   * @param data 源订阅者数据
+   * @param lastKey 最后推送消息键
    * @return 行为
    */
-  def listenStage(data: SourceSubscriberData): Receive = {
+  def listenStage(lastKey: String): Receive = {
     case SourceSubscriberProtocol.SourcePush(SourceContent(messageKey, renderResult)) =>
-      if (messageKey != data.lastKey) {
-        Future
-          .unit
-          .flatMap { _ =>
+      if (messageKey != lastKey) {
+        async {
+          val pushed = await(db.run {
+            SourcePushHistory
+              .filter(row => row.subscriberId === id && row.messageKey === messageKey)
+              .exists.result
+          })
+          if (!pushed) {
             import ChatInfo.ChatInfoReply
             chatInfo.sendMsg(renderResult.message)
-            db.run {
-              SourceSubscriberTable
-                .filter(_.id === id)
-                .map(row => (row.lastKey, row.lastUpdateTime))
-                .update((messageKey, TimeUtil.currentTimeStamp))
-            }
-          }(ThreadPools.SCHEDULE_TASK)
-          .onComplete {
-            case Failure(exception) =>
-              logger.error(s"推送出现错误，消息标识：$lastKey，消息内容：${renderResult.message}，消息源：$source，目标聊天：$chatInfo", exception)
-            case Success(_) =>
-              logger.debug(s"消息成功推送，消息标识：$lastKey，消息内容：${renderResult.message}，消息源：$source，目标聊天：$chatInfo")
-          }(ThreadPools.SCHEDULE_TASK)
+            await(db.run {
+              DBIO.sequence(Seq(
+                SourceSubscriberTable
+                  .filter(_.id === id)
+                  .map(row => (row.lastKey, row.lastUpdateTime))
+                  .update((messageKey, TimeUtil.currentTimeStamp)),
+                SourcePushHistory.map(row => (row.subscriberId, row.messageKey)) += ((id, messageKey))
+              ))
+            })
+          }
+        }(ThreadPools.DB).onComplete {
+          case Failure(exception) =>
+            logger.error(s"推送出现错误，消息标识：$lastKey，消息内容：${renderResult.message}，消息源：$source，目标聊天：$chatInfo", exception)
+          case Success(_) =>
+            logger.debug(s"消息成功推送，消息标识：$lastKey，消息内容：${renderResult.message}，消息源：$source，目标聊天：$chatInfo")
+            that.context.become(listenStage(messageKey))
+        }(ThreadPools.SCHEDULE_TASK)
       }
     case SourceSubscriberProtocol.Pause(fromRef) =>
-      that.context.become(pauseStage(data))
       db.run {
         SourceSubscriberTable
           .filter(_.id === id)
-          .map(_.isActive)
-          .update(false)
+          .map(_.isPaused)
+          .update(true)
       }
+      that.context.become(pauseStage(lastKey))
       fromRef ! CommonProtocol.Done
     case CommonProtocol.IsAlive_?(fromRef) =>
       fromRef ! CommonProtocol.Online
@@ -73,24 +81,23 @@ class SourceSubscriber(id: Long, chatInfo: ChatInfo, source: SourceIdentity, isP
   /**
    * 暂停阶段
    *
-   * @param data 源订阅者数据
+   * @param lastKey 最后推送消息键
    * @return 行为
    */
-  def pauseStage(data: SourceSubscriberData): Receive = {
+  def pauseStage(lastKey: String): Receive = {
     case SourceSubscriberProtocol.Resume(fromRef) =>
-      that.context.become(listenStage(data))
       db.run {
         SourceSubscriberTable
           .filter(_.id === id)
-          .map(_.isActive)
-          .update(true)
+          .map(_.isPaused)
+          .update(false)
       }
+      that.context.become(listenStage(lastKey))
       fromRef ! CommonProtocol.Done
   }
 }
 
 object SourceSubscriber {
-  case class SourceSubscriberData(isPaused: Boolean, lastKey: String)
   object SourceSubscriberProtocol {
     sealed trait Request
     // 源推送
