@@ -3,6 +3,7 @@ package o.lartifa.jam.database.schema
 // AUTO-GENERATED Slick data model for table SourceSubscriber
 trait SourceSubscriberTable {
 
+
   self: Tables =>
 
   import profile.api.*
@@ -19,22 +20,22 @@ trait SourceSubscriberTable {
    * @param isPaused       Database column is_paused SqlType(bool), Default(false)
    * @param lastKey        Database column last_key SqlType(text), Default(INIT)
    * @param lastUpdateTime Database column last_update_time SqlType(timestamp)
-   * @param createTime     Database column create_time SqlType(timestamp)
-   * @param isActive       Database column is_active SqlType(bool), Default(true) */
-  case class SourceSubscriberRow(id: Long, chatId: Long, chatType: String, sourceId: Long, isPaused: Boolean = false, lastKey: String = "INIT", lastUpdateTime: java.sql.Timestamp, createTime: java.sql.Timestamp, isActive: Boolean = true)
+   * @param createTime     Database column create_time SqlType(timestamp) */
+  case class SourceSubscriberRow(id: Long, chatId: Long, chatType: String, sourceId: Long, isPaused: Boolean = false, lastKey: String = "INIT", lastUpdateTime: java.sql.Timestamp, createTime: java.sql.Timestamp)
 
   /** GetResult implicit for fetching SourceSubscriberRow objects using plain SQL queries */
   implicit def GetResultSourceSubscriberRow(implicit e0: GR[Long], e1: GR[String], e2: GR[Boolean], e3: GR[java.sql.Timestamp]): GR[SourceSubscriberRow] = GR {
     prs =>
       import prs.*
-      SourceSubscriberRow.tupled((<<[Long], <<[Long], <<[String], <<[Long], <<[Boolean], <<[String], <<[java.sql.Timestamp], <<[java.sql.Timestamp], <<[Boolean]))
+      SourceSubscriberRow.tupled((<<[Long], <<[Long], <<[String], <<[Long], <<[Boolean], <<[String], <<[java.sql.Timestamp], <<[java.sql.Timestamp]))
   }
+
   /** Table description of table source_subscriber. Objects of this class serve as prototypes for rows in queries. */
   class SourceSubscriber(_tableTag: Tag) extends profile.api.Table[SourceSubscriberRow](_tableTag, "source_subscriber") {
-    def * = (id, chatId, chatType, sourceId, isPaused, lastKey, lastUpdateTime, createTime, isActive) <> (SourceSubscriberRow.tupled, SourceSubscriberRow.unapply)
+    def * = (id, chatId, chatType, sourceId, isPaused, lastKey, lastUpdateTime, createTime) <> (SourceSubscriberRow.tupled, SourceSubscriberRow.unapply)
 
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(chatId), Rep.Some(chatType), Rep.Some(sourceId), Rep.Some(isPaused), Rep.Some(lastKey), Rep.Some(lastUpdateTime), Rep.Some(createTime), Rep.Some(isActive)).shaped.<>({ r => import r.*; _1.map(_ => SourceSubscriberRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(chatId), Rep.Some(chatType), Rep.Some(sourceId), Rep.Some(isPaused), Rep.Some(lastKey), Rep.Some(lastUpdateTime), Rep.Some(createTime)).shaped.<>({ r => import r.*; _1.map(_ => SourceSubscriberRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)
@@ -52,8 +53,6 @@ trait SourceSubscriberTable {
     val lastUpdateTime: Rep[java.sql.Timestamp] = column[java.sql.Timestamp]("last_update_time")
     /** Database column create_time SqlType(timestamp) */
     val createTime: Rep[java.sql.Timestamp] = column[java.sql.Timestamp]("create_time")
-    /** Database column is_active SqlType(bool), Default(true) */
-    val isActive: Rep[Boolean] = column[Boolean]("is_active", O.Default(true))
 
     /** Foreign key referencing SourceObserver (database name source_subscriber_source_id_fkey) */
     lazy val sourceObserverFk = foreignKey("source_subscriber_source_id_fkey", sourceId, SourceObserver)(r => r.id, onUpdate = ForeignKeyAction.NoAction, onDelete = ForeignKeyAction.NoAction)

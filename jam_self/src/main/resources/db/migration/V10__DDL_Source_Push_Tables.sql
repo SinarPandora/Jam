@@ -4,7 +4,7 @@ create table source_observer
     source_identity text      not null,
     source_type     text      not null,
     create_time     timestamp not null default current_timestamp,
-    is_active       boolean   not null default true
+    is_paused       boolean   not null default false
 );
 
 create table source_subscriber
@@ -16,8 +16,7 @@ create table source_subscriber
     is_paused        boolean   not null default false,
     last_key         text      not null default 'INIT',
     last_update_time timestamp not null default current_timestamp,
-    create_time      timestamp not null default current_timestamp,
-    is_active        boolean   not null default true
+    create_time timestamp not null default current_timestamp
 );
 
 create unique index source_subscriber_source_chat
