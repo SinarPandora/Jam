@@ -66,16 +66,16 @@ object JamLoader {
     await(JamPluginLoader.initJamPluginSystems())
     JamContext.cronTaskPool.getAndSet(CronTaskPool().autoRefreshTaskDefinition())
     await(initSXDL())
-    client.getEventManager.registerListeners(QMessageListener, QEventListener, SystemEventListener)
-    client.getCommandManager.registerCommands(MasterCommands.commands *)
-    Runtime.getRuntime.addShutdownHook(shutdownHookThread)
-    SubscriptionPool.init()
-    runBootTasks()
+    await(ObserverRegistry.init())
     await(BehaviorInitializer.init())
+    SubscriptionPool.init()
     await(BanList.loadBanList())
     ScriptRunner.init()
-    await(ObserverRegistry.init())
+    runBootTasks()
+    client.getEventManager.registerListeners(QMessageListener, QEventListener, SystemEventListener)
+    client.getCommandManager.registerCommands(MasterCommands.commands *)
     KeepAliveDreamingActor.showBootMessage()
+    Runtime.getRuntime.addShutdownHook(shutdownHookThread)
   }
 
   /**
