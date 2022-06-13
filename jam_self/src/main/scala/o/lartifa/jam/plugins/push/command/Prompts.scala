@@ -1,4 +1,4 @@
-package o.lartifa.jam.plugins.push
+package o.lartifa.jam.plugins.push.command
 
 import o.lartifa.jam.plugins.push.source.SourceIdentity
 
@@ -33,4 +33,13 @@ object Prompts {
        |-------------------
        |指令正确格式举例：
        |.订阅 $command B站动态 uid""".stripMargin
+
+  /**
+   * 订阅不存在
+   */
+  val SubscriptionNotExist: String =
+    """订阅不存在🤔
+      |------------------
+      |您可以发送 .订阅 列表
+      |查看当前聊天的订阅信息""".stripMargin
 }

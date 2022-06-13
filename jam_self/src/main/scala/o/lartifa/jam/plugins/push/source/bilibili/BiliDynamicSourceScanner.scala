@@ -1,9 +1,8 @@
 package o.lartifa.jam.plugins.push.source.bilibili
 
-import akka.actor.ActorRef
 import o.lartifa.jam.common.util.MasterUtil
-import o.lartifa.jam.database.schema.Tables.SourceObserverRow
-import o.lartifa.jam.plugins.push.observer.SourceObserver
+import o.lartifa.jam.plugins.push.scanner.SourceScanner
+import o.lartifa.jam.plugins.push.source.SourceIdentity
 import o.lartifa.jam.plugins.push.template.{SourceContent, TemplateRender}
 import o.lartifa.jam.pool.ThreadPools
 
@@ -15,27 +14,28 @@ import scala.jdk.CollectionConverters.*
 import scala.util.{Failure, Success}
 
 /**
- * B站动态观察者
- * sourceIdentity 为 UID
+ * Bili动态扫描器
  *
  * Author: sinar
- * 2022/6/7 01:04
+ * 2022/6/13 22:14
  */
-class BiliDynamicObserver(creatorRef: ActorRef, initData: SourceObserverRow) extends SourceObserver(creatorRef, initData) {
-  private val uid: Long = source.sourceIdentity.toLong
+object BiliDynamicSourceScanner extends SourceScanner {
   private val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.CHINA)
 
   /**
-   * 拉取消息
+   * 源扫描
    *
-   * @return 拉取结果
+   * @param identity 源标识
+   * @param ec       异步上下文
+   * @return 扫描结果
    */
-  override def pull(): Future[Option[SourceContent]] = async {
-    BiliClient.Dynamic.getUserDynamic(uid).headOption match {
+  override def scan(identity: SourceIdentity)(implicit ec: ExecutionContext): Future[Option[SourceContent]] = async {
+    val SourceIdentity(_, uid) = identity
+    BiliClient.Dynamic.getUserDynamic(uid.toLong).headOption match {
       case Some(dynamic) =>
         val messageKey = dynamic.dynamicId.toString
-        val renderResult = if (TemplateRender.isRendered(source, messageKey)) {
-          TemplateRender.render(source, messageKey)
+        val renderResult = if (TemplateRender.isRendered(identity, messageKey)) {
+          TemplateRender.render(identity, messageKey)
         } else {
           val imageData = await(pullImages(dynamic.face +: dynamic.pictures.take(9)))
           val templateData = Map(
@@ -47,17 +47,17 @@ class BiliDynamicObserver(creatorRef: ActorRef, initData: SourceObserverRow) ext
             }",
             "avatar" -> imageData.head,
           )
-          TemplateRender.render(source, messageKey, templateData)
+          TemplateRender.render(identity, messageKey, templateData)
         }
         renderResult match {
           case Failure(exception) =>
-            MasterUtil.notifyAndLogError(s"%s，渲染订阅消息过程中出现错误，订阅源：$source, 消息唯一标识：$messageKey", exception)
+            MasterUtil.notifyAndLogError(s"%s，渲染订阅消息过程中出现错误，订阅源：$identity, 消息唯一标识：$messageKey", exception)
             None
           case Success(result) => Some(SourceContent(messageKey, result))
         }
       case None => None
     }
-  }(ThreadPools.SCHEDULE_TASK)
+  }
 
   /**
    * 拉取全部图片

@@ -20,10 +20,11 @@ abstract class ShellLikeCommand(prefixes: String*) extends Command[Unit] {
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = {
     val msg = context.eventMessage.message
-    val content = prefixes.find(msg.startsWith).map(msg.stripPrefix).getOrElse(msg)
+    val content = prefixes.find(msg.startsWith).map(msg.stripPrefix).getOrElse(msg).trim
     content.split("\\s+").toList match {
       case "help" :: Nil => help()
       case "帮助" :: Nil => help()
+      case "" :: Nil => this.execute(Nil)
       case args => this.execute(args)
     }
   }

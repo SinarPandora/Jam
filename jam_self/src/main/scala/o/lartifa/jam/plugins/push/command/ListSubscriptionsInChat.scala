@@ -5,6 +5,7 @@ import o.lartifa.jam.database.Memory.database.profile.api.*
 import o.lartifa.jam.database.schema.Tables.{SourceObserver, SourceSubscriber}
 import o.lartifa.jam.model.commands.Command
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
+import o.lartifa.jam.pool.ThreadPools
 
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,17 +45,15 @@ object ListSubscriptionsInChat extends Command[Int] {
       reply(
         """当前没有任何订阅
           |------------------------
-          |请使用 .订阅 添加 指令来添加订阅""".stripMargin)
+          |发送 .订阅 帮助 来查看操作提示""".stripMargin)
     } else {
       reply(
         s"""已订阅列表
            |------------------------
            |${sources.mkString("\n")}
            |------------------------
-           |暂停订阅：.订阅 暂停
-           |恢复订阅：.订阅 恢复
-           |删除订阅：.订阅 删除""".stripMargin)
+           |发送 .订阅 帮助 来查看操作提示""".stripMargin)
     }
     sources.size
-  }
+  }(ThreadPools.DB)
 }

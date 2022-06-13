@@ -20,7 +20,7 @@ import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext, Step}
 import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.plugins.caiyunai.dream.KeepAliveDreamingActor
 import o.lartifa.jam.plugins.lambda.runner.ScriptRunner
-import o.lartifa.jam.plugins.push.observer.ObserverRegistry
+import o.lartifa.jam.plugins.push.scanner.SourceScanTask
 import o.lartifa.jam.plugins.rss.SubscriptionPool
 import o.lartifa.jam.pool.CronTaskPool.TaskDefinition
 import o.lartifa.jam.pool.{CronTaskPool, JamContext, StepPool}
@@ -66,7 +66,7 @@ object JamLoader {
     await(JamPluginLoader.initJamPluginSystems())
     JamContext.cronTaskPool.getAndSet(CronTaskPool().autoRefreshTaskDefinition())
     await(initSXDL())
-    await(ObserverRegistry.init())
+    SourceScanTask.init()
     await(BehaviorInitializer.init())
     SubscriptionPool.init()
     await(BanList.loadBanList())

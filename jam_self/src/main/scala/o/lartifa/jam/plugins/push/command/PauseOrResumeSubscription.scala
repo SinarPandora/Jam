@@ -11,12 +11,12 @@ import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
- * 删除订阅
+ * 暂停或恢复订阅
  *
  * Author: sinar
- * 2022/6/9 00:27
+ * 2022/6/9 00:28
  */
-object DeleteSubscription extends Command[Unit] {
+object PauseOrResumeSubscription extends Command[Unit] {
   /**
    * 执行
    *
@@ -25,23 +25,19 @@ object DeleteSubscription extends Command[Unit] {
    * @return 异步返回执行结果
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
-    (await(context.tempVars.get("sourceType")), await(context.tempVars.get("sourceIdentity"))) match {
-      case (Some(sourceType), Some(sourceIdentity)) =>
+    (await(context.tempVars.get("sourceType")),
+      await(context.tempVars.get("sourceIdentity")),
+      await(context.tempVars.get("isPaused"))) match {
+      case (Some(sourceType), Some(sourceIdentity), Some(isPausedStr)) =>
         await(getSubscriber(sourceType, sourceIdentity, context.chatInfo)) match {
           case Some(subscriber) =>
+            val isPaused = isPausedStr.toBoolean
             await(db.run {
-              SourceSubscriber.filter(_.id === subscriber.id).delete
+              SourceSubscriber.filter(_.id === subscriber.id)
+                .map(_.isPaused)
+                .update(isPaused)
             })
-            // 如果已经没有对应的订阅者，将源删除
-            await(db.run {
-              SourceObserver
-                .joinLeft(SourceSubscriber)
-                .on((obs, sub) => obs.id === sub.sourceId)
-                .filter(_._2.isEmpty)
-                .map(_._1)
-                .delete
-            })
-            reply("订阅已取消👋")
+            reply(if (isPaused) "已暂停订阅⏸" else "已恢复订阅▶️")
           case None => reply(Prompts.SubscriptionNotExist)
         }
       case _ =>

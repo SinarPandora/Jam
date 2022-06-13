@@ -5,9 +5,10 @@ import cn.hutool.cron.CronUtil
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.model.CommandExecuteContext
-import o.lartifa.jam.model.tasks._
+import o.lartifa.jam.model.tasks.*
 import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.plugins.picbot.FetchPictureTask
+import o.lartifa.jam.plugins.push.scanner.SourceScanTask
 import o.lartifa.jam.pool.CronTaskPool.{TaskDefinition, logger}
 
 import java.util.concurrent.Semaphore
@@ -70,7 +71,8 @@ class CronTaskPool {
       "回复频率变更" -> TaskDefinition("回复频率变更", classOf[ChangeRespFrequency], isSingleton = false),
       "睡眠" -> TaskDefinition("睡眠", classOf[GoASleep], isSingleton = true),
       "起床" -> TaskDefinition("起床", classOf[WakeUp], isSingleton = true),
-      "更新图片库" -> TaskDefinition("更新图片库", classOf[FetchPictureTask], isSingleton = true)
+      "更新图片库" -> TaskDefinition("更新图片库", classOf[FetchPictureTask], isSingleton = true),
+      SourceScanTask.name -> TaskDefinition(SourceScanTask.name, classOf[SourceScanTask], isSingleton = true)
     ) ++ JamPluginLoader.loadedComponents.cronTaskDefinitions.map(it => it.name -> it)
     CronUtil.start()
     this._taskDefinition.values.foreach(_.startRequireTasks(this))
@@ -224,7 +226,7 @@ object CronTaskPool {
     /**
      * 定义类
      */
-    cls: Class[_ <: JamCronTask],
+    cls: Class[? <: JamCronTask],
 
     /**
      * 是否是单例任务

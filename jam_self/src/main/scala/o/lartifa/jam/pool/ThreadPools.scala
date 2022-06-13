@@ -28,7 +28,7 @@ object ThreadPools {
    * 网络请求线程池
    */
   val NETWORK: ExecutionContext = ExecutionContext.fromExecutor(
-    Executors.newWorkStealingPool(20)
+    Executors.newWorkStealingPool(30)
   )
 
   /**
@@ -57,7 +57,7 @@ object ThreadPools {
    * 默认池
    */
   val DEFAULT: ExecutionContext = ExecutionContext.fromExecutor(
-    Executors.newWorkStealingPool(Runtime.getRuntime.availableProcessors() * 2)
+    Executors.newWorkStealingPool(10)
   )
 
   /**

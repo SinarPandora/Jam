@@ -11,6 +11,7 @@ import o.lartifa.jam.model.commands.Ask.{AnyBody, CurrentSender}
 import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.plugins.lambda.RunLambda
 import o.lartifa.jam.plugins.picbot.*
+import o.lartifa.jam.plugins.push.command.SourcePushAllInOneCommand
 import o.lartifa.jam.plugins.rss.{RSSShowAll, RSSSubscribe, RSSUnSubscribe}
 import o.lartifa.jam.pool.JamContext
 
@@ -63,7 +64,8 @@ object CommandParser extends Parser {
       // 包含类模式放在后边
       parseDoNoting _, parseGroupWholeBan _, parseGroupWholeUnBan _, parseShowPicInfo _,
       parseRSSSubscribe _, parseRSSUnSubscribe _, parseRSSShowAll _, parseWhatICanDo _,
-      parseQQDice _, parseQQRPS _, parseShake _, parseBreakDirectly _, parseBreakAsUnMatched _, parseListAIModels _)
+      parseQQDice _, parseQQRPS _, parseShake _, parseBreakDirectly _, parseBreakAsUnMatched _,
+      parseListAIModels _, parseSourcePushCmd _)
       ++ contains
   }
 
@@ -733,4 +735,14 @@ object CommandParser extends Parser {
       RunLambda(scriptPath, args)
     })
   }
+
+  /**
+   * 解析源订阅指令
+   *
+   * @param string  待解析字符串
+   * @param context 解析引擎上下文
+   * @return 解析结果
+   */
+  private def parseSourcePushCmd(string: String, context: ParseEngineContext): Option[SourcePushAllInOneCommand.type] =
+    if (string.contains(CommandPattern.sourcePushCmd)) Some(SourcePushAllInOneCommand) else None
 }

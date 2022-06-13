@@ -13,9 +13,7 @@ import o.lartifa.jam.model.tasks.JamCronTask.logger
 import o.lartifa.jam.pool.JamContext
 
 import java.util.concurrent.atomic.AtomicBoolean
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * 定时任务封装
@@ -42,23 +40,23 @@ abstract class JamCronTask(val name: String, val chatInfo: ChatInfo = ChatInfo.N
       val stopWatch = new StopWatch()
       stopWatch.start()
       logger.log(s"任务执行开始：定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id")
-      Try(Await.result(run(), Duration.Inf)) match {
-        case Failure(exception) =>
-          exception match {
-            case e: InterruptedException => MasterUtil.notifyAndLog(s"%s，任务执行被打断：定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id",
+      run()
+        .recover {
+          case e: InterruptedException => MasterUtil.notifyAndLog(s"%s，任务执行被打断：定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id",
+            LogLevel.ERROR, Some(e))
+          case e =>
+            MasterUtil.notifyAndLog(s"任务执行出错：错误信息：${e.getMessage}，定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id",
               LogLevel.ERROR, Some(e))
-            case e =>
-              MasterUtil.notifyAndLog(s"任务执行执行出错：错误信息：${e.getMessage}，定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id",
-                LogLevel.ERROR, Some(e))
-          }
-        case Success(_) => logger.log(s"任务执行结束：定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id")
-      }
-      stopWatch.stop()
-      val cost = stopWatch.getTotalTimeSeconds
-      if (cost < 1) logger.log(s"${AnsiColor.GREEN}任务 ID：$id 执行耗时：小于1s")
-      else logger.log(s"${AnsiColor.GREEN}}任务 ID：$id 执行耗时：${cost}s")
-      postRun()
-      isRunning.getAndSet(false)
+        }
+        .foreach { _ =>
+          logger.log(s"任务执行结束：定时任务名称：$name，聊天信息：$chatInfo，唯一 ID：$id")
+          stopWatch.stop()
+          val cost = stopWatch.getTotalTimeSeconds
+          if (cost < 1) logger.log(s"${AnsiColor.GREEN}任务 ID：$id 执行耗时：小于1s")
+          else logger.log(s"${AnsiColor.GREEN}}任务 ID：$id 执行耗时：${cost}s")
+          postRun()
+          isRunning.getAndSet(false)
+        }
     }
   }
 
