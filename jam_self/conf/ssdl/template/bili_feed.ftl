@@ -82,6 +82,11 @@
             display: flex;
             justify-content: start;
         }
+
+        .card-image {
+            margin-top: 10px;
+            max-width: 300px;
+        }
     </style>
 </head>
 <body>
@@ -98,7 +103,7 @@
             ${content}
             <br/>
             <#list pictures as picture >
-                <img style="margin-top: 10px" src="${picture}" alt="#"/>
+                <img class="card-image" src="${picture}" alt="无法显示的图片"/>
             </#list>
         </div>
         <div class="card-footer">

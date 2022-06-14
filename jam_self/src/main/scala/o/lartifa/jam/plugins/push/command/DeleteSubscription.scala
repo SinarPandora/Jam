@@ -34,12 +34,13 @@ object DeleteSubscription extends Command[Unit] {
             })
             // 如果已经没有对应的订阅者，将源删除
             await(db.run {
-              SourceObserver
-                .joinLeft(SourceSubscriber)
-                .on((obs, sub) => obs.id === sub.sourceId)
-                .filter(_._2.isEmpty)
-                .map(_._1)
-                .delete
+              sqlu"""
+                    delete
+                    from source_observer obs
+                    where not exists(
+                            select sub.id from source_subscriber sub
+                                          where source_id = obs.id)
+                """
             })
             reply("订阅已取消👋")
           case None => reply(Prompts.SubscriptionNotExist)

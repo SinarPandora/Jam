@@ -148,7 +148,7 @@ object BiliClient {
         uname = (card \ "user" \ "name").extract[String],
         face = (card \ "user" \ "head_url").extract[String],
         content = (card \ "item" \ "description").extract[String],
-        pictures = (card \ "item" \ "pictures" \\ "img_src").extractOrElse[Seq[String]](Seq.empty)
+        pictures = (card \ "item" \ "pictures" \ "img_src").extractOrElse[Seq[String]](Seq.empty)
       )
     }
 

@@ -1,14 +1,17 @@
 package o.lartifa.jam.plugins.push.source.bilibili
 
-import o.lartifa.jam.common.util.MasterUtil
+import o.lartifa.jam.common.util.{MasterUtil, ResUtil}
 import o.lartifa.jam.plugins.push.scanner.SourceScanner
 import o.lartifa.jam.plugins.push.source.SourceIdentity
+import o.lartifa.jam.plugins.push.source.bilibili.BiliClient.Dynamic.EmojiInfo
 import o.lartifa.jam.plugins.push.template.{SourceContent, TemplateRender}
 import o.lartifa.jam.pool.ThreadPools
 
 import java.time.format.DateTimeFormatter
-import java.util.{Base64, Locale}
+import java.util
+import java.util.Locale
 import scala.async.Async.{async, await}
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters.*
 import scala.util.{Failure, Success}
@@ -37,17 +40,21 @@ object BiliDynamicSourceScanner extends SourceScanner {
         val renderResult = if (TemplateRender.isRendered(identity, messageKey)) {
           TemplateRender.render(identity, messageKey)
         } else {
-          val imageData = await(pullImages(dynamic.face +: dynamic.pictures.take(9)))
-          val templateData = Map(
-            "timestamp" -> formatter.format(dynamic.timestamp.toInstant),
-            "username" -> dynamic.uname,
-            "pictures" -> imageData.tail.asJava,
-            "content" -> s"${dynamic.content}${
-              if (dynamic.pictures.sizeIs > 9) "\n<最多显示九张图片>" else ""
-            }",
-            "avatar" -> imageData.head,
-          )
-          TemplateRender.render(identity, messageKey, templateData)
+          val tasks = await {
+            Future.sequence(Seq(
+              pullImages(dynamic.face +: dynamic.pictures.take(9)),
+              convertImageInContent(dynamic.content, dynamic.emojiInfo)
+            ))
+          }
+          val imageData = tasks.head.asInstanceOf[Seq[String]]
+          val content = tasks.last.asInstanceOf[String]
+          val data = new util.HashMap[String, Object]()
+          data.put("timestamp", formatter.format(dynamic.timestamp.toLocalDateTime))
+          data.put("username", dynamic.uname)
+          data.put("pictures", imageData.tail.asJava)
+          data.put("content", s"$content${if (dynamic.pictures.sizeIs > 9) "\n<最多显示九张图片>" else ""}")
+          data.put("avatar", imageData.head)
+          TemplateRender.render(identity, messageKey, data)
         }
         renderResult match {
           case Failure(exception) =>
@@ -66,8 +73,32 @@ object BiliDynamicSourceScanner extends SourceScanner {
    */
   def pullImages(imageUrls: Seq[String])(implicit ec: ExecutionContext = ThreadPools.SCHEDULE_TASK): Future[Seq[String]] = async {
     val tasks = Future.sequence(imageUrls.map(url => Future {
-      requests.get(url).bytes
+      ResUtil.downloadPicToHTMLBase64(url)
     }(ThreadPools.NETWORK)))
-    await(tasks).map(Base64.getEncoder.encodeToString)
+    await(tasks).map(_.base64)
+  }
+
+  /**
+   * 转换内容中的 emoji
+   *
+   * @param content   内容
+   * @param emojiInfo emoji 信息
+   * @param ec        异步上下文
+   */
+  def convertImageInContent(content: String, emojiInfo: EmojiInfo)(implicit ec: ExecutionContext = ThreadPools.SCHEDULE_TASK): Future[String] = async {
+    val emojiURL = ListBuffer[String]()
+    val rawMap: Map[String, Int] = emojiInfo.zipWithIndex.map {
+      case ((k, v), i) =>
+        emojiURL += v
+        k -> i
+    }.toMap
+    val emojiData = await(pullImages(emojiURL.toSeq)).zipWithIndex.map {
+      case (data, idx) => idx -> data
+    }.toMap
+    rawMap.foldLeft(content) {
+      case (content, (text, idx)) =>
+        val html = s"""<img src="${emojiData(idx)}" style="max-width: 20px" alt="$text"/>"""
+        content.replaceAll(text.replace("[", "\\["), html)
+    }
   }
 }

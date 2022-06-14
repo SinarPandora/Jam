@@ -1,6 +1,7 @@
 package o.lartifa.jam.plugins.push.scanner
 
 import cc.moecraft.logger.HyLogger
+import o.lartifa.jam.common.config.PluginConfig
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.common.util.TimeUtil
 import o.lartifa.jam.database.Memory.database.*
@@ -58,10 +59,12 @@ class SourceScanTask(name: String) extends JamCronTask(name) {
             .scan(identity)(ThreadPools.NETWORK)
             .filter(_.nonEmpty)
             .map(_.get)
-            .foreach { content =>
-              subscribers.foreach { subscriber =>
-                createPushTask(content, subscriber)
-              }
+            .onComplete {
+              case Failure(exception) => logger.error(exception)
+              case Success(content) =>
+                subscribers.foreach { subscriber =>
+                  createPushTask(content, subscriber)
+                }
             }
         }
         }
@@ -101,13 +104,14 @@ class SourceScanTask(name: String) extends JamCronTask(name) {
                 += ((id, messageKey))
             ))
           })
-        }
-      }
+          true
+        } else false
+      } else false
     } onComplete {
       case Failure(exception) =>
         logger.error(s"推送出现错误，消息标识：$messageKey，消息内容：$message，消息源：$identity，目标聊天：$chatInfo", exception)
-      case Success(_) =>
-        logger.debug(s"消息成功推送，消息标识：$messageKey，消息内容：$message，消息源：$identity，目标聊天：$chatInfo")
+      case Success(isPushed) =>
+        if (isPushed) logger.debug(s"消息成功推送，消息标识：$messageKey，消息内容：$message，消息源：$identity，目标聊天：$chatInfo")
     }
   }
 }
@@ -122,7 +126,7 @@ object SourceScanTask {
     logger.log(s"${AnsiColor.GREEN}[源订阅] ${AnsiColor.YELLOW}正在初始化")
     JamContext.cronTaskPool.get().getActiveTasks(SourceScanTask.name).left
       .getOrElse(throw ParseFailException("源扫描任务尚未初始化"))
-      .setUp(s"*/1 * * * *")
+      .setUp(s"*/${PluginConfig.config.sourcePush.scanFrequency} * * * *")
     logger.log(s"${AnsiColor.GREEN}[源订阅] 初始化成功，已设定为每三分钟扫描一次")
   }
 

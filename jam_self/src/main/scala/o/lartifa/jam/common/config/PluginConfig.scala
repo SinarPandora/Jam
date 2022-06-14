@@ -16,7 +16,13 @@ object PluginConfig extends Reloadable {
   case class PicBot(pixivProxy: String, apiBatchSize: Int)
   case class Rss(deployUrl: String, defaultStyle: String, customStyles: Map[String, String])
   case class FlipRepeatPicture(useFFMpeg: Boolean, ffmpegPath: String, useRandomFilter: Boolean)
-  case class SourcePush(templateDir: String, templateMapping: Map[String, String])
+  case class SourcePush
+  (
+    templateDir: String,
+    browserPath: String,
+    scanFrequency: Int,
+    templateMapping: Map[String, String]
+  )
   case class PreHandle
   (
     runTaskAsync: Boolean,
@@ -71,6 +77,8 @@ object PluginConfig extends Reloadable {
         ),
         sourcePush = SourcePush(
           templateDir = config.getStringOrElse("source_push.template_dir", "../conf/sxdl/template"),
+          browserPath = config.getStringOrElse("source_push.browser_path", "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"),
+          scanFrequency = config.getIntOrElse("source_push.scan_frequency", 3),
           templateMapping = config.getConfig("source_push.template_mapping")
             .entrySet().asScala
             .map(it => it.getKey.replace("\"", "") ->

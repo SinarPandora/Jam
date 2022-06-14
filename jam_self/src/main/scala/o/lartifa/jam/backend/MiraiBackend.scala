@@ -3,6 +3,7 @@ package o.lartifa.jam.backend
 import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.common.config.BotConfig.{password, qID}
 import o.lartifa.jam.common.config.CoolQConfig
+import o.lartifa.jam.common.util.OSUtil
 import o.lartifa.jam.pool.JamContext
 
 import java.io.{BufferedReader, File, FileReader}
@@ -58,8 +59,7 @@ object MiraiBackend extends Backend {
         .filter(it => it.contains("./backend.jar"))
         .map(it => it.split(" ").head)
         .findAny().stream().forEach { pid =>
-        val os = System.getProperty("os.name").toLowerCase
-        if (os.contains("win")) {
+        if (OSUtil.isWindows) {
           // Is windows
           s"taskkill /F /PID $pid".!
         } else {

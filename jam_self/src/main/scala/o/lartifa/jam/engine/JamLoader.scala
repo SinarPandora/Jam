@@ -93,6 +93,7 @@ object JamLoader {
       CoolQQLoader.reloadMasterCommands()
       JamContext.cronTaskPool.get().autoRefreshTaskDefinition()
       await(BehaviorInitializer.init())
+      SourceScanTask.init()
       await(initSXDL())
       runBootTasks()
       JamContext.initLock.getAndSet(false)
