@@ -117,9 +117,10 @@ object JamLoader {
             "λ> 📥 远程编辑已开启，即将从远程仓库获取最新脚本及资源文件\n"
           else ""
         }λ> 🛠 已连接到解析器实例，正在重新解析SXDL（简易定义语言）脚本
-        |λ> ⏰ 注册的定时任务也将被刷新
-        |λ> 🧬 当前解析器版本：v4.0-ARC
-        |λ> 🌈 Lambda函数引擎版本：v0.1-Premiere""".stripMargin)
+           |λ> ⏰ 注册的定时任务也将被刷新
+           |λ> 🧬 当前解析器版本：v4.0-ARC
+           |λ> 🌈 Lambda函数引擎版本：v0.1-Premiere
+           |λ> 📨 源推送引擎 "玛蒂瓦"（Modivior）版本：v0.1-Alpha""".stripMargin)
       QMessageListener.reloadPreHandleTasks()
       QMessageListener.reloadPostHandleTasks()
       JamContext.cronTaskPool.get().autoRefreshTaskDefinition()
