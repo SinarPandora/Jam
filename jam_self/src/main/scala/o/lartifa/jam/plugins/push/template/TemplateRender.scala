@@ -6,6 +6,7 @@ import cc.moecraft.logger.HyLogger
 import freemarker.template.Configuration
 import o.lartifa.jam.common.config.{JamConfig, PluginConfig, SystemConfig}
 import o.lartifa.jam.common.exception.ExecutionException
+import o.lartifa.jam.common.util.OSUtil
 import o.lartifa.jam.plugins.push.source.SourceIdentity
 import o.lartifa.jam.pool.JamContext
 
@@ -35,7 +36,7 @@ object TemplateRender {
   private def templateDir: File = PluginConfig.config.sourcePush.templateDir.toFile
 
   // 渲染工具
-  private val renderApp: String = "node-html-to-image-cli"
+  private def renderApp: String = PluginConfig.config.sourcePush.renderPath
 
   // 临时文件夹
   private lazy val tmp: File = (File(SystemConfig.tempDir) / "source_push").createDirectoryIfNotExists()
@@ -71,9 +72,9 @@ object TemplateRender {
     val tmpDir = (tmp / s"${source.sourceType}_${source.sourceIdentity}").createDirectoryIfNotExists()
     val workDir = (tmpDir / messageKey).createDirectoryIfNotExists()
     val renderImage = workDir / "rendered.png"
-    if (renderImage.exists) {
-      Success(RenderResult(new ComponentImage(s"file://${renderImage.pathAsString}").toString))
-    } else templates.get(source.sourceType) match {
+    val renderResult = Success(RenderResult(new ComponentImage(s"${OSUtil.fileProtocol}${renderImage.pathAsString}").toString))
+    if (renderImage.exists) renderResult
+    else templates.get(source.sourceType) match {
       case Some(name) =>
         Try {
           data.put("made_by", JamConfig.config.name)
@@ -92,9 +93,7 @@ object TemplateRender {
             if (renderImage.notExists) {
               Thread.sleep(3000)
               count += 1
-            } else {
-              return Success(RenderResult(new ComponentImage(s"file://${renderImage.pathAsString}").toString))
-            }
+            } else return renderResult
           }
           throw ExecutionException(s"渲染失败，请检查日志信息，订阅源：$source")
         }
