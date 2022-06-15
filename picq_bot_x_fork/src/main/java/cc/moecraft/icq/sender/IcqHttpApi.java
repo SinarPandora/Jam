@@ -100,16 +100,17 @@ public class IcqHttpApi
     {
         String url = makeUrl(api);
         // 判断有没有 Access Token, 并加到 Url 后
-        if (!bot.getConfig().getAccessToken().isEmpty())
-        {
+        if (!bot.getConfig().getAccessToken().isEmpty()) {
             url += "?access_token=" + bot.getConfig().getAccessToken();
         }
 
         // 创建请求
-        HttpRequest request = HttpRequest.post(url).body(new JSONObject(params).toString()).timeout(5000);
+        HttpRequest request = HttpRequest.post(url).body(new JSONObject(params).toString()).timeout(1500);
 
         // 发送并返回
-        return new JsonParser().parse(request.execute().body());
+        try (var resp = request.execute()) {
+            return new JsonParser().parse(resp.body());
+        }
     }
 
     /**
