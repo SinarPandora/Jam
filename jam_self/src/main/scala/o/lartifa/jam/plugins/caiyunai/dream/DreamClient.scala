@@ -102,9 +102,9 @@ object DreamClient {
     try {
       val resp = parse(session.get(API_V2.modelList, headers = commonHeader).text())
       Right {
-        (resp \ "data" \ "models").extract[Seq[JValue]].flatMap { v =>
+        resp.extract[Seq[JValue]].flatMap { v =>
           val name = (v \ "name").extract[String].trim
-          val mid = (v \ "mid").extract[String].trim
+          val mid = (v \ "_id").extract[String].trim
           if (name != "" && mid != "") Some(AICharacter(name, mid)) else None
         }.toList
       }
