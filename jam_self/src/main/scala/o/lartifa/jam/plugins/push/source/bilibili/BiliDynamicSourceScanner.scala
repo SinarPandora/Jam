@@ -42,7 +42,7 @@ object BiliDynamicSourceScanner extends SourceScanner {
         } else {
           val tasks = await {
             Future.sequence(Seq(
-              pullImages(dynamic.face +: dynamic.pictures.take(9)),
+              pullImages(dynamic.face +: dynamic.pictures.take(3)),
               convertImageInContent(dynamic.content, dynamic.emojiInfo)
             ))
           }
@@ -52,7 +52,7 @@ object BiliDynamicSourceScanner extends SourceScanner {
           data.put("timestamp", formatter.format(dynamic.timestamp.toLocalDateTime))
           data.put("username", dynamic.uname)
           data.put("pictures", imageData.tail.asJava)
-          data.put("content", s"$content${if (dynamic.pictures.sizeIs > 9) "\n<最多显示九张图片>" else ""}")
+          data.put("content", s"$content${if (dynamic.pictures.sizeIs > 3) "\n<最多显示三张图片>" else ""}")
           data.put("avatar", imageData.head)
           TemplateRender.render(identity, messageKey, data)
         }
