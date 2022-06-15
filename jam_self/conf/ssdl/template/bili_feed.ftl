@@ -5,7 +5,7 @@
 <#-- @ftlvariable name="avatar" type="java.lang.String" -->
 <#-- @ftlvariable name="background" type="java.lang.String" -->
 <#-- @ftlvariable name="made_by" type="java.lang.String" -->
-<html>
+<html lang="zh">
 <head>
     <meta charset="UTF-8"/>
     <style>
@@ -100,6 +100,7 @@
             27px 24px 79px rgb(0 0 0 / 8%);
         }
     </style>
+    <title>${username}的最新动态</title>
 </head>
 <body>
 <div class="card">
