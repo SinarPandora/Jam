@@ -4,6 +4,7 @@
 <#-- @ftlvariable name="content" type="java.lang.String" -->
 <#-- @ftlvariable name="avatar" type="java.lang.String" -->
 <#-- @ftlvariable name="background" type="java.lang.String" -->
+<#-- @ftlvariable name="made_by" type="java.lang.String" -->
 <html>
 <head>
     <meta charset="UTF-8"/>
@@ -69,7 +70,7 @@
         }
 
         .card-content {
-            padding: 10px 20px;
+            padding: 20px;
             background-color: #F2F2F2;
             border-radius: 10px;
             line-height: 1.5;
@@ -83,16 +84,27 @@
             justify-content: start;
         }
 
+        .card-image-container {
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+        }
+
         .card-image {
             margin-top: 10px;
-            max-width: 300px;
+            width: 500px;
+            border-radius: 10px;
+            box-shadow: 1px 1px 4px rgb(0 0 0 / 3%),
+            3px 3px 10px rgb(0 0 0 / 4%),
+            9px 8px 19px rgb(0 0 0 / 6%),
+            27px 24px 79px rgb(0 0 0 / 8%);
         }
     </style>
 </head>
 <body>
 <div class="card">
     <div class="card-avatar-container">
-        <img class="card-avatar" src="${avatar}" alt="#"/>
+        <img class="card-avatar" src="${avatar}" alt="无法显示的头像"/>
     </div>
     <div class="card-body">
         <div class="card-title">
@@ -102,12 +114,14 @@
         <div class="card-content">
             ${content}
             <br/>
-            <#list pictures as picture >
-                <img class="card-image" src="${picture}" alt="无法显示的图片"/>
-            </#list>
+            <div class="card-image-container">
+                <#list pictures as picture>
+                    <img class="card-image" src="${picture}" alt="无法显示的图片"/>
+                </#list>
+            </div>
         </div>
         <div class="card-footer">
-            -- 由果酱生成 --
+            -- 由${made_by}生成 --
         </div>
     </div>
 </div>

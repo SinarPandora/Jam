@@ -4,7 +4,7 @@ import better.files.*
 import cc.moecraft.icq.sender.message.components.ComponentImage
 import cc.moecraft.logger.HyLogger
 import freemarker.template.Configuration
-import o.lartifa.jam.common.config.{PluginConfig, SystemConfig}
+import o.lartifa.jam.common.config.{JamConfig, PluginConfig, SystemConfig}
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.plugins.push.source.SourceIdentity
 import o.lartifa.jam.pool.JamContext
@@ -76,6 +76,7 @@ object TemplateRender {
     } else templates.get(source.sourceType) match {
       case Some(name) =>
         Try {
+          data.put("made_by", JamConfig.config.name)
           val templateName = s"$name.ftl"
           val template = engine.getTemplate(templateName)
           Using((workDir / "source.html").newBufferedWriter) { writer =>
