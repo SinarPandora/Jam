@@ -20,6 +20,7 @@ object PluginConfig extends Reloadable {
   (
     templateDir: String,
     browserPath: String,
+    renderPath: String,
     scanFrequency: Int,
     templateMapping: Map[String, String]
   )
@@ -78,6 +79,7 @@ object PluginConfig extends Reloadable {
         sourcePush = SourcePush(
           templateDir = config.getStringOrElse("source_push.template_dir", "../conf/sxdl/template"),
           browserPath = config.getStringOrElse("source_push.browser_path", "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"),
+          renderPath = config.getStringOrElse("source_push.render_path", "node-html-to-image-cli.cmd"),
           scanFrequency = config.getIntOrElse("source_push.scan_frequency", 3),
           templateMapping = config.getConfig("source_push.template_mapping")
             .entrySet().asScala
