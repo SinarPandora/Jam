@@ -109,7 +109,7 @@
     </div>
     <div class="card-body">
         <div class="card-title">
-            <div class="card-name">${username}</div>
+            <div class="card-name">${username}的动态</div>
             <div class="card-time">${timestamp}</div>
         </div>
         <div class="card-content">
