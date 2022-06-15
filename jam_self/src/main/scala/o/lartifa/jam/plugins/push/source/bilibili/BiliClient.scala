@@ -35,10 +35,17 @@ object BiliClient {
       cardDecorate: Option[String],
       emojiInfo: EmojiInfo
     )
-    case class DynamicDetail(uname: String, face: String, content: String, pictures: Seq[String] = Seq.empty)
+    case class DynamicDetail
+    (
+      uname: String,
+      face: String,
+      content: String,
+      pictures: Seq[String] = Seq.empty,
+      extraEmojiInfo: Option[EmojiInfo] = None
+    )
 
     /**
-     * 通过 UID 获取用户动态（前 20 条）
+     * 通过 UID 获取用户动态
      *
      * @param uid     用户 ID
      * @param offset  偏移量（默认为 0）
@@ -80,7 +87,7 @@ object BiliClient {
         content = content.content,
         pictures = content.pictures,
         cardDecorate = (json \ "desc" \ "decorate_card" \ "image_enhance").extractOpt[String],
-        emojiInfo = emojiInfo,
+        emojiInfo = emojiInfo ++ content.extraEmojiInfo.getOrElse(Map.empty),
       )
     }
 
@@ -111,7 +118,7 @@ object BiliClient {
         case Type.ALBUM => extractAlbumDynamic(dynamicCard)
         case Type.TEXT => extractTextDynamic(dynamicCard)
         case Type.VIDEO => extractVideoDynamic(dynamicCard)
-        case _ => throw new NoSuchMethodException("")
+        case _ => throw new NoSuchMethodException("暂不支持该动态类型")
       }
     }
 
@@ -122,18 +129,16 @@ object BiliClient {
      * @return 动态内容
      */
     private def extractForwardDynamic(card: JValue): DynamicDetail = {
-      val oriContent = extractDynamicContent(
-        `type` = (card \ "item" \ "orig_type").extract[Int],
-        dynamicCard = card \ "origin"
-      )
+      val oriContent = getDynamic((card \ "item" \ "orig_dy_id").extract[Long])
       DynamicDetail(
         uname = (card \ "user" \ "uname").extract[String],
         face = (card \ "user" \ "face").extract[String],
         content =
           s"""${(card \ "item" \ "content").extractOrElse[String]("转发动态")}
              |<hr />
-             |${oriContent.content}""".stripMargin,
-        pictures = oriContent.pictures,
+             |${oriContent.map(_.content).getOrElse("原动态已被删除")}""".stripMargin,
+        pictures = oriContent.map(_.pictures).getOrElse(Seq.empty),
+        extraEmojiInfo = oriContent.map(_.emojiInfo)
       )
     }
 
