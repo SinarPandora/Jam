@@ -15,7 +15,7 @@
             align-items: center;
             padding: 20px;
             background-color: ${background!'#F6F6F6'};
-            font-family: "Sarasa Mono SC", monospace;
+            font-family: "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Heiti SC", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
         }
 
         .card {
