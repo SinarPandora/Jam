@@ -22,4 +22,11 @@ object OSUtil {
   def isWindows: Boolean = {
     System.getProperty("os.name").toLowerCase.contains("win")
   }
+
+  /**
+   * 文件协议前缀
+   *
+   * @return 前缀字符串
+   */
+  def fileProtocol: String = if (isWindows) "file:///" else "file://"
 }
