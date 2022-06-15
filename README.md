@@ -13,11 +13,12 @@ SXDL [脚本手册](https://www.yuque.com/docs/share/1405438e-c596-4ce4-ad3c-483
 
 ## Release History 版本历史
 
+* 3.0.8 源推送引擎
 * 3.0.7 SXDL + 彩云小梦 + 远程编辑
 * 3.0.6 插件系统
 * 3.0.5 RSS 订阅（预览版）+ 询问模式
 * 3.0.2 字符串模板 + 图片 Bot
-    * 该版本在实现过程中遭遇 CQ 关站，因此在迁移到 Mirai 前暂不发布
+  * 该版本在实现过程中遭遇 CQ 关站，因此在迁移到 Mirai 前暂不发布
 * 3.0.1 生物钟
 * 3.0.0-beta 基础版本
 
@@ -42,3 +43,11 @@ SXDL [脚本手册](https://www.yuque.com/docs/share/1405438e-c596-4ce4-ad3c-483
 ## License 授权协议
 
 这个项目 MIT 协议， 请点击 [LICENSE.md](LICENSE.md) 了解更多细节。
+
+## Thanks 感谢
+
+> [IntelliJ IDEA](https://zh.wikipedia.org/zh-hans/IntelliJ_IDEA) 是一个在各个方面都最大程度地提高开发人员的生产力的 IDE，适用于 JVM 平台语言。
+
+特别感谢 [JetBrains](https://www.jetbrains.com/?from=Jam)
+为开源项目提供免费的 [IntelliJ IDEA](https://www.jetbrains.com/idea/?from=Jam) 等 IDE 的授权  
+[<img src=".github/jetbrains-variant.png" width="200"/>](https://www.jetbrains.com/?from=Jam)
