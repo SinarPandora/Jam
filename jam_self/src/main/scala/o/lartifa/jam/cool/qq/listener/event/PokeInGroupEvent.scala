@@ -8,7 +8,7 @@ import o.lartifa.jam.model.ChatInfo
 import java.sql.Timestamp
 
 /**
- * 群聊拍一拍事件
+ * 群聊双击头像事件
  *
  * Example: 在群 935752317 中，1211402231 戳 1580265059
  * {
@@ -26,7 +26,7 @@ import java.sql.Timestamp
  * Author: sinar
  * 2021/7/9 22:25
  */
-case class PokeInGroupEvent(event: EventNoticeGroupPoke) extends CQEvent("群聊拍一拍", event.getUserId) {
+case class PokeInGroupEvent(event: EventNoticeGroupPoke) extends CQEvent("群聊双击头像", event.getUserId) {
   /**
    * 会话信息
    */

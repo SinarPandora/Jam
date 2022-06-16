@@ -1,5 +1,7 @@
 package o.lartifa.jam.cool.qq.listener
 
+import cc.moecraft.icq.event.events.notice.groupmember.decrease.EventNoticeGroupMemberDecrease
+import cc.moecraft.icq.event.events.notice.groupmember.increase.EventNoticeGroupMemberIncrease
 import cc.moecraft.icq.event.events.notice.{EventNotice, EventNoticeFriendPoke, EventNoticeGroupPoke}
 import cc.moecraft.icq.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
@@ -9,7 +11,7 @@ import o.lartifa.jam.common.config.{BotConfig, JamConfig}
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.listener.base.Break
-import o.lartifa.jam.cool.qq.listener.event.{CQEvent, PokeEvent, PokeInGroupEvent}
+import o.lartifa.jam.cool.qq.listener.event.*
 import o.lartifa.jam.model.patterns.ContentMatcher
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.pool.JamContext
@@ -37,6 +39,8 @@ object QEventListener extends IcqListener {
       val evt = event match {
         case evt: EventNoticeFriendPoke => PokeEvent(evt)
         case evt: EventNoticeGroupPoke => PokeInGroupEvent(evt)
+        case evt: EventNoticeGroupMemberIncrease => MemberIncEvent(evt)
+        case evt: EventNoticeGroupMemberDecrease => MemberDecEvent(evt)
         case _ => return // 其他事件直接忽略
       }
       handleEvent(evt)
