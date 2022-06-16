@@ -65,7 +65,7 @@ object CommandParser extends Parser {
       parseDoNoting _, parseGroupWholeBan _, parseGroupWholeUnBan _, parseShowPicInfo _,
       parseRSSSubscribe _, parseRSSUnSubscribe _, parseRSSShowAll _, parseWhatICanDo _,
       parseQQDice _, parseQQRPS _, parseShake _, parseBreakDirectly _, parseBreakAsUnMatched _,
-      parseListAIModels _, parseSourcePushCmd _)
+      parseListAIModels _, parseConfigSourcePush _)
       ++ contains
   }
 
@@ -737,12 +737,12 @@ object CommandParser extends Parser {
   }
 
   /**
-   * 解析源订阅指令
+   * 配置源订阅
    *
    * @param string  待解析字符串
    * @param context 解析引擎上下文
    * @return 解析结果
    */
-  private def parseSourcePushCmd(string: String, context: ParseEngineContext): Option[SourcePushAllInOneCommand.type] =
-    if (string.contains(CommandPattern.sourcePushCmd)) Some(SourcePushAllInOneCommand) else None
+  private def parseConfigSourcePush(string: String, context: ParseEngineContext): Option[SourcePushAllInOneCommand.type] =
+    if (string.contains(CommandPattern.configSourcePush)) Some(SourcePushAllInOneCommand) else None
 }

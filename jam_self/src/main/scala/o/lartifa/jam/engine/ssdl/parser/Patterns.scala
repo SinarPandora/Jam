@@ -170,8 +170,8 @@ object Patterns {
     val runLambda: Regex = """([Ll]ambda|λ|=>)<(?<scriptPath>.+?)>(?<args>[(（].+?[)）])?""".r
     // Lambda 参数
     val lambdaArgs: Regex = """,?%\{(?<template>.+?)}%""".r
-    // 源订阅指令
-    val sourcePushCmd: String = "源订阅指令"
+    // 配置源订阅
+    val configSourcePush: String = "配置订阅源"
   }
 
 }
