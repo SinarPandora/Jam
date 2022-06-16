@@ -1,6 +1,6 @@
 package o.lartifa.jam.plugins.filppic
 
-import better.files._
+import better.files.*
 import cc.moecraft.logger.HyLogger
 import com.github.kokorin.jaffree.ffmpeg.{FFmpeg, UrlInput, UrlOutput}
 import o.lartifa.jam.common.config.SystemConfig
@@ -62,7 +62,7 @@ object FFMpegGifFlipper {
   }
 
   /**
-   * 通过 FFMpeg 翻转图片
+   * 通过 FFMpeg 倒放图片
    *
    * @param source 输入输出路径
    * @return 翻转后的图片数据
@@ -71,7 +71,7 @@ object FFMpegGifFlipper {
     val (in: UrlInput, out: File) = source
     ffmpeg.addInput(in)
       .addOutput(UrlOutput.toUrl(out.pathAsString))
-      .addArguments("-vf", "reverse,hflip,vflip")
+      .addArguments("-vf", "reverse")
       .execute()
     out.byteArray
   }
