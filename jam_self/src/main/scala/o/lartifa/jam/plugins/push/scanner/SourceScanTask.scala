@@ -127,7 +127,7 @@ object SourceScanTask {
     JamContext.cronTaskPool.get().getActiveTasks(SourceScanTask.name).left
       .getOrElse(throw ParseFailException("源扫描任务尚未初始化"))
       .setUp(s"*/${PluginConfig.config.sourcePush.scanFrequency} * * * *")
-    logger.log(s"${AnsiColor.GREEN}[源订阅] 初始化成功，已设定为每三分钟扫描一次")
+    logger.log(s"${AnsiColor.GREEN}[源订阅] 初始化成功，已设定为每 ${PluginConfig.config.sourcePush.scanFrequency} 分钟扫描一次")
   }
 
   val name: String = "源扫描"

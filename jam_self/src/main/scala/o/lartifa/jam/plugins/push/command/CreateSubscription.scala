@@ -45,7 +45,7 @@ object CreateSubscription extends Command[Unit] {
               += ((obsId, context.chatInfo.chatId, context.chatInfo.chatType))
           })
           reply(
-            """订阅成功！🎉（消息将在三分钟内开始推送）
+            """订阅成功！🎉（消息将在稍后开始推送）
               |----------------------
               |你可以发送 .订阅 列表
               |来查看当前聊天的订阅信息""".stripMargin)
