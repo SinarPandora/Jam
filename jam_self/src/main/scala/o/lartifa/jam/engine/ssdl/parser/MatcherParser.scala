@@ -15,7 +15,7 @@ import scala.util.Try
  */
 object MatcherParser {
   private val eventNames: Set[String] = {
-    import Events._
+    import Events.*
     Set(Poke.name, PokeInGroup.name, MemberInc.name,
       MemberDec.name, MemberKick.name, SelfBeKick.name,
       NewGroupHonor.name, NewLuckyDog.name, PrivateRecall.name,

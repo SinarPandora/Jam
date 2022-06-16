@@ -51,8 +51,8 @@ case class MemberDecEvent(event: EventNoticeGroupMemberDecrease) extends CQEvent
       "群员昵称" -> api.getStrangerInfo(event.getUserId).getData.getNickname,
       // 操作者信息
       "操作者QQ" -> event.getOperatorId.toString,
-      "操作者昵称" -> api.getStrangerInfo(event.getOperatorId).getData.getNickname,
-      "操作者群昵称" -> api.getGroupMemberInfo(event.getGroupId, event.getOperatorId).getData.getNickname,
+      "操作者昵称" -> (if (event.getOperatorId == 0) "" else api.getStrangerInfo(event.getOperatorId).getData.getNickname),
+      "操作者群昵称" -> (if (event.getOperatorId == 0) "" else api.getGroupMemberInfo(event.getGroupId, event.getOperatorId).getData.getNickname),
       // Metadata
       "事件类型" -> event.getPostType,
       "通知类型" -> event.getNoticeType,

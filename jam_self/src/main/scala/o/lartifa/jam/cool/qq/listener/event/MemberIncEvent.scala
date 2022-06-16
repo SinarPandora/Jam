@@ -51,8 +51,8 @@ case class MemberIncEvent(event: EventNoticeGroupMemberIncrease) extends CQEvent
       "新群员昵称" -> api.getStrangerInfo(event.getUserId).getData.getNickname,
       // 审批人信息
       "审批人QQ" -> event.getOperatorId.toString,
-      "审批人昵称" -> api.getStrangerInfo(event.getOperatorId).getData.getNickname,
-      "审批人群昵称" -> api.getGroupMemberInfo(event.getGroupId, event.getOperatorId).getData.getNickname,
+      "审批人昵称" -> (if (event.getOperatorId == 0) "" else api.getStrangerInfo(event.getOperatorId).getData.getNickname),
+      "审批人群昵称" -> (if (event.getOperatorId == 0) "" else api.getGroupMemberInfo(event.getGroupId, event.getOperatorId).getData.getNickname),
       // Metadata
       "事件类型" -> event.getPostType,
       "通知类型" -> event.getNoticeType,
