@@ -3,9 +3,9 @@ package o.lartifa.jam.model.patterns
 import o.lartifa.jam.common.exception.{ExecutionException, ParseFailException}
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.RenderStrTemplate
-import o.lartifa.jam.model.patterns.ContentMatcher._
+import o.lartifa.jam.model.patterns.ContentMatcher.*
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 /**
@@ -72,10 +72,10 @@ object ContentMatcher {
 
   object Events {
     sealed abstract class EventType(val name: String)
-    case object Poke extends EventType("私聊拍一拍")
-    case object PokeInGroup extends EventType("群聊拍一拍")
-    case object MemberInc extends EventType("成员入群")
-    case object MemberDec extends EventType("群员退群")
+    case object Poke extends EventType("私聊双击头像")
+    case object PokeInGroup extends EventType("群聊双击头像")
+    case object MemberInc extends EventType("群员增加")
+    case object MemberDec extends EventType("群员减少")
     case object MemberKick extends EventType("群员被踢")
     case object SelfBeKick extends EventType("被踢出群聊")
     case object NewGroupHonor extends EventType("群荣耀变更")

@@ -4,6 +4,7 @@ import cc.moecraft.icq.event.events.notice.groupmember.decrease.EventNoticeGroup
 import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.model.ChatInfo
+import o.lartifa.jam.model.patterns.ContentMatcher.Events
 
 import java.sql.Timestamp
 
@@ -22,7 +23,7 @@ import java.sql.Timestamp
  * Author: sinar
  * 2021/7/9 22:27
  */
-case class MemberDecEvent(event: EventNoticeGroupMemberDecrease) extends CQEvent("群员增加", event.getOperatorId) {
+case class MemberDecEvent(event: EventNoticeGroupMemberDecrease) extends CQEvent(Events.MemberDec.name, event.getOperatorId) {
   /**
    * 会话信息
    */

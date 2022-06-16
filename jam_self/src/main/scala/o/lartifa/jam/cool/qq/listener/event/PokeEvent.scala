@@ -4,6 +4,7 @@ import cc.moecraft.icq.event.events.notice.EventNoticeFriendPoke
 import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.model.ChatInfo
+import o.lartifa.jam.model.patterns.ContentMatcher.Events
 
 import java.sql.Timestamp
 
@@ -25,7 +26,7 @@ import java.sql.Timestamp
  * Author: sinar
  * 2021/7/6 22:29
  */
-case class PokeEvent(event: EventNoticeFriendPoke) extends CQEvent("私聊双击头像", event.getUserId) {
+case class PokeEvent(event: EventNoticeFriendPoke) extends CQEvent(Events.Poke.name, event.getUserId) {
   /**
    * 会话信息
    */
