@@ -84,6 +84,8 @@ object CommandExecuteContext {
     mockedMessage.setMessageType(MessageType.EVENT)
     mockedMessage.setSelfId(BotConfig.qID)
     mockedMessage.setBot(JamContext.bot.get())
+    mockedMessage.setMessage(event.name)
+    mockedMessage.setRawMessage(event.name)
     new CommandExecuteContext(
       mockedMessage,
       JamContext.variablePool,
