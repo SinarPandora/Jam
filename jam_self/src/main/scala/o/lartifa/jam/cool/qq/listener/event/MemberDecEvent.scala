@@ -48,11 +48,8 @@ case class MemberDecEvent(event: EventNoticeGroupMemberDecrease) extends CQEvent
       "群名" -> event.getGroupMethods.getGroup.getInfo.getGroupName,
       // 被踢成员信息
       "群员QQ" -> event.getUserId.toString,
-      "群员昵称" -> api.getStrangerInfo(event.getUserId).getData.getNickname,
       // 操作者信息
       "操作者QQ" -> event.getOperatorId.toString,
-      "操作者昵称" -> (if (event.getOperatorId == 0) "" else api.getStrangerInfo(event.getOperatorId).getData.getNickname),
-      "操作者群昵称" -> (if (event.getOperatorId == 0) "" else api.getGroupMemberInfo(event.getGroupId, event.getOperatorId).getData.getNickname),
       // Metadata
       "事件类型" -> event.getPostType,
       "通知类型" -> event.getNoticeType,
