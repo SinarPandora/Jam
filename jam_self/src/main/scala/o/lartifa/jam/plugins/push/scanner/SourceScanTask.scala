@@ -92,8 +92,6 @@ class SourceScanTask(name: String) extends JamCronTask(name) {
             .result
         })
         if (!pushed) {
-          import ChatInfo.ChatInfoReply
-          chatInfo.sendMsg(message)
           await(db.run {
             DBIO.sequence(Seq(
               SourceSubscriber
@@ -104,6 +102,8 @@ class SourceScanTask(name: String) extends JamCronTask(name) {
                 += ((id, messageKey))
             ))
           })
+          import ChatInfo.ChatInfoReply
+          chatInfo.sendMsg(message)
           true
         } else false
       } else false
