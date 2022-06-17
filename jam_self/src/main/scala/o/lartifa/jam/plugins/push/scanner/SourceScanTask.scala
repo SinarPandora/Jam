@@ -17,7 +17,7 @@ import o.lartifa.jam.pool.{JamContext, ThreadPools}
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.AnsiColor
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 /**
  * 源扫描任务
@@ -103,7 +103,7 @@ class SourceScanTask(name: String) extends JamCronTask(name) {
             ))
           })
           import ChatInfo.ChatInfoReply
-          chatInfo.sendMsg(message)
+          Try(chatInfo.sendMsg(message))
           true
         } else false
       } else false
