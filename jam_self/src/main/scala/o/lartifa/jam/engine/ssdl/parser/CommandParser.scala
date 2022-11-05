@@ -1,6 +1,5 @@
 package o.lartifa.jam.engine.ssdl.parser
 
-import ammonite.ops.PipeableImplicit
 import cc.moecraft.icq.sender.message.components.ComponentContact.ContactType
 import cc.moecraft.icq.sender.message.components.ComponentMusic.MusicSourceType
 import cn.hutool.core.text.CharSequenceUtil
@@ -12,12 +11,12 @@ import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.plugins.lambda.RunLambda
 import o.lartifa.jam.plugins.picbot.*
 import o.lartifa.jam.plugins.push.command.SourcePushAllInOneCommand
-import o.lartifa.jam.plugins.rss.{RSSShowAll, RSSSubscribe, RSSUnSubscribe}
 import o.lartifa.jam.pool.JamContext
 
 import java.util.concurrent.TimeUnit
 import scala.collection.parallel.CollectionConverters.*
 import scala.util.Try
+import scala.util.chaining.*
 
 /**
  * SSDL 指令解析器
@@ -63,9 +62,8 @@ object CommandParser extends Parser {
       ++ List(
       // 包含类模式放在后边
       parseDoNoting _, parseGroupWholeBan _, parseGroupWholeUnBan _, parseShowPicInfo _,
-      parseRSSSubscribe _, parseRSSUnSubscribe _, parseRSSShowAll _, parseWhatICanDo _,
       parseQQDice _, parseQQRPS _, parseShake _, parseBreakDirectly _, parseBreakAsUnMatched _,
-      parseListAIModels _, parseConfigSourcePush _)
+      parseListAIModels _, parseConfigSourcePush _, parseWhatICanDo _)
       ++ contains
   }
 
@@ -415,7 +413,7 @@ object CommandParser extends Parser {
    */
   private def parseThenSaveTo(string: String, command: Command[?], context: ParseEngineContext): Option[ThenSaveTo] = {
     Patterns.thenSaveTo.findFirstMatchIn(string).map(result => {
-      val varKey = result.group("name") |> context.getVar
+      val varKey = result.group("name") pipe context.getVar
       ThenSaveTo(command, varKey)
     })
   }
@@ -448,36 +446,6 @@ object CommandParser extends Parser {
       RunTaskNow(task)
     })
   }
-
-  /**
-   * 解析源订阅指令
-   *
-   * @param string  待解析字符串
-   * @param context 解析引擎上下文
-   * @return 解析结果
-   */
-  private def parseRSSSubscribe(string: String, context: ParseEngineContext): Option[RSSSubscribe.type] =
-    if (string.contains(CommandPattern.rssSubscribe)) Some(RSSSubscribe) else None
-
-  /**
-   * 解析源退订指令
-   *
-   * @param string  待解析字符串
-   * @param context 解析引擎上下文
-   * @return 解析结果
-   */
-  private def parseRSSUnSubscribe(string: String, context: ParseEngineContext): Option[RSSUnSubscribe.type] =
-    if (string.contains(CommandPattern.rssUnSubscribe)) Some(RSSUnSubscribe) else None
-
-  /**
-   * 解析列出当前会话订阅源指令
-   *
-   * @param string  待解析字符串
-   * @param context 解析引擎上下文
-   * @return 解析结果
-   */
-  private def parseRSSShowAll(string: String, context: ParseEngineContext): Option[RSSShowAll.type] =
-    if (string.contains(CommandPattern.rssShowAll)) Some(RSSShowAll) else None
 
   /**
    * 解析询问指令
@@ -518,8 +486,8 @@ object CommandParser extends Parser {
    */
   private def parseBanSomeOneInGroup(string: String, context: ParseEngineContext): Option[BanSomeOneInGroup] = {
     CommandPattern.banSomeOneInGroup.findFirstMatchIn(string).map(result => {
-      val qId = result.group("qId") |> context.getTemplate
-      val time = result.group("time") |> context.getTemplate
+      val qId = result.group("qId") pipe context.getTemplate
+      val time = result.group("time") pipe context.getTemplate
       val unit: TimeUnit = result.group("unit") match {
         case "分钟" => TimeUnit.MINUTES
         case "小时" => TimeUnit.HOURS

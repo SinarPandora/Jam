@@ -13,7 +13,6 @@ trait Tables
   extends MessageRecordsTable
     with VariablesTable
     with WebPicturesTable
-    with RssSubscriptionTable
     with PluginsTable
     with StoryTable
     with StoryInstanceTable

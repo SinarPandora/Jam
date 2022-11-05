@@ -21,7 +21,6 @@ import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.plugins.caiyunai.dream.KeepAliveDreamingActor
 import o.lartifa.jam.plugins.lambda.runner.ScriptRunner
 import o.lartifa.jam.plugins.push.scanner.SourceScanTask
-import o.lartifa.jam.plugins.rss.SubscriptionPool
 import o.lartifa.jam.pool.CronTaskPool.TaskDefinition
 import o.lartifa.jam.pool.{CronTaskPool, JamContext, StepPool}
 
@@ -68,7 +67,6 @@ object JamLoader {
     await(initSXDL())
     SourceScanTask.init()
     await(BehaviorInitializer.init())
-    SubscriptionPool.init()
     await(BanList.loadBanList())
     ScriptRunner.init()
     runBootTasks()

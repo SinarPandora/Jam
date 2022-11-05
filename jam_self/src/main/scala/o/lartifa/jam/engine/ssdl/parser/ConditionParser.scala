@@ -1,7 +1,8 @@
 package o.lartifa.jam.engine.ssdl.parser
 
-import ammonite.ops.PipeableImplicit
 import o.lartifa.jam.model.conditions.{Condition, VarCondition}
+
+import scala.util.chaining.*
 
 /**
  * 解析条件结构
@@ -32,7 +33,7 @@ object ConditionParser {
   private def parseParamCondition(string: String)(implicit context: ParseEngineContext): Option[VarCondition] = {
     import VarCondition.Constant
     ConditionPattern.paramCondition.findFirstMatchIn(string).map(result => {
-      val varKey = result.group("var") |> context.getVar
+      val varKey = result.group("var") pipe context.getVar
       val op = result.group("op") match {
         case Constant.gtOp => VarCondition.gtOp
         case Constant.geOp => VarCondition.geOp
@@ -41,7 +42,7 @@ object ConditionParser {
         case Constant.eqOp => VarCondition.eqOp
         case Constant.neOp => VarCondition.neOp
       }
-      val template = result.group("template") |> context.getTemplate
+      val template = result.group("template") pipe context.getTemplate
       VarCondition(varKey, op, template)
     })
   }

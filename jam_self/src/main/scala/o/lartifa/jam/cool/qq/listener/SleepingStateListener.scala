@@ -1,12 +1,12 @@
 package o.lartifa.jam.cool.qq.listener
 
-import ammonite.ops.PipeableImplicit
 import cc.moecraft.icq.event.events.message.{EventMessage, EventPrivateMessage}
 import cc.moecraft.icq.event.{EventHandler, IcqListener}
 import cc.moecraft.icq.sender.message.components.ComponentAt
 import o.lartifa.jam.common.config.{BotConfig, JamConfig}
 
 import scala.util.Random
+import scala.util.chaining.*
 
 /**
  * 睡觉时被戳来戳去，给与反馈
@@ -26,7 +26,7 @@ object SleepingStateListener extends IcqListener {
   @EventHandler
   def listen(eventMessage: EventMessage): Unit = {
     if (eventMessage.isInstanceOf[EventPrivateMessage] || eventMessage.message.contains(atMyself)) {
-      balderdash.size |> Random.nextInt |> balderdash |> eventMessage.respond
+      balderdash.size pipe Random.nextInt pipe balderdash pipe eventMessage.respond
     }
   }
 

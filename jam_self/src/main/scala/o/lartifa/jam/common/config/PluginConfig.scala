@@ -14,7 +14,6 @@ import scala.jdk.CollectionConverters.*
 object PluginConfig extends Reloadable {
   case class DreamAI(mobile: String)
   case class PicBot(pixivProxy: String, apiBatchSize: Int)
-  case class Rss(deployUrl: String, defaultStyle: String, customStyles: Map[String, String])
   case class FlipRepeatPicture(useFFMpeg: Boolean, ffmpegPath: String, useRandomFilter: Boolean)
   case class SourcePush
   (
@@ -54,15 +53,6 @@ object PluginConfig extends Reloadable {
           pixivProxy = config.getStringOrElse("picbot.pixiv_proxy", "i.pixiv.re"),
           apiBatchSize = config.getIntOrElse("picbot.api_batch_size", 100)
         ),
-        rss = Rss(
-          deployUrl = config.getStringOrElse("rss.deploy_url", ""),
-          defaultStyle = config.getStringOrElse("rss.style.default", "图文混排"),
-          customStyles = config.getConfig("rss.style.custom")
-            .entrySet().asScala
-            .map(it => it.getKey.replace("\"", "") ->
-              it.getValue.render().replace("\"", ""))
-            .toMap
-        ),
         preHandle = PreHandle(
           runTaskAsync = config.getBooleanOrElse("pre_handle.run_task_async", default = true),
           enabledTasks = config.getStringListOrElse("pre_handle.enabled_tasks", List("反向复读图片", "替换小程序跳转")),
@@ -97,7 +87,6 @@ case class PluginConfig
 (
   dreamAI: DreamAI,
   picBot: PicBot,
-  rss: Rss,
   preHandle: PreHandle,
   postHandle: PostHandle,
   sourcePush: SourcePush

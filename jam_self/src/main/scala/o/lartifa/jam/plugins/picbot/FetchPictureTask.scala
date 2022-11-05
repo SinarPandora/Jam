@@ -1,6 +1,5 @@
 package o.lartifa.jam.plugins.picbot
 
-import ammonite.ops.PipeableImplicit
 import cc.moecraft.logger.HyLogger
 import cn.hutool.core.text.CharSequenceUtil
 import o.lartifa.jam.common.config.JSONConfig.formats
@@ -19,6 +18,7 @@ import java.util.concurrent.ForkJoinPool
 import scala.annotation.tailrec
 import scala.async.Async.*
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.chaining.*
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -145,7 +145,7 @@ class FetchPictureTask(name: String) extends JamCronTask(name) {
     if (retry > 3) {
       logger.warning(s"图片下载失败且尝试次数过多，地址：$url")
       None
-    } else Try(requests.get(url).bytes |> encoder.encodeToString) match {
+    } else Try(requests.get(url).bytes pipe encoder.encodeToString) match {
       case Failure(_) => logger.debug(s"图片下载失败，正在重试：$url"); downloadPicture(url, retry + 1)
       case Success(value) => logger.debug(s"图片下载完成：$url"); Some(value)
     }

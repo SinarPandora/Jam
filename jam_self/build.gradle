@@ -113,43 +113,41 @@ dependencies {
     api("org.scala-lang:scala-library:$scala_version")
 
     // Language extensions
-    api('com.chuusai:shapeless_2.13:2.3.9')
     api("org.scala-lang:scala-reflect:$scala_version")
+    api('org.reflections:reflections:0.10.2')
+    api("net.redhogs.cronparser:cron-parser-core:3.5")
 
     // Core
     api(project(":picq_bot_x_fork"))
     api(project(":jam_utils"))
 
-    // Meta
-    api('com.jayway.jsonpath:json-path:2.7.0')
-    api("org.codehaus.groovy:groovy-all:$groovy_version")
+    // Message processiong
+    api("com.typesafe.akka:akka-actor_2.13:$akka_version")
+    api('tv.cntt:glokka_2.13:2.6.1') {
+        exclude group: 'com.typesafe.akka'
+    }
 
     // Database
     api("com.typesafe.slick:slick_2.13:$slick_version")
     api("com.typesafe.slick:slick-codegen_2.13:$slick_version")
     api("com.typesafe.slick:slick-hikaricp_2.13:$slick_version")
     api('com.h2database:h2:2.1.212')
-    api('org.postgresql:postgresql:42.3.4')
+    api('org.postgresql:postgresql:42.3.7')
     api('org.flywaydb:flyway-core:8.5.12')
 
-    // Tools
+    // Jam Lambda
+    api('org.jsoup:jsoup:1.15.3')
+    api('com.jayway.jsonpath:json-path:2.7.0')
+    api("org.codehaus.groovy:groovy-all:$groovy_version")
+    api('org.apache.httpcomponents.client5:httpclient5:5.1.3')
+
+    // Jam Extensions
     api('org.freemarker:freemarker:2.3.31')
-    api('com.github.w3stling:rssreader:v2.5.0')
-    api('org.reflections:reflections:0.10.2')
-    api("com.typesafe.akka:akka-actor_2.13:$akka_version")
-    api("tv.cntt:glokka_2.13:2.6.1") {
-        exclude group: 'com.typesafe.akka'
-    }
-    api("io.reactivex.rxjava3:rxjava:$rx_extension_version")
-    api('com.lihaoyi:ammonite-ops_2.13:2.4.1')
     api('com.lihaoyi:requests_2.13:0.7.1')
-    api('org.jsoup:jsoup:1.14.3')
-    api('org.json4s:json4s-jackson_2.13:4.0.5')
-    api("net.redhogs.cronparser:cron-parser-core:3.5")
+    api('org.json4s:json4s-jackson_2.13:4.0.6')
     api("com.bladecoder.ink:blade-ink:1.0.0")
     api('com.sksamuel.scrimage:scrimage-core:4.0.30')
     api('com.sksamuel.scrimage:scrimage-filters:4.0.31')
     api('com.github.kokorin.jaffree:jaffree:0.11.0')
-    api('org.apache.httpcomponents.client5:httpclient5:5.1.3')
     implementation('org.slf4j:slf4j-simple:1.7.36')
 }

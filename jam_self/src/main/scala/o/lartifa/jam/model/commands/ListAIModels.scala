@@ -1,10 +1,11 @@
 package o.lartifa.jam.model.commands
-import ammonite.ops.PipeableImplicit
+
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.plugins.caiyunai.dream.DreamClient
 import requests.Session
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.chaining.*
 
 /**
  * 列出可用模型指令
@@ -24,7 +25,7 @@ object ListAIModels extends Command[Unit] {
     implicit val session: Session = requests.Session()
     DreamClient.listModels match {
       case Left(_) => reply("获取失败请稍后重试")
-      case Right(list) => list.zipWithIndex.map(it => s"${it._2}: ${it._1.name}").mkString("\n") |> reply
+      case Right(list) => list.zipWithIndex.map(it => s"${it._2}: ${it._1.name}").mkString("\n") pipe reply
     }
   }
 }

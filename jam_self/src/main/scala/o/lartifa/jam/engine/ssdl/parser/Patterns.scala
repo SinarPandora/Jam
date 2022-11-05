@@ -122,12 +122,6 @@ object Patterns {
     val deregisterCronTask: Regex = """取消定时任务\{变量(?<value>.+?)}""".r
     // 立即执行任务
     val runTaskNow: Regex = """立即执行任务\{(?<task>[0-9A-Za-z一-龥,，]+)}""".r
-    // 源订阅
-    val rssSubscribe: String = "订阅消息中的源"
-    // 源退订
-    val rssUnSubscribe: String = "退订消息中的源"
-    // 源列出
-    val rssShowAll: String = "列出当前会话订阅的源"
     // 询问
     val ask: Regex = """询问(?<questioner>发送者|任何人)[:：]%\{(?<question>.+?)}%[，,](?<answerMatchers>(若答案为\{.+?}|其他答案)[，,]则(.+)[;；]?)+""".r
     // 答案匹配器
