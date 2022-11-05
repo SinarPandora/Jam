@@ -1,6 +1,6 @@
 buildscript {
     dependencies {
-        classpath 'org.flywaydb:flyway-core:8.5.11'
+        classpath 'org.flywaydb:flyway-core:8.5.12'
         classpath 'mysql:mysql-connector-java:8.0.28'
     }
 }
@@ -18,18 +18,14 @@ plugins {
 
 sourceCompatibility = '11'
 
-scala {
-    zincVersion = '1.3.5'
-}
-
 distributions {
     main {
         distributionBaseName = 'jam_self'
         contents {
             into('conf') {
                 from 'conf/.'
-                exclude '*test*'
-                exclude '*local*'
+                exclude '**/*test*'
+                exclude '**/*local*'
             }
         }
     }
@@ -99,6 +95,19 @@ task migrateDatabase(type: GradleBuild) {
     tasks = ['flywayMigrate']
 }
 
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'o.lartifa.jam.Bootloader'
+    }
+    exclude "META-INF/*.SF"
+    exclude "META-INF/*.DSA"
+    exclude "META-INF/*.RSA"
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
+}
+
 dependencies {
     // Scala
     api("org.scala-lang:scala-library:$scala_version")
@@ -121,7 +130,7 @@ dependencies {
     api("com.typesafe.slick:slick-hikaricp_2.13:$slick_version")
     api('com.h2database:h2:2.1.212')
     api('org.postgresql:postgresql:42.3.4')
-    api('org.flywaydb:flyway-core:8.5.11')
+    api('org.flywaydb:flyway-core:8.5.12')
 
     // Tools
     api('org.freemarker:freemarker:2.3.31')
@@ -133,7 +142,7 @@ dependencies {
     }
     api("io.reactivex.rxjava3:rxjava:$rx_extension_version")
     api('com.lihaoyi:ammonite-ops_2.13:2.4.1')
-    api('com.lihaoyi:requests_2.13:0.7.0')
+    api('com.lihaoyi:requests_2.13:0.7.1')
     api('org.jsoup:jsoup:1.14.3')
     api('org.json4s:json4s-jackson_2.13:4.0.5')
     api("net.redhogs.cronparser:cron-parser-core:3.5")
@@ -141,5 +150,6 @@ dependencies {
     api('com.sksamuel.scrimage:scrimage-core:4.0.30')
     api('com.sksamuel.scrimage:scrimage-filters:4.0.31')
     api('com.github.kokorin.jaffree:jaffree:0.11.0')
+    api('org.apache.httpcomponents.client5:httpclient5:5.1.3')
     implementation('org.slf4j:slf4j-simple:1.7.36')
 }

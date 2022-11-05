@@ -7,10 +7,6 @@ plugins {
 
 sourceCompatibility = "11"
 
-scala {
-    zincVersion = "1.3.5"
-}
-
 tasks.withType(ScalaCompile) {
     scalaCompileOptions.additionalParameters = ['-Xsource:3', '-Xasync']
 }

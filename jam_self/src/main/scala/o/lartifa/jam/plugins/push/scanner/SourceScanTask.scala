@@ -103,7 +103,7 @@ class SourceScanTask(name: String) extends JamCronTask(name) {
             ))
           })
           import ChatInfo.ChatInfoReply
-          Try(chatInfo.sendMsg(message))
+          Try(chatInfo.sendMsg(message)).recover(logger.error(_))
           true
         } else false
       } else false
