@@ -1,0 +1,20 @@
+plugins {
+    id "idea"
+    id "java"
+    id "java-library"
+    id "io.freefair.lombok" version "5.3.0"
+}
+
+group 'lartifa.o'
+sourceCompatibility = "11"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    api('cn.hutool:hutool-all:5.8.2')
+    api("com.github.hydevelop:HyLogger:4.0.254")
+
+    testImplementation('junit:junit:4.13.2')
+}

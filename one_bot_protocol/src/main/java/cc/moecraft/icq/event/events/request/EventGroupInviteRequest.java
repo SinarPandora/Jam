@@ -1,0 +1,25 @@
+package cc.moecraft.icq.event.events.request;
+
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
+/**
+ * 群邀请事件 ( 别人邀请机器人的时候 )
+ *
+ * @author Hykilpikonna
+ */
+@EqualsAndHashCode(callSuper = true)
+@Data
+@ToString(callSuper = true)
+public class EventGroupInviteRequest extends EventRequest {
+    @SerializedName("group_id")
+    @Expose
+    protected Long groupId;
+
+    @SerializedName("sub_type")
+    @Expose
+    protected String subType;
+}
