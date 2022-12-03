@@ -30,7 +30,7 @@ object Bootloader {
     JamContext.clientConfig.getAndSet(client.getConfig)
     client.getHttpServer.start()
     val afterBoot = () => {
-      JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}已连接 Mirai 后端，正在刷新数据...")
+      JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}已连接后端，正在刷新数据...")
       client.addAccount(JamConfig.config.name, postUrl, postPort)
       Await.result(JamLoader.init(client, args), Duration.Inf)
       JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}数据刷新成功！开始接收消息")
@@ -65,7 +65,7 @@ object Bootloader {
    *
    * @param args 命令行参数
    */
-  def setUpJVMParameters(args: Array[String]): Unit = {
+  private def setUpJVMParameters(args: Array[String]): Unit = {
     val configPath = args
       .find(_.startsWith("--config="))
       .map(_.stripPrefix("--config="))

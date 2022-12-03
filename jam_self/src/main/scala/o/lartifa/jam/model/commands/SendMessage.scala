@@ -3,14 +3,14 @@ package o.lartifa.jam.model.commands
 import better.files.File
 import cc.moecraft.icq.sender.message.MessageBuilder
 import cc.moecraft.icq.sender.message.components.{ComponentImage, ComponentImageBase64, ComponentRecord}
-import cc.moecraft.icq.sender.returndata.ReturnData
-import cc.moecraft.icq.sender.returndata.returnpojo.send.RMessageReturnData
+import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.SendMessage.Type
+import o.lartifa.jam.pool.JamContext
 
 import java.util.Base64
-import scala.async.Async._
+import scala.async.Async.*
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
@@ -20,7 +20,8 @@ import scala.util.{Failure, Success, Try}
  * Author: sinar
  * 2020/1/3 23:05
  */
-case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Command[ReturnData[RMessageReturnData]] {
+case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Command[Boolean] {
+  private final val logger: HyLogger = JamContext.loggerFactory.get().getLogger(this.getClass)
 
   /**
    * 发送回复消息
@@ -29,7 +30,7 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
    * @param exec    异步执行上下文
    * @return 异步结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[ReturnData[RMessageReturnData]] = {
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = {
     `type` match {
       case SendMessage.SEND_TEXT => sendTextMessage()
       case SendMessage.SEND_PIC => sendPic()
@@ -42,11 +43,11 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
    *
    * @param context 指令执行上下文
    * @param exec    异步执行上下文
-   * @return 异步消息返回对象
+   * @return 消息是否发送成功
    */
-  def sendTextMessage()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[ReturnData[RMessageReturnData]] = async {
+  private def sendTextMessage()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = async {
     val message = await(template.execute())
-    reply(message)
+    Try(reply(message)).map(_ => true).getOrElse(false)
   }
 
   /**
@@ -54,9 +55,9 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
    *
    * @param context 指令执行上下文
    * @param exec    异步执行上下文
-   * @return 异步消息返回对象
+   * @return 消息是否发送成功
    */
-  def sendPic()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[ReturnData[RMessageReturnData]] = async {
+  private def sendPic()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = async {
     val message = await(template.execute())
     val content = new MessageBuilder().add({
       val lowCaseName = message.toLowerCase
@@ -69,8 +70,9 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
     }).toString
     Try(reply(content)) match {
       case Failure(exception) =>
-        throw ExecutionException("图片发送可能失败，请检查是否图片较大或地址不正确").initCause(exception)
-      case Success(value) => value
+        logger.error("图片发送可能失败，请检查是否图片较大或地址不正确", exception)
+        false
+      case Success(_) => true
     }
   }
 
@@ -79,15 +81,16 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
    *
    * @param context 执行上下文
    * @param exec    异步执行上下文
-   * @return 异步消息返回对象
+   * @return 消息是否发送成功
    */
-  def sendAudio()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[ReturnData[RMessageReturnData]] = async {
+  private def sendAudio()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = async {
     val audioUri = await(template.execute())
     val audioMessage = new MessageBuilder().add(new ComponentRecord(audioUri)).toString
     Try(reply(audioMessage)) match {
       case Failure(exception) =>
-        throw ExecutionException("语音发送可能失败，请检查是否语音文件较大或尝试将语音文件放在对应后端的 /data/record 目录下").initCause(exception)
-      case Success(value) => value
+        logger.error("语音发送可能失败，请检查是否语音文件较大或尝试将语音文件放在对应后端的 /data/record 目录下", exception)
+        false
+      case Success(_) => true
     }
   }
 }
