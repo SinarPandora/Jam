@@ -28,13 +28,14 @@ object ImageFilter {
    * @return gif 数据
    */
   def randomFilter(image: ImmutableImage): Array[Byte] = {
-    val filter = Random.nextInt(6) match {
+    val filter = Random.nextInt(7) match {
       case 0 => flip _
       case 1 => loop _
       case 2 => motionBlur _
       case 3 => motionBlurXY _
       case 4 => faceToFace _
       case 5 => headToFoot _
+      case 6 => twitch _
     }
     filter(image)
   }
@@ -134,6 +135,19 @@ object ImageFilter {
     gifWriter.bytes(Array(
       image,
       image.flipY(),
+    ))
+  }
+
+  /**
+   * 抽动（放大，缩小，放大）
+   *
+   * @param image 原图
+   * @return gif 数据
+   */
+  def twitch(image: ImmutableImage): Array[Byte] = {
+    gifWriter.bytes(Array(
+      image.zoom(2),
+      image,
     ))
   }
 }
