@@ -52,7 +52,7 @@ object SensitiveWordKiller {
           case k1 :: k2 :: Nil => first.equalsIgnoreCase(k1) && second.equalsIgnoreCase(k2)
           case k1 :: k2 :: k3 :: Nil => first.equalsIgnoreCase(k1) && second.equalsIgnoreCase(k2) && third.equalsIgnoreCase(k3)
           case _ => false
-        }.flatten
+        }.map(_.mkString(""))
     }.distinct.map(_.replaceAll("\\s+", "")).toList
   }
 }
