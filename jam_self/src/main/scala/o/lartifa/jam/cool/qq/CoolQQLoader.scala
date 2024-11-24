@@ -21,10 +21,10 @@ object CoolQQLoader {
    * @return 尚未启动的酷Q客户端
    */
   def createCoolQQClient(): PicqBotX = {
-    val client = new PicqBotX(new PicqConfig(socketPort).setDebug(SystemConfig.debugMode)) {
+    val client = new PicqBotX(new PicqConfig(socketPort).setNoVerify(true).setDebug(SystemConfig.debugMode)) {
       /**
        * 启动监听服务
-       * 由于 CQHttp 不再维护，使用 mrial 后端时版本号与 CQ 不同，因此此处取消版本检查
+       * 由于 CQHttp 不再维护，使用 miral 后端时版本号与 CQ 不同，因此此处取消版本检查
        * 不使用自带的禁用检查，因为其会输出红色警告日志
        */
       override def startBot(): Unit = {

@@ -3,7 +3,7 @@ package o.lartifa.jam.cool.qq.listener
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.common.config.PluginConfig
-import o.lartifa.jam.cool.qq.listener.posthandle.{AssociatedReply, AssociatedReplyAll, PostHandleTask}
+import o.lartifa.jam.cool.qq.listener.posthandle.{AssociatedReply, AssociatedReplyAll, NvXingJiaoLiuSensitiveWordKiller, PostHandleTask}
 import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.pool.JamContext
 
@@ -26,7 +26,8 @@ object PostHandleTaskInitializer {
   def tasks: List[PostHandleTask] = {
     val allTasks = Map(
       "联想回复" -> AssociatedReplyAll,
-      "未匹配时联想回复" -> AssociatedReply
+      "未匹配时联想回复" -> AssociatedReply,
+      "女性♂交流" -> NvXingJiaoLiuSensitiveWordKiller,
     ) ++ JamPluginLoader.loadedComponents.postHandleTasks.map(it => it.name -> it)
     val tasks = enableTasks.flatMap(allTasks.get)
     if (enableTasks.sizeIs == tasks.size) {

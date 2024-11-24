@@ -1,7 +1,7 @@
 package o.lartifa.jam.cool.qq.command
 
 import cc.moecraft.icq.command.interfaces.IcqCommand
-import cc.moecraft.icq.event.events.message.EventMessage
+import cc.moecraft.icq.event.events.message.{EventGroupMessage, EventMessage}
 import cc.moecraft.icq.user.User
 import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.protocol.CommonProtocol.{Done, Exit, Fail}
@@ -37,7 +37,7 @@ object MasterCommands {
     ListVariable, ClearVariableInChat, SetVariable, RemoveVariable,
     ListPlugins, EnablePlugin, DisablePlugin, UninstallPlugin,
     WakeUpNow, GoASleepNow, ShowRawMessage, BanChat, AllowChat, ShowBanList,
-    DreamClientLogin
+    DreamClientLogin, EnableNXJL, DisableNXJL
   ) ++ JamPluginLoader.loadedComponents.masterCommands
 
   private object Ping extends MasterEverywhereCommand("ping", "在吗") {
@@ -451,6 +451,46 @@ object MasterCommands {
         }
       ))
       NO_RESPONSE
+    }
+  }
+
+  private object EnableNXJL extends MasterEverywhereCommand("开启女性交流") {
+    /**
+     * 指令操作
+     *
+     * @param event   消息事件
+     * @param sender  发送者
+     * @param command 指令内容
+     * @param args    参数
+     * @return 输出内容
+     */
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = async {
+      event match {
+        case message: EventGroupMessage =>
+          await(JamContext.variablePool.updateOrElseSet(s"Group_${message.getGroupId}_NXJL_Enabled", "true"))
+          "本群已开启女性交流功能，请注意发言！"
+        case _ => "无法为私聊开启该功能"
+      }
+    }
+  }
+
+  private object DisableNXJL extends MasterEverywhereCommand("关闭女性交流") {
+    /**
+     * 指令操作
+     *
+     * @param event   消息事件
+     * @param sender  发送者
+     * @param command 指令内容
+     * @param args    参数
+     * @return 输出内容
+     */
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = async {
+      event match {
+        case message: EventGroupMessage =>
+          await(JamContext.variablePool.updateOrElseSet(s"Group_${message.getGroupId}_NXJL_Enabled", "false"))
+          "女性交流已关闭，可以畅所欲言啦"
+        case _ => "未开启该功能"
+      }
     }
   }
 }
