@@ -81,36 +81,53 @@ object LogicStructureParser extends Parser {
   /**
    * 解析与或逻辑
    *
+   * 同句同时出现「或」与「且/并」时：先按「或」拆成多路，每路内部再解析「且/并」。
+   * 例如：`回复%A%，或回复%B%，并Lambda<X>` → A 或 (B 并且 X)
+   *
    * @param string  待解析字符串
    * @param context 解析引擎上下文
    * @return 解析结果
    */
   private def parseAndOr(string: String)(implicit context: ParseEngineContext): Option[Executable[_]] = {
-    val resultAnd = LogicStructurePattern.and.findAllIn(string).toList
     val resultOr = LogicStructurePattern.or.findAllIn(string).toList
-    if (resultAnd.nonEmpty && resultOr.nonEmpty) {
-      // 逻辑混乱
-      throw ParseFailException("与或逻辑混用导致逻辑混乱，请确保'或'、'且'或'并'在如果/否则后面只出现一种")
-    } else if (resultAnd.nonEmpty || resultOr.nonEmpty) {
+    if (resultOr.nonEmpty) {
+      // 或优先；路上若还有且/并，递归进 parseAndOrAsCommand
+      val first = parseAndOrAsCommand(string.splitAt(string.indexOf(resultOr.head))._1)
+      val rest = resultOr.map(m => parseAndOrAsCommand(stripLogicPrefix(m, isOr = true)))
+      Some(RandomOr(first +: rest))
+    } else {
+      val resultAnd = LogicStructurePattern.and.findAllIn(string).toList
       if (resultAnd.nonEmpty) {
-        // 与逻辑
         val firstCommand = CommandParser.parseCommand(string.splitAt(string.indexOf(resultAnd.head))._1, context)
           .getOrElse(throw ParseFailException("与或逻辑前没有一条可执行的指令"))
         Some(And(firstCommand +: parseCommands(resultAnd)))
       } else {
-        // 或逻辑
-        val firstCommand = CommandParser.parseCommand(string.splitAt(string.indexOf(resultOr.head))._1, context)
-          .getOrElse(throw ParseFailException("与或逻辑前没有一条可执行的指令"))
-        Some(RandomOr(firstCommand +: parseCommands(resultOr)))
+        CommandParser.parseCommand(string, context)
       }
-    } else {
-      // 不存在与或逻辑对
-      CommandParser.parseCommand(string, context)
     }
   }
 
   /**
-   * 批量解析指令（用于与或逻辑）
+   * 去掉「或/且/并」连接词前缀，得到分支正文
+   */
+  private def stripLogicPrefix(matched: String, isOr: Boolean): String = {
+    val prefix = if (isOr) """^[，,]?或""" else """^[，,]?[且并]"""
+    matched.replaceFirst(prefix, "")
+  }
+
+  /**
+   * 将一段（可能含且/并）解析为单条 Command（And 本身也是 Command，可嵌进 RandomOr）
+   */
+  private def parseAndOrAsCommand(string: String)(implicit context: ParseEngineContext): Command[_] = {
+    parseAndOr(string) match {
+      case Some(command: Command[_]) => command
+      case Some(_) => throw ParseFailException("'且并或'子语句结构不正确")
+      case None => throw ParseFailException("'且并或'子语句中包含有无法识别的指令内容")
+    }
+  }
+
+  /**
+   * 批量解析指令（用于纯且/并逻辑）
    *
    * @param results 待解析字符串
    * @param context 解析引擎上下文
@@ -118,7 +135,8 @@ object LogicStructureParser extends Parser {
    */
   private def parseCommands(results: List[String])(implicit context: ParseEngineContext): List[Command[_]] = {
     results
-      .map(CommandParser.parseCommand(_, context))
+      .map(m => CommandParser.parseCommand(stripLogicPrefix(m, isOr = false), context)
+        .orElse(CommandParser.parseCommand(m, context)))
       .tapEach(opt => if (opt.isEmpty) throw ParseFailException("'且并或'子语句中包含有无法识别的指令内容"))
       .map(_.get)
   }

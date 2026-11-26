@@ -2,11 +2,11 @@ package o.lartifa.jam.engine
 
 import better.files.StringExtensions
 import cc.moecraft.icq.PicqBotX
-import cc.moecraft.logger.HyLogger
+import cc.moecraft.logger.{HyLogger, LoggerInstanceManager}
 import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.bionic.BehaviorInitializer
 import o.lartifa.jam.common.config.*
-import o.lartifa.jam.common.util.MasterUtil
+import o.lartifa.jam.common.util.{LoggerFactory, MasterUtil}
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.cool.qq.command.MasterCommands
 import o.lartifa.jam.cool.qq.listener.{BanList, EvtMatchers, MsgMatchers, QEventListener, QMessageListener, SystemEventListener}
@@ -23,6 +23,8 @@ import o.lartifa.jam.plugins.lambda.runner.ScriptRunner
 import o.lartifa.jam.plugins.push.scanner.SourceScanTask
 import o.lartifa.jam.pool.CronTaskPool.TaskDefinition
 import o.lartifa.jam.pool.{CronTaskPool, JamContext, StepPool}
+import o.lartifa.jam.common.config.JSONConfig.formats
+import org.json4s.jackson.Serialization.write
 
 import scala.async.Async.*
 import scala.collection.mutable
@@ -102,6 +104,17 @@ object JamLoader {
   }
 
   /**
+   * 仅编译 SXDL 脚本并导出结果
+   *
+   * @return 异步结果
+   */
+  def compileOnly(): Future[Unit] = async {
+    JamContext.loggerFactory.set(new LoggerFactory(new LoggerInstanceManager()))
+    JamContext.setAPIClient(() => null)
+    await(initSXDL(true))
+  }
+
+  /**
    * R 指令刷新范围
    *
    * @param context 指令解析上下文
@@ -161,18 +174,21 @@ object JamLoader {
 
   /**
    * 初始化并解析 SXDL
+   *
+   * @param compileOnly 仅编译
    */
-  private def initSXDL(): Future[Unit] = async {
-    await(loadSXDL()).foreach(message =>
+  private def initSXDL(compileOnly: Boolean = false): Future[Unit] = async {
+    await(loadSXDL(compileOnly)).foreach(message =>
       MasterUtil.notifyAndLog(message.mkString("\n")))
   }
 
   /**
    * 读取 SSDL
    *
+   * @param compileOnly 是否仅编译
    * @return 错误信息
    */
-  private def loadSXDL(): Future[Option[List[String]]] = {
+  private def loadSXDL(compileOnly: Boolean = false): Future[Option[List[String]]] = {
     logger.log(s"${AnsiColor.GREEN}SSDL&STDL脚本解析开始")
     SXDLParseEngine.load().map(result => {
       val success: Option[Seq[Either[SXDLParseFailResult, SXDLParseSuccessResult]]] = result.get(true)
@@ -186,7 +202,7 @@ object JamLoader {
           case x: SSDLParseSuccessResult => stepDefs.addOne(x)
           case x: STDLParseSuccessResult => taskDefs.addOne(x)
         }
-        val stepSetupMsg = handleSSDLParseResult(stepDefs.toSeq).getOrElse(List.empty)
+        val stepSetupMsg = handleSSDLParseResult(stepDefs.toSeq, compileOnly).getOrElse(List.empty)
         val taskSetupMsg = handleSTDLParseResult(taskDefs.toSeq).getOrElse(List.empty)
         Some(stepSetupMsg ++ taskSetupMsg)
       }
@@ -213,10 +229,11 @@ object JamLoader {
   /**
    * 处理 SSDL 解析成功的结果
    *
-   * @param success 解析成功结果列表
+   * @param success     解析成功结果列表
+   * @param compileOnly 只进行编译
    * @return 输出内容
    */
-  private def handleSSDLParseResult(success: Seq[SSDLParseSuccessResult]): Option[List[String]] = {
+  private def handleSSDLParseResult(success: Seq[SSDLParseSuccessResult], compileOnly: Boolean = false): Option[List[String]] = {
     val steps = mutable.Map[Long, (Option[String], ChatInfo, Step)]()
     val msgMatchers = new MatcherParseGroup()
     val evtMatchers = new MatcherParseGroup()
@@ -267,6 +284,30 @@ object JamLoader {
             case (k2, v2) => (k2, v2.sortBy(_.stepId * -1).toList)
           }.toMap)
       }.toMap)
+
+      if (compileOnly) {
+        val result = write(Map(
+          "msg" -> Map(
+            "global" -> MsgMatchers.global.get(),
+            "global_group" -> MsgMatchers.globalGroup.get(),
+            "global_private" -> MsgMatchers.globalPrivate.get(),
+            "custom" -> MsgMatchers.custom.get(),
+          ),
+          "event" -> Map(
+            "global" -> EvtMatchers.global.get(),
+            "global_group" -> EvtMatchers.globalGroup.get(),
+            "global_private" -> EvtMatchers.globalPrivate.get(),
+            "custom" -> EvtMatchers.custom.get(),
+          ),
+          "steps" -> steps
+        ))
+        val outFile = SystemConfig.sxdlPath / "ssdl.json"
+        if (outFile.exists) outFile.delete()
+        outFile.createFile().writeText(result)
+        logger.log(s"${AnsiColor.GREEN}${steps.size}条SSDL脚本已全部编译完毕并导出！")
+        sys.exit(0)
+      }
+
       JamContext.stepPool.getAndSet(StepPool(steps.toMap))
       logger.log(s"${AnsiColor.GREEN}${steps.size}条SSDL脚本已全部成功载入！")
       Some(List(

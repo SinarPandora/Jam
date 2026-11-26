@@ -17,7 +17,6 @@ import scala.jdk.CollectionConverters.*
  */
 case class RunLambda(scriptPath: String, vars: Seq[RenderStrTemplate]) extends Command[Object] {
   private val scopedVars: mutable.Map[ChatInfo, util.HashMap[String, Object]] = mutable.HashMap().withDefaultValue(new util.HashMap[String, Object]())
-  private val rootScopedVars: util.HashMap[String, Object] = new util.HashMap[String, Object]()
   /**
    * 执行
    *
@@ -29,7 +28,12 @@ case class RunLambda(scriptPath: String, vars: Seq[RenderStrTemplate]) extends C
     Future.sequence(vars.map(_.execute())).flatMap(args => ScriptRunner.eval(scriptPath, context, Map(
       "$args" -> args.asJava,
       "$scope" -> scopedVars(context.chatInfo),
-      "$rootScope" -> rootScopedVars
+      "$rootScope" -> RunLambda.rootScopedVars
     )))
   }
+}
+
+object RunLambda {
+  /** 跨所有 Lambda 指令共享的全局作用域（与文档「$rootScope 全局」一致） */
+  private[lambda] val rootScopedVars: util.HashMap[String, Object] = new util.HashMap[String, Object]()
 }

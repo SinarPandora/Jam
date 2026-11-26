@@ -9,8 +9,6 @@ import o.lartifa.jam.cool.qq.listener.interactive.InteractiveFunction
 import o.lartifa.jam.cool.qq.listener.interactive.InteractiveSession
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.SpecificSender
-import scala.jdk.FutureConverters
-
 import java.util.concurrent.CompletionStage
 import java.util.function.BiConsumer
 
@@ -67,12 +65,14 @@ class LambdaDSLWrapper {
          * @return 询问会话引用
          */
         CompletionStage<Object> ask(BiConsumer<InteractiveSession, EventMessage> behavior, SpecificSender sender = context.msgSender()) {
-            FutureConverters.FutureOps(interact(sender, new InteractiveFunction() {
+            // Groovy 无法正确调用 Scala 扩展 FutureOps.asJava（会落到 Future 本身）
+            // 须走 javaapi：scala.jdk.javaapi.FutureConverters.asJava
+            (CompletionStage<Object>) scala.jdk.javaapi.FutureConverters.asJava(interact(sender, new InteractiveFunction() {
                 @Override
                 void apply(InteractiveSession session, EventMessage event) {
                     behavior.accept(session, event)
                 }
-            })).asJava()
+            }))
         }
     }
 

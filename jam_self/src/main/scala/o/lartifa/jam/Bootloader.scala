@@ -1,10 +1,12 @@
 package o.lartifa.jam
 
 import better.files.File
+import cc.moecraft.logger.LoggerInstanceManager
 import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.backend.MiraiBackend
 import o.lartifa.jam.common.config.CoolQConfig.{postPort, postUrl}
 import o.lartifa.jam.common.config.{DynamicConfigLoader, JamConfig, SystemConfig}
+import o.lartifa.jam.common.util.LoggerFactory
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.engine.JamLoader
 import o.lartifa.jam.pool.JamContext
@@ -24,6 +26,11 @@ object Bootloader {
     DynamicConfigLoader.reload()
     if (args.contains("--help")) help()
     File(SystemConfig.tempDir).createDirectoryIfNotExists()
+
+    if (args.contains("--compile")) {
+      Await.result(JamLoader.compileOnly(), Duration.Inf)
+    }
+
     val client = CoolQQLoader.createCoolQQClient()
     JamContext.bot.set(client)
     JamContext.setAPIClient(() => client.getAccountManager.getNonAccountSpecifiedApi)
@@ -51,6 +58,7 @@ object Bootloader {
         |*nix: ./jam
         |
         |可选参数：
+        |--compile        仅编译脚本
         |--flyway_repair  执行数据迁移修复
         |--help           输出该提示
         |--config=xxx     手动指定配置文件位置
