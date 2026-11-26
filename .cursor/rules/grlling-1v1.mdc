@@ -1,0 +1,6 @@
+---
+description: Grill 时一问一答，每轮只问一个问题
+alwaysApply: true
+---
+
+When grilling (skill, session, or any grill trigger): one-question turns only.

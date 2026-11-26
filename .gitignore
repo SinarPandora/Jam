@@ -112,9 +112,12 @@ hs_err_pid*
 .vscode/
 .cursor/*
 !.cursor/skills/
-.cursor/skills/*
-!.cursor/skills/verify-jam/
-!.cursor/skills/verify-jam/**
+!.cursor/skills/**
+!.cursor/rules/
+!.cursor/rules/**
+# Local verification evidence & copy-review logs (regenerated / ephemeral)
+.cursor/skills/verify-jam/artifacts/
+.cursor/changes/
 backup/
 tabby/
 UML/
@@ -122,5 +125,3 @@ jam_self/db/
 jam_self/conf/ssdl/ssdl.json
 jam_self/conf/**/*_local.conf
 jam_self/src/test/scala/Playground.scala
-# Verification run evidence (regenerated locally)
-.cursor/skills/verify-jam/artifacts/

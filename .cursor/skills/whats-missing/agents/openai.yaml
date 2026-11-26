@@ -1,0 +1,7 @@
+interface:
+  display_name: "What's Missing"
+  short_description: "Pressure-test ideas before implementation"
+  default_prompt: "Use $whats-missing to pressure-test this idea before implementation."
+
+policy:
+  allow_implicit_invocation: false
