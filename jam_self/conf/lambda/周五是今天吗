@@ -1,0 +1,13 @@
+import java.time.LocalDateTime
+import java.time.ZoneId
+
+int dayOfWeek = LocalDateTime.now().atZone(ZoneId.of("Asia/Shanghai")).getDayOfWeek().ordinal() + 1
+if (dayOfWeek < 5) {
+    reply("距离周五还有 ${5 - dayOfWeek} 天")
+} else if (dayOfWeek == 6) {
+    reply("今天是周六！爽！")
+} else if (dayOfWeek == 7) {
+    reply("今天是周日！爽！")
+} else {
+    reply("周五！明天休息，爽！")
+}

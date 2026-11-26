@@ -1,0 +1,60 @@
+import cc.moecraft.icq.sender.message.components.ComponentImage
+import cc.moecraft.icq.sender.message.components.ComponentImageBase64
+import cn.hutool.core.img.Img
+import cn.hutool.core.img.ImgUtil
+import com.jayway.jsonpath.JsonPath
+import org.apache.hc.client5.http.classic.HttpClient
+import org.apache.hc.client5.http.classic.methods.HttpGet
+import org.apache.hc.client5.http.classic.methods.HttpPost
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
+import org.apache.hc.client5.http.impl.classic.HttpClients
+import org.apache.hc.core5.http.NameValuePair
+import org.apache.hc.core5.http.io.entity.EntityUtils
+import org.apache.hc.core5.http.message.BasicNameValuePair
+import org.jsoup.Jsoup
+
+import javax.imageio.ImageIO
+import java.net.http.HttpResponse
+
+try (CloseableHttpClient client = HttpClients.createDefault()) {
+    def firstVisit = client.execute(new HttpGet('https://randomlistgenerator.com/birds'))
+    def crsfToken = Jsoup.parse(EntityUtils.toString(firstVisit.getEntity()))
+            .select("meta[name=csrf-token]").first().attr('content')
+
+    def getList = new HttpPost('https://randomlistgenerator.com/site/data')
+    getList.addHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+    getList.addHeader("x-requested-with", "XMLHttpRequest")
+    getList.addHeader("x-csrf-token", crsfToken)
+    getList.addHeader("cache-control", 'no-cache')
+    List<NameValuePair> params = new ArrayList<NameValuePair>();
+    params.add(new BasicNameValuePair("count", "4"));
+    params.add(new BasicNameValuePair("id", "85"));
+    getList.setEntity(new UrlEncodedFormEntity(params));
+    def imgId = JsonPath.parse(EntityUtils.toString(client.execute(getList).getEntity())).read('$.data[0].id')
+
+    def search = new HttpPost("https://randomlistgenerator.com/search-image")
+    search.addHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+    search.addHeader("x-requested-with", "XMLHttpRequest")
+    search.addHeader("x-csrf-token", crsfToken)
+    search.addHeader("cache-control", 'no-cache')
+    params = new ArrayList<NameValuePair>();
+    params.add(new BasicNameValuePair("data_id", "$imgId"));
+    search.setEntity(new UrlEncodedFormEntity(params));
+
+    def url = EntityUtils.toString(client.execute(search).getEntity())
+
+    reply("拿咬")
+    def data = EntityUtils.toByteArray(client.execute(new HttpGet(url)).getEntity())
+
+    try (ByteArrayInputStream byteIn = new ByteArrayInputStream(data);
+         ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        Img.from(ImageIO.read(byteIn))
+                .scale(0.7)
+                .write(out)
+
+        def image = Base64.encoder.encodeToString(out.toByteArray())
+
+        reply(new ComponentImageBase64(image).toString())
+    }
+}

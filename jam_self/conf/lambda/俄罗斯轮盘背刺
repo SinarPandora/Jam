@@ -1,0 +1,39 @@
+import cc.moecraft.icq.event.events.message.EventGroupMessage
+import cc.moecraft.icq.sender.message.components.ComponentAt
+
+static List<Integer> createCartridge() {
+    def cartridge = [0, 0, 0, 0, 0, 0]
+    def bulletPos = new Random().nextInt(6)
+    cartridge[bulletPos] = 1
+    return cartridge
+}
+
+def luckyDog = $temp.get("目标") == null? $msg.getSenderId(): $temp.get("目标").toLong()
+def entrap = luckyDog != $msg.getSenderId()
+
+def prompts = [
+        """${new ComponentAt($msg.senderId).toString()} 把抢抵在 ${new ComponentAt(luckyDog).toString()} 的太阳穴""",
+        """${new ComponentAt($msg.senderId).toString()} 趁 ${new ComponentAt(luckyDog).toString()} 不备，飞快掏枪"""
+]
+
+def random = new Random()
+
+def prompt = entrap? prompts[random.nextInt(prompts.size())]: "${new ComponentAt($msg.senderId).toString()} 扣下了扳机……"
+
+if ($scope.cartridge == null) {
+    $scope.cartridge = createCartridge()
+}
+
+if (($scope.cartridge as List<Integer>).remove(0) == 1) {
+    if ($msg instanceof EventGroupMessage) {
+        reply("""$prompt
+
+砰！你死了。""")
+        $api.setGroupBan($msg.getGroupId(), luckyDog, 60 + random.nextInt(6) * 60)
+    }
+    $scope.cartridge = null
+} else {
+    reply("""$prompt
+
+咔哒，是空的。""")
+}

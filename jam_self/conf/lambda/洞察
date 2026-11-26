@@ -1,0 +1,21 @@
+/**
+ * lambda<NAME>(%{目标QQ}%)
+ */
+import cc.moecraft.icq.event.events.message.EventDiscussMessage
+import cc.moecraft.icq.event.events.message.EventGroupMessage
+import cc.moecraft.icq.event.events.message.EventPrivateMessage
+import cc.moecraft.icq.sender.message.components.ComponentAt
+
+if ($args.isEmpty()) {
+    return
+}
+
+if ($msg instanceof EventPrivateMessage || $msg instanceof EventDiscussMessage) {
+    return
+}
+
+target = $args.head().toLong()
+
+shield = $vars.get("背刺盾_${target}").map(Integer::parseInt).orElse(0)
+
+reply("🔍目标${new ComponentAt(target)}身上有${shield}层盾🛡")

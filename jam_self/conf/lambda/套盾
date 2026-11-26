@@ -1,0 +1,49 @@
+/**
+ * lambda<NAME>(%{目标QQ}%,%{数量}%)
+ */
+import cc.moecraft.icq.event.events.message.EventDiscussMessage
+import cc.moecraft.icq.event.events.message.EventGroupMessage
+import cc.moecraft.icq.event.events.message.EventPrivateMessage
+import cc.moecraft.icq.sender.message.components.ComponentAt
+
+import java.util.concurrent.TimeUnit
+
+if ($args.size() < 2) {
+    return
+}
+
+if ($msg instanceof EventPrivateMessage || $msg instanceof EventDiscussMessage) {
+    return
+}
+
+target = $args.head().toLong()
+amount = $args.get(1).toInteger()
+def random = new Random()
+
+shield = $vars.get("背刺盾_${target}").map(Integer::parseInt).orElse(0)
+
+if (amount > 0) {
+    if (shield + amount > 5) {
+        if (random.nextInt(4) == 1 && $msg.senderId == target) {
+            $api.setGroupBan(((EventGroupMessage) $msg).getGroupId(), target, TimeUnit.MINUTES.toSeconds(5))
+            $vars.updateOrElseSet("背刺盾_${target}", "0")
+            reply("${new ComponentAt(target)}套了太多的盾，行动迟缓无力，被路过的南村群童公然背刺😭，盾也都被抱走了！！")
+        } else {
+            $vars.updateOrElseSet("背刺盾_${target}", "5")
+            reply("${new ComponentAt(target)}已经被套 5 层盾，都套成洋葱了🧅，不能再套了！！")
+        }
+    } else {
+        $vars.updateOrElseSet("背刺盾_${target}", (shield + amount).toString())
+        reply("${new ComponentAt(target)}获得了 ${amount} 层禁言盾牌🛡")
+    }
+} else if (amount == -9999) {
+    $vars.updateOrElseSet("背刺盾_${target}", "0")
+} else if (amount == -999) {
+    $vars.updateOrElseSet("背刺盾_${target}", "0")
+    reply("${new ComponentAt(target)}被一击斩铁剑击中！失去了所有的盾😱！！")
+} else if (shield + amount >= 0) {
+    $vars.updateOrElseSet("背刺盾_${target}", (shield + amount).toString())
+    reply("${new ComponentAt(target)}的盾破了💔")
+} else {
+    reply("${new ComponentAt(target)}身上已经没有盾了🤔")
+}

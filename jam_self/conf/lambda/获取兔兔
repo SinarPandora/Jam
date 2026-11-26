@@ -1,0 +1,23 @@
+import cc.moecraft.icq.sender.message.components.ComponentImageBase64
+import cn.hutool.core.img.Img
+import org.jsoup.Jsoup
+
+filename = Jsoup.connect("https://generatorfun.com/random-rabbit-image").get().select(".main-template>img").first().attr("src")
+
+reply("兔物")
+
+try {
+        out = new ByteArrayOutputStream()
+
+        Img.from(new URL("https://generatorfun.com/$filename"))
+                //.scale(0.5)
+                //.setQuality(0.7)
+                .write(out)
+
+        image = Base64.encoder.encodeToString(out.toByteArray())
+
+        reply(new ComponentImageBase64(image).toString())
+} catch (Throwable e) {
+    
+}
+

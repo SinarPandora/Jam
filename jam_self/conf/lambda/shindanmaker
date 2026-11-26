@@ -1,0 +1,28 @@
+import org.jsoup.Connection
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+
+String name = $temp.get('名字')
+String sId = $temp.get('ID')
+
+Connection session = Jsoup.newSession()
+session.url("https://shindanmaker.com/$sId")
+Document document = session.get()
+String token = document.selectFirst('input[name=_token]').attr('value')
+
+Document result = session.url("https://shindanmaker.com/$sId")
+        .data([
+                _token     : token,
+                shindanName: (name == null? $msg.sender.info.nickname : name).trim(),
+                hiddenName : '无名的W'
+        ])
+        .method(Connection.Method.POST)
+        .execute()
+        .parse()
+
+reply(
+        Jsoup.parse(result.selectFirst('#shindanResult').html().replaceAll("<br>", "[换行]"))
+                .text()
+                .replaceAll("\\[换行]", "\n")
+                .stripTrailing()
+)

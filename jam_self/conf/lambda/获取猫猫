@@ -1,0 +1,17 @@
+import cc.moecraft.icq.sender.message.components.ComponentImageBase64
+import cn.hutool.core.img.Img
+import org.jsoup.Jsoup
+
+filename = Jsoup.connect("http://random.cat/").get().select("img").first().attr("src")
+
+reply("摸凹")
+out = new ByteArrayOutputStream()
+
+Img.from(new URL(filename))
+        .scale(0.5)
+        .setQuality(0.6)
+        .write(out)
+
+image = Base64.encoder.encodeToString(out.toByteArray())
+
+reply(new ComponentImageBase64(image).toString())
