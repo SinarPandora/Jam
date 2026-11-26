@@ -27,15 +27,15 @@ trait BwyGroupTable {
   implicit def GetResultBwyGroupRow(implicit e0: GR[Long], e1: GR[String], e2: GR[java.sql.Timestamp], e3: GR[Boolean]): GR[BwyGroupRow] = GR {
     prs =>
       import prs.*
-      BwyGroupRow.tupled((<<[Long], <<[String], <<[String], <<[java.sql.Timestamp], <<[Long], <<[Boolean]))
+      BwyGroupRow.apply.tupled((<<[Long], <<[String], <<[String], <<[java.sql.Timestamp], <<[Long], <<[Boolean]))
   }
 
   /** Table description of table bwy_group. Objects of this class serve as prototypes for rows in queries. */
   class BwyGroup(_tableTag: Tag) extends profile.api.Table[BwyGroupRow](_tableTag, "bwy_group") {
-    def * = (id, name, detail, createTime, creatorQid, isActive) <> (BwyGroupRow.tupled, BwyGroupRow.unapply)
+    def * = (id, name, detail, createTime, creatorQid, isActive) <> (BwyGroupRow.apply.tupled, BwyGroupRow.unapply)
 
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(name), Rep.Some(detail), Rep.Some(createTime), Rep.Some(creatorQid), Rep.Some(isActive)).shaped.<>({ r => import r.*; _1.map(_ => BwyGroupRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(name), Rep.Some(detail), Rep.Some(createTime), Rep.Some(creatorQid), Rep.Some(isActive)).shaped.<>({ r => import r.*; _1.map(_ => BwyGroupRow.apply.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)

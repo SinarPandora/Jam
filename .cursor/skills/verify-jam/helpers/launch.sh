@@ -24,7 +24,7 @@ fi
 
 cd "$JAM_VERIFY_REPO_ROOT"
 
-# Build distribution via sbt (project pins sbt 1.10.x). Prefer sbtn thin client when available.
+# Build distribution via sbt (project pins sbt 2.x). Prefer sbtn thin client when available.
 if command -v sbtn >/dev/null 2>&1; then
   sbtn jam_self/installDist
 else

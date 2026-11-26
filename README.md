@@ -10,7 +10,7 @@
 
 推荐 JDK：**GraalVM 25**（本机路径示例 `/Library/Java/JavaVirtualMachines/graalvm-25.jdk`）。请将 `JAVA_HOME` 指向该 JDK。
 
-构建工具：**sbt 1.10.x + sbtn**（版本见 `project/build.properties`）。日常入口：
+语言：**Scala 3.9 LTS**。构建工具：**sbt 2.1 + sbtn**（版本见 `project/build.properties`）。版本号 **4.2.0**。日常入口：
 
 ```bash
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/graalvm-25.jdk/Contents/Home

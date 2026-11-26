@@ -2,10 +2,11 @@ import sbt.*
 import sbt.Keys.*
 
 ThisBuild / organization := "lartifa.o"
-ThisBuild / version := "4.0"
-ThisBuild / scalaVersion := "2.13.16"
+ThisBuild / version := "4.2.0"
+ThisBuild / scalaVersion := "3.9.0"
 ThisBuild / javacOptions ++= Seq("--release", "25")
-ThisBuild / scalacOptions ++= Seq("-Xsource:3")
+// 3.0-migration：保留 2.13 写法可编译，并把差异报成警告（json4s Manifest、package object）
+ThisBuild / scalacOptions ++= Seq("-source:3.0-migration")
 ThisBuild / resolvers += "jitpack" at "https://jitpack.io"
 // Packaging does not need javadoc/scaladoc artifacts (lombok -processorpath breaks javadoc)
 ThisBuild / Compile / packageDoc / publishArtifact := false
@@ -64,9 +65,8 @@ lazy val jam_utils = (project in file("jam_utils"))
   .settings(
     name := "jam_utils",
     libraryDependencies ++= Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-      "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4",
-      "com.github.pathikrit" %% "better-files" % "3.9.1",
+      "org.scala-lang.modules" %% "scala-parallel-collections" % "1.2.0",
+      "com.github.pathikrit" %% "better-files" % "3.9.2",
       "org.eclipse.jgit" % "org.eclipse.jgit" % "5.13.0.202109080827-r",
     ),
   )
@@ -84,7 +84,6 @@ lazy val jam_self = (project in file("jam_self"))
     Test / sources := (Test / sources).value.filterNot(_.getName == "Playground.scala"),
     excludeDependencies += ExclusionRule("ch.qos.logback", "logback-classic"),
     libraryDependencies ++= Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
       "org.reflections" % "reflections" % "0.10.2",
       "net.redhogs.cronparser" % "cron-parser-core" % "3.5",
       "org.apache.pekko" %% "pekko-actor" % pekkoVersion,
@@ -100,8 +99,8 @@ lazy val jam_self = (project in file("jam_self"))
       "org.codehaus.groovy" % "groovy-all" % groovyVersion,
       "org.apache.httpcomponents.client5" % "httpclient5" % "5.1.3",
       "org.freemarker" % "freemarker" % "2.3.31",
-      "com.lihaoyi" %% "requests" % "0.7.1",
-      "org.json4s" %% "json4s-jackson" % "4.0.6",
+      "com.lihaoyi" %% "requests" % "0.9.0",
+      "org.json4s" %% "json4s-jackson" % "4.0.7",
       "com.bladecoder.ink" % "blade-ink" % "1.0.0",
       "com.sksamuel.scrimage" % "scrimage-core" % "4.0.30",
       "com.sksamuel.scrimage" % "scrimage-filters" % "4.0.31",
@@ -120,10 +119,11 @@ lazy val jam_self = (project in file("jam_self"))
     bashScriptExtraDefines += """app_classpath="$app_classpath:$app_home/plugins/*"""",
     batScriptExtraDefines += """set "APP_CLASSPATH=%APP_CLASSPATH%;%APP_HOME%\plugins\*"""",
     Universal / mappings ++= {
+      val converter = fileConverter.value
       val confBase = baseDirectory.value / "conf"
       if (!confBase.exists) Seq.empty
       else {
-        val files = (confBase ** "*").get.filter(_.isFile)
+        val files = (confBase ** "*").get().filter(_.isFile)
         files
           .filterNot { f =>
             val n = f.getName
@@ -131,7 +131,7 @@ lazy val jam_self = (project in file("jam_self"))
           }
           .map { f =>
             val rel = confBase.toURI.relativize(f.toURI).getPath
-            f -> s"conf/$rel"
+            converter.toVirtualFile(f.toPath) -> s"conf/$rel"
           }
       }
     },
@@ -144,11 +144,12 @@ lazy val jam_self = (project in file("jam_self"))
         (LocalProject("poket_memo") / Compile / packageBin).value,
         (LocalProject("story_runner") / Compile / packageBin).value,
       )
-      jars.map(j => j -> s"plugins/${j.getName}")
+      jars.map(j => j -> s"plugins/${j.name}")
     },
-    installDist := {
+    installDist := Def.uncached {
       val staged = (Universal / stage).value
-      val dest = target.value / "install" / name.value
+      // 固定在模块 target/install，避免 sbt 2 的 target/out/... 布局改掉 verify-jam 路径
+      val dest = baseDirectory.value / "target" / "install" / name.value
       IO.delete(dest)
       IO.copyDirectory(staged, dest, overwrite = true, preserveLastModified = true)
       streams.value.log.info(s"Installed distribution to $dest")

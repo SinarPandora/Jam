@@ -26,7 +26,9 @@ case class OneByOne(stepIds: List[Long], inOrder: Boolean = true) extends Comman
         Await.result(pool.goto(id), Duration.Inf)
       }
     } else {
-      Await.result(Future.sequence(stepIds.map(pool.goto)), Duration.Inf)
+      val futures = stepIds.map(id => pool.goto(id))
+      Await.result(Future.sequence(futures), Duration.Inf)
+      ()
     }
   }
 }

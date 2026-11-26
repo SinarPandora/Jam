@@ -25,13 +25,13 @@ trait MessageRecordsTable {
   /** GetResult implicit for fetching MessageRecord objects using plain SQL queries */
   implicit def GetResultMessageRecord(implicit e0: GR[Long], e1: GR[String], e2: GR[java.sql.Timestamp]): GR[MessageRecord] = GR{
     prs => import prs.*
-      MessageRecord.tupled((<<[Long], <<[String], <<[Long], <<[String], <<[String], <<[String], <<[String], <<[Long], <<[Long], <<[Long], <<[Long], <<[java.sql.Timestamp]))
+      MessageRecord.apply.tupled((<<[Long], <<[String], <<[Long], <<[String], <<[String], <<[String], <<[String], <<[Long], <<[Long], <<[Long], <<[Long], <<[java.sql.Timestamp]))
   }
   /** Table description of table message_records. Objects of this class serve as prototypes for rows in queries. */
   class MessageRecords(_tableTag: Tag) extends profile.api.Table[MessageRecord](_tableTag, "message_records") {
-    def * = (id, message, messageId, messageType, messageSubType, postType, rawMessage, selfId, senderId, groupId, font, timestamp) <> (MessageRecord.tupled, MessageRecord.unapply)
+    def * = (id, message, messageId, messageType, messageSubType, postType, rawMessage, selfId, senderId, groupId, font, timestamp) <> (MessageRecord.apply.tupled, MessageRecord.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(message), Rep.Some(messageId), Rep.Some(messageType), Rep.Some(messageSubType), Rep.Some(postType), Rep.Some(rawMessage), Rep.Some(selfId), Rep.Some(senderId), Rep.Some(groupId), Rep.Some(font), Rep.Some(timestamp)).shaped.<>({ r=>import r.*; _1.map(_=> MessageRecord.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10.get, _11.get, _12.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(message), Rep.Some(messageId), Rep.Some(messageType), Rep.Some(messageSubType), Rep.Some(postType), Rep.Some(rawMessage), Rep.Some(selfId), Rep.Some(senderId), Rep.Some(groupId), Rep.Some(font), Rep.Some(timestamp)).shaped.<>({ r=>import r.*; _1.map(_=> MessageRecord.apply.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10.get, _11.get, _12.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)

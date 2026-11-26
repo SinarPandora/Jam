@@ -22,15 +22,15 @@ trait SourceObserverTable {
   implicit def GetResultSourceObserverRow(implicit e0: GR[Long], e1: GR[String], e2: GR[java.sql.Timestamp], e3: GR[Boolean]): GR[SourceObserverRow] = GR {
     prs =>
       import prs.*
-      SourceObserverRow.tupled((<<[Long], <<[String], <<[String], <<[java.sql.Timestamp], <<[Boolean]))
+      SourceObserverRow.apply.tupled((<<[Long], <<[String], <<[String], <<[java.sql.Timestamp], <<[Boolean]))
   }
 
   /** Table description of table source_observer. Objects of this class serve as prototypes for rows in queries. */
   class SourceObserver(_tableTag: Tag) extends profile.api.Table[SourceObserverRow](_tableTag, "source_observer") {
-    def * = (id, sourceIdentity, sourceType, createTime, isPaused) <> (SourceObserverRow.tupled, SourceObserverRow.unapply)
+    def * = (id, sourceIdentity, sourceType, createTime, isPaused) <> (SourceObserverRow.apply.tupled, SourceObserverRow.unapply)
 
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(sourceIdentity), Rep.Some(sourceType), Rep.Some(createTime), Rep.Some(isPaused)).shaped.<>({ r => import r.*; _1.map(_ => SourceObserverRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(sourceIdentity), Rep.Some(sourceType), Rep.Some(createTime), Rep.Some(isPaused)).shaped.<>({ r => import r.*; _1.map(_ => SourceObserverRow.apply.tupled((_1.get, _2.get, _3.get, _4.get, _5.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)

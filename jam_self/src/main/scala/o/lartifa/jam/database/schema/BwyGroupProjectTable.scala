@@ -25,15 +25,15 @@ trait BwyGroupProjectTable {
   implicit def GetResultBwyGroupProjectRow(implicit e0: GR[Long]): GR[BwyGroupProjectRow] = GR {
     prs =>
       import prs.*
-      BwyGroupProjectRow.tupled((<<[Long], <<[Long], <<[Long]))
+      BwyGroupProjectRow.apply.tupled((<<[Long], <<[Long], <<[Long]))
   }
 
   /** Table description of table bwy_group_project. Objects of this class serve as prototypes for rows in queries. */
   class BwyGroupProject(_tableTag: Tag) extends profile.api.Table[BwyGroupProjectRow](_tableTag, "bwy_group_project") {
-    def * = (id, groupId, projectId) <> (BwyGroupProjectRow.tupled, BwyGroupProjectRow.unapply)
+    def * = (id, groupId, projectId) <> (BwyGroupProjectRow.apply.tupled, BwyGroupProjectRow.unapply)
 
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(groupId), Rep.Some(projectId)).shaped.<>({ r => import r.*; _1.map(_ => BwyGroupProjectRow.tupled((_1.get, _2.get, _3.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(groupId), Rep.Some(projectId)).shaped.<>({ r => import r.*; _1.map(_ => BwyGroupProjectRow.apply.tupled((_1.get, _2.get, _3.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)
