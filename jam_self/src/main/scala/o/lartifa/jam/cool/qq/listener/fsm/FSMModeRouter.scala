@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.fsm
 
-import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.ob.event.events.message.EventMessage
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 
 import scala.concurrent.{ExecutionContext, Future}

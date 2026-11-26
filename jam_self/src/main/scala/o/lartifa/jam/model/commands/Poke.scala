@@ -1,6 +1,6 @@
 package o.lartifa.jam.model.commands
 
-import cc.moecraft.icq.sender.message.components.ComponentPoke
+import o.lartifa.jam.ob.sender.message.components.ComponentPoke
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
 

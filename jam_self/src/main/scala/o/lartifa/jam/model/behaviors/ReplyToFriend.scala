@@ -1,10 +1,10 @@
 package o.lartifa.jam.model.behaviors
 
-import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventPrivateMessage}
-import cc.moecraft.icq.sender.message.components.ComponentAt
-import cc.moecraft.icq.sender.returndata.returnpojo.get.RGroupMemberInfo
-import cc.moecraft.icq.sender.returndata.returnpojo.send.RMessageReturnData
-import cc.moecraft.icq.sender.returndata.{ReturnData, ReturnStatus}
+import o.lartifa.jam.ob.event.events.message.{EventGroupOrDiscussMessage, EventPrivateMessage}
+import o.lartifa.jam.ob.sender.message.components.ComponentAt
+import o.lartifa.jam.ob.sender.returndata.returnpojo.get.RGroupMemberInfo
+import o.lartifa.jam.ob.sender.returndata.returnpojo.send.RMessageReturnData
+import o.lartifa.jam.ob.sender.returndata.{ReturnData, ReturnStatus}
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.pool.JamContext
 

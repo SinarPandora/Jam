@@ -1,8 +1,8 @@
 package o.lartifa.jam.model.commands
 
 import better.files.File
-import cc.moecraft.icq.sender.message.MessageBuilder
-import cc.moecraft.icq.sender.message.components.{ComponentImage, ComponentImageBase64, ComponentRecord}
+import o.lartifa.jam.ob.sender.message.MessageBuilder
+import o.lartifa.jam.ob.sender.message.components.{ComponentImage, ComponentImageBase64, ComponentRecord}
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext

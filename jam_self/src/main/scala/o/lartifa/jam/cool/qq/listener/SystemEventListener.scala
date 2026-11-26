@@ -1,8 +1,8 @@
 package o.lartifa.jam.cool.qq.listener
 
-import cc.moecraft.icq.event.events.meta.EventMetaHeartbeat
-import cc.moecraft.icq.event.events.request.{EventFriendRequest, EventGroupInviteRequest}
-import cc.moecraft.icq.event.{EventHandler, IcqListener}
+import o.lartifa.jam.ob.event.events.meta.EventMetaHeartbeat
+import o.lartifa.jam.ob.event.events.request.{EventFriendRequest, EventGroupInviteRequest}
+import o.lartifa.jam.ob.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.pool.JamContext

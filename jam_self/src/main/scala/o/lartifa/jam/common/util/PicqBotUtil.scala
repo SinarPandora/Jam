@@ -1,9 +1,9 @@
 package o.lartifa.jam.common.util
 
-import cc.moecraft.icq.PicqBotX
-import cc.moecraft.icq.accounts.AccountManagerListener
-import cc.moecraft.icq.event.IcqListener
-import cc.moecraft.icq.listeners.HyExpressionListener
+import o.lartifa.jam.ob.PicqBotX
+import o.lartifa.jam.ob.accounts.AccountManagerListener
+import o.lartifa.jam.ob.event.IcqListener
+import o.lartifa.jam.ob.listeners.HyExpressionListener
 import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.cool.qq.listener.{QEventListener, QMessageListener, SleepingStateListener, SystemEventListener}
 import o.lartifa.jam.pool.JamContext

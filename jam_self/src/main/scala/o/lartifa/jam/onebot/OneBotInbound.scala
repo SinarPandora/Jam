@@ -1,6 +1,6 @@
 package o.lartifa.jam.onebot
 
-import cc.moecraft.icq.PicqBotX
+import o.lartifa.jam.ob.PicqBotX
 import o.lartifa.jam.onebot.EventInboundServer
 import zio.Fiber
 

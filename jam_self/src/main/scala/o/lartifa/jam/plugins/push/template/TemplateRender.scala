@@ -1,7 +1,7 @@
 package o.lartifa.jam.plugins.push.template
 
 import better.files.*
-import cc.moecraft.icq.sender.message.components.ComponentImage
+import o.lartifa.jam.ob.sender.message.components.ComponentImage
 import cc.moecraft.logger.HyLogger
 import freemarker.template.Configuration
 import o.lartifa.jam.common.config.{JamConfig, PluginConfig, SystemConfig}

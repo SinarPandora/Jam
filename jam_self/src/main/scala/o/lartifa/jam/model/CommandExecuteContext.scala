@@ -1,6 +1,6 @@
 package o.lartifa.jam.model
 
-import cc.moecraft.icq.event.events.message.{EventGroupMessage, EventMessage, EventPrivateMessage}
+import o.lartifa.jam.ob.event.events.message.{EventGroupMessage, EventMessage, EventPrivateMessage}
 import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.GlobalConstant.MessageType

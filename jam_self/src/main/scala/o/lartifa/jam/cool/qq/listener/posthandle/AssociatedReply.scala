@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.posthandle
 
-import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.ob.event.events.message.EventMessage
 
 import scala.concurrent.{ExecutionContext, Future}
 

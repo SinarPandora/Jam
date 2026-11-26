@@ -1,7 +1,7 @@
 package o.lartifa.jam.cool.qq.listener.posthandle
 
-import cc.moecraft.icq.event.events.message.{EventGroupMessage, EventMessage}
-import cc.moecraft.icq.sender.message.components.ComponentAt
+import o.lartifa.jam.ob.event.events.message.{EventGroupMessage, EventMessage}
+import o.lartifa.jam.ob.sender.message.components.ComponentAt
 import o.lartifa.jam.common.util.TriBoolValue
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.plugins.nv_xing_jiao_liu.SensitiveWordKiller

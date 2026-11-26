@@ -1,6 +1,6 @@
 package o.lartifa.jam.model.commands
 
-import cc.moecraft.icq.sender.message.components.ComponentLocation
+import o.lartifa.jam.ob.sender.message.components.ComponentLocation
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
 

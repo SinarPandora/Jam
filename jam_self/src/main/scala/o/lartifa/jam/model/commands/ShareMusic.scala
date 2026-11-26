@@ -1,7 +1,7 @@
 package o.lartifa.jam.model.commands
 
-import cc.moecraft.icq.sender.message.components.ComponentMusic
-import cc.moecraft.icq.sender.message.components.ComponentMusic.MusicSourceType
+import o.lartifa.jam.ob.sender.message.components.ComponentMusic
+import o.lartifa.jam.ob.sender.message.components.ComponentMusic.MusicSourceType
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
 

@@ -1,6 +1,6 @@
 package o.lartifa.jam.pool
 
-import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.ob.event.events.message.EventMessage
 import o.lartifa.jam.common.exception.{ExecutionException, VarNotFoundException}
 import o.lartifa.jam.common.util.EventMessageHelper.*
 import o.lartifa.jam.database.schema.Tables

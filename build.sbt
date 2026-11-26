@@ -52,13 +52,15 @@ lazy val one_bot_protocol = (project in file("one_bot_protocol"))
     ),
   )
 
-lazy val picq_bot_x_fork = (project in file("picq_bot_x_fork"))
+/** Absorbed Picq types under o.lartifa.jam.ob (no PicqHttpServer). Retires picq_bot_x_fork for jam_self. */
+lazy val one_bot_legacy = (project in file("one_bot_legacy"))
   .settings(javaLibSettings*)
   .settings(
-    name := "picq_bot_x_fork",
+    name := "one_bot_legacy",
     libraryDependencies ++= Seq(
       "cn.hutool" % "hutool-all" % "5.8.2",
       "com.github.hydevelop" % "HyLogger" % "4.0.254",
+      "com.github.hydevelop" % "HyCommonUtils" % "1.4.0.207",
       "com.google.code.gson" % "gson" % "2.11.0",
     ),
   )
@@ -92,7 +94,7 @@ lazy val one_bot_runtime = (project in file("one_bot_runtime"))
   )
 
 lazy val jam_self = (project in file("jam_self"))
-  .dependsOn(picq_bot_x_fork, jam_utils, one_bot_runtime)
+  .dependsOn(one_bot_legacy, jam_utils, one_bot_runtime)
   .enablePlugins(JavaAppPackaging)
   .settings(commonTestSettings*)
   .settings(FlywayTasks.settings(flywayVersion)*)
@@ -186,6 +188,8 @@ def jamPlugin(id: String): Project =
     .settings(
       name := id,
       version := "0.1",
+      // jam_self / zio-blocks-next is @experimental
+      scalacOptions += "-experimental",
       Test / sources := (Test / sources).value.filterNot(_.getName == "Playground.scala"),
     )
 
@@ -198,7 +202,7 @@ lazy val story_runner = jamPlugin("story_runner")
 lazy val root = (project in file("."))
   .aggregate(
     one_bot_protocol,
-    picq_bot_x_fork,
+    one_bot_legacy,
     jam_utils,
     one_bot_runtime,
     jam_self,

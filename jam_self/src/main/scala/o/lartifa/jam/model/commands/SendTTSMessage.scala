@@ -1,6 +1,6 @@
 package o.lartifa.jam.model.commands
 
-import cc.moecraft.icq.sender.message.components.ComponentTTS
+import o.lartifa.jam.ob.sender.message.components.ComponentTTS
 import o.lartifa.jam.model.CommandExecuteContext
 
 import scala.concurrent.{ExecutionContext, Future}

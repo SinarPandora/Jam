@@ -1,8 +1,8 @@
 package o.lartifa.jam.pool
 
 import org.apache.pekko.actor.ActorSystem
-import cc.moecraft.icq.sender.IcqHttpApi
-import cc.moecraft.icq.{PicqBotX, PicqConfig}
+import o.lartifa.jam.ob.sender.IcqHttpApi
+import o.lartifa.jam.ob.{PicqBotX, PicqConfig}
 import o.lartifa.jam.common.config.botConfigFile
 import o.lartifa.jam.common.util.LoggerFactory
 

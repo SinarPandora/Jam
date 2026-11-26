@@ -1,6 +1,6 @@
 package jam.plugins.cool.apis.commands
 
-import cc.moecraft.icq.event.events.message.EventGroupOrDiscussMessage
+import o.lartifa.jam.ob.event.events.message.EventGroupOrDiscussMessage
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.engine.ssdl.parser.{ParseEngineContext, SSDLCommandParser}
 import o.lartifa.jam.model.CommandExecuteContext

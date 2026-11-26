@@ -1,7 +1,7 @@
 package o.lartifa.jam.model.commands
 
-import cc.moecraft.icq.sender.message.components.ComponentContact
-import cc.moecraft.icq.sender.message.components.ComponentContact.ContactType
+import o.lartifa.jam.ob.sender.message.components.ComponentContact
+import o.lartifa.jam.ob.sender.message.components.ComponentContact.ContactType
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
 

@@ -1,6 +1,6 @@
 package o.lartifa.jam.plugins
 
-import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.ob.event.events.message.EventMessage
 import cc.moecraft.logger.format.AnsiColor
 import cc.moecraft.logger.{HyLogger, LogLevel}
 import o.lartifa.jam.common.config.{JamConfig, JamPluginConfig}

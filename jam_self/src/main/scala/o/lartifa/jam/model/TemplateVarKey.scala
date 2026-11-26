@@ -1,6 +1,6 @@
 package o.lartifa.jam.model
 
-import cc.moecraft.icq.sender.message.components.{ComponentAt, ComponentFace, ComponentImage}
+import o.lartifa.jam.ob.sender.message.components.{ComponentAt, ComponentFace, ComponentImage}
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.TemplateVarKey.TemplateVarSubType
 import o.lartifa.jam.pool.JamContext

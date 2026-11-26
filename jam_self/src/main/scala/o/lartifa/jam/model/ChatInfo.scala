@@ -1,8 +1,8 @@
 package o.lartifa.jam.model
 
-import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
-import cc.moecraft.icq.sender.returndata.ReturnData
-import cc.moecraft.icq.sender.returndata.returnpojo.send.RMessageReturnData
+import o.lartifa.jam.ob.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
+import o.lartifa.jam.ob.sender.returndata.ReturnData
+import o.lartifa.jam.ob.sender.returndata.returnpojo.send.RMessageReturnData
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.pool.JamContext
 

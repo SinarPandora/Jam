@@ -2,8 +2,8 @@ package o.lartifa.jam.cool.qq.command.base
 
 import java.util
 
-import cc.moecraft.icq.command.CommandProperties
-import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.ob.command.CommandProperties
+import o.lartifa.jam.ob.event.events.message.EventMessage
 
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}

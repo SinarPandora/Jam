@@ -1,6 +1,6 @@
 package o.lartifa.jam.model.tasks
 
-import cc.moecraft.icq.event.events.message.{EventGroupMessage, EventMessage, EventPrivateMessage}
+import o.lartifa.jam.ob.event.events.message.{EventGroupMessage, EventMessage, EventPrivateMessage}
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.exception.ExecutionException

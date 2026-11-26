@@ -1,6 +1,6 @@
 package jam.plugins.meme_maker.engine
 
-import cc.moecraft.icq.sender.message.components.ComponentImageBase64
+import o.lartifa.jam.ob.sender.message.components.ComponentImageBase64
 import cc.moecraft.logger.HyLogger
 import jam.plugins.meme_maker.engine.MemeAPIResponse._
 import o.lartifa.jam.common.config.JSONConfig.formats

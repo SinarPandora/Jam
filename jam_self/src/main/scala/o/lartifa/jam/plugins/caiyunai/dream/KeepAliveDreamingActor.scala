@@ -1,7 +1,7 @@
 package o.lartifa.jam.plugins.caiyunai.dream
 
 import org.apache.pekko.actor.{Actor, ActorRef, Cancellable, Props}
-import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.ob.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
 import cn.hutool.core.util.NumberUtil
 import o.lartifa.jam.common.config.PluginConfig

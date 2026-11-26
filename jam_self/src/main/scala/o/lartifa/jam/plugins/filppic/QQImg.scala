@@ -1,6 +1,6 @@
 package o.lartifa.jam.plugins.filppic
 
-import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.ob.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
 import com.sksamuel.scrimage.nio.{ImageWriter, JpegWriter, PngWriter}
 import o.lartifa.jam.plugins.filppic.QQImg.ImageType

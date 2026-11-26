@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.handle
 
-import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
+import o.lartifa.jam.ob.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch

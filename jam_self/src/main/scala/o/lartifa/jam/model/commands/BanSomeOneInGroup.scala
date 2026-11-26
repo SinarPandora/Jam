@@ -2,7 +2,7 @@ package o.lartifa.jam.model.commands
 
 import java.util.concurrent.TimeUnit
 
-import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventPrivateMessage}
+import o.lartifa.jam.ob.event.events.message.{EventGroupOrDiscussMessage, EventPrivateMessage}
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
 

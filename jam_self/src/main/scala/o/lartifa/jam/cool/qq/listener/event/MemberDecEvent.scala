@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.event
 
-import cc.moecraft.icq.event.events.notice.groupmember.decrease.EventNoticeGroupMemberDecrease
+import o.lartifa.jam.ob.event.events.notice.groupmember.decrease.EventNoticeGroupMemberDecrease
 import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.model.ChatInfo

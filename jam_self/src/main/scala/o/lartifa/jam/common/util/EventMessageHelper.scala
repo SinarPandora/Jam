@@ -1,6 +1,6 @@
 package o.lartifa.jam.common.util
 
-import cc.moecraft.icq.event.events.message.{EventGroupMessage, EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
+import o.lartifa.jam.ob.event.events.message.{EventGroupMessage, EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.ChatInfo
 
