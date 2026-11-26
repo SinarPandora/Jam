@@ -1,5 +1,5 @@
-import cc.moecraft.icq.sender.message.components.ComponentImage
-import cc.moecraft.icq.sender.message.components.ComponentImageBase64
+import o.lartifa.jam.ob.sender.message.components.ComponentImage
+import o.lartifa.jam.ob.sender.message.components.ComponentImageBase64
 import cn.hutool.core.img.Img
 import cn.hutool.core.img.ImgUtil
 import com.jayway.jsonpath.JsonPath

@@ -1,5 +1,5 @@
-import cc.moecraft.icq.event.events.message.EventGroupMessage
-import cc.moecraft.icq.sender.message.components.ComponentAt
+import o.lartifa.jam.ob.event.events.message.EventGroupMessage
+import o.lartifa.jam.ob.sender.message.components.ComponentAt
 
 static List<Integer> createCartridge() {
     def cartridge = [0, 0, 0, 0, 0, 0]

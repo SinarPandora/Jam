@@ -13,6 +13,21 @@ PG_DB="jam_verify_${RUN_ID//-/_}"
 PG_USER="${JAM_VERIFY_PG_USER:-$(whoami)}"
 PG_PASSWORD="${JAM_VERIFY_PG_PASSWORD:-}"
 
+# Postgres.app on macOS often isn't on PATH
+if ! command -v createdb >/dev/null; then
+  for cand in \
+    "/Applications/Postgres.app/Contents/Versions/latest/bin" \
+    "/Applications/Postgres.app/Contents/Versions/17/bin" \
+    "/Applications/Postgres.app/Contents/Versions/16/bin"
+  do
+    if [[ -x "$cand/createdb" ]]; then
+      PATH="$cand:$PATH"
+      export PATH
+      break
+    fi
+  done
+fi
+
 if ! command -v createdb >/dev/null; then
   echo "createdb not found; Postgres client tools required for verify runs" >&2
   exit 1

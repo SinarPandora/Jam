@@ -1,8 +1,8 @@
 package wrapper
 
-import cc.moecraft.icq.event.events.message.EventMessage
-import cc.moecraft.icq.sender.returndata.ReturnData
-import cc.moecraft.icq.sender.returndata.returnpojo.send.RMessageReturnData
+import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.ob.sender.returndata.ReturnData
+import o.lartifa.jam.ob.sender.returndata.returnpojo.send.RMessageReturnData
 import o.lartifa.jam.common.util.AsyncUtil
 import o.lartifa.jam.cool.qq.listener.interactive.Interactive
 import o.lartifa.jam.cool.qq.listener.interactive.InteractiveFunction

@@ -18,6 +18,21 @@ set -a
 source "$META"
 set +a
 
+# Postgres.app on macOS often isn't on PATH (needed for dropdb)
+if ! command -v dropdb >/dev/null; then
+  for cand in \
+    "/Applications/Postgres.app/Contents/Versions/latest/bin" \
+    "/Applications/Postgres.app/Contents/Versions/17/bin" \
+    "/Applications/Postgres.app/Contents/Versions/16/bin"
+  do
+    if [[ -x "$cand/dropdb" ]]; then
+      PATH="$cand:$PATH"
+      export PATH
+      break
+    fi
+  done
+fi
+
 if [[ -f "$JAM_VERIFY_PID_FILE" ]]; then
   PID="$(cat "$JAM_VERIFY_PID_FILE")"
   if kill -0 "$PID" 2>/dev/null; then
