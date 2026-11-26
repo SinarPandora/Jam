@@ -1,6 +1,6 @@
 package o.lartifa.jam.plugins.caiyunai.dream
 
-import akka.actor.{Actor, ActorRef, Cancellable, Props}
+import org.apache.pekko.actor.{Actor, ActorRef, Cancellable, Props}
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
 import cn.hutool.core.util.NumberUtil
@@ -17,7 +17,6 @@ import o.lartifa.jam.pool.JamContext
 import requests.Session
 
 import java.util.concurrent.Executors
-import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -138,35 +137,35 @@ class KeepAliveDreamingActor extends Actor {
    * @param senderRef 发送者引用
    * @return 多个梦境
    */
-  def dreaming(data: Data, content: String, senderRef: ActorRef): Future[Unit] = async {
-    val value = await(JamContext.variablePool.getOrElseUpdate("彩云小梦默认AI编号", "0"))
-    val modelId = value.toInt
-    if (data.models.lengthIs <= modelId) {
-      senderRef ! Fail("😴试图进入一个不存在的梦境……")
-    } else {
-      implicit val session: Session = data.session
-      DreamClient.saveAtFirst(data.uid, content) match {
-        case Left(errMsg) =>
-          senderRef ! Fail(errMsg)
-          handleStage(data.copy(failCount = data.failCount + 1))
-        case Right(meta) =>
-          DreamClient.dreaming(data.uid, data.models(modelId).mid, content, meta) match {
-            case Left(errMsg) =>
-              senderRef ! Fail(errMsg)
-              handleStage(data.copy(failCount = data.failCount + 1))
-            case Right(dreams) =>
-              if (dreams.isEmpty) {
+  def dreaming(data: Data, content: String, senderRef: ActorRef): Future[Unit] =
+    JamContext.variablePool.getOrElseUpdate("彩云小梦默认AI编号", "0").map { value =>
+      val modelId = value.toInt
+      if (data.models.lengthIs <= modelId) {
+        senderRef ! Fail("😴试图进入一个不存在的梦境……")
+      } else {
+        implicit val session: Session = data.session
+        DreamClient.saveAtFirst(data.uid, content) match {
+          case Left(errMsg) =>
+            senderRef ! Fail(errMsg)
+            handleStage(data.copy(failCount = data.failCount + 1))
+          case Right(meta) =>
+            DreamClient.dreaming(data.uid, data.models(modelId).mid, content, meta) match {
+              case Left(errMsg) =>
+                senderRef ! Fail(errMsg)
                 handleStage(data.copy(failCount = data.failCount + 1))
-              } else {
-                senderRef ! Resp(dreams)
-                if (data.failCount != 0) {
-                  handleStage(data.copy(failCount = 0))
+              case Right(dreams) =>
+                if (dreams.isEmpty) {
+                  handleStage(data.copy(failCount = data.failCount + 1))
+                } else {
+                  senderRef ! Resp(dreams)
+                  if (data.failCount != 0) {
+                    handleStage(data.copy(failCount = 0))
+                  }
                 }
-              }
-          }
+            }
+        }
       }
     }
-  }
 }
 
 object KeepAliveDreamingActor {

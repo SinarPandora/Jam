@@ -49,22 +49,22 @@ object CommandParser extends Parser {
     val contains = components.containsModeCommandParsers.map(it => it.parse _)
     val regex = components.regexModeCommandParsers.map(it => it.parse _)
     val highOrder = components.highOrderModeCommandParsers.map(it => it.parse _)
-    List(parseAsk _)
-      ++ highOrder
-      ++ List(
-      parseCatchParameters _, parseMessageSend _, parseGoto _, parseOneByOne _, parseParamOpt _,
-      parseRandomNumber _, parseRandomGoto _, parseLoopGoto _, parseParamDel _, parseWaiting _,
-      parseSetPicFetcherMode _, parseSetPicRating _, parseRunTaskNow _, parseFetchAndSendPic _,
-      parseRollEveryThing _, parseBanSomeOneInGroup _, parseSendVideo _, parseShareLocation _,
-      parseShareURL _, parseShareContact _, parseShareMusic _, parsePoke _, parseTTS _, parseDropInDream _,
-      parseRunLambda _)
-      ++ regex
-      ++ List(
-      // 包含类模式放在后边
-      parseDoNoting _, parseGroupWholeBan _, parseGroupWholeUnBan _, parseShowPicInfo _,
-      parseQQDice _, parseQQRPS _, parseShake _, parseBreakDirectly _, parseBreakAsUnMatched _,
-      parseListAIModels _, parseConfigSourcePush _, parseWhatICanDo _)
-      ++ contains
+    List(parseAsk _) ++
+      highOrder ++
+      List(
+        parseCatchParameters _, parseMessageSend _, parseGoto _, parseOneByOne _, parseParamOpt _,
+        parseRandomNumber _, parseRandomGoto _, parseLoopGoto _, parseParamDel _, parseWaiting _,
+        parseSetPicFetcherMode _, parseSetPicRating _, parseRunTaskNow _, parseFetchAndSendPic _,
+        parseRollEveryThing _, parseBanSomeOneInGroup _, parseSendVideo _, parseShareLocation _,
+        parseShareURL _, parseShareContact _, parseShareMusic _, parsePoke _, parseTTS _, parseDropInDream _,
+        parseRunLambda _) ++
+      regex ++
+      List(
+        // 包含类模式放在后边
+        parseDoNoting _, parseGroupWholeBan _, parseGroupWholeUnBan _, parseShowPicInfo _,
+        parseQQDice _, parseQQRPS _, parseShake _, parseBreakDirectly _, parseBreakAsUnMatched _,
+        parseListAIModels _, parseConfigSourcePush _, parseWhatICanDo _) ++
+      contains
   }
 
   /**

@@ -1,6 +1,6 @@
 package o.lartifa.jam.model.behaviors
 
-import akka.actor.ActorRef
+import org.apache.pekko.actor.ActorRef
 import o.lartifa.jam.cool.qq.listener.fsm.{Continue, Mode, ModeRtnCode, ModeSwitcher}
 import o.lartifa.jam.model.CommandExecuteContext
 

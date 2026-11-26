@@ -3,7 +3,6 @@ package o.lartifa.jam.model.commands
 import o.lartifa.jam.common.exception.VarNotFoundException
 import o.lartifa.jam.model.{CommandExecuteContext, VarKey}
 
-import scala.async.Async.*
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -18,14 +17,14 @@ case class RenderStrTemplate(template: String, varKeys: Seq[VarKey] = Seq()) ext
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[String] = async {
-    if (isPlainString) template
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[String] =
+    if (isPlainString) Future.successful(template)
     else {
-      val vars: Seq[String] = await(Future.sequence(varKeys.map(x => x.query.map(x -> _))))
-        .map { case (name, opt) => opt.getOrElse(throw VarNotFoundException(name)) }
-      template.format(vars*)
+      Future.sequence(varKeys.map(x => x.query.map(x -> _))).map { pairs =>
+        val vars: Seq[String] = pairs.map { case (name, opt) => opt.getOrElse(throw VarNotFoundException(name)) }
+        template.format(vars*)
+      }
     }
-  }
 
   /**
    * 该模板是否只是一个普通的字符串

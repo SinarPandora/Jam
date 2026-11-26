@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener
 
-import akka.actor.{ActorRef, Props}
+import org.apache.pekko.actor.{ActorRef, Props}
 import o.lartifa.jam.pool.JamContext
 
 /**

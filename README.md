@@ -8,6 +8,8 @@
 
 ## Getting Started 使用指南
 
+推荐 JDK：**GraalVM 25**（本机路径示例 `/Library/Java/JavaVirtualMachines/graalvm-25.jdk`）。请将 `JAVA_HOME` 指向该 JDK 后再执行 Gradle。
+
 SXDL [脚本手册](https://www.yuque.com/docs/share/1405438e-c596-4ce4-ad3c-483eb3057451)
 [部署文档（暂时没有更新）](https://mubu.com/doc/X8zrTpx7c)
 

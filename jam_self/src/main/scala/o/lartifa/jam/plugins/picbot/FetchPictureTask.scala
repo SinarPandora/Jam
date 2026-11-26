@@ -16,7 +16,6 @@ import org.json4s.jackson.Serialization.read
 import java.util.Base64
 import java.util.concurrent.ForkJoinPool
 import scala.annotation.tailrec
-import scala.async.Async.*
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.chaining.*
 import scala.util.{Failure, Success, Try}
@@ -44,18 +43,19 @@ class FetchPictureTask(name: String) extends JamCronTask(name) {
    *
    * @return 并发占位符
    */
-  override def run()(implicit exec: ExecutionContext): Future[Unit] = async {
+  override def run()(implicit exec: ExecutionContext): Future[Unit] = {
     MasterUtil.notifyMaster("图片更新任务开始")
     val (pool, content) = startWorkingPool()
     currentPool = Some(pool)
-    val result = await(Future.sequence((1 to 10)
+    Future.sequence((1 to 10)
       .map(_ => doDownload()(content)
-        .recover { case e => logger.error("API调用出现未知错误", e); 0 })))
-      .tapEach(count => logger.log(s"已添加：${count}张图片"))
-      .sum
-    logger.log(s"已添加：${result}张图片")
-    MasterUtil.notifyMaster(s"图片更新任务结束，已添加：${result}张图片")
-    Future.successful(())
+        .recover { case e => logger.error("API调用出现未知错误", e); 0 }))
+      .map { counts =>
+        counts.foreach(count => logger.log(s"已添加：${count}张图片"))
+        val result = counts.sum
+        logger.log(s"已添加：${result}张图片")
+        MasterUtil.notifyMaster(s"图片更新任务结束，已添加：${result}张图片")
+      }
   }
 
 
@@ -84,25 +84,26 @@ class FetchPictureTask(name: String) extends JamCronTask(name) {
    * @param exec 异步执行上下文
    * @return 影响行数
    */
-  private def doDownload()(implicit exec: ExecutionContext): Future[Int] = async {
+  private def doDownload()(implicit exec: ExecutionContext): Future[Int] = {
     val rawResponse = requests.get(API, check = false)
     if (rawResponse.statusCode == 429) {
       logger.warning("API请求次数已达上限")
-      0
+      Future.successful(0)
     } else if (rawResponse.statusCode == 200) {
       val resp = read[Response](rawResponse.text())
       if (CharSequenceUtil.isNotBlank(resp.error)) {
         logger.warning("本次API调用失败，错误：{}", resp.error)
-        0
+        Future.successful(0)
       } else {
         val dataList = read[Response](rawResponse.text()).data.filter(_.urls.contains("original"))
-        val inserts = await(Future.sequence(dataList.map(createSingleInsertTask))).flatten
-        // Bulk insert
-        await(db.run(DBIO.sequence(inserts))).sum
+        Future.sequence(dataList.map(createSingleInsertTask)).flatMap { insertsNested =>
+          val inserts = insertsNested.flatten
+          db.run(DBIO.sequence(inserts)).map(_.sum)
+        }
       }
     } else {
       logger.warning("本次API调用失败，错误码：{}，响应：{}", rawResponse.statusCode, rawResponse.text())
-      0
+      Future.successful(0)
     }
   }
 

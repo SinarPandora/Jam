@@ -7,7 +7,6 @@ import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.Command
 import o.lartifa.jam.pool.ThreadPools
 
-import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -24,29 +23,36 @@ object DeleteSubscription extends Command[Unit] {
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
-    (await(context.tempVars.get("sourceType")), await(context.tempVars.get("sourceIdentity"))) match {
-      case (Some(sourceType), Some(sourceIdentity)) =>
-        await(getSubscriber(sourceType, sourceIdentity, context.chatInfo)) match {
-          case Some(subscriber) =>
-            await(db.run {
-              SourceSubscriber.filter(_.id === subscriber.id).delete
-            })
-            // 如果已经没有对应的订阅者，将源删除
-            await(db.run {
-              sqlu"""
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] =
+    run(context)(ThreadPools.DB)
+
+  private def run(context: CommandExecuteContext)(implicit exec: ExecutionContext): Future[Unit] = {
+    implicit val ctx: CommandExecuteContext = context
+    for {
+      sourceTypeOpt <- context.tempVars.get("sourceType")
+      sourceIdentityOpt <- context.tempVars.get("sourceIdentity")
+      _ <- (sourceTypeOpt, sourceIdentityOpt) match {
+        case (Some(sourceType), Some(sourceIdentity)) =>
+          getSubscriber(sourceType, sourceIdentity, context.chatInfo).flatMap {
+            case Some(subscriber) =>
+              for {
+                _ <- db.run(SourceSubscriber.filter(_.id === subscriber.id).delete)
+                _ <- db.run {
+                  sqlu"""
                     delete
                     from source_observer obs
                     where not exists(
                             select sub.id from source_subscriber sub
                                           where source_id = obs.id)
                 """
-            })
-            reply("订阅已取消👋")
-          case None => reply(Prompts.SubscriptionNotExist)
-        }
-      case _ =>
-    }
-    ()
-  }(ThreadPools.DB)
+                }
+              } yield reply("订阅已取消👋")
+            case None =>
+              reply(Prompts.SubscriptionNotExist)
+              Future.unit
+          }
+        case _ => Future.unit
+      }
+    } yield ()
+  }
 }

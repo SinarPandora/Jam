@@ -1,7 +1,7 @@
 package o.lartifa.jam.model.behaviors
 
-import akka.actor.Actor.Receive
-import akka.actor.{Actor, ActorRef, Props}
+import org.apache.pekko.actor.Actor.Receive
+import org.apache.pekko.actor.{Actor, ActorRef, Props}
 import o.lartifa.jam.pool.JamContext
 
 import scala.concurrent.{Future, Promise}

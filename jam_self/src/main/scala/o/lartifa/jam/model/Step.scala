@@ -1,6 +1,5 @@
 package o.lartifa.jam.model
 
-import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -17,7 +16,6 @@ case class Step(id: Long, executable: Executable[_]) extends Executable[Unit] {
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
-    await(executable.execute())
-  }
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] =
+    executable.execute().map(_ => ())
 }

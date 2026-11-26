@@ -10,7 +10,6 @@ import o.lartifa.jam.model.commands.SendMessage.Type
 import o.lartifa.jam.pool.JamContext
 
 import java.util.Base64
-import scala.async.Async.*
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
@@ -45,10 +44,10 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
    * @param exec    异步执行上下文
    * @return 消息是否发送成功
    */
-  private def sendTextMessage()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = async {
-    val message = await(template.execute())
-    Try(reply(message)).map(_ => true).getOrElse(false)
-  }
+  private def sendTextMessage()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] =
+    template.execute().map { message =>
+      Try(reply(message)).map(_ => true).getOrElse(false)
+    }
 
   /**
    * 发送图片消息
@@ -57,8 +56,7 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
    * @param exec    异步执行上下文
    * @return 消息是否发送成功
    */
-  private def sendPic()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = async {
-    val message = await(template.execute())
+  private def sendPic()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = template.execute().map { message =>
     val content = new MessageBuilder().add({
       val lowCaseName = message.toLowerCase
       if (lowCaseName.startsWith("http://") || lowCaseName.startsWith("https://") || lowCaseName.contains("data/image") || lowCaseName.contains("data\\image")) {
@@ -83,8 +81,7 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
    * @param exec    异步执行上下文
    * @return 消息是否发送成功
    */
-  private def sendAudio()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = async {
-    val audioUri = await(template.execute())
+  private def sendAudio()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = template.execute().map { audioUri =>
     val audioMessage = new MessageBuilder().add(new ComponentRecord(audioUri)).toString
     Try(reply(audioMessage)) match {
       case Failure(exception) =>

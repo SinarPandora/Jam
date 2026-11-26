@@ -3,7 +3,6 @@ package o.lartifa.jam.model.commands
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.{CommandExecuteContext, VarKey}
 
-import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.matching.Regex
 
@@ -21,11 +20,10 @@ case class CatchParameters(regex: Regex, varKeys: Seq[(VarKey, Int)]) extends Co
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
-    await {
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] =
+    Future.unit.flatMap { _ =>
       regex.findFirstMatchIn(context.eventMessage.getMessage).map(result => {
         Future.sequence(varKeys.map { case (key, idx) => key.updateOrElseSet(result.group(idx + 1)) })
       }).getOrElse(throw ExecutionException("没有匹配到捕获变量"))
-    }
-  }
+    }.map(_ => ())
 }

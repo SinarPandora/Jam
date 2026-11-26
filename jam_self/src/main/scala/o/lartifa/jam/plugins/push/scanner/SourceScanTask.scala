@@ -14,7 +14,6 @@ import o.lartifa.jam.plugins.push.source.SourceIdentity
 import o.lartifa.jam.plugins.push.template.{RenderResult, SourceContent}
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
-import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.AnsiColor
 import scala.util.{Failure, Success, Try}
@@ -32,7 +31,7 @@ class SourceScanTask(name: String) extends JamCronTask(name) {
    *
    * @return 并发占位符
    */
-  override def run()(implicit exec: ExecutionContext): Future[Unit] = async {
+  override def run()(implicit exec: ExecutionContext): Future[Unit] = {
     val query = db.run {
       SourceObserver
         .join(SourceSubscriber)
@@ -45,29 +44,30 @@ class SourceScanTask(name: String) extends JamCronTask(name) {
         }
         .result
     }
-    val sourceInfo: Map[SourceIdentity, Seq[Subscriber]] = await(query)
-      .map {
-        case (sourceType, sourceIdentity, id, chatType, chatId, lastKey) =>
-          val identity = SourceIdentity(sourceType, sourceIdentity)
-          identity -> Subscriber(id, ChatInfo(chatType, chatId), lastKey, identity)
+    query.map { rows =>
+      val sourceInfo: Map[SourceIdentity, Seq[Subscriber]] = rows
+        .map {
+          case (sourceType, sourceIdentity, id, chatType, chatId, lastKey) =>
+            val identity = SourceIdentity(sourceType, sourceIdentity)
+            identity -> Subscriber(id, ChatInfo(chatType, chatId), lastKey, identity)
+        }
+        .groupMap(_._1)(_._2)
+      sourceInfo.foreach {
+        case (identity@SourceIdentity(sourceType, _), subscribers) =>
+          SourceScanner.scanners.get(sourceType).foreach { scanner =>
+            scanner
+              .scan(identity)(ThreadPools.NETWORK)
+              .filter(_.nonEmpty)
+              .map(_.get)
+              .onComplete {
+                case Failure(exception) => logger.error(exception)
+                case Success(content) =>
+                  subscribers.foreach { subscriber =>
+                    createPushTask(content, subscriber)
+                  }
+              }
+          }
       }
-      .groupMap(_._1)(_._2)
-    sourceInfo.foreach {
-      case (identity@SourceIdentity(sourceType, _), subscribers) =>
-        SourceScanner.scanners.get(sourceType).foreach { scanner => {
-          scanner
-            .scan(identity)(ThreadPools.NETWORK)
-            .filter(_.nonEmpty)
-            .map(_.get)
-            .onComplete {
-              case Failure(exception) => logger.error(exception)
-              case Success(content) =>
-                subscribers.foreach { subscriber =>
-                  createPushTask(content, subscriber)
-                }
-            }
-        }
-        }
     }
   }
 
@@ -83,31 +83,33 @@ class SourceScanTask(name: String) extends JamCronTask(name) {
   def createPushTask(content: SourceContent, subscriber: Subscriber)(implicit ec: ExecutionContext = ThreadPools.SCHEDULE_TASK): Unit = {
     val SourceContent(messageKey, RenderResult(message)) = content
     val Subscriber(id, chatInfo, lastKey, identity) = subscriber
-    async {
+    val pushF: Future[Boolean] =
       if (messageKey != lastKey) {
-        val pushed = await(db.run {
+        db.run {
           SourcePushHistory
             .filter(row => row.subscriberId === id && row.messageKey === messageKey)
             .exists
             .result
-        })
-        if (!pushed) {
-          await(db.run {
-            DBIO.sequence(Seq(
-              SourceSubscriber
-                .filter(_.id === id)
-                .map(row => (row.lastKey, row.lastUpdateTime))
-                .update((messageKey, TimeUtil.currentTimeStamp)),
-              SourcePushHistory.map(row => (row.subscriberId, row.messageKey))
-                += ((id, messageKey))
-            ))
-          })
-          import ChatInfo.ChatInfoReply
-          Try(chatInfo.sendMsg(message)).recover(logger.error(_))
-          true
-        } else false
-      } else false
-    } onComplete {
+        }.flatMap { pushed =>
+          if (!pushed) {
+            db.run {
+              DBIO.sequence(Seq(
+                SourceSubscriber
+                  .filter(_.id === id)
+                  .map(row => (row.lastKey, row.lastUpdateTime))
+                  .update((messageKey, TimeUtil.currentTimeStamp)),
+                SourcePushHistory.map(row => (row.subscriberId, row.messageKey)) +=
+                  ((id, messageKey))
+              ))
+            }.map { _ =>
+              import ChatInfo.ChatInfoReply
+              Try(chatInfo.sendMsg(message)).recover(logger.error(_))
+              true
+            }
+          } else Future.successful(false)
+        }
+      } else Future.successful(false)
+    pushF.onComplete {
       case Failure(exception) =>
         logger.error(s"推送出现错误，消息标识：$messageKey，消息内容：$message，消息源：$identity，目标聊天：$chatInfo", exception)
       case Success(isPushed) =>
@@ -133,4 +135,3 @@ object SourceScanTask {
   val name: String = "源扫描"
   case class Subscriber(id: Long, chatInfo: ChatInfo, lastKey: String, identity: SourceIdentity)
 }
-

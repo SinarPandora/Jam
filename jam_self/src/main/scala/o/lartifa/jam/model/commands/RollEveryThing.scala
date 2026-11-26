@@ -5,7 +5,6 @@ import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.RollEveryThing.{Mode, config}
 
 import java.security.SecureRandom
-import scala.async.Async.async
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 import scala.util.matching.Regex
@@ -43,7 +42,7 @@ case class RollEveryThing(mode: Mode, random: Random) extends Command[Int] {
    * @param exec    异步上下文
    * @return 随机结果
    */
-  private def TRPGRoll()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Int] = async {
+  private def TRPGRoll()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Int] = Future {
     val event = context.eventMessage
     val times -> size = TRPG_ROLL.findFirstMatchIn(event.getMessage)
       .map(it => it.group("times").toInt -> it.group("size").toInt)
@@ -67,7 +66,7 @@ case class RollEveryThing(mode: Mode, random: Random) extends Command[Int] {
    * @param exec    异步上下文
    * @return 随机结果
    */
-  private def makeDecision()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Int] = async {
+  private def makeDecision()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Int] = Future {
     val result = random.nextInt(2)
     val ab = if (result == 1) "正面" else "反面"
     reply(s"$atSender 抛了个硬币，是$ab")
@@ -81,7 +80,7 @@ case class RollEveryThing(mode: Mode, random: Random) extends Command[Int] {
    * @param exec    异步上下文
    * @return 随机结果
    */
-  private def simple1To100()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Int] = async {
+  private def simple1To100()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Int] = Future {
     val result = random.nextInt(100) + 1
     reply(s"$atSender 投掷D100，结果为：$result")
     result
@@ -94,7 +93,7 @@ case class RollEveryThing(mode: Mode, random: Random) extends Command[Int] {
    * @param exec    异步上下文
    * @return 随机结果
    */
-  private def randomAIReply()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Int] = async {
+  private def randomAIReply()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Int] = Future {
     val result = random.nextInt(100) + 1
     val message = result match {
       case 1 => config.replayWhen1

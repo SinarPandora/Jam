@@ -3,7 +3,7 @@ package o.lartifa.jam.database.schema
 // AUTO-GENERATED Slick data model
 /** Stand-alone Slick data model for immediate use */
 object Tables extends Tables {
-  val profile = slick.jdbc.PostgresProfile
+  val profile: slick.jdbc.JdbcProfile = slick.jdbc.PostgresProfile
 }
 
 /** Slick data model trait for extension, choice of backend or usage in the cake pattern. (Make sure to initialize this late.)

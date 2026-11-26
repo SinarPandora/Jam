@@ -6,7 +6,6 @@ import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventPr
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
 
-import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -23,14 +22,19 @@ case class BanSomeOneInGroup(qIdTemplate: RenderStrTemplate, timeTemplate: Rende
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
-    if (context.eventMessage.isInstanceOf[EventPrivateMessage]) {
-      throw ExecutionException("无法在非群聊进行禁言")
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] =
+    Future.unit.flatMap { _ =>
+      if (context.eventMessage.isInstanceOf[EventPrivateMessage]) {
+        throw ExecutionException("无法在非群聊进行禁言")
+      }
+      for {
+        qId <- qIdTemplate.execute()
+        time <- timeTemplate.execute()
+      } yield {
+        context.eventMessage.getHttpApi.setGroupBan(
+          context.eventMessage.asInstanceOf[EventGroupOrDiscussMessage].getGroup.getId, qId.toLong, unit.toSeconds(time.toLong)
+        )
+        ()
+      }
     }
-    val qId = await(qIdTemplate.execute())
-    val time = await(timeTemplate.execute())
-    context.eventMessage.getHttpApi.setGroupBan(
-      context.eventMessage.asInstanceOf[EventGroupOrDiscussMessage].getGroup.getId, qId.toLong, unit.toSeconds(time.toLong)
-    )
-  }
 }

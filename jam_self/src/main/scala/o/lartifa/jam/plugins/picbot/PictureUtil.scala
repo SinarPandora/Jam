@@ -5,7 +5,6 @@ import o.lartifa.jam.database.schema.Tables
 import o.lartifa.jam.database.schema.Tables.*
 import o.lartifa.jam.model.CommandExecuteContext
 
-import scala.async.Async.*
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -25,19 +24,16 @@ object PictureUtil {
    * @param exec    异步执行上下文
    * @return 图片列表
    */
-  def getPictureById(id: Int, amount: Int = 1)(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[List[Tables.WebPicturesRow]] = async {
-    val (enableR18, isOnly) = await {
+  def getPictureById(id: Int, amount: Int = 1)(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[List[Tables.WebPicturesRow]] = {
+    val flagsF =
       CONFIG_ALLOWED_R18.queryOrElseUpdate("false").map(_.toBoolean) zip
         CONFIG_MODE.queryOrElseUpdate(RANGE.str).map(_ == ONLY.str)
+    flagsF.flatMap { case (enableR18, isOnly) =>
+      val query =
+        if (enableR18 && isOnly) WebPictures.filter(_.isR18 === true).drop(id).take(amount).result
+        else if (enableR18 && !isOnly) WebPictures.drop(id).take(amount).result
+        else WebPictures.filter(_.isR18 === false).drop(id).take(amount).result
+      db.run(query).map(_.toList)
     }
-
-    val result = if (enableR18 && isOnly) {
-      await(db.run(WebPictures.filter(_.isR18 === true).drop(id).take(amount).result))
-    } else if (enableR18 && !isOnly) {
-      await(db.run(WebPictures.drop(id).take(amount).result))
-    } else {
-      await(db.run(WebPictures.filter(_.isR18 === false).drop(id).take(amount).result))
-    }
-    result.toList
   }
 }

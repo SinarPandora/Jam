@@ -9,7 +9,6 @@ import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.plugins.filppic.QQImg
 
 import java.util.UUID
-import scala.async.Async.*
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -31,12 +30,12 @@ class MessagePool {
    * @tparam T 消息类型
    * @return 变更结果（true：成功，false：失败）
    */
-  def recordMessage[T <: EventMessage](message: T): Future[Boolean] = async {
+  def recordMessage[T <: EventMessage](message: T): Future[Boolean] = {
     val result: Future[Int] = message match {
       case message: EventPrivateMessage => recordPrivateMessage(message)
       case message: EventGroupOrDiscussMessage => recordGroupOrDiscussMessage(message)
     }
-    await(result) == 1
+    result.map(_ == 1)
   }
 
   /**
@@ -47,12 +46,12 @@ class MessagePool {
    * @tparam T 消息类型
    * @return 变更结果（true：成功，false：失败）
    */
-  def recordAPlaceholder[T <: EventMessage](message: T, content: String): Future[Boolean] = async {
+  def recordAPlaceholder[T <: EventMessage](message: T, content: String): Future[Boolean] = {
     val result: Future[Int] = message match {
       case message: EventPrivateMessage => recordPrivatePlaceholder(message, content)
       case message: EventGroupOrDiscussMessage => recordGroupOrDiscussPlaceholder(message, content)
     }
-    await(result) == 1
+    result.map(_ == 1)
   }
 
   /**

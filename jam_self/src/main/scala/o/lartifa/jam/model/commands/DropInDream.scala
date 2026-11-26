@@ -11,7 +11,6 @@ import o.lartifa.jam.plugins.caiyunai.dream.DreamingActorProtocol.Reply
 import o.lartifa.jam.plugins.caiyunai.dream.KeepAliveDreamingActor
 import o.lartifa.jam.pool.JamContext
 
-import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -28,8 +27,7 @@ case class DropInDream(template: RenderStrTemplate) extends Command[Unit] {
    * @param exec 异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit ctx: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
-    val content = await(template.execute())
+  override def execute()(implicit ctx: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = template.execute().map { content =>
     ActorCreator.actorOf(ExtraActor(
       ctx => {
         KeepAliveDreamingActor.instance ! Reply(ctx.self, content)

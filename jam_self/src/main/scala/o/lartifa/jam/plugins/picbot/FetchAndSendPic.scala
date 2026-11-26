@@ -10,7 +10,6 @@ import o.lartifa.jam.model.commands.Command
 import o.lartifa.jam.plugins.picbot.FetchAndSendPic.logger
 import o.lartifa.jam.pool.JamContext
 
-import scala.async.Async.*
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Try}
 
@@ -29,27 +28,30 @@ case class FetchAndSendPic(amount: Int) extends Command[Unit] {
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
-    val lastId = await(CONFIG_ID.queryOrElseUpdate("0")).toInt
-    val result = await(PictureUtil.getPictureById(lastId, amount))
-
-    result match {
-      case Nil =>
-        context.eventMessage.respond("色图用光光啦~")
-        val name = context.eventMessage.senderNickName
-        MasterUtil.notifyMaster(s"%s，${name}已经把色图用光了，太强了。。（${context.eventMessage.getSenderId}）")
-      case head :: Nil =>
-        await(CONFIG_ID.update((lastId + 1).toString))
-        sendPic(head)
-      case list =>
-        await(CONFIG_ID.update((lastId + amount).toString))
-        list.foreach { record =>
-          sendPic(record)
-          // 等待一秒以防被屏蔽
-          Thread.sleep(1000)
-        }
-    }
-  }
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] =
+    for {
+      lastId <- CONFIG_ID.queryOrElseUpdate("0").map(_.toInt)
+      result <- PictureUtil.getPictureById(lastId, amount)
+      _ <- result match {
+        case Nil =>
+          context.eventMessage.respond("色图用光光啦~")
+          val name = context.eventMessage.senderNickName
+          MasterUtil.notifyMaster(s"%s，${name}已经把色图用光了，太强了。。（${context.eventMessage.getSenderId}）")
+          Future.unit
+        case head :: Nil =>
+          CONFIG_ID.update((lastId + 1).toString).map { _ =>
+            sendPic(head)
+          }
+        case list =>
+          CONFIG_ID.update((lastId + amount).toString).map { _ =>
+            list.foreach { record =>
+              sendPic(record)
+              // 等待一秒以防被屏蔽
+              Thread.sleep(1000)
+            }
+          }
+      }
+    } yield ()
 
   /**
    * 发送图片

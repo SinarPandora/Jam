@@ -6,6 +6,7 @@ import o.lartifa.jam.pool.JamContext
 import org.json4s.JValue
 import org.json4s.JsonDSL.*
 import org.json4s.jackson.JsonMethods.*
+import org.json4s.{jvalue2extractable, jvalue2monadic}
 import requests.Session
 
 /**

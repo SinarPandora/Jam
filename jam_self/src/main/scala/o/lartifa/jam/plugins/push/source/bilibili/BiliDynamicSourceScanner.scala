@@ -10,7 +10,6 @@ import o.lartifa.jam.pool.ThreadPools
 import java.time.format.DateTimeFormatter
 import java.util
 import java.util.Locale
-import scala.async.Async.{async, await}
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters.*
@@ -32,37 +31,37 @@ object BiliDynamicSourceScanner extends SourceScanner {
    * @param ec       异步上下文
    * @return 扫描结果
    */
-  override def scan(identity: SourceIdentity)(implicit ec: ExecutionContext): Future[Option[SourceContent]] = async {
+  override def scan(identity: SourceIdentity)(implicit ec: ExecutionContext): Future[Option[SourceContent]] = {
     val SourceIdentity(_, uid) = identity
     BiliClient.Dynamic.getUserDynamic(uid.toLong).headOption match {
       case Some(dynamic) =>
         val messageKey = dynamic.dynamicId.toString
-        val renderResult = if (TemplateRender.isRendered(identity, messageKey)) {
-          TemplateRender.render(identity, messageKey)
-        } else {
-          val tasks = await {
+        val renderResultF: Future[scala.util.Try[o.lartifa.jam.plugins.push.template.RenderResult]] =
+          if (TemplateRender.isRendered(identity, messageKey)) {
+            Future.successful(TemplateRender.render(identity, messageKey))
+          } else {
             Future.sequence(Seq(
               pullImages(dynamic.face +: dynamic.pictures.take(3)),
               convertImageInContent(dynamic.content, dynamic.emojiInfo)
-            ))
+            )).map { tasks =>
+              val imageData = tasks.head.asInstanceOf[Seq[String]]
+              val content = tasks.last.asInstanceOf[String]
+              val data = new util.HashMap[String, Object]()
+              data.put("timestamp", formatter.format(dynamic.timestamp.toLocalDateTime))
+              data.put("username", dynamic.uname)
+              data.put("pictures", imageData.tail.asJava)
+              data.put("content", s"$content${if (dynamic.pictures.sizeIs > 3) "<br/><最多显示三张图片>" else ""}")
+              data.put("avatar", imageData.head)
+              TemplateRender.render(identity, messageKey, data)
+            }
           }
-          val imageData = tasks.head.asInstanceOf[Seq[String]]
-          val content = tasks.last.asInstanceOf[String]
-          val data = new util.HashMap[String, Object]()
-          data.put("timestamp", formatter.format(dynamic.timestamp.toLocalDateTime))
-          data.put("username", dynamic.uname)
-          data.put("pictures", imageData.tail.asJava)
-          data.put("content", s"$content${if (dynamic.pictures.sizeIs > 3) "<br/><最多显示三张图片>" else ""}")
-          data.put("avatar", imageData.head)
-          TemplateRender.render(identity, messageKey, data)
-        }
-        renderResult match {
+        renderResultF.map {
           case Failure(exception) =>
             MasterUtil.notifyAndLogError(s"%s，渲染订阅消息过程中出现错误，订阅源：$identity, 消息唯一标识：$messageKey", exception)
             None
           case Success(result) => Some(SourceContent(messageKey, result))
         }
-      case None => None
+      case None => Future.successful(None)
     }
   }
 
@@ -71,11 +70,11 @@ object BiliDynamicSourceScanner extends SourceScanner {
    *
    * @return 图片数据
    */
-  def pullImages(imageUrls: Seq[String])(implicit ec: ExecutionContext = ThreadPools.SCHEDULE_TASK): Future[Seq[String]] = async {
+  def pullImages(imageUrls: Seq[String])(implicit ec: ExecutionContext = ThreadPools.SCHEDULE_TASK): Future[Seq[String]] = {
     val tasks = Future.sequence(imageUrls.map(url => Future {
       ResUtil.downloadPicToHTMLBase64(url)
     }(ThreadPools.NETWORK)))
-    await(tasks).map(_.base64)
+    tasks.map(_.map(_.base64))
   }
 
   /**
@@ -85,20 +84,22 @@ object BiliDynamicSourceScanner extends SourceScanner {
    * @param emojiInfo emoji 信息
    * @param ec        异步上下文
    */
-  def convertImageInContent(content: String, emojiInfo: EmojiInfo)(implicit ec: ExecutionContext = ThreadPools.SCHEDULE_TASK): Future[String] = async {
+  def convertImageInContent(content: String, emojiInfo: EmojiInfo)(implicit ec: ExecutionContext = ThreadPools.SCHEDULE_TASK): Future[String] = {
     val emojiURL = ListBuffer[String]()
     val rawMap: Map[String, Int] = emojiInfo.zipWithIndex.map {
       case ((k, v), i) =>
         emojiURL += v
         k -> i
     }.toMap
-    val emojiData = await(pullImages(emojiURL.toSeq)).zipWithIndex.map {
-      case (data, idx) => idx -> data
-    }.toMap
-    rawMap.foldLeft(content) {
-      case (content, (text, idx)) =>
-        val html = s"""<img src="${emojiData(idx)}" style="max-width: 20px" alt="$text"/>"""
-        content.replaceAll(text.replace("[", "\\["), html)
+    pullImages(emojiURL.toSeq).map { images =>
+      val emojiData = images.zipWithIndex.map {
+        case (data, idx) => idx -> data
+      }.toMap
+      rawMap.foldLeft(content) {
+        case (content, (text, idx)) =>
+          val html = s"""<img src="${emojiData(idx)}" style="max-width: 20px" alt="$text"/>"""
+          content.replaceAll(text.replace("[", "\\["), html)
+      }
     }
   }
 }

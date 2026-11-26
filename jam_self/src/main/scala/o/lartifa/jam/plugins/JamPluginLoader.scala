@@ -20,7 +20,6 @@ import o.lartifa.jam.pool.CronTaskPool.TaskDefinition
 import o.lartifa.jam.pool.JamContext
 import org.reflections.Reflections
 
-import scala.async.Async.{async, await}
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters.*
@@ -70,9 +69,9 @@ object JamPluginLoader {
    *
    * @param exec 异步执行上下文
    */
-  def initJamPluginSystems()(implicit exec: ExecutionContext): Future[Unit] = async {
+  def initJamPluginSystems()(implicit exec: ExecutionContext): Future[Unit] =
     // 对比存在的插件和数据库表
-    val installedPlugins: Map[String, Tables.PluginsRow] = await(db.run(Plugins.result)).map(it => it.`package` -> it).toMap
+    db.run(Plugins.result).map(_.map(it => it.`package` -> it).toMap[String, Tables.PluginsRow]).flatMap { installedPlugins =>
     if (installers.nonEmpty || installedPlugins.nonEmpty) {
       // 若表中存在而插件未找到，提示警告
       val missingPlugins = installedPlugins.view.filterKeys(it => !installers.keySet.contains(it)).map {
@@ -84,18 +83,20 @@ object JamPluginLoader {
         MasterUtil.notifyMaster(missingPlugins)
       }
 
-      // 自动安装插件
-      val installResult = await(autoInstall(installedPlugins.keySet))
-      // 自动升级插件
-      await(autoUpgrade(installedPlugins))
-
-      // 将挂载点注入到各个组件
-      val needLoad: Set[String] = installedPlugins.values.groupBy(_.isEnabled).getOrElse(true, Nil).map(_.`package`).toSet ++ {
-        if (JamPluginConfig.autoEnablePlugins) installResult.getOrElse(true, Nil)
-        else Nil
-      }.toSet
-      this._loadedComponents = mountPlugins(installers.view.filterKeys(needLoad.contains).values)
-    }
+      for {
+        // 自动安装插件
+        installResult <- autoInstall(installedPlugins.keySet)
+        // 自动升级插件
+        _ <- autoUpgrade(installedPlugins)
+      } yield {
+        // 将挂载点注入到各个组件
+        val needLoad: Set[String] = installedPlugins.values.groupBy(_.isEnabled).getOrElse(true, Nil).map(_.`package`).toSet ++ {
+          if (JamPluginConfig.autoEnablePlugins) installResult.getOrElse(true, Nil)
+          else Nil
+        }.toSet
+        this._loadedComponents = mountPlugins(installers.view.filterKeys(needLoad.contains).values)
+      }
+    } else Future.unit
   }
 
   /**
@@ -105,14 +106,12 @@ object JamPluginLoader {
    * @param exec                 异步执行上下文
    * @return 安装结果
    */
-  private def autoInstall(installedPluginNames: Set[String])(implicit exec: ExecutionContext): Future[Map[Boolean, Iterable[String]]] = async {
-    val installation = await {
-      Future.sequence {
-        installers
-          .filterNot(it => installedPluginNames.contains(it._1)) // 若表中不存在，执行 install
-          .map { case (packageName, installer) => tryInstallPlugin(packageName, installer) }
-      }
-    }
+  private def autoInstall(installedPluginNames: Set[String])(implicit exec: ExecutionContext): Future[Map[Boolean, Iterable[String]]] =
+    Future.sequence {
+      installers
+        .filterNot(it => installedPluginNames.contains(it._1)) // 若表中不存在，执行 install
+        .map { case (packageName, installer) => tryInstallPlugin(packageName, installer) }
+    }.flatMap { installation =>
     val installResult = installation.groupMap(_._2.isSuccess)(_._1)
     val packageNames = installResult.getOrElse(true, Nil).toSet
     val needInsert = installers.view.filterKeys(packageNames.contains)
@@ -120,18 +119,18 @@ object JamPluginLoader {
         (it.pluginName, it.keywords.mkString(","), it.author, packageName, JamPluginConfig.autoEnablePlugins, it.version)
       }.toList
 
-    val insertSuccess = needInsert.sizeIs == await {
-      db.run {
-        Plugins.map(row => (row.name, row.keywords, row.author, row.`package`, row.isEnabled, row.version)) ++= needInsert
+    db.run {
+      Plugins.map(row => (row.name, row.keywords, row.author, row.`package`, row.isEnabled, row.version)) ++= needInsert
+    }.map { inserted =>
+      val insertSuccess = needInsert.sizeIs == inserted.getOrElse(0)
+
+      if (!insertSuccess) {
+        MasterUtil.notifyAndLog(s"插件安装数量与预期不符，这很可能是一个 bug，若${JamConfig.config.name}无法正常运作，请联系作者",
+          LogLevel.WARNING)
       }
-    }.getOrElse(0)
 
-    if (!insertSuccess) {
-      MasterUtil.notifyAndLog(s"插件安装数量与预期不符，这很可能是一个 bug，若${JamConfig.config.name}无法正常运作，请联系作者",
-        LogLevel.WARNING)
+      installResult
     }
-
-    installResult
   }
 
   /**
@@ -142,21 +141,17 @@ object JamPluginLoader {
    * @param exec             异步执行上下文
    * @return 安装结果
    */
-  private def autoUpgrade(installedPlugins: Map[String, Tables.PluginsRow])(implicit exec: ExecutionContext): Future[Unit] = async {
-    val upgrade = await {
-      Future.sequence {
-        installedPlugins.flatMap {
-          case (packageName, record) =>
-            // 若存在的版本高于数据库，则升级
-            installers.get(packageName).filter(installer => installer.version > record.version)
-              .map(installer => (packageName, record.version, installer))
-        }.map { case (packageName, oldVersion, installer) => tryUpgradePlugin(packageName, oldVersion, installer) }
-      }
-    }
+  private def autoUpgrade(installedPlugins: Map[String, Tables.PluginsRow])(implicit exec: ExecutionContext): Future[Unit] =
+    Future.sequence {
+      installedPlugins.flatMap {
+        case (packageName, record) =>
+          // 若存在的版本高于数据库，则升级
+          installers.get(packageName).filter(installer => installer.version > record.version)
+            .map(installer => (packageName, record.version, installer))
+      }.map { case (packageName, oldVersion, installer) => tryUpgradePlugin(packageName, oldVersion, installer) }
+    }.flatMap { upgrade =>
+      val upgradeResult = upgrade.filter(_._2.isSuccess).map(it => it._1 -> it._2.get)
 
-    val upgradeResult = upgrade.filter(_._2.isSuccess).map(it => it._1 -> it._2.get)
-
-    await {
       db.run {
         DBIO.sequence(
           upgradeResult.map {
@@ -166,9 +161,8 @@ object JamPluginLoader {
                 .update(plugin.pluginName, plugin.author, plugin.keywords.mkString(","), plugin.version, TimeUtil.currentTimeStamp)
           }
         )
-      }
+      }.map(_ => ())
     }
-  }
 
   /**
    * 挂载全部挂载点
@@ -313,33 +307,34 @@ object JamPluginLoader {
    * @param reloadNow 是否立刻重新加载果酱
    * @param exec      异步执行上下文
    */
-  private def updatePluginStatus(event: EventMessage, id: Long, isEnabled: Boolean, reloadNow: Boolean)(implicit exec: ExecutionContext): Future[Unit] = async {
-    val plugin = await(getPluginById(id))
-    if (plugin.isDefined) {
-      if (isEnabled == plugin.get._1.isEnabled) {
-        event.respond(s"插件已经${if (isEnabled) "启用" else "禁用"}了")
-      } else {
-        val result = await(db.run(Plugins.filter(_.id === id).map(_.isEnabled).update(isEnabled)))
-        if (result != 1) {
-          logger.error("更新插件状态失败，请检查数据库连接！")
-          event.respond("更新插件状态失败，请检查数据库连接！")
+  private def updatePluginStatus(event: EventMessage, id: Long, isEnabled: Boolean, reloadNow: Boolean)(implicit exec: ExecutionContext): Future[Unit] =
+    getPluginById(id).flatMap { plugin =>
+      if (plugin.isDefined) {
+        if (isEnabled == plugin.get._1.isEnabled) {
+          event.respond(s"插件已经${if (isEnabled) "启用" else "禁用"}了")
+          Future.unit
         } else {
-          event.respond(s"插件已成功${if (isEnabled) "启用" else "禁用"}")
-          if (reloadNow) {
-            await {
-              JamLoader.reload().recover(err => {
-                logger.error(s"重新加载过程中出现错误！", err)
-                event.respond(s"重新加载过程中出现错误！请检查${JamConfig.config.name}的日志")
-                err
-              })
+          db.run(Plugins.filter(_.id === id).map(_.isEnabled).update(isEnabled)).flatMap { result =>
+            if (result != 1) {
+              logger.error("更新插件状态失败，请检查数据库连接！")
+              event.respond("更新插件状态失败，请检查数据库连接！")
+              Future.unit
+            } else {
+              event.respond(s"插件已成功${if (isEnabled) "启用" else "禁用"}")
+              if (reloadNow) {
+                JamLoader.reload().recover { err =>
+                  logger.error(s"重新加载过程中出现错误！", err)
+                  event.respond(s"重新加载过程中出现错误！请检查${JamConfig.config.name}的日志")
+                }
+              } else Future.unit
             }
           }
         }
+      } else {
+        event.respond("指定编号的插件不存在！")
+        Future.unit
       }
-    } else {
-      event.respond("指定编号的插件不存在！")
     }
-  }
 
 
   /**
@@ -349,27 +344,33 @@ object JamPluginLoader {
    * @param id    插件 ID
    * @param exec  异步执行上下文
    */
-  def uninstallPlugin(event: EventMessage, id: Long)(implicit exec: ExecutionContext): Future[Unit] = async {
-    val plugin = await(getPluginById(id))
-    plugin match {
+  def uninstallPlugin(event: EventMessage, id: Long)(implicit exec: ExecutionContext): Future[Unit] =
+    getPluginById(id).flatMap {
       case Some((_, installer)) =>
-        await(disablePlugin(event, id))
-        await(installer.uninstall()) match {
-          case Failure(exception) =>
-            logger.error(s"未能成功卸载，请联系插件的作者：${installer.author}", exception)
-            event.respond(s"未能成功卸载，请联系插件的作者：${installer.author}")
-          case Success(_) =>
-            val result = await(db.run(Plugins.filter(_.id === id).delete))
-            if (result != 1) {
-              logger.error("插件记录删除失败，请检查数据库连接！")
-              event.respond("插件记录删除失败，请检查数据库连接！")
-            } else {
-              event.respond("插件卸载成功！")
-            }
-        }
-      case None => event.respond("指定编号的插件不存在")
+        for {
+          _ <- disablePlugin(event, id)
+          uninstalled <- installer.uninstall()
+          _ <- uninstalled match {
+            case Failure(exception) =>
+              logger.error(s"未能成功卸载，请联系插件的作者：${installer.author}", exception)
+              event.respond(s"未能成功卸载，请联系插件的作者：${installer.author}")
+              Future.unit
+            case Success(_) =>
+              db.run(Plugins.filter(_.id === id).delete).map { result =>
+                if (result != 1) {
+                  logger.error("插件记录删除失败，请检查数据库连接！")
+                  event.respond("插件记录删除失败，请检查数据库连接！")
+                } else {
+                  event.respond("插件卸载成功！")
+                }
+                ()
+              }
+          }
+        } yield ()
+      case None =>
+        event.respond("指定编号的插件不存在")
+        Future.unit
     }
-  }
 
   /**
    * 通过 id 获取插件数据以及安装器
@@ -378,8 +379,7 @@ object JamPluginLoader {
    * @param exec 异步执行上下文
    * @return 查询结果
    */
-  private def getPluginById(id: Long)(implicit exec: ExecutionContext): Future[Option[(PluginsRow, JamPluginInstaller)]] = async {
-    await(db.run(Plugins.filter(_.id === id).result.headOption))
-      .flatMap(it => installers.get(it.`package`).map(it -> _))
-  }
+  private def getPluginById(id: Long)(implicit exec: ExecutionContext): Future[Option[(PluginsRow, JamPluginInstaller)]] =
+    db.run(Plugins.filter(_.id === id).result.headOption)
+      .map(_.flatMap(it => installers.get(it.`package`).map(it -> _)))
 }

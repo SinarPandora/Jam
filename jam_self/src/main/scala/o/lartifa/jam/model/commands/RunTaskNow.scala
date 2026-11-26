@@ -4,7 +4,6 @@ import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.tasks.JamCronTask
 import o.lartifa.jam.pool.CronTaskPool.TaskDefinition
 
-import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -21,7 +20,7 @@ case class RunTaskNow(task: Either[JamCronTask, TaskDefinition]) extends Command
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = Future {
     task match {
       case Left(task) =>
         if (task.isRunning.get()) {

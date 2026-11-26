@@ -5,7 +5,6 @@ import o.lartifa.jam.model.commands.RenderStrTemplate
 import o.lartifa.jam.model.conditions.VarCondition.Op
 import o.lartifa.jam.model.{CommandExecuteContext, VarKey}
 
-import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
@@ -26,9 +25,22 @@ case class VarCondition(varKey: VarKey, op: Op, template: RenderStrTemplate) ext
    * @param exec    异步执行上下文
    * @return 匹配结果
    */
-  override def isMatched(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = async {
-    val paramValue: String = await(varKey.query).getOrElse(throw VarNotFoundException(varKey))
-    val comparedValue: String = await(template.execute())
+  override def isMatched(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] =
+    for {
+      queried <- varKey.query
+      paramValue = queried.getOrElse(throw VarNotFoundException(varKey))
+      comparedValue <- template.execute()
+    } yield VarCondition.compare(op, paramValue, comparedValue)
+}
+
+object VarCondition {
+
+  /**
+   * 按运算符比较两个值（纯逻辑，无副作用）
+   *
+   * @throws ExecutionException 数值比较时有一侧不是数字
+   */
+  private[jam] def compare(op: Op, paramValue: String, comparedValue: String): Boolean =
     if (op != eqOp && op != neOp) {
       val a = Try(BigDecimal(paramValue)).getOrElse(throw ExecutionException("执行数值比较的左侧必须为数字"))
       val b = Try(BigDecimal(comparedValue)).getOrElse(throw ExecutionException("执行数值比较的右侧必须为数字"))
@@ -44,10 +56,6 @@ case class VarCondition(varKey: VarKey, op: Op, template: RenderStrTemplate) ext
         case VarCondition.neOp => paramValue != comparedValue
       }
     }
-  }
-}
-
-object VarCondition {
 
   sealed class Op
 

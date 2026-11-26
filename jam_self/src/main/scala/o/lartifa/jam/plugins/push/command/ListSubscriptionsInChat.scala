@@ -7,7 +7,6 @@ import o.lartifa.jam.model.commands.Command
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.pool.ThreadPools
 
-import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -24,9 +23,9 @@ object ListSubscriptionsInChat extends Command[Int] {
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Int] = async {
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Int] = {
     val ChatInfo(chatType, chatId) = context.chatInfo
-    val query = db.run {
+    db.run {
       SourceObserver
         .join(SourceSubscriber).on((obs, sub) => obs.id === sub.sourceId)
         .filter {
@@ -36,24 +35,25 @@ object ListSubscriptionsInChat extends Command[Int] {
           case (observer, subscriber) => (observer.sourceType, observer.sourceIdentity, subscriber.isPaused)
         }
         .result
-    }
-    val sources = await(query).map {
-      case (sourceType, sourceIdentity, isPaused) =>
-        s"[${if (isPaused) "已暂停" else "订阅中"}] $sourceType：$sourceIdentity"
-    }
-    if (sources.isEmpty) {
-      reply(
-        """当前没有任何订阅
-          |------------------------
-          |发送 .订阅 帮助 来查看操作提示""".stripMargin)
-    } else {
-      reply(
-        s"""已订阅列表
-           |------------------------
-           |${sources.mkString("\n")}
-           |------------------------
-           |发送 .订阅 帮助 来查看操作提示""".stripMargin)
-    }
-    sources.size
-  }(ThreadPools.DB)
+    }.map { rows =>
+      val sources = rows.map {
+        case (sourceType, sourceIdentity, isPaused) =>
+          s"[${if (isPaused) "已暂停" else "订阅中"}] $sourceType：$sourceIdentity"
+      }
+      if (sources.isEmpty) {
+        reply(
+          """当前没有任何订阅
+            |------------------------
+            |发送 .订阅 帮助 来查看操作提示""".stripMargin)
+      } else {
+        reply(
+          s"""已订阅列表
+             |------------------------
+             |${sources.mkString("\n")}
+             |------------------------
+             |发送 .订阅 帮助 来查看操作提示""".stripMargin)
+      }
+      sources.size
+    }(ThreadPools.DB)
+  }
 }

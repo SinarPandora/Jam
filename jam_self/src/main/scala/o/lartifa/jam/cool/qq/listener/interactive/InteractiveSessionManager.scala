@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.interactive
 
-import akka.actor.{Actor, ActorRef, PoisonPill, Props}
+import org.apache.pekko.actor.{Actor, ActorRef, PoisonPill, Props}
 import cc.moecraft.logger.HyLogger
 import cn.hutool.core.lang.UUID
 import o.lartifa.jam.cool.qq.listener.interactive.InteractiveSessionProtocol.Manage

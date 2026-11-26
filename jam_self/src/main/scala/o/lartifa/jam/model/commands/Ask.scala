@@ -5,7 +5,6 @@ import o.lartifa.jam.cool.qq.listener.interactive.{Interactive, InteractiveSessi
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.Ask.{AnswererType, AnyBody}
 
-import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -23,8 +22,7 @@ case class Ask(question: RenderStrTemplate, answererType: AnswererType, askMatch
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
-    val result = await(question.execute())
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = question.execute().map { result =>
     reply(result)
     interact(context.msgSender) { (session, event) =>
       if (answererType == AnyBody || event.getSenderId == context.eventMessage.getSenderId) {
