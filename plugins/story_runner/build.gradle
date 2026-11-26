@@ -7,8 +7,6 @@ plugins {
 group 'lartifa.o'
 version '0.1'
 
-sourceCompatibility = "11"
-
 dependencies {
     implementation(project(":jam_self"))
 }

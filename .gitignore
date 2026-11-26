@@ -104,3 +104,18 @@ hs_err_pid*
 *.DS_Store
 
 !**/libs/*.jar
+
+### Local / IDE / runtime (do not commit)
+.bloop/
+.metals/
+.vscode/
+.cursor/
+backup/
+tabby/
+UML/
+jam_self/db/
+jam_self/conf/ssdl/ssdl.json
+jam_self/conf/**/*_local.conf
+jam_self/src/test/scala/Playground.scala
+jam_mirai_backend/mirai_console/
+jam_mirai_backend/mirai_console_java/
