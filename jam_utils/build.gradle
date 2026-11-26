@@ -9,6 +9,10 @@ tasks.withType(ScalaCompile) {
     scalaCompileOptions.additionalParameters = ['-Xsource:3', '-Xasync']
 }
 
+tasks.named('test') {
+    useJUnit()
+}
+
 dependencies {
     // Scala
     api("org.scala-lang:scala-library:$scala_version")
@@ -17,4 +21,8 @@ dependencies {
     api('org.scala-lang.modules:scala-parallel-collections_2.13:1.0.4')
     api("com.github.pathikrit:better-files_2.13:3.9.1")
     api('org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r')
+
+    testImplementation("org.scalatest:scalatest_2.13:$scalatest_version")
+    testImplementation("org.scalatestplus:junit-4-13_2.13:$scalatest_version.0")
+    testImplementation('junit:junit:4.13.2')
 }

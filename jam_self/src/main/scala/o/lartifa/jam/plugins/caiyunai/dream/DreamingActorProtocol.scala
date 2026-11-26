@@ -1,6 +1,6 @@
 package o.lartifa.jam.plugins.caiyunai.dream
 
-import akka.actor.ActorRef
+import org.apache.pekko.actor.ActorRef
 import cc.moecraft.icq.event.events.message.EventMessage
 
 /**

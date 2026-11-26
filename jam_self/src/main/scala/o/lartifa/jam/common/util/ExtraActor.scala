@@ -1,8 +1,8 @@
 package o.lartifa.jam.common.util
 
-import akka.actor.Actor.Receive
-import akka.actor.{Actor, ActorContext, Props}
-import akka.util.Timeout
+import org.apache.pekko.actor.Actor.Receive
+import org.apache.pekko.actor.{Actor, ActorContext, Props}
+import org.apache.pekko.util.Timeout
 import o.lartifa.jam.pool.ThreadPools
 
 import scala.concurrent.duration.FiniteDuration

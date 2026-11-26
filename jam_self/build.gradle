@@ -33,6 +33,19 @@ tasks.withType(ScalaCompile) {
     scalaCompileOptions.additionalParameters = ['-Xsource:3', '-Xasync']
 }
 
+// Playground 是本地实验入口，不是测试；排除以免干扰 test 任务
+sourceSets {
+    test {
+        scala {
+            exclude 'Playground.scala'
+        }
+    }
+}
+
+tasks.named('test') {
+    useJUnit()
+}
+
 // [distZip, distTar]*.dependsOn tasks.findByPath(':jam_mirai_backend:downloadBackend')
 
 application {
@@ -118,11 +131,8 @@ dependencies {
     api(project(":picq_bot_x_fork"))
     api(project(":jam_utils"))
 
-    // Message processiong
-    api("com.typesafe.akka:akka-actor_2.13:$akka_version")
-    api('tv.cntt:glokka_2.13:2.6.1') {
-        exclude group: 'com.typesafe.akka'
-    }
+    // Message processing (Pekko classic; glokka unused → deleted)
+    api("org.apache.pekko:pekko-actor_2.13:$pekko_version")
 
     // Database
     api("com.typesafe.slick:slick_2.13:$slick_version")
@@ -149,4 +159,9 @@ dependencies {
     api("com.github.houbb:pinyin:0.4.0")
     api("com.github.hydevelop:HyLogger:4.0.254")
     implementation('org.slf4j:slf4j-simple:1.7.36')
+
+    // Tests (ScalaTest + JUnitRunner)
+    testImplementation("org.scalatest:scalatest_2.13:$scalatest_version")
+    testImplementation("org.scalatestplus:junit-4-13_2.13:$scalatest_version.0")
+    testImplementation('junit:junit:4.13.2')
 }

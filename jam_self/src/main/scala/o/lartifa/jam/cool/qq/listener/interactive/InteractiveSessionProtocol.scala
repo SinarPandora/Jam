@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.interactive
 
-import akka.actor.ActorRef
+import org.apache.pekko.actor.ActorRef
 import o.lartifa.jam.model.SpecificSender
 
 /**

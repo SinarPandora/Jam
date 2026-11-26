@@ -1,6 +1,6 @@
 package o.lartifa.jam.plugins.story_runner
 
-import akka.actor.{Actor, ActorRef}
+import org.apache.pekko.actor.{Actor, ActorRef}
 import cc.moecraft.icq.event.events.message.EventMessage
 import com.bladecoder.ink.runtime.Story
 import o.lartifa.jam.model.CommandExecuteContext

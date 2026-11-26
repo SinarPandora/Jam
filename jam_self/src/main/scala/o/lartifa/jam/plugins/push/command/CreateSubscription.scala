@@ -41,8 +41,8 @@ object CreateSubscription extends Command[Unit] {
           reply("源已被订阅🤔")
         } else {
           await(db.run {
-            SourceSubscriber.map(row => (row.sourceId, row.chatId, row.chatType))
-              += ((obsId, context.chatInfo.chatId, context.chatInfo.chatType))
+            SourceSubscriber.map(row => (row.sourceId, row.chatId, row.chatType)) +=
+              ((obsId, context.chatInfo.chatId, context.chatInfo.chatType))
           })
           reply(
             """订阅成功！🎉（消息将在稍后开始推送）
@@ -68,8 +68,8 @@ object CreateSubscription extends Command[Unit] {
       case None => await(db.run {
         SourceObserver
           .map(row => (row.sourceType, row.sourceIdentity))
-          .returning(SourceObserver.map(_.id))
-          += ((sourceType, sourceIdentity))
+          .returning(SourceObserver.map(_.id)) +=
+          ((sourceType, sourceIdentity))
       })
     }
   }(ThreadPools.DB)

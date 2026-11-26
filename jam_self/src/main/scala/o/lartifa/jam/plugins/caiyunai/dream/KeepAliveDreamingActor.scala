@@ -1,6 +1,6 @@
 package o.lartifa.jam.plugins.caiyunai.dream
 
-import akka.actor.{Actor, ActorRef, Cancellable, Props}
+import org.apache.pekko.actor.{Actor, ActorRef, Cancellable, Props}
 import cc.moecraft.icq.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
 import cn.hutool.core.util.NumberUtil
