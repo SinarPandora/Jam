@@ -16,6 +16,11 @@ plugins {
     id 'org.flywaydb.flyway' version '11.7.2'
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
 distributions {
     main {
         distributionBaseName = 'jam_self'
