@@ -125,8 +125,18 @@ public class PicqHttpServer
             // 输出Debug
             printDebug(exchange, data);
 
-            // 调用事件
-            bot.getEventManager().getEventParser().call(data);
+            // 调用事件（捕获异常，避免 HttpServer 线程直接断开导致客户端 Empty reply）
+            try
+            {
+                bot.getEventManager().getEventParser().call(data);
+            }
+            catch (Throwable t)
+            {
+                logger.error("处理事件时出现异常: " + t.getMessage());
+                t.printStackTrace();
+                respondAndClose(exchange, 500, "event handler error");
+                return;
+            }
 
             // 回复成功
             respondAndClose(exchange, 204, "");

@@ -109,7 +109,11 @@ hs_err_pid*
 .bloop/
 .metals/
 .vscode/
-.cursor/
+.cursor/*
+!.cursor/skills/
+.cursor/skills/*
+!.cursor/skills/verify-jam/
+!.cursor/skills/verify-jam/**
 backup/
 tabby/
 UML/
@@ -119,3 +123,6 @@ jam_self/conf/**/*_local.conf
 jam_self/src/test/scala/Playground.scala
 jam_mirai_backend/mirai_console/
 jam_mirai_backend/mirai_console_java/
+
+# Verification run evidence (regenerated locally)
+.cursor/skills/verify-jam/artifacts/

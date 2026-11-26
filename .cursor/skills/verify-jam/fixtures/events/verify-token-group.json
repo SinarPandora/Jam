@@ -1,0 +1,19 @@
+{
+  "post_type": "message",
+  "message_type": "group",
+  "sub_type": "normal",
+  "message_id": 424242,
+  "group_id": 713201079,
+  "user_id": 10002,
+  "self_id": 90001,
+  "font": 0,
+  "time": 1700000000,
+  "message": "验证券",
+  "raw_message": "验证券",
+  "sender": {
+    "user_id": 10002,
+    "nickname": "验证用户",
+    "card": "",
+    "role": "member"
+  }
+}

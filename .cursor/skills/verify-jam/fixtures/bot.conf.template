@@ -1,0 +1,84 @@
+# Verification fixture — paths filled by helpers/prepare-run.sh (do not use as production)
+bot {
+  jam_qq = 90001
+  password = "unused-in-stub-mode"
+  jam_config_file = "__RUN_DIR__/sxdl/config/jam_config.conf"
+  remote_editing {
+    enable = false
+    repo = ""
+    user_name = "verify"
+    git_email = "verify@localhost"
+    secret = ""
+    branch = "main"
+  }
+}
+
+plugin {
+  plugin_path = "__RUN_DIR__/plugins"
+  auto_enable = false
+}
+
+system {
+  debugMode = true
+  temp_dir = "__RUN_DIR__/tmp"
+  sxdl_path = "__RUN_DIR__/sxdl"
+  file_extension = [".ssdl", ".jam3", ".stdl", ".sxdl"]
+  auto_remove_message_before = -1
+}
+
+lambda {
+  script_root_path = "__RUN_DIR__/sxdl/lambda"
+}
+
+coolQQ {
+  host = "127.0.0.1"
+  port {
+    post = __POST_PORT__
+    socket = __SOCKET_PORT__
+  }
+  backend {
+    mirai {
+      path = "__RUN_DIR__/backend-unused"
+    }
+  }
+}
+
+# Migrations are PostgreSQL-shaped; H2 2.x cannot apply them. Verify uses a disposable PG database.
+databases {
+  use = "PGSQL"
+  H2 {
+    profile = "slick.jdbc.H2Profile$"
+    db {
+      dirver = "org.h2.Driver"
+      url = "jdbc:h2:mem:unused"
+      connectionPool = "HikariCP"
+      keepAliveConnection = true
+      user = "root"
+      password = ""
+    }
+  }
+  PGSQL {
+    profile = "slick.jdbc.PostgresProfile$"
+    db {
+      dirver = "org.postgresql.Driver"
+      url = "jdbc:postgresql://localhost:5432/__PG_DB__"
+      connectionPool = "HikariCP"
+      keepAliveConnection = true
+      user = "__PG_USER__"
+      password = "__PG_PASSWORD__"
+    }
+  }
+}
+
+blocking-io-dispatcher {
+  type = Dispatcher
+  executor = "thread-pool-executor"
+  thread-pool-executor {
+    fixed-pool-size = 8
+  }
+  throughput = 1
+}
+
+akka {
+  akka.log-dead-letters = off
+}

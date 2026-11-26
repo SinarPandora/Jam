@@ -1,6 +1,7 @@
 package cc.moecraft.icq;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 /**
  * The class {@code PicqConstants} is a class with static and final
@@ -78,6 +79,7 @@ public class PicqConstants
 
 
     // GSON 常量
-    public static Gson gsonRead = new Gson();
-    public static Gson gsonWrite = new Gson();
+    // 仅反序列化带 @Expose 的字段，避免把 Event.bot / PicqBotX / HttpServer / Thread 拉进反射（JDK 17+ 会 InaccessibleObjectException）
+    public static Gson gsonRead = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+    public static Gson gsonWrite = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
 }

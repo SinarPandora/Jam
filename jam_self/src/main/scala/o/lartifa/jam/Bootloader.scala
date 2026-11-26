@@ -3,10 +3,9 @@ package o.lartifa.jam
 import better.files.File
 import cc.moecraft.logger.LoggerInstanceManager
 import cc.moecraft.logger.format.AnsiColor
-import o.lartifa.jam.backend.MiraiBackend
+import o.lartifa.jam.backend.{MiraiBackend, StubOneBotBackend}
 import o.lartifa.jam.common.config.CoolQConfig.{postPort, postUrl}
 import o.lartifa.jam.common.config.{DynamicConfigLoader, JamConfig, SystemConfig}
-import o.lartifa.jam.common.util.LoggerFactory
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.engine.JamLoader
 import o.lartifa.jam.pool.JamContext
@@ -23,12 +22,18 @@ import scala.concurrent.duration.Duration
 object Bootloader {
   def main(args: Array[String]): Unit = {
     setUpJVMParameters(args)
-    DynamicConfigLoader.reload()
     if (args.contains("--help")) help()
+    DynamicConfigLoader.reload()
     File(SystemConfig.tempDir).createDirectoryIfNotExists()
 
     if (args.contains("--compile")) {
       Await.result(JamLoader.compileOnly(), Duration.Inf)
+    }
+
+    val stubBackend = args.contains("--stub_backend")
+    if (stubBackend) {
+      val stubLog = File(SystemConfig.tempDir) / "stub-onebot.ndjson"
+      StubOneBotBackend.start(stubLog.toJava)
     }
 
     val client = CoolQQLoader.createCoolQQClient()
@@ -37,12 +42,15 @@ object Bootloader {
     JamContext.clientConfig.getAndSet(client.getConfig)
     client.getHttpServer.start()
     val afterBoot = () => {
-      JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}已连接后端，正在刷新数据...")
+      JamContext.loggerFactory.get().system.log(
+        if (stubBackend) s"${AnsiColor.GREEN}已连接 Stub OneBot，正在刷新数据..."
+        else s"${AnsiColor.GREEN}已连接后端，正在刷新数据..."
+      )
       client.addAccount(JamConfig.config.name, postUrl, postPort)
       Await.result(JamLoader.init(client, args), Duration.Inf)
       JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}数据刷新成功！开始接收消息")
     }
-    if (args.contains("--no_backend")) afterBoot()
+    if (stubBackend || args.contains("--no_backend")) afterBoot()
     else MiraiBackend.startAndConnectToBackEnd(args)(afterBoot)
     JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}${JamConfig.config.name}已恢复生命体征")
   }
@@ -64,6 +72,7 @@ object Bootloader {
         |--config=xxx     手动指定配置文件位置
         |--use_mirai3     使用 mirai 3 后端（实验性）
         |--no_backend     不监控任何 backend（适合于独立运行CQHTTP后端）
+        |--stub_backend   假启动：内置 Stub OneBot API，不依赖真实协议端；向收消息端口 POST 事件即可驱动
         |""".stripMargin)
     sys.exit(0)
   }
