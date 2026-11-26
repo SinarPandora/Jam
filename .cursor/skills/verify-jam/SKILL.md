@@ -13,7 +13,7 @@ Primary verification surface: **HTTP OneBot event ingest + stub outbound API** (
 
 - Never start, stop, or POST into production ArfiesBot / shared NapCat without explicit user consent this turn.
 - Never drive an instance you did not launch via these helpers.
-- Prefer Liberica JDK 17 for runs until M1 makes GraalVM 25 builds green (`JAVA_HOME` override allowed).
+- Prefer **GraalVM 25** (`JAVA_HOME=/Library/Java/JavaVirtualMachines/graalvm-25.jdk/Contents/Home`).
 - Local **Postgres** must accept `createdb`/`dropdb` (migrations are PostgreSQL SQL; H2 cannot apply them).
 
 ## Launch
@@ -21,10 +21,13 @@ Primary verification surface: **HTTP OneBot event ingest + stub outbound API** (
 From repo root `Jam/`:
 
 ```bash
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/graalvm-25.jdk/Contents/Home
 RUN_DIR=$(.cursor/skills/verify-jam/helpers/prepare-run.sh)
 # prints absolute run dir; also writes $RUN_DIR/meta.env
 .cursor/skills/verify-jam/helpers/launch.sh "$RUN_DIR/meta.env"
 ```
+
+`launch.sh` runs `sbtn jam_self/installDist` (falls back to `sbt --batch`), then starts Bootloader from `jam_self/target/install/jam_self`.
 
 Ready when stdout says `Jam stub ready` and log contains `开始接收消息`. Stub outbound calls append NDJSON to `$JAM_VERIFY_STUB_LOG` (`tmp/stub-onebot.ndjson` under the run dir).
 
@@ -60,9 +63,9 @@ Outbound side effects appear as NDJSON lines in the stub log (`path` = `send_gro
 CLI compile (no long-running server):
 
 ```bash
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/liberica-jdk-17-full.jdk/Contents/Home
-./gradlew :jam_self:installDist
-java -Dconfig.file="$RUN_DIR/bot.conf" -cp "$(find jam_self/build/install/jam_self/lib -name '*.jar' | tr '\n' ':')" \
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/graalvm-25.jdk/Contents/Home
+sbtn jam_self/installDist   # or: sbt --batch jam_self/installDist
+java -Dconfig.file="$RUN_DIR/bot.conf" -cp "$(find jam_self/target/install/jam_self/lib -name '*.jar' | tr '\n' ':')" \
   o.lartifa.jam.Bootloader --config="$RUN_DIR/bot.conf" --compile
 # proof: $RUN_DIR/sxdl/ssdl.json exists and mentions step content
 ```
@@ -91,7 +94,7 @@ Always `cleanup.sh` with the **same** `meta.env` from launch. Kill only that pid
 | Script | Role |
 |--------|------|
 | `helpers/prepare-run.sh` | Isolated run dir + `bot.conf` + fixture SXDL |
-| `helpers/launch.sh` | `installDist` + java `--stub_backend` |
+| `helpers/launch.sh` | `sbtn`/`sbt` `jam_self/installDist` + java `--stub_backend` |
 | `helpers/doctor.sh` | Read-only health |
 | `helpers/drive-event.sh` | POST event JSON to socket port |
 | `helpers/cleanup.sh` | Stop pid; optional remove `/tmp/jam-verify/*` run dir |

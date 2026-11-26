@@ -9,6 +9,7 @@ import o.lartifa.jam.model.commands.Command
 import o.lartifa.jam.pool.JamContext
 import org.json4s.JValue
 import org.json4s.jackson.JsonMethods.{parse => jParse}
+import org.json4s.{jvalue2extractable, jvalue2monadic}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
