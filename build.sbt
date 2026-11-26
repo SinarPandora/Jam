@@ -17,6 +17,9 @@ val slickVersion = "3.5.2"
 val groovyVersion = "3.0.25"
 val scalatestVersion = "3.2.19"
 val flywayVersion = "11.7.2"
+val zioVersion = "2.1.21"
+val zioHttpVersion = "3.12.0"
+val zioBlocksVersion = "0.0.56"
 
 lazy val installDist = taskKey[File]("Install app like Gradle installDist")
 
@@ -71,13 +74,32 @@ lazy val jam_utils = (project in file("jam_utils"))
     ),
   )
 
+lazy val one_bot_runtime = (project in file("one_bot_runtime"))
+  .settings(commonTestSettings*)
+  .settings(
+    name := "one_bot_runtime",
+    // Blocks next + modern Scala 3 syntax (ThisBuild still uses 3.0-migration for jam_self)
+    scalacOptions --= Seq("-source:3.0-migration"),
+    scalacOptions += "-experimental",
+    libraryDependencies ++= Seq(
+      "dev.zio" %% "zio" % zioVersion,
+      "dev.zio" %% "zio-http" % zioHttpVersion,
+      "dev.zio" %% "zio-blocks-next-schema" % zioBlocksVersion,
+      "dev.zio" %% "zio-test" % zioVersion % Test,
+      "dev.zio" %% "zio-test-sbt" % zioVersion % Test,
+    ),
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+  )
+
 lazy val jam_self = (project in file("jam_self"))
-  .dependsOn(picq_bot_x_fork, jam_utils)
+  .dependsOn(picq_bot_x_fork, jam_utils, one_bot_runtime)
   .enablePlugins(JavaAppPackaging)
   .settings(commonTestSettings*)
   .settings(FlywayTasks.settings(flywayVersion)*)
   .settings(
     name := "jam_self",
+    // one_bot_runtime / zio-blocks-next is @experimental
+    scalacOptions += "-experimental",
     Compile / mainClass := Some("o.lartifa.jam.Bootloader"),
     Compile / discoveredMainClasses := Seq("o.lartifa.jam.Bootloader"),
     executableScriptName := "jam_self",
@@ -178,6 +200,7 @@ lazy val root = (project in file("."))
     one_bot_protocol,
     picq_bot_x_fork,
     jam_utils,
+    one_bot_runtime,
     jam_self,
     meme_maker,
     meme_maker_v1,

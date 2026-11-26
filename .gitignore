@@ -125,3 +125,5 @@ jam_self/db/
 jam_self/conf/ssdl/ssdl.json
 jam_self/conf/**/*_local.conf
 jam_self/src/test/scala/Playground.scala
+.agents/
+skills-lock.json
