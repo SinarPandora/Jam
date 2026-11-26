@@ -39,7 +39,7 @@ Teardown:
 .cursor/skills/verify-jam/helpers/cleanup.sh "$RUN_DIR/meta.env" --remove-run-dir
 ```
 
-`--stub_backend` starts an embedded fake OneBot HTTP API on `coolQQ.port.post`, then boots Picq receive server on `coolQQ.port.socket` and loads SXDL. No Mirai/NapCat process is required.
+`--stub_backend` starts an embedded fake OneBot HTTP API on `coolQQ.port.post`, then boots the ZIO OneBot inbound server on `coolQQ.port.socket` (EventParser still Picq) and loads SXDL. Outbound uses the ZIO `OneBotHttpClient` via a temporary `IcqHttpApi` adapter. No Mirai/NapCat process is required.
 
 ## Doctor
 

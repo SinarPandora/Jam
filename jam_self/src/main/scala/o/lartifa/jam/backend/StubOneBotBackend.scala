@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicLong
 import com.sun.net.httpserver.{HttpExchange, HttpServer}
 
 /**
- * 假 OneBot HTTP API：不连接真实协议端，只响应 Picq 出站调用并落盘，便于本地/验证驱动。
+ * 假 OneBot HTTP API：不连接真实协议端，只响应出站调用（ZIO OneBotHttpClient / 过渡期 HttpApi）并落盘，便于本地/验证驱动。
  *
  * Author: sinar
  * 2026/11/26
