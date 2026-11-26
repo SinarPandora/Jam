@@ -2,7 +2,6 @@
 HELP.md
 .gradle
 build/
-!gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
@@ -59,6 +58,8 @@ bin/
 /project/project
 /project/target
 /target
+**/target/
+.bsp/
 tmp/
 test-result
 server.pid
@@ -121,8 +122,5 @@ jam_self/db/
 jam_self/conf/ssdl/ssdl.json
 jam_self/conf/**/*_local.conf
 jam_self/src/test/scala/Playground.scala
-jam_mirai_backend/mirai_console/
-jam_mirai_backend/mirai_console_java/
-
 # Verification run evidence (regenerated locally)
 .cursor/skills/verify-jam/artifacts/

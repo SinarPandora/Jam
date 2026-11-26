@@ -8,7 +8,18 @@
 
 ## Getting Started 使用指南
 
-推荐 JDK：**GraalVM 25**（本机路径示例 `/Library/Java/JavaVirtualMachines/graalvm-25.jdk`）。请将 `JAVA_HOME` 指向该 JDK 后再执行 Gradle。
+推荐 JDK：**GraalVM 25**（本机路径示例 `/Library/Java/JavaVirtualMachines/graalvm-25.jdk`）。请将 `JAVA_HOME` 指向该 JDK。
+
+构建工具：**sbt 1.10.x + sbtn**（版本见 `project/build.properties`）。日常入口：
+
+```bash
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/graalvm-25.jdk/Contents/Home
+sbtn compile
+sbtn test
+sbtn jam_self/stage          # 或 jam_self/installDist → jam_self/target/install/jam_self
+```
+
+无 `sbtn` 时可用 `sbt --batch <task>`。数据库迁移：`sbtn jam_self/flywayMigrate`（可用 `-Dflyway.url=` / `user` / `password` 覆盖默认值）。
 
 SXDL [脚本手册](https://www.yuque.com/docs/share/1405438e-c596-4ce4-ad3c-483eb3057451)
 [部署文档（暂时没有更新）](https://mubu.com/doc/X8zrTpx7c)

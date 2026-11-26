@@ -13,7 +13,7 @@ set -a
 source "$META"
 set +a
 
-JAVA_HOME="${JAVA_HOME:-/Library/Java/JavaVirtualMachines/liberica-jdk-17-full.jdk/Contents/Home}"
+JAVA_HOME="${JAVA_HOME:-/Library/Java/JavaVirtualMachines/graalvm-25.jdk/Contents/Home}"
 export JAVA_HOME
 export PATH="$JAVA_HOME/bin:$PATH"
 
@@ -23,12 +23,29 @@ if [[ -f "$JAM_VERIFY_PID_FILE" ]] && kill -0 "$(cat "$JAM_VERIFY_PID_FILE")" 2>
 fi
 
 cd "$JAM_VERIFY_REPO_ROOT"
-./gradlew :jam_self:installDist --console=plain
 
-INSTALL_DIR="$JAM_VERIFY_REPO_ROOT/jam_self/build/install/jam_self"
-# Collect jars for classpath (application plugin layout)
+# Build distribution via sbt (project pins sbt 1.10.x). Prefer sbtn thin client when available.
+if command -v sbtn >/dev/null 2>&1; then
+  sbtn jam_self/installDist
+else
+  sbt --batch -Dsbt.supershell=false jam_self/installDist
+fi
+INSTALL_DIR="$JAM_VERIFY_REPO_ROOT/jam_self/target/install/jam_self"
+if [[ ! -d "$INSTALL_DIR/lib" ]]; then
+  echo "installDist missing lib at $INSTALL_DIR" >&2
+  exit 1
+fi
+
+# Collect jars for classpath (native-packager installDist layout + plugins/)
 CP="$(find "$INSTALL_DIR/lib" -name '*.jar' | tr '\n' ':')"
 CP="${CP%:}"
+if [[ -d "$INSTALL_DIR/plugins" ]]; then
+  PLUGIN_CP="$(find "$INSTALL_DIR/plugins" -name '*.jar' | tr '\n' ':')"
+  PLUGIN_CP="${PLUGIN_CP%:}"
+  if [[ -n "$PLUGIN_CP" ]]; then
+    CP="$CP:$PLUGIN_CP"
+  fi
+fi
 
 nohup "$JAVA_HOME/bin/java" \
   -Dconfig.file="$JAM_VERIFY_BOT_CONF" \
@@ -49,7 +66,6 @@ for _ in $(seq 1 120); do
   fi
   if grep -qE "FlywaySqlScriptException|Migration .* failed|Exception in thread" "$JAM_VERIFY_LOG" 2>/dev/null \
     && ! grep -q "开始接收消息" "$JAM_VERIFY_LOG" 2>/dev/null; then
-    # Give a moment for concurrent log flush, then fail if still not ready
     sleep 1
     if ! grep -q "开始接收消息" "$JAM_VERIFY_LOG" 2>/dev/null; then
       echo "Jam init failed; see $JAM_VERIFY_LOG" >&2
