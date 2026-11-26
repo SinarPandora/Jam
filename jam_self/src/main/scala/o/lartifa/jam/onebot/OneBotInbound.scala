@@ -31,4 +31,14 @@ object OneBotInbound {
     }
     fiberOpt = None
   }
+
+  /**
+   * 阻塞当前线程直到入站 fiber 结束（正常常驻永不返回；失败则抛出）。
+   * PicqHttpServer 退役后，Bootloader 需靠此保活 JVM。
+   */
+  def blockUntilStopped(): Unit = {
+    fiberOpt.foreach { fiber =>
+      ZioRuntime.run(fiber.join)
+    }
+  }
 }

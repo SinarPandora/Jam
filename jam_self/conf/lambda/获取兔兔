@@ -1,4 +1,4 @@
-import cc.moecraft.icq.sender.message.components.ComponentImageBase64
+import o.lartifa.jam.ob.sender.message.components.ComponentImageBase64
 import cn.hutool.core.img.Img
 import org.jsoup.Jsoup
 

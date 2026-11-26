@@ -57,6 +57,8 @@ object Bootloader {
     if (stubBackend || args.contains("--no_backend")) afterBoot()
     else MiraiBackend.startAndConnectToBackEnd(args)(afterBoot)
     JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}${JamConfig.config.name}已恢复生命体征")
+    // ZIO 入站是后台 fiber；旧 PicqHttpServer 会占住主线程，退役后需显式阻塞
+    OneBotInbound.blockUntilStopped()
   }
 
   /**
