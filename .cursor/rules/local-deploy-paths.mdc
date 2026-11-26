@@ -1,0 +1,23 @@
+---
+description: 本机 ArfiesBot / SXDL 部署与编辑路径（开发须按此操作）
+alwaysApply: true
+---
+
+# 本机 ArfiesBot / SXDL 路径
+
+本机开发、改脚本、部署、排查时，**默认按下列路径操作**（本会话另有约定除外）：
+
+| 用途 | 路径 |
+|---|---|
+| Bot 部署目录 | `/Users/sinar/Development/Production/ArfiesBot/arfies_bot` |
+| SXDL 源仓库（编辑并 git 提交） | `/Users/sinar/Development/Production/ArfiesBot/arfies-sxdl` |
+| SXDL 运行时（git pull 后生效） | `/Users/sinar/Development/Production/ArfiesBot/arfies_bot/conf/sxdl` |
+
+## 部署链路
+
+1. 在 `arfies-sxdl` 修改脚本并提交到 git
+2. 再拉取到 `arfies_bot/conf/sxdl`，Bot 才会用到新脚本
+
+## 与验证的边界
+
+- `verify-jam` 等本地验证默认**不得**触碰上述生产 ArfiesBot，除非维护者在本会话明确同意
