@@ -28,15 +28,15 @@ trait BwyProjectTable {
   implicit def GetResultBwyProjectRow(implicit e0: GR[Long], e1: GR[String], e2: GR[java.sql.Date], e3: GR[java.sql.Timestamp], e4: GR[Boolean]): GR[BwyProjectRow] = GR {
     prs =>
       import prs.*
-      BwyProjectRow.tupled((<<[Long], <<[String], <<[String], <<[java.sql.Date], <<[Long], <<[java.sql.Timestamp], <<[Boolean]))
+      BwyProjectRow.apply.tupled((<<[Long], <<[String], <<[String], <<[java.sql.Date], <<[Long], <<[java.sql.Timestamp], <<[Boolean]))
   }
 
   /** Table description of table bwy_project. Objects of this class serve as prototypes for rows in queries. */
   class BwyProject(_tableTag: Tag) extends profile.api.Table[BwyProjectRow](_tableTag, "bwy_project") {
-    def * = (id, name, detail, dueDate, createQid, createTime, isActive) <> (BwyProjectRow.tupled, BwyProjectRow.unapply)
+    def * = (id, name, detail, dueDate, createQid, createTime, isActive) <> (BwyProjectRow.apply.tupled, BwyProjectRow.unapply)
 
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(name), Rep.Some(detail), Rep.Some(dueDate), Rep.Some(createQid), Rep.Some(createTime), Rep.Some(isActive)).shaped.<>({ r => import r.*; _1.map(_ => BwyProjectRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(name), Rep.Some(detail), Rep.Some(dueDate), Rep.Some(createQid), Rep.Some(createTime), Rep.Some(isActive)).shaped.<>({ r => import r.*; _1.map(_ => BwyProjectRow.apply.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)

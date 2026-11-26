@@ -27,15 +27,15 @@ trait SourceSubscriberTable {
   implicit def GetResultSourceSubscriberRow(implicit e0: GR[Long], e1: GR[String], e2: GR[Boolean], e3: GR[java.sql.Timestamp]): GR[SourceSubscriberRow] = GR {
     prs =>
       import prs.*
-      SourceSubscriberRow.tupled((<<[Long], <<[Long], <<[String], <<[Long], <<[Boolean], <<[String], <<[java.sql.Timestamp], <<[java.sql.Timestamp]))
+      SourceSubscriberRow.apply.tupled((<<[Long], <<[Long], <<[String], <<[Long], <<[Boolean], <<[String], <<[java.sql.Timestamp], <<[java.sql.Timestamp]))
   }
 
   /** Table description of table source_subscriber. Objects of this class serve as prototypes for rows in queries. */
   class SourceSubscriber(_tableTag: Tag) extends profile.api.Table[SourceSubscriberRow](_tableTag, "source_subscriber") {
-    def * = (id, chatId, chatType, sourceId, isPaused, lastKey, lastUpdateTime, createTime) <> (SourceSubscriberRow.tupled, SourceSubscriberRow.unapply)
+    def * = (id, chatId, chatType, sourceId, isPaused, lastKey, lastUpdateTime, createTime) <> (SourceSubscriberRow.apply.tupled, SourceSubscriberRow.unapply)
 
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(chatId), Rep.Some(chatType), Rep.Some(sourceId), Rep.Some(isPaused), Rep.Some(lastKey), Rep.Some(lastUpdateTime), Rep.Some(createTime)).shaped.<>({ r => import r.*; _1.map(_ => SourceSubscriberRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(chatId), Rep.Some(chatType), Rep.Some(sourceId), Rep.Some(isPaused), Rep.Some(lastKey), Rep.Some(lastUpdateTime), Rep.Some(createTime)).shaped.<>({ r => import r.*; _1.map(_ => SourceSubscriberRow.apply.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)

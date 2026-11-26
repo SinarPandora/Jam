@@ -20,13 +20,13 @@ trait StorySaveFileTable {
   /** GetResult implicit for fetching StorySaveFileRow objects using plain SQL queries */
   implicit def GetResultStorySaveFileRow(implicit e0: GR[Long], e1: GR[String]): GR[StorySaveFileRow] = GR{
     prs => import prs.*
-    StorySaveFileRow.tupled((<<[Long], <<[Long], <<[Long], <<[String], <<[String], <<[String]))
+    StorySaveFileRow.apply.tupled((<<[Long], <<[Long], <<[Long], <<[String], <<[String], <<[String]))
   }
   /** Table description of table story_save_file. Objects of this class serve as prototypes for rows in queries. */
   class StorySaveFile(_tableTag: Tag) extends profile.api.Table[StorySaveFileRow](_tableTag, "story_save_file") {
-    def * = (id, storyId, chatId, saveList, chatType, chatScopeDefaultConfig) <> (StorySaveFileRow.tupled, StorySaveFileRow.unapply)
+    def * = (id, storyId, chatId, saveList, chatType, chatScopeDefaultConfig) <> (StorySaveFileRow.apply.tupled, StorySaveFileRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(storyId), Rep.Some(chatId), Rep.Some(saveList), Rep.Some(chatType), Rep.Some(chatScopeDefaultConfig)).shaped.<>({ r=>import r.*; _1.map(_=> StorySaveFileRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(storyId), Rep.Some(chatId), Rep.Some(saveList), Rep.Some(chatType), Rep.Some(chatScopeDefaultConfig)).shaped.<>({ r=>import r.*; _1.map(_=> StorySaveFileRow.apply.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)

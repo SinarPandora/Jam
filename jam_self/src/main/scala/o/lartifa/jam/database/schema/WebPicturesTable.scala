@@ -23,13 +23,13 @@ trait WebPicturesTable {
   /** GetResult implicit for fetching WebPicturesRow objects using plain SQL queries */
   implicit def GetResultWebPicturesRow(implicit e0: GR[Long], e1: GR[String], e2: GR[Boolean], e3: GR[Int], e4: GR[Option[String]]): GR[WebPicturesRow] = GR{
     prs => import prs.*
-    WebPicturesRow.tupled((<<[Long], <<[Long], <<[String], <<[String], <<[String], <<[Boolean], <<[Int], <<[Int], <<[String], <<?[String]))
+    WebPicturesRow.apply.tupled((<<[Long], <<[Long], <<[String], <<[String], <<[String], <<[Boolean], <<[Int], <<[Int], <<[String], <<?[String]))
   }
   /** Table description of table web_pictures. Objects of this class serve as prototypes for rows in queries. */
   class WebPictures(_tableTag: Tag) extends profile.api.Table[WebPicturesRow](_tableTag, "web_pictures") {
-    def * = (pid, uid, title, author, url, isR18, width, height, tags, base64Data) <> (WebPicturesRow.tupled, WebPicturesRow.unapply)
+    def * = (pid, uid, title, author, url, isR18, width, height, tags, base64Data) <> (WebPicturesRow.apply.tupled, WebPicturesRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(pid), Rep.Some(uid), Rep.Some(title), Rep.Some(author), Rep.Some(url), Rep.Some(isR18), Rep.Some(width), Rep.Some(height), Rep.Some(tags), base64Data).shaped.<>({ r=>import r.*; _1.map(_=> WebPicturesRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(pid), Rep.Some(uid), Rep.Some(title), Rep.Some(author), Rep.Some(url), Rep.Some(isR18), Rep.Some(width), Rep.Some(height), Rep.Some(tags), base64Data).shaped.<>({ r=>import r.*; _1.map(_=> WebPicturesRow.apply.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get, _9.get, _10)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column pid SqlType(int8), PrimaryKey, Default(-1) */
     val pid: Rep[Long] = column[Long]("pid", O.PrimaryKey, O.Default(-1L))

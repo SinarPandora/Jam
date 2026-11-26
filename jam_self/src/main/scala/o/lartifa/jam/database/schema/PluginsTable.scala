@@ -21,14 +21,14 @@ trait PluginsTable {
   /** GetResult implicit for fetching PluginsRow objects using plain SQL queries */
   implicit def GetResultPluginsRow(implicit e0: GR[Long], e1: GR[String], e2: GR[java.sql.Timestamp], e3: GR[Boolean], e4: GR[scala.math.BigDecimal]): GR[PluginsRow] = GR{
     prs => import prs.*
-      PluginsRow.tupled((<<[Long], <<[String], <<[String], <<[String], <<[String], <<[java.sql.Timestamp], <<[Boolean], <<[scala.math.BigDecimal]))
+      PluginsRow.apply.tupled((<<[Long], <<[String], <<[String], <<[String], <<[String], <<[java.sql.Timestamp], <<[Boolean], <<[scala.math.BigDecimal]))
   }
   /** Table description of table plugins. Objects of this class serve as prototypes for rows in queries.
    *  NOTE: The following names collided with Scala keywords and were escaped: package */
   class Plugins(_tableTag: Tag) extends profile.api.Table[PluginsRow](_tableTag, "plugins") {
-    def * = (id, name, keywords, author, `package`, installDate, isEnabled, version) <> (PluginsRow.tupled, PluginsRow.unapply)
+    def * = (id, name, keywords, author, `package`, installDate, isEnabled, version) <> (PluginsRow.apply.tupled, PluginsRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(name), Rep.Some(keywords), Rep.Some(author), Rep.Some(`package`), Rep.Some(installDate), Rep.Some(isEnabled), Rep.Some(version)).shaped.<>({ r=>import r.*; _1.map(_=> PluginsRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(name), Rep.Some(keywords), Rep.Some(author), Rep.Some(`package`), Rep.Some(installDate), Rep.Some(isEnabled), Rep.Some(version)).shaped.<>({ r=>import r.*; _1.map(_=> PluginsRow.apply.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)

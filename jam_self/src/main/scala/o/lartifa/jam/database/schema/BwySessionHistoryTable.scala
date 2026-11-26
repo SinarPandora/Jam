@@ -27,15 +27,15 @@ trait BwySessionHistoryTable {
   implicit def GetResultBwySessionHistoryRow(implicit e0: GR[Long], e1: GR[Int], e2: GR[java.sql.Timestamp], e3: GR[Option[java.sql.Timestamp]]): GR[BwySessionHistoryRow] = GR {
     prs =>
       import prs.*
-      BwySessionHistoryRow.tupled((<<[Long], <<[Long], <<[Long], <<[Int], <<[java.sql.Timestamp], <<?[java.sql.Timestamp]))
+      BwySessionHistoryRow.apply.tupled((<<[Long], <<[Long], <<[Long], <<[Int], <<[java.sql.Timestamp], <<?[java.sql.Timestamp]))
   }
 
   /** Table description of table bwy_session_history. Objects of this class serve as prototypes for rows in queries. */
   class BwySessionHistory(_tableTag: Tag) extends profile.api.Table[BwySessionHistoryRow](_tableTag, "bwy_session_history") {
-    def * = (id, memberQid, sessionId, sessionType, startTime, endTime) <> (BwySessionHistoryRow.tupled, BwySessionHistoryRow.unapply)
+    def * = (id, memberQid, sessionId, sessionType, startTime, endTime) <> (BwySessionHistoryRow.apply.tupled, BwySessionHistoryRow.unapply)
 
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(memberQid), Rep.Some(sessionId), Rep.Some(sessionType), Rep.Some(startTime), endTime).shaped.<>({ r => import r.*; _1.map(_ => BwySessionHistoryRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(memberQid), Rep.Some(sessionId), Rep.Some(sessionType), Rep.Some(startTime), endTime).shaped.<>({ r => import r.*; _1.map(_ => BwySessionHistoryRow.apply.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)

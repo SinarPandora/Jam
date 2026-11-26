@@ -29,15 +29,15 @@ trait BwyNotificationTable {
   implicit def GetResultBwyNotificationRow(implicit e0: GR[Long], e1: GR[String], e2: GR[Int], e3: GR[java.sql.Timestamp], e4: GR[Boolean]): GR[BwyNotificationRow] = GR {
     prs =>
       import prs.*
-      BwyNotificationRow.tupled((<<[Long], <<[String], <<[String], <<[String], <<[Int], <<[java.sql.Timestamp], <<[Long], <<[Boolean]))
+      BwyNotificationRow.apply.tupled((<<[Long], <<[String], <<[String], <<[String], <<[Int], <<[java.sql.Timestamp], <<[Long], <<[Boolean]))
   }
 
   /** Table description of table bwy_notification. Objects of this class serve as prototypes for rows in queries. */
   class BwyNotification(_tableTag: Tag) extends profile.api.Table[BwyNotificationRow](_tableTag, "bwy_notification") {
-    def * = (id, content, cron, scope, scopeType, createTime, creatorQid, isActive) <> (BwyNotificationRow.tupled, BwyNotificationRow.unapply)
+    def * = (id, content, cron, scope, scopeType, createTime, creatorQid, isActive) <> (BwyNotificationRow.apply.tupled, BwyNotificationRow.unapply)
 
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(content), Rep.Some(cron), Rep.Some(scope), Rep.Some(scopeType), Rep.Some(createTime), Rep.Some(creatorQid), Rep.Some(isActive)).shaped.<>({ r => import r.*; _1.map(_ => BwyNotificationRow.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(content), Rep.Some(cron), Rep.Some(scope), Rep.Some(scopeType), Rep.Some(createTime), Rep.Some(creatorQid), Rep.Some(isActive)).shaped.<>({ r => import r.*; _1.map(_ => BwyNotificationRow.apply.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)

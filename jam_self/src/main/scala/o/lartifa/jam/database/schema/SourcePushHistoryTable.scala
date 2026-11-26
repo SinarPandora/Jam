@@ -22,15 +22,15 @@ trait SourcePushHistoryTable {
   implicit def GetResultSourcePushHistoryRow(implicit e0: GR[Long], e1: GR[java.sql.Timestamp], e2: GR[String]): GR[SourcePushHistoryRow] = GR {
     prs =>
       import prs.*
-      SourcePushHistoryRow.tupled((<<[Long], <<[Long], <<[java.sql.Timestamp], <<[String]))
+      SourcePushHistoryRow.apply.tupled((<<[Long], <<[Long], <<[java.sql.Timestamp], <<[String]))
   }
 
   /** Table description of table source_push_history. Objects of this class serve as prototypes for rows in queries. */
   class SourcePushHistory(_tableTag: Tag) extends profile.api.Table[SourcePushHistoryRow](_tableTag, "source_push_history") {
-    def * = (id, subscriberId, pushTime, messageKey) <> (SourcePushHistoryRow.tupled, SourcePushHistoryRow.unapply)
+    def * = (id, subscriberId, pushTime, messageKey) <> (SourcePushHistoryRow.apply.tupled, SourcePushHistoryRow.unapply)
 
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(subscriberId), Rep.Some(pushTime), Rep.Some(messageKey)).shaped.<>({ r => import r.*; _1.map(_ => SourcePushHistoryRow.tupled((_1.get, _2.get, _3.get, _4.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(subscriberId), Rep.Some(pushTime), Rep.Some(messageKey)).shaped.<>({ r => import r.*; _1.map(_ => SourcePushHistoryRow.apply.tupled((_1.get, _2.get, _3.get, _4.get))) }, (_: Any) => throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(bigserial), AutoInc, PrimaryKey */
     val id: Rep[Long] = column[Long]("id", O.AutoInc, O.PrimaryKey)

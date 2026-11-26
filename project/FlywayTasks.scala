@@ -19,24 +19,37 @@ object FlywayTasks {
       "org.flywaydb" % "flyway-database-postgresql" % flywayVersion % Flyway,
       "org.postgresql" % "postgresql" % "42.3.7" % Flyway,
     ),
-    flywayMigrate := runFlyway(
-      streams.value.log,
-      (Compile / baseDirectory).value,
-      Classpaths.managedJars(Flyway, classpathTypes.value, update.value).files,
-      clean = false,
-    ),
-    flywayClean := runFlyway(
-      streams.value.log,
-      (Compile / baseDirectory).value,
-      Classpaths.managedJars(Flyway, classpathTypes.value, update.value).files,
-      clean = true,
-    ),
+    flywayMigrate := Def.uncached {
+      runFlyway(
+        streams.value.log,
+        (Compile / baseDirectory).value,
+        flywayJars(fileConverter.value, classpathTypes.value, update.value),
+        clean = false,
+      )
+    },
+    flywayClean := Def.uncached {
+      runFlyway(
+        streams.value.log,
+        (Compile / baseDirectory).value,
+        flywayJars(fileConverter.value, classpathTypes.value, update.value),
+        clean = true,
+      )
+    },
     recreateDatabase := {
       flywayClean.value
       flywayMigrate.value
     },
     migrateDatabase := flywayMigrate.value,
   )
+
+  private def flywayJars(
+    converter: xsbti.FileConverter,
+    jarTypes: Set[String],
+    report: UpdateReport,
+  ): Seq[File] =
+    Classpaths.managedJars(Flyway, jarTypes, report, converter).map { entry =>
+      converter.toPath(entry.data).toFile
+    }
 
   private def runFlyway(log: Logger, base: File, jars: Seq[File], clean: Boolean): Unit = {
     val locations = (base / "src" / "main" / "resources" / "db" / "migration").getAbsolutePath

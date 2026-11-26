@@ -26,7 +26,7 @@ object Lombok {
     libraryDependencies += "org.projectlombok" % "lombok" % version % Provided,
     dependencyOverrides += "org.projectlombok" % "lombok" % version,
     // Zinc in-process javac + Lombok fails on JDK 25; use forked javac.
-    Compile / compilers := {
+    Compile / compilers := Def.uncached {
       val prev = (Compile / compilers).value
       val homePath = javaHome.value.map(_.toPath)
       val forkedJavac = ZincJavaCompiler.fork(javaHome = homePath)
@@ -38,7 +38,7 @@ object Lombok {
     // javadoc does not accept -processorpath / -J--add-opens
     Compile / doc / sources := Seq.empty,
     Compile / doc / javacOptions := Seq("--release", "25"),
-    Test / compilers := (Compile / compilers).value,
+    Test / compilers := Def.uncached((Compile / compilers).value),
     Test / javacOptions ++= lombokJavacOptions((Test / update).value),
   )
 
