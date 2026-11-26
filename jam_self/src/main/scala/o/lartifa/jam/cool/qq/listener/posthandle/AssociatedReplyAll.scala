@@ -1,7 +1,7 @@
 package o.lartifa.jam.cool.qq.listener.posthandle
 
-import cc.moecraft.icq.event.events.message.EventMessage
-import cc.moecraft.icq.sender.message.components.ComponentAt
+import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.ob.sender.message.components.ComponentAt
 import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.util.TriBoolValue
 import o.lartifa.jam.model.CommandExecuteContext

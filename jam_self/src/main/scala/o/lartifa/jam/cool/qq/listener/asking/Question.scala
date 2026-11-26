@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.asking
 
-import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.ob.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.listener.asking.Question.{logger, questionTimer}

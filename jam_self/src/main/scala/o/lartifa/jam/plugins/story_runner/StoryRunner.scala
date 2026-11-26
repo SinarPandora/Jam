@@ -1,7 +1,7 @@
 package o.lartifa.jam.plugins.story_runner
 
 import org.apache.pekko.actor.{Actor, ActorRef}
-import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.ob.event.events.message.EventMessage
 import com.bladecoder.ink.runtime.Story
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.behaviors.ReplyToFriend

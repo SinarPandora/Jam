@@ -1,6 +1,6 @@
 package jam.plugins.meme_maker.v1.commands
 
-import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.ob.event.events.message.EventMessage
 import jam.plugins.meme_maker.v1.engine.MemeAPIV1Response.TemplatePair
 import jam.plugins.meme_maker.v1.engine.MemeMakerAPI
 import o.lartifa.jam.cool.qq.listener.asking.{Answerer, Result}

@@ -1,6 +1,6 @@
 package jam.plugins.meme_maker.commands
 
-import cc.moecraft.icq.sender.message.components.ComponentImage
+import o.lartifa.jam.ob.sender.message.components.ComponentImage
 import jam.plugins.meme_maker.engine.MemeAPIResponse.TemplateInfo
 import jam.plugins.meme_maker.engine.MemeMakerAPI
 import o.lartifa.jam.cool.qq.listener.asking.{Answerer, Result}

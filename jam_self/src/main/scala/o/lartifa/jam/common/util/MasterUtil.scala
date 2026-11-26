@@ -1,6 +1,6 @@
 package o.lartifa.jam.common.util
 
-import cc.moecraft.icq.sender.IcqHttpApi
+import o.lartifa.jam.ob.sender.IcqHttpApi
 import cc.moecraft.logger.{HyLogger, LogLevel}
 import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.pool.JamContext

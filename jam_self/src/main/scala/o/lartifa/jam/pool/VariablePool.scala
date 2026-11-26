@@ -1,5 +1,5 @@
 package o.lartifa.jam.pool
-import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.ob.event.events.message.EventMessage
 import o.lartifa.jam.database.schema.Tables
 import o.lartifa.jam.model.CommandExecuteContext
 

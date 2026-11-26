@@ -1,7 +1,7 @@
 package o.lartifa.jam.cool.qq.listener
 
-import cc.moecraft.icq.event.events.message.EventMessage
-import cc.moecraft.icq.event.{EventHandler, IcqListener}
+import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.ob.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.{JamConfig, PluginConfig}
 import o.lartifa.jam.common.util.{MasterUtil, TriBoolValue}

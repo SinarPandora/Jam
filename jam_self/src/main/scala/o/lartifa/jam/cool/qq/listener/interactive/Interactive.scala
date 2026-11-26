@@ -1,7 +1,7 @@
 package o.lartifa.jam.cool.qq.listener.interactive
 
 import org.apache.pekko.actor.ActorRef
-import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.ob.event.events.message.EventMessage
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.ExtraActor

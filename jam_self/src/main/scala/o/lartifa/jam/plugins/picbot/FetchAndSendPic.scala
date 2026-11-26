@@ -1,6 +1,6 @@
 package o.lartifa.jam.plugins.picbot
 
-import cc.moecraft.icq.sender.message.components.ComponentImageBase64
+import o.lartifa.jam.ob.sender.message.components.ComponentImageBase64
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.util.EventMessageHelper.*
 import o.lartifa.jam.common.util.MasterUtil

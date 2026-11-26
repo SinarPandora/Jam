@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq
 
-import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
+import o.lartifa.jam.ob.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.model.patterns.MatcherGroup

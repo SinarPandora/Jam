@@ -1,8 +1,8 @@
 package o.lartifa.jam.plugins.filppic
 
 import at.dhyan.open_imaging.GifDecoder
-import cc.moecraft.icq.event.events.message.EventMessage
-import cc.moecraft.icq.sender.message.components.ComponentImageBase64
+import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.ob.sender.message.components.ComponentImageBase64
 import cc.moecraft.logger.HyLogger
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.GifSequenceWriter

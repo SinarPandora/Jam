@@ -1,6 +1,6 @@
 package o.lartifa.jam.model
 
-import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.ob.event.events.message.EventMessage
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 
 /**

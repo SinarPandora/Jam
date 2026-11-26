@@ -1,8 +1,8 @@
 package o.lartifa.jam.cool.qq.listener
 
-import cc.moecraft.icq.event.events.message.{EventMessage, EventPrivateMessage}
-import cc.moecraft.icq.event.{EventHandler, IcqListener}
-import cc.moecraft.icq.sender.message.components.ComponentAt
+import o.lartifa.jam.ob.event.events.message.{EventMessage, EventPrivateMessage}
+import o.lartifa.jam.ob.event.{EventHandler, IcqListener}
+import o.lartifa.jam.ob.sender.message.components.ComponentAt
 import o.lartifa.jam.common.config.{BotConfig, JamConfig}
 
 import scala.util.Random

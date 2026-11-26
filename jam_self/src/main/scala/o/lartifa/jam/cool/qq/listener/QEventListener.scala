@@ -1,9 +1,9 @@
 package o.lartifa.jam.cool.qq.listener
 
-import cc.moecraft.icq.event.events.notice.groupmember.decrease.EventNoticeGroupMemberDecrease
-import cc.moecraft.icq.event.events.notice.groupmember.increase.EventNoticeGroupMemberIncrease
-import cc.moecraft.icq.event.events.notice.{EventNotice, EventNoticeFriendPoke, EventNoticeGroupPoke}
-import cc.moecraft.icq.event.{EventHandler, IcqListener}
+import o.lartifa.jam.ob.event.events.notice.groupmember.decrease.EventNoticeGroupMemberDecrease
+import o.lartifa.jam.ob.event.events.notice.groupmember.increase.EventNoticeGroupMemberIncrease
+import o.lartifa.jam.ob.event.events.notice.{EventNotice, EventNoticeFriendPoke, EventNoticeGroupPoke}
+import o.lartifa.jam.ob.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch

@@ -1,6 +1,6 @@
 package o.lartifa.jam.model.commands
 
-import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.ob.event.events.message.EventMessage
 import o.lartifa.jam.cool.qq.listener.interactive.{Interactive, InteractiveSession}
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.Ask.{AnswererType, AnyBody}

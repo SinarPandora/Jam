@@ -1,8 +1,8 @@
 package o.lartifa.jam.cool.qq.command
 
-import cc.moecraft.icq.command.interfaces.IcqCommand
-import cc.moecraft.icq.event.events.message.{EventGroupMessage, EventMessage}
-import cc.moecraft.icq.user.User
+import o.lartifa.jam.ob.command.interfaces.IcqCommand
+import o.lartifa.jam.ob.event.events.message.{EventGroupMessage, EventMessage}
+import o.lartifa.jam.ob.user.User
 import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.protocol.CommonProtocol.{Done, Exit, Fail}
 import o.lartifa.jam.common.util.{ExtraActor, GlobalConstant}

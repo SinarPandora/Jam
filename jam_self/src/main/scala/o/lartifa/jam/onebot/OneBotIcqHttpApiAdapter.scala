@@ -1,9 +1,9 @@
 package o.lartifa.jam.onebot
 
-import cc.moecraft.icq.PicqBotX
-import cc.moecraft.icq.accounts.BotAccount
-import cc.moecraft.icq.sender.IcqHttpApi
-import cc.moecraft.icq.sender.HttpApiNode
+import o.lartifa.jam.ob.PicqBotX
+import o.lartifa.jam.ob.accounts.BotAccount
+import o.lartifa.jam.ob.sender.IcqHttpApi
+import o.lartifa.jam.ob.sender.HttpApiNode
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import o.lartifa.jam.onebot.OneBotHttpClient
@@ -12,7 +12,7 @@ import java.util
 import scala.jdk.CollectionConverters.*
 
 /**
- * 临时 IcqHttpApi 适配器：出站走 ZIO OneBotHttpClient，其余 API 表面保持 Picq 兼容（#21 删除）。
+ * IcqHttpApi 适配器：出站走 ZIO OneBotHttpClient；表面保留在 one_bot_legacy（o.lartifa.jam.ob）。
  *
  * Author: sinar
  * 2026/11/26

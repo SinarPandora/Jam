@@ -1,9 +1,9 @@
 package o.lartifa.jam.cool.qq.command.base
 
-import cc.moecraft.icq.command.CommandProperties
-import cc.moecraft.icq.command.interfaces.EverywhereCommand
-import cc.moecraft.icq.event.events.message.EventMessage
-import cc.moecraft.icq.user.User
+import o.lartifa.jam.ob.command.CommandProperties
+import o.lartifa.jam.ob.command.interfaces.EverywhereCommand
+import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.ob.user.User
 import o.lartifa.jam.common.config.JamConfig
 
 import java.util

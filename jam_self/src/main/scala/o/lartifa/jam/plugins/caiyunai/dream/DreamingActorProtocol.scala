@@ -1,7 +1,7 @@
 package o.lartifa.jam.plugins.caiyunai.dream
 
 import org.apache.pekko.actor.ActorRef
-import cc.moecraft.icq.event.events.message.EventMessage
+import o.lartifa.jam.ob.event.events.message.EventMessage
 
 /**
  * Dreaming Actor 协议

@@ -3,8 +3,9 @@
 基于语法简洁的中文步骤定义语言 SXDL ，可由用户添加行为的 QQ 机器人
 
 > QQBot  
-> Based on Mirai Console + Mirai CQHTTP Plugin + PicqBotX
-> 全面迁移到 Mirai 的工作正在进行……
+> 协议端：**NapCat**（OneBot v11 HTTP 反向）  
+> 客户端：自有 `one_bot_runtime`（ZIO HTTP）+ `one_bot_legacy`（业务事件/指令壳，包名 `o.lartifa.jam.ob`）  
+> 已退役：`picq_bot_x_fork` / `PicqHttpServer`
 
 ## Getting Started 使用指南
 

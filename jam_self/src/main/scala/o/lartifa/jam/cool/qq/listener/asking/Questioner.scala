@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.asking
 
-import cc.moecraft.icq.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
+import o.lartifa.jam.ob.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
 import o.lartifa.jam.cool.qq.listener.listenerCommonPool
 
 import java.util.concurrent.atomic.AtomicInteger

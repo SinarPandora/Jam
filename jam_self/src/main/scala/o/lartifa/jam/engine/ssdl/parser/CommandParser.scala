@@ -1,7 +1,7 @@
 package o.lartifa.jam.engine.ssdl.parser
 
-import cc.moecraft.icq.sender.message.components.ComponentContact.ContactType
-import cc.moecraft.icq.sender.message.components.ComponentMusic.MusicSourceType
+import o.lartifa.jam.ob.sender.message.components.ComponentContact.ContactType
+import o.lartifa.jam.ob.sender.message.components.ComponentMusic.MusicSourceType
 import cn.hutool.core.text.CharSequenceUtil
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.engine.proto.Parser

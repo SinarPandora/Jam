@@ -1,0 +1,37 @@
+package o.lartifa.jam.ob.event.events.message;
+
+import o.lartifa.jam.ob.sender.returndata.ReturnData;
+import o.lartifa.jam.ob.sender.returndata.returnpojo.send.RMessageReturnData;
+import o.lartifa.jam.ob.user.User;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
+/**
+ * 私聊消息事件
+ *
+ * @author Hykilpikonna
+ */
+@EqualsAndHashCode(callSuper = true)
+@Data
+@ToString(callSuper = true)
+public class EventPrivateMessage extends EventMessage
+{
+    @SerializedName("sub_type")
+    @Expose
+    protected String subType;
+
+    @Override
+    public ReturnData<RMessageReturnData> respond(String message, boolean raw)
+    {
+        return respondPrivateMessage(message, raw);
+    }
+
+    @Override
+    public User getSender()
+    {
+        return getBot().getUserManager().getUserFromID(senderId);
+    }
+}

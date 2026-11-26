@@ -1,7 +1,7 @@
 package o.lartifa.jam.engine
 
 import better.files.StringExtensions
-import cc.moecraft.icq.PicqBotX
+import o.lartifa.jam.ob.PicqBotX
 import cc.moecraft.logger.{HyLogger, LoggerInstanceManager}
 import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.bionic.BehaviorInitializer

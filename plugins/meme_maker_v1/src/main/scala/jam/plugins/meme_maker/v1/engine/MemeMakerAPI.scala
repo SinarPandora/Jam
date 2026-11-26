@@ -4,8 +4,8 @@ import java.time.LocalDateTime
 import java.util.Base64
 import java.util.concurrent.{SynchronousQueue, ThreadPoolExecutor, TimeUnit}
 
-import cc.moecraft.icq.event.events.message.EventMessage
-import cc.moecraft.icq.sender.message.components.ComponentImageBase64
+import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.ob.sender.message.components.ComponentImageBase64
 import cc.moecraft.logger.HyLogger
 import jam.plugins.meme_maker.v1.engine.MemeAPIV1Response._
 import o.lartifa.jam.pool.JamContext
