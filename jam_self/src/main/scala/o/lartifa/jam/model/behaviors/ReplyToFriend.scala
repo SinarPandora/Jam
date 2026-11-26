@@ -8,7 +8,6 @@ import cc.moecraft.icq.sender.returndata.{ReturnData, ReturnStatus}
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.pool.JamContext
 
-import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
@@ -84,18 +83,17 @@ trait ReplyToFriend {
    * @param exec    执行上下文
    * @return 昵称
    */
-  protected def senderNickName(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[String] = async {
+  protected def senderNickName(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[String] =
     context.eventMessage match {
       case _: EventGroupOrDiscussMessage =>
-        await(context.tempVars.get("对方群昵称")) match {
-          case Some(value) => value
-          case None => await(context.tempVars.get("对方昵称")).getOrElse("这个人")
+        context.tempVars.get("对方群昵称").flatMap {
+          case Some(value) => Future.successful(value)
+          case None => context.tempVars.get("对方昵称").map(_.getOrElse("这个人"))
         }
       case _: EventPrivateMessage =>
-        await(context.tempVars.get("对方昵称")).getOrElse("你")
-      case _ => "这个人"
+        context.tempVars.get("对方昵称").map(_.getOrElse("你"))
+      case _ => Future.successful("这个人")
     }
-  }
 
   /**
    * At 消息发送者

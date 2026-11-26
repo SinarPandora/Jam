@@ -7,7 +7,6 @@ import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.Command
 import o.lartifa.jam.pool.ThreadPools
 
-import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -24,24 +23,33 @@ object PauseOrResumeSubscription extends Command[Unit] {
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
-    (await(context.tempVars.get("sourceType")),
-      await(context.tempVars.get("sourceIdentity")),
-      await(context.tempVars.get("isPaused"))) match {
-      case (Some(sourceType), Some(sourceIdentity), Some(isPausedStr)) =>
-        await(getSubscriber(sourceType, sourceIdentity, context.chatInfo)) match {
-          case Some(subscriber) =>
-            val isPaused = isPausedStr.toBoolean
-            await(db.run {
-              SourceSubscriber.filter(_.id === subscriber.id)
-                .map(_.isPaused)
-                .update(isPaused)
-            })
-            reply(if (isPaused) "已暂停订阅⏸" else "已恢复订阅▶️")
-          case None => reply(Prompts.SubscriptionNotExist)
-        }
-      case _ =>
-    }
-    ()
-  }(ThreadPools.DB)
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] =
+    run(context)(ThreadPools.DB)
+
+  private def run(context: CommandExecuteContext)(implicit exec: ExecutionContext): Future[Unit] = {
+    implicit val ctx: CommandExecuteContext = context
+    for {
+      sourceTypeOpt <- context.tempVars.get("sourceType")
+      sourceIdentityOpt <- context.tempVars.get("sourceIdentity")
+      isPausedOpt <- context.tempVars.get("isPaused")
+      _ <- (sourceTypeOpt, sourceIdentityOpt, isPausedOpt) match {
+        case (Some(sourceType), Some(sourceIdentity), Some(isPausedStr)) =>
+          getSubscriber(sourceType, sourceIdentity, context.chatInfo).flatMap {
+            case Some(subscriber) =>
+              val isPaused = isPausedStr.toBoolean
+              db.run {
+                SourceSubscriber.filter(_.id === subscriber.id)
+                  .map(_.isPaused)
+                  .update(isPaused)
+              }.map { _ =>
+                reply(if (isPaused) "已暂停订阅⏸" else "已恢复订阅▶️")
+              }
+            case None =>
+              reply(Prompts.SubscriptionNotExist)
+              Future.unit
+          }
+        case _ => Future.unit
+      }
+    } yield ()
+  }
 }

@@ -26,7 +26,6 @@ import o.lartifa.jam.pool.{CronTaskPool, JamContext, StepPool}
 import o.lartifa.jam.common.config.JSONConfig.formats
 import org.json4s.jackson.Serialization.write
 
-import scala.async.Async.*
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.collection.parallel.CollectionConverters.*
@@ -61,58 +60,68 @@ object JamLoader {
    * @param args   命令行参数
    * @return 异步结果
    */
-  def init(client: PicqBotX, args: Array[String]): Future[Unit] = async {
-    makeSureDirsExist()
-    Memory.init(args.contains("--flyway_repair"))
-    await(JamPluginLoader.initJamPluginSystems())
-    JamContext.cronTaskPool.getAndSet(CronTaskPool().autoRefreshTaskDefinition())
-    await(initSXDL())
-    SourceScanTask.init()
-    await(BehaviorInitializer.init())
-    await(BanList.loadBanList())
-    ScriptRunner.init()
-    runBootTasks()
-    client.getEventManager.registerListeners(QMessageListener, QEventListener, SystemEventListener)
-    client.getCommandManager.registerCommands(MasterCommands.commands *)
-    KeepAliveDreamingActor.showBootMessage()
-    Runtime.getRuntime.addShutdownHook(shutdownHookThread)
-  }
+  def init(client: PicqBotX, args: Array[String]): Future[Unit] =
+    for {
+      _ <- Future.unit
+      _ = {
+        makeSureDirsExist()
+        Memory.init(args.contains("--flyway_repair"))
+      }
+      _ <- JamPluginLoader.initJamPluginSystems()
+      _ = JamContext.cronTaskPool.getAndSet(CronTaskPool().autoRefreshTaskDefinition())
+      _ <- initSXDL()
+      _ = SourceScanTask.init()
+      _ <- BehaviorInitializer.init()
+      _ <- BanList.loadBanList()
+    } yield {
+      ScriptRunner.init()
+      runBootTasks()
+      client.getEventManager.registerListeners(QMessageListener, QEventListener, SystemEventListener)
+      client.getCommandManager.registerCommands(MasterCommands.commands *)
+      KeepAliveDreamingActor.showBootMessage()
+      Runtime.getRuntime.addShutdownHook(shutdownHookThread)
+    }
 
   /**
    * 重新加载
    *
    * @return 异步结果
    */
-  def reload(): Future[Unit] = async {
-    if (!JamContext.initLock.get()) {
-      DynamicConfigLoader.reload()
-      makeSureDirsExist()
-      MasterUtil.notifyAndLog(s"开始重新加载${JamConfig.config.name}的各个组件")
-      QMessageListener.reloadPreHandleTasks()
-      QMessageListener.reloadPostHandleTasks()
-      CoolQQLoader.reloadMasterCommands()
-      JamContext.cronTaskPool.get().autoRefreshTaskDefinition()
-      await(BehaviorInitializer.init())
-      SourceScanTask.init()
-      await(initSXDL())
-      runBootTasks()
-      JamContext.initLock.getAndSet(false)
-      MasterUtil.notifyAndLog("加载完毕！")
-    } else {
-      MasterUtil.notifyMaster("重新加载进行中...")
+  def reload(): Future[Unit] =
+    Future.unit.flatMap { _ =>
+      if (!JamContext.initLock.get()) {
+        DynamicConfigLoader.reload()
+        makeSureDirsExist()
+        MasterUtil.notifyAndLog(s"开始重新加载${JamConfig.config.name}的各个组件")
+        QMessageListener.reloadPreHandleTasks()
+        QMessageListener.reloadPostHandleTasks()
+        CoolQQLoader.reloadMasterCommands()
+        JamContext.cronTaskPool.get().autoRefreshTaskDefinition()
+        for {
+          _ <- BehaviorInitializer.init()
+          _ = SourceScanTask.init()
+          _ <- initSXDL()
+        } yield {
+          runBootTasks()
+          JamContext.initLock.getAndSet(false)
+          MasterUtil.notifyAndLog("加载完毕！")
+        }
+      } else {
+        Future.successful(MasterUtil.notifyMaster("重新加载进行中..."))
+      }
     }
-  }
 
   /**
    * 仅编译 SXDL 脚本并导出结果
    *
    * @return 异步结果
    */
-  def compileOnly(): Future[Unit] = async {
-    JamContext.loggerFactory.set(new LoggerFactory(new LoggerInstanceManager()))
-    JamContext.setAPIClient(() => null)
-    await(initSXDL(true))
-  }
+  def compileOnly(): Future[Unit] =
+    Future.unit.flatMap { _ =>
+      JamContext.loggerFactory.set(new LoggerFactory(new LoggerInstanceManager()))
+      JamContext.setAPIClient(() => null)
+      initSXDL(true)
+    }
 
   /**
    * R 指令刷新范围
@@ -120,7 +129,8 @@ object JamLoader {
    * @param context 指令解析上下文
    * @return
    */
-  def rCommand()(implicit context: CommandExecuteContext): Future[Unit] = async {
+  def rCommand()(implicit context: CommandExecuteContext): Future[Unit] =
+    Future.unit.flatMap { _ =>
     if (!JamContext.initLock.get()) {
       context.eventMessage.respond(
         s"""${
@@ -135,14 +145,20 @@ object JamLoader {
       QMessageListener.reloadPreHandleTasks()
       QMessageListener.reloadPostHandleTasks()
       JamContext.cronTaskPool.get().autoRefreshTaskDefinition()
-      await(BehaviorInitializer.init())
-      await(loadSXDL()).foreach {
-        _.sliding(10, 10).foreach(lines => context.eventMessage.respond(lines.map(it => s"λ> $it").mkString("\n")))
+      for {
+        _ <- BehaviorInitializer.init()
+        loaded <- loadSXDL()
+      } yield {
+        loaded.foreach {
+          _.sliding(10, 10).foreach(lines => context.eventMessage.respond(lines.map(it => s"λ> $it").mkString("\n")))
+        }
+        context.eventMessage.respond("λ> 🎉 动态配置和定时任务已全部刷新完毕！")
+        JamContext.initLock.getAndSet(false)
+        ()
       }
-      context.eventMessage.respond("λ> 🎉 动态配置和定时任务已全部刷新完毕！")
-      JamContext.initLock.getAndSet(false)
     } else {
       context.eventMessage.respond("重新加载已在进行...")
+      Future.unit
     }
   }
 
@@ -177,10 +193,9 @@ object JamLoader {
    *
    * @param compileOnly 仅编译
    */
-  private def initSXDL(compileOnly: Boolean = false): Future[Unit] = async {
-    await(loadSXDL(compileOnly)).foreach(message =>
-      MasterUtil.notifyAndLog(message.mkString("\n")))
-  }
+  private def initSXDL(compileOnly: Boolean = false): Future[Unit] =
+    loadSXDL(compileOnly).map(_.foreach(message =>
+      MasterUtil.notifyAndLog(message.mkString("\n"))))
 
   /**
    * 读取 SSDL

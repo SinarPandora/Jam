@@ -4,7 +4,6 @@ import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.pool.JamContext
 
-import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -20,7 +19,7 @@ object BehaviorInitializer {
   /**
    * 初始化
    */
-  def init()(implicit exec: ExecutionContext): Future[Unit] = async {
+  def init()(implicit exec: ExecutionContext): Future[Unit] = Future {
     logger.log(s"${AnsiColor.YELLOW}正在调整生物钟")
     BiochronometerParser.parse()
     logger.log(s"${AnsiColor.YELLOW}生物钟调整完毕")

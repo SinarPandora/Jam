@@ -8,7 +8,8 @@ plugins {
 group 'lartifa.o'
 
 java {
-    sourceCompatibility = "11"
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
 }
 
 repositories {
@@ -18,6 +19,8 @@ repositories {
 dependencies {
     api('cn.hutool:hutool-all:5.8.2')
     api("com.github.hydevelop:HyLogger:4.0.254")
+    // Picq 直接使用 Gson，此前仅传递依赖；显式声明以免 classpath 漂移
+    api('com.google.code.gson:gson:2.11.0')
 
     testImplementation('junit:junit:4.13.2')
 }

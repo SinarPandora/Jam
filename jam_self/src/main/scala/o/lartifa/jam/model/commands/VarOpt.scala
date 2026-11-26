@@ -4,7 +4,6 @@ import o.lartifa.jam.common.exception.{ExecutionException, VarNotFoundException}
 import o.lartifa.jam.model.commands.VarOpt.Operation
 import o.lartifa.jam.model.{CommandExecuteContext, VarKey}
 
-import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
@@ -32,17 +31,19 @@ case class VarOpt(varKey: VarKey, opt: Operation, template: RenderStrTemplate) e
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[String] = async {
-    val value: String = await(template.execute())
-    if (opt == VarOpt.SET) {
-      await(varKey.updateOrElseSet(value))
-    } else {
-      Try(BigDecimal(value)).getOrElse(throw ExecutionException("试图使用非数字进行加减乘除"))
-      val originValue = await(varKey.query).getOrElse(throw VarNotFoundException(varKey.name))
-      Try(BigDecimal(originValue)).getOrElse(throw ExecutionException("变量的原始值不为数字"))
-      await(varKey.update(operate(originValue, value)))
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[String] =
+    template.execute().flatMap { value =>
+      if (opt == VarOpt.SET) {
+        varKey.updateOrElseSet(value)
+      } else {
+        Try(BigDecimal(value)).getOrElse(throw ExecutionException("试图使用非数字进行加减乘除"))
+        varKey.query.flatMap { queried =>
+          val originValue = queried.getOrElse(throw VarNotFoundException(varKey.name))
+          Try(BigDecimal(originValue)).getOrElse(throw ExecutionException("变量的原始值不为数字"))
+          varKey.update(operate(originValue, value))
+        }
+      }
     }
-  }
 }
 
 object VarOpt {

@@ -18,7 +18,6 @@ import o.lartifa.jam.plugins.caiyunai.dream.KeepAliveDreamingActor
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
 import java.util
-import scala.async.Async.*
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
@@ -64,12 +63,12 @@ object MasterCommands {
      * @param args    参数
      * @return 输出内容
      */
-    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = async {
-      val pool = JamContext.variablePool
-      val result: String = await(pool.listAll()).sortBy(_.chatId).map(row => s"ID：${row.chatId}，变量名：${row.name}，值：${row.value}").mkString("\n")
-      if ("" == result) event.respond("当前会话没有变量哦")
-      result
-    }
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] =
+      JamContext.variablePool.listAll().map { rows =>
+        val result: String = rows.sortBy(_.chatId).map(row => s"ID：${row.chatId}，变量名：${row.name}，值：${row.value}").mkString("\n")
+        if ("" == result) event.respond("当前会话没有变量哦")
+        result
+      }
   }
 
   private object ClearVariableInChat extends MasterEverywhereCommand("清空变量", "清理变量") {
@@ -82,11 +81,8 @@ object MasterCommands {
      * @param args    参数
      * @return 输出内容
      */
-    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = async {
-      val pool = JamContext.variablePool
-      await(pool.cleanAllInChat(event))
-      "我已经把它们忘掉啦！"
-    }
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] =
+      JamContext.variablePool.cleanAllInChat(event).map(_ => "我已经把它们忘掉啦！")
   }
 
   private object SetVariable extends MasterEverywhereCommand("设置变量") {
@@ -99,17 +95,18 @@ object MasterCommands {
      * @param args    参数
      * @return 输出内容
      */
-    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = async {
-      if (args.size() != 2) {
-        // 输入不合法
-        "？"
-      } else {
-        val name = args.get(0)
-        val value = args.get(1)
-        val pool = JamContext.variablePool
-        await(pool.updateOrElseSet(name, value)(CommandExecuteContext(event)).map(_ => "变量设置成功！"))
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] =
+      Future.unit.flatMap { _ =>
+        if (args.size() != 2) {
+          // 输入不合法
+          Future.successful("？")
+        } else {
+          val name = args.get(0)
+          val value = args.get(1)
+          val pool = JamContext.variablePool
+          pool.updateOrElseSet(name, value)(CommandExecuteContext(event)).map(_ => "变量设置成功！")
+        }
       }
-    }
   }
 
   private object RemoveVariable extends MasterEverywhereCommand("删除变量") {
@@ -122,15 +119,16 @@ object MasterCommands {
      * @param args    参数
      * @return 输出内容
      */
-    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = async {
-      if (args.isEmpty) {
-        "？？"
-      } else {
-        val name = args.get(0)
-        val pool = JamContext.variablePool
-        await(pool.delete(name)(CommandExecuteContext(event)).map(_ => "变量删除成功！"))
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] =
+      Future.unit.flatMap { _ =>
+        if (args.isEmpty) {
+          Future.successful("？？")
+        } else {
+          val name = args.get(0)
+          val pool = JamContext.variablePool
+          pool.delete(name)(CommandExecuteContext(event)).map(_ => "变量删除成功！")
+        }
       }
-    }
   }
 
   private object ReloadSSDL extends MasterEverywhereCommand("重新解析", "R") {
@@ -143,10 +141,8 @@ object MasterCommands {
      * @param args    参数
      * @return 输出内容
      */
-    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = async {
-      await(JamLoader.rCommand()(CommandExecuteContext(event)))
-      NO_RESPONSE
-    }
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] =
+      Future.unit.flatMap(_ => JamLoader.rCommand()(CommandExecuteContext(event))).map(_ => NO_RESPONSE)
   }
 
   private object SessionInfo extends MasterEverywhereCommand("聊天信息", "会话信息") {
@@ -159,7 +155,7 @@ object MasterCommands {
      * @param args    参数
      * @return 输出内容
      */
-    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = async {
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = Future {
       val ChatInfo(chatType, chatId) = ChatInfo(event)
       s"""会话类型为：$chatType
          |会话 ID 为：$chatId""".stripMargin
@@ -176,7 +172,7 @@ object MasterCommands {
      * @param args    参数
      * @return 输出内容
      */
-    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = async {
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = Future {
       event.getBot.getAccountManager.refreshCache()
       "缓存刷新成功"
     }
@@ -192,14 +188,14 @@ object MasterCommands {
      * @param args    参数
      * @return 输出内容
      */
-    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = async {
-      val plugins = await(JamPluginLoader.listPlugin()).map(it => {
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] =
+      JamPluginLoader.listPlugin().map(_.map(it => {
         s"${it.id}：[${if (it.isEnabled) "启用" else "禁用"}]${it.name}，" +
           s"包名：${it.`package`}，作者：${it.author}"
-      })
-      if (plugins.isEmpty) "当前没有安装任何插件"
-      else "当前已安装的插件列表如下：\n" + plugins.mkString("\n")
-    }
+      })).map { plugins =>
+        if (plugins.isEmpty) "当前没有安装任何插件"
+        else "当前已安装的插件列表如下：\n" + plugins.mkString("\n")
+      }
   }
 
   private object EnablePlugin extends MasterEverywhereCommand("启用插件") {
@@ -433,25 +429,27 @@ object MasterCommands {
      * @param args    参数
      * @return 输出内容
      */
-    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = async {
-      val promise = Promise[Boolean]()
-      ActorCreator.actorOf(ExtraActor(
-        ctx => KeepAliveDreamingActor.instance ! Exit(ctx.self),
-        _ => {
-          case Done => promise.success(true)
-        }
-      ))
-      await(promise.future)
-      ActorCreator.actorOf(ExtraActor(
-        ctx => KeepAliveDreamingActor.instance ! Login(ctx.self, event),
-        _ => {
-          case Done => // 什么也不做
-          case Fail(errMsg) => event.respond(errMsg)
-          case _ => event.respond("进入登录流程失败")
-        }
-      ))
-      NO_RESPONSE
-    }
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] =
+      Future.unit.flatMap { _ =>
+        val promise = Promise[Boolean]()
+        ActorCreator.actorOf(ExtraActor(
+          ctx => KeepAliveDreamingActor.instance ! Exit(ctx.self),
+          _ => {
+            case Done => promise.success(true)
+          }
+        ))
+        promise.future
+      }.map { _ =>
+        ActorCreator.actorOf(ExtraActor(
+          ctx => KeepAliveDreamingActor.instance ! Login(ctx.self, event),
+          _ => {
+            case Done => // 什么也不做
+            case Fail(errMsg) => event.respond(errMsg)
+            case _ => event.respond("进入登录流程失败")
+          }
+        ))
+        NO_RESPONSE
+      }
   }
 
   private object EnableNXJL extends MasterEverywhereCommand("开启女性交流") {
@@ -464,14 +462,12 @@ object MasterCommands {
      * @param args    参数
      * @return 输出内容
      */
-    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = async {
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] =
       event match {
         case message: EventGroupMessage =>
-          await(JamContext.variablePool.updateOrElseSet(s"Group_${message.getGroupId}_NXJL_Enabled", "true"))
-          "本群已开启女性交流功能，请注意发言！"
-        case _ => "无法为私聊开启该功能"
+          JamContext.variablePool.updateOrElseSet(s"Group_${message.getGroupId}_NXJL_Enabled", "true").map(_ => "本群已开启女性交流功能，请注意发言！")
+        case _ => Future.successful("无法为私聊开启该功能")
       }
-    }
   }
 
   private object DisableNXJL extends MasterEverywhereCommand("关闭女性交流") {
@@ -484,13 +480,11 @@ object MasterCommands {
      * @param args    参数
      * @return 输出内容
      */
-    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] = async {
+    override def task(event: EventMessage, sender: User, command: String, args: util.ArrayList[String]): Future[String] =
       event match {
         case message: EventGroupMessage =>
-          await(JamContext.variablePool.updateOrElseSet(s"Group_${message.getGroupId}_NXJL_Enabled", "false"))
-          "女性交流已关闭，可以畅所欲言啦"
-        case _ => "未开启该功能"
+          JamContext.variablePool.updateOrElseSet(s"Group_${message.getGroupId}_NXJL_Enabled", "false").map(_ => "女性交流已关闭，可以畅所欲言啦")
+        case _ => Future.successful("未开启该功能")
       }
-    }
   }
 }

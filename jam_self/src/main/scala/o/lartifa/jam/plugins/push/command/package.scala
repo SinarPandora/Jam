@@ -7,8 +7,7 @@ import o.lartifa.jam.database.schema.Tables.*
 import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.pool.ThreadPools
 
-import scala.async.Async.{async, await}
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * 通用方法
@@ -37,15 +36,17 @@ package object command {
    * @param chatInfo       会话信息
    * @return 源订阅者（可能存在）
    */
-  private[command] def getSubscriber(sourceType: String, sourceIdentity: String, chatInfo: ChatInfo): Future[Option[SourceSubscriberRow]] = async {
+  private[command] def getSubscriber(sourceType: String, sourceIdentity: String, chatInfo: ChatInfo): Future[Option[SourceSubscriberRow]] = {
+    implicit val exec: ExecutionContext = ThreadPools.DB
     val ChatInfo(chatType, chatId) = chatInfo
-    await(getObserver(sourceType, sourceIdentity)) match {
-      case Some(observer) => await(db.run {
-        SourceSubscriber
-          .filter(row => row.sourceId === observer.id && row.chatId === chatId && row.chatType === chatType)
-          .result.headOption
-      })
-      case None => None
+    getObserver(sourceType, sourceIdentity).flatMap {
+      case Some(observer) =>
+        db.run {
+          SourceSubscriber
+            .filter(row => row.sourceId === observer.id && row.chatId === chatId && row.chatType === chatType)
+            .result.headOption
+        }
+      case None => Future.successful(None)
     }
-  }(ThreadPools.DB)
+  }
 }

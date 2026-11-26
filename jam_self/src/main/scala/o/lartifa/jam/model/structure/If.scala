@@ -3,7 +3,6 @@ package o.lartifa.jam.model.structure
 import o.lartifa.jam.model.conditions.Condition
 import o.lartifa.jam.model.{CommandExecuteContext, Executable}
 
-import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -20,10 +19,9 @@ case class If(condition: Condition, command: Executable[_]) extends LogicStructu
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = async {
-    if (await(condition.isMatched)) {
-      await(command.execute())
-      true
-    } else false
-  }
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] =
+    condition.isMatched.flatMap {
+      case true => command.execute().map(_ => true)
+      case false => Future.successful(false)
+    }
 }

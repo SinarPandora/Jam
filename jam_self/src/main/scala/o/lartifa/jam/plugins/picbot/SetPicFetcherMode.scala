@@ -3,7 +3,6 @@ package o.lartifa.jam.plugins.picbot
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.Command
 
-import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -20,7 +19,6 @@ case class SetPicFetcherMode(mode: Mode) extends Command[Unit] {
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
-    await(CONFIG_MODE.updateOrElseSet(mode.str))
-  }
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] =
+    CONFIG_MODE.updateOrElseSet(mode.str).map(_ => ())
 }

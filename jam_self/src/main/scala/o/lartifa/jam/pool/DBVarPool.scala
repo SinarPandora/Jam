@@ -10,7 +10,6 @@ import o.lartifa.jam.database.schema.Tables.*
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 import o.lartifa.jam.pool.DBVarPool.logger
 
-import scala.async.Async.*
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -64,12 +63,8 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
    * @param context 执行上下文
    * @return 执行结果
    */
-  override def updateOrElseUse(name: String, value: String)(implicit context: CommandExecuteContext = null): Future[String] = async {
-    await(get(name)) match {
-      case Some(_) => await(update(name, value))
-      case None => value
-    }
-  }
+  override def updateOrElseUse(name: String, value: String)(implicit context: CommandExecuteContext = null): Future[String] =
+    DBVarPool.updateOrElseUse(get(name), update(name, value), value)(exec)
 
   /**
    * 添加变量
@@ -113,14 +108,11 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
    * @param context 执行上下文
    * @return 变量值
    */
-  override def getOrElseUpdate(name: String, orElse: String)(implicit context: CommandExecuteContext = null): Future[String] = async {
-    await(get(name)) match {
-      case Some(value) => value
-      case None =>
-        await(add(name, orElse))
-        orElse
+  override def getOrElseUpdate(name: String, orElse: String)(implicit context: CommandExecuteContext = null): Future[String] =
+    get(name).flatMap {
+      case Some(value) => Future.successful(value)
+      case None => add(name, orElse).map(_ => orElse)
     }
-  }
 
   /**
    * 删除变量
@@ -129,15 +121,12 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
    * @param context 执行上下文
    * @return true：删除成功
    */
-  override def delete(name: String)(implicit context: CommandExecuteContext = null): Future[Boolean] = async {
+  override def delete(name: String)(implicit context: CommandExecuteContext = null): Future[Boolean] = {
     val ChatInfo(chatType, chatId) = if (context == null) ChatInfo.None else context.chatInfo
     logger.debug(s"变量移除：名称：$name，聊天类型：$chatType，会话 ID：$chatId")
-    await {
-      db.run {
-        Variables.filter(row => row.chatId === chatId && row.chatType === chatType && row.name === name).delete
-      }
-    }
-    true
+    db.run {
+      Variables.filter(row => row.chatId === chatId && row.chatType === chatType && row.name === name).delete
+    }.map(_ => true)
   }
 
   /**
@@ -146,14 +135,11 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
    * @param eventMessage 消息事件
    * @return true：删除成功
    */
-  override def cleanAllInChat(eventMessage: EventMessage): Future[Boolean] = async {
+  override def cleanAllInChat(eventMessage: EventMessage): Future[Boolean] = {
     val ChatInfo(chatType, chatId) = ChatInfo(eventMessage)
-    await {
-      db.run {
-        Variables.filter(row => row.chatId === chatId && row.chatType === chatType).delete
-      }
-    }
-    true
+    db.run {
+      Variables.filter(row => row.chatId === chatId && row.chatType === chatType).delete
+    }.map(_ => true)
   }
 
   /**
@@ -161,19 +147,16 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
    *
    * @return true：删除成功
    */
-  override def cleanAll(): Future[Boolean] = async {
-    await(db.run(Variables.delete))
-    true
-  }
+  override def cleanAll(): Future[Boolean] =
+    db.run(Variables.delete).map(_ => true)
 
   /**
    * 列出全部变量
    *
    * @return 全部变量
    */
-  override def listAll(): Future[Seq[Tables.VariablesRow]] = async {
-    await(db.run(Variables.result))
-  }
+  override def listAll(): Future[Seq[Tables.VariablesRow]] =
+    db.run(Variables.result)
 
   /**
    * 列出全部变量
@@ -181,9 +164,9 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
    * @param eventMessage 消息事件
    * @return 全部变量
    */
-  override def listAllInChart(eventMessage: EventMessage): Future[Seq[Tables.VariablesRow]] = async {
+  override def listAllInChart(eventMessage: EventMessage): Future[Seq[Tables.VariablesRow]] = {
     val ChatInfo(chatType, chatId) = ChatInfo(eventMessage)
-    await(db.run(Variables.filter(row => row.chatType === chatType && row.chatId === chatId).result))
+    db.run(Variables.filter(row => row.chatType === chatType && row.chatId === chatId).result)
   }
 }
 
@@ -192,4 +175,18 @@ object DBVarPool {
   private implicit val executionContext: ExecutionContext = ThreadPools.DB
 
   def apply(): DBVarPool = new DBVarPool()
+
+  /**
+   * 变量存在时更新，不存在时直接使用默认值（纯 Future 逻辑，不依赖数据库）
+   *
+   * @param lookup  查询变量是否存在
+   * @param doUpdate 变量存在时执行的更新
+   * @param default 变量不存在时的默认值
+   */
+  private[jam] def updateOrElseUse(lookup: => Future[Option[String]], doUpdate: => Future[String], default: String)
+                                  (exec: ExecutionContext): Future[String] =
+    lookup.flatMap {
+      case Some(_) => doUpdate
+      case None => Future.successful(default)
+    }(exec)
 }

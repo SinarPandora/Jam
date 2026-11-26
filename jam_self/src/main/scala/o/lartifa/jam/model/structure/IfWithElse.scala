@@ -2,7 +2,6 @@ package o.lartifa.jam.model.structure
 
 import o.lartifa.jam.model.{CommandExecuteContext, Executable}
 
-import scala.async.Async._
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -19,11 +18,10 @@ case class IfWithElse(`if`: If, orElse: Executable[_]) extends LogicStructure {
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = async {
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] =
     // 当 IF 没有执行时，执行 Else
-    if (!await(`if`.execute())) {
-      await(orElse.execute())
-      true
-    } else false
-  }
+    `if`.execute().flatMap {
+      case false => orElse.execute().map(_ => true)
+      case true => Future.successful(false)
+    }
 }

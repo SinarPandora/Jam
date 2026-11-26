@@ -12,7 +12,6 @@ import o.lartifa.jam.model.patterns.SSDLParseResult
 import java.nio.charset.Charset
 import java.util.concurrent.atomic.AtomicLong
 import scala.annotation.tailrec
-import scala.async.Async.{async, await}
 import scala.collection.parallel.CollectionConverters.*
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.matching.Regex
@@ -53,18 +52,21 @@ object SXDLParseEngine extends Parser {
    * @return 解析结果，键为 false 对应的内容为解析失败的信息
    */
   @throws[ParseFailException]
-  def load()(implicit exec: ExecutionContext): Future[Map[Boolean, Seq[Either[SXDLParseFailResult, SXDLParseSuccessResult]]]] = async {
-    val autoIdCounter = new AtomicLong(-1)
-    CommandParser.prepareParsers()
-    val scriptPath: File = File(SystemConfig.sxdlPath).createDirectoryIfNotExists()
-    if (BotConfig.RemoteEditing.enable) {
-      await(RemoteSXDLClient.fetchRemoteScripts(scriptPath))
+  def load()(implicit exec: ExecutionContext): Future[Map[Boolean, Seq[Either[SXDLParseFailResult, SXDLParseSuccessResult]]]] =
+    Future.unit.flatMap { _ =>
+      val autoIdCounter = new AtomicLong(-1)
+      CommandParser.prepareParsers()
+      val scriptPath: File = File(SystemConfig.sxdlPath).createDirectoryIfNotExists()
+      val fetched: Future[Unit] =
+        if (BotConfig.RemoteEditing.enable) RemoteSXDLClient.fetchRemoteScripts(scriptPath).map(_ => ())
+        else Future.unit
+      fetched.map { _ =>
+        DynamicConfigLoader.reload()
+        loadFiles(scriptPath).flatMap {
+          case (ssdlFiles, chatInfo) => parseFiles(ssdlFiles, chatInfo, autoIdCounter)
+        }.groupBy(_.isRight)
+      }
     }
-    DynamicConfigLoader.reload()
-    loadFiles(scriptPath).flatMap {
-      case (ssdlFiles, chatInfo) => parseFiles(ssdlFiles, chatInfo, autoIdCounter)
-    }.groupBy(_.isRight)
-  }
 
   /**
    * 加载 SSDL 文件

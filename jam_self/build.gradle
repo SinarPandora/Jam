@@ -1,7 +1,7 @@
 buildscript {
     dependencies {
-        classpath 'org.flywaydb:flyway-core:8.5.12'
-        classpath 'mysql:mysql-connector-java:8.0.28'
+        classpath "org.flywaydb:flyway-core:$flyway_version"
+        classpath 'org.postgresql:postgresql:42.3.7'
     }
 }
 
@@ -13,7 +13,7 @@ plugins {
     id 'application'
     id 'java-library'
     id 'io.freefair.lombok' version '9.1.0'
-    id 'org.flywaydb.flyway' version '8.5.11'
+    id 'org.flywaydb.flyway' version '11.7.2'
 }
 
 distributions {
@@ -30,7 +30,7 @@ distributions {
 }
 
 tasks.withType(ScalaCompile) {
-    scalaCompileOptions.additionalParameters = ['-Xsource:3', '-Xasync']
+    scalaCompileOptions.additionalParameters = ['-Xsource:3']
 }
 
 // Playground 是本地实验入口，不是测试；排除以免干扰 test 任务
@@ -140,7 +140,8 @@ dependencies {
     api("com.typesafe.slick:slick-hikaricp_2.13:$slick_version")
     api('com.h2database:h2:2.1.212')
     api('org.postgresql:postgresql:42.3.7')
-    api('org.flywaydb:flyway-core:8.5.12')
+    api("org.flywaydb:flyway-core:$flyway_version")
+    api("org.flywaydb:flyway-database-postgresql:$flyway_version")
 
     // Jam Lambda
     api('org.jsoup:jsoup:1.15.3')

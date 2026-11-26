@@ -4,7 +4,6 @@ import o.lartifa.jam.cool.qq.listener.MsgMatchers
 import o.lartifa.jam.model.patterns.ContentMatcher
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 
-import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
@@ -22,7 +21,7 @@ object WhatICanDo extends Command[Unit] {
    * @param exec    异步上下文
    * @return 异步返回执行结果
    */
-  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = async {
+  override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = Future.unit.flatMap { _ =>
     val ChatInfo(chatType, chatId) = ChatInfo(context.eventMessage)
     val matchers: Seq[ContentMatcher] = (MsgMatchers.custom.get()
       .getOrElse(chatType, Map())
@@ -31,12 +30,13 @@ object WhatICanDo extends Command[Unit] {
       .filterNot(_.`type` == ContentMatcher.REGEX)
     val idx = Random.nextInt(matchers.size)
     val matcher = matchers(idx)
-    val intro = await(matcher.intro)
-    reply(
-      s"""你可以尝试$intro
-         |------------------------
-         |注意，某些功能：
-         |1. 可能是概率触发的
-         |2. 可能是为指定群定制的""".stripMargin)
+    matcher.intro.map { intro =>
+      reply(
+        s"""你可以尝试$intro
+           |------------------------
+           |注意，某些功能：
+           |1. 可能是概率触发的
+           |2. 可能是为指定群定制的""".stripMargin)
+    }
   }
 }
