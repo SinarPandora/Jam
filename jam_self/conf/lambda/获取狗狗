@@ -1,7 +1,6 @@
-import o.lartifa.jam.ob.sender.message.components.ComponentImageBase64
 import cn.hutool.core.img.Img
 import org.jsoup.Jsoup
-
+import o.lartifa.jam.onebot.cq.ComponentImageBase64
 filename = Jsoup.connect("https://random.dog/").get().getElementById("dog-img").attr("src")
 
 reply("割藕")

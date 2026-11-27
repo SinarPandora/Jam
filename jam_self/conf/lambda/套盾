@@ -1,18 +1,17 @@
 /**
  * lambda<NAME>(%{目标QQ}%,%{数量}%)
  */
-import o.lartifa.jam.ob.event.events.message.EventDiscussMessage
-import o.lartifa.jam.ob.event.events.message.EventGroupMessage
-import o.lartifa.jam.ob.event.events.message.EventPrivateMessage
-import o.lartifa.jam.ob.sender.message.components.ComponentAt
+import o.lartifa.jam.onebot.domain.DiscussMessage
+import o.lartifa.jam.onebot.domain.GroupMessage
+import o.lartifa.jam.onebot.domain.PrivateMessage
 
 import java.util.concurrent.TimeUnit
-
+import o.lartifa.jam.onebot.cq.ComponentAt
 if ($args.size() < 2) {
     return
 }
 
-if ($msg instanceof EventPrivateMessage || $msg instanceof EventDiscussMessage) {
+if ($msg instanceof PrivateMessage || $msg instanceof DiscussMessage) {
     return
 }
 
@@ -25,7 +24,7 @@ shield = $vars.get("背刺盾_${target}").map(Integer::parseInt).orElse(0)
 if (amount > 0) {
     if (shield + amount > 5) {
         if (random.nextInt(4) == 1 && $msg.senderId == target) {
-            $api.setGroupBan(((EventGroupMessage) $msg).getGroupId(), target, TimeUnit.MINUTES.toSeconds(5))
+            $api.setGroupBan(((GroupMessage) $msg).groupId(), target, TimeUnit.MINUTES.toSeconds(5))
             $vars.updateOrElseSet("背刺盾_${target}", "0")
             reply("${new ComponentAt(target)}套了太多的盾，行动迟缓无力，被路过的南村群童公然背刺😭，盾也都被抱走了！！")
         } else {

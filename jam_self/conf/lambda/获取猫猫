@@ -1,7 +1,6 @@
-import o.lartifa.jam.ob.sender.message.components.ComponentImageBase64
 import cn.hutool.core.img.Img
 import org.jsoup.Jsoup
-
+import o.lartifa.jam.onebot.cq.ComponentImageBase64
 filename = Jsoup.connect("http://random.cat/").get().select("img").first().attr("src")
 
 reply("摸凹")
