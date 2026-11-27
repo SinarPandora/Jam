@@ -41,11 +41,14 @@ final class OneBotHttpClient(
       } yield body
     }
 
-  def sendPrivateMsg(userId: Long, message: String): String =
-    postRaw("send_private_msg", SendPrivateMsgParams(userId, message).toJsonString)
+  def sendPrivateMsg(userId: Long, message: String, autoEscape: Boolean = false): String =
+    postRaw("send_private_msg", SendPrivateMsgParams(userId, message, autoEscape).toJsonString)
 
-  def sendGroupMsg(groupId: Long, message: String): String =
-    postRaw("send_group_msg", SendGroupMsgParams(groupId, message).toJsonString)
+  def sendGroupMsg(groupId: Long, message: String, autoEscape: Boolean = false): String =
+    postRaw("send_group_msg", SendGroupMsgParams(groupId, message, autoEscape).toJsonString)
+
+  def sendDiscussMsg(discussId: Long, message: String, autoEscape: Boolean = false): String =
+    postRaw("send_discuss_msg", SendDiscussMsgParams(discussId, message, autoEscape).toJsonString)
 
   def setGroupBan(groupId: Long, userId: Long, duration: Long): String =
     postRaw("set_group_ban", SetGroupBanParams(groupId, userId, duration).toJsonString)
@@ -65,12 +68,12 @@ final class OneBotHttpClient(
   private def encodeParams(params: Map[String, Any]): String = {
     val entries = params.map { case (k, v) =>
       val encoded = v match {
-        case null          => "null"
-        case n: Number     => n.toString
+        case null                 => "null"
+        case n: Number            => n.toString
         case b: java.lang.Boolean => b.toString
-        case b: Boolean    => b.toString
-        case s: String     => "\"" + escapeJson(s) + "\""
-        case other         => "\"" + escapeJson(other.toString) + "\""
+        case b: Boolean           => b.toString
+        case s: String            => "\"" + escapeJson(s) + "\""
+        case other                => "\"" + escapeJson(other.toString) + "\""
       }
       s""""$k":$encoded"""
     }
