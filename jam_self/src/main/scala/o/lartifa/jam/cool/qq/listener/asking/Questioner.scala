@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.asking
 
-import o.lartifa.jam.ob.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
+import o.lartifa.jam.onebot.domain.{ChatMessage, DiscussMessage, GroupMessage, PrivateMessage}
 import o.lartifa.jam.cool.qq.listener.listenerCommonPool
 
 import java.util.concurrent.atomic.AtomicInteger
@@ -18,7 +18,7 @@ import scala.concurrent.duration.{Duration, _}
 @deprecated(since = "3.1", message = "Please use o.lartifa.jam.cool.qq.listener.interactive")
 object Questioner {
 
-  case class QuestionContext(answerer: Answerer, event: EventMessage, question: Question)
+  case class QuestionContext(answerer: Answerer, event: ChatMessage, question: Question)
 
   /**
    * 待解决问题队列
@@ -33,15 +33,15 @@ object Questioner {
    * @return true：继续处理之后的消息
    *         false：中断，并等待下一条消息
    */
-  def tryAnswerer(eventMessage: EventMessage): Future[Boolean] = {
+  def tryAnswerer(eventMessage: ChatMessage): Future[Boolean] = {
     val currentAnswer = Answerer.sender(eventMessage)
     if (questionWaitingQueue.isEmpty) return Future.successful(true)
     val questInSession = eventMessage match {
-      case _: EventGroupOrDiscussMessage =>
+      case _: GroupMessage | _: DiscussMessage =>
         questionWaitingQueue.get(currentAnswer)
           .orElse(questionWaitingQueue.get(currentAnswer.copy(qID = None)))
           .getOrElse(return Future.successful(true))
-      case _: EventPrivateMessage =>
+      case _: PrivateMessage =>
         questionWaitingQueue.getOrElse(currentAnswer, return Future.successful(true))
     }
     questInSession.synchronized {
@@ -84,28 +84,31 @@ object Questioner {
          (callback: QuestionContext => Future[Result]): Unit = {
     val hit = answerer match {
       case Answerer(Some(_), Some(_)) =>
-        (event: EventMessage, _answerer: Answerer) => {
+        (event: ChatMessage, _answerer: Answerer) => {
           event match {
-            case _: EventGroupOrDiscussMessage =>
+            case _: GroupMessage | _: DiscussMessage =>
               answerer == _answerer &&
                 (options.isEmpty || options.contains(event.message.trim))
-            case _: EventPrivateMessage => false
+            case _: PrivateMessage => false
           }
         }
       case Answerer(None, Some(groupID)) =>
-        (event: EventMessage, _: Answerer) => {
+        (event: ChatMessage, _: Answerer) => {
           event match {
-            case message: EventGroupOrDiscussMessage =>
-              message.getGroup.getId == groupID &&
+            case message: GroupMessage =>
+              message.groupId == groupID &&
                 (options.isEmpty || options.contains(event.message.trim))
-            case _: EventPrivateMessage => false
+            case message: DiscussMessage =>
+              message.discussId == groupID &&
+                (options.isEmpty || options.contains(event.message.trim))
+            case _: PrivateMessage => false
           }
         }
       case _ =>
-        (event: EventMessage, _answerer: Answerer) => {
+        (event: ChatMessage, _answerer: Answerer) => {
           event match {
-            case _: EventGroupOrDiscussMessage => false
-            case _: EventPrivateMessage =>
+            case _: GroupMessage | _: DiscussMessage => false
+            case _: PrivateMessage =>
               answerer == _answerer &&
                 (options.isEmpty || options.contains(event.message.trim))
           }

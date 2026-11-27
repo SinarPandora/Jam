@@ -1,7 +1,7 @@
 package o.lartifa.jam.cool.qq.listener.interactive
 
 import org.apache.pekko.actor.ActorRef
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.ExtraActor
@@ -62,7 +62,7 @@ object Interactive extends Interactive {
   /**
    * 为消息对象创建并开启交互模式
    */
-  implicit class InteractiveHelper(event: EventMessage) {
+  implicit class InteractiveHelper(event: ChatMessage) {
     /**
      * 创建交互
      *

@@ -1,6 +1,5 @@
 package o.lartifa.jam.cool.qq.listener.handle
 
-import o.lartifa.jam.ob.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch
@@ -11,6 +10,7 @@ import o.lartifa.jam.cool.qq.listener.base.Break
 import o.lartifa.jam.cool.qq.listener.fsm.FSMModeRouter
 import o.lartifa.jam.model.patterns.ContentMatcher
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
+import o.lartifa.jam.onebot.domain.{ChatMessage, DiscussMessage, GroupMessage, PrivateMessage}
 import o.lartifa.jam.pool.JamContext
 
 import scala.annotation.tailrec
@@ -33,7 +33,7 @@ object SSDLRuleRunner {
    * @param exec         异步执行上下文
    * @return 执行结果，若成功捕获并执行，则返回当次的指令上下文
    */
-  def executeIfFound(eventMessage: EventMessage)(implicit exec: ExecutionContext): Future[Option[CommandExecuteContext]] = if (!JamContext.initLock.get()) {
+  def executeIfFound(eventMessage: ChatMessage)(implicit exec: ExecutionContext): Future[Option[CommandExecuteContext]] = if (!JamContext.initLock.get()) {
     // 启动计时器
     val matchCost = new StopWatch()
     matchCost.start()
@@ -46,7 +46,7 @@ object SSDLRuleRunner {
       // 是否继续执行普通流程（捕获并执行 SSDL）
       if (continue) {
         // 查找步骤
-        findMatchedStep(eventMessage.getMessage, scanList).map { matcher =>
+        findMatchedStep(eventMessage.message, scanList).map { matcher =>
           val stepId = matcher.stepId
           // 执行任务
           val ssdlTask = JamContext.stepPool.get().goto(stepId).recover {
@@ -96,12 +96,12 @@ object SSDLRuleRunner {
    * @param eventMessage 聊天事件
    * @return 扫描列表
    */
-  private def buildMatcherScanList(eventMessage: EventMessage): List[ContentMatcher] = {
+  private def buildMatcherScanList(eventMessage: ChatMessage): List[ContentMatcher] = {
     val ChatInfo(chatType, chatId) = ChatInfo(eventMessage)
     val chatScopeMatchers = MsgMatchers.custom.get().get(chatType).flatMap(_.get(chatId)).getOrElse(List.empty)
     val chatTypeScopeMatchers = eventMessage match {
-      case _: EventGroupOrDiscussMessage => MsgMatchers.globalGroup.get()
-      case _: EventPrivateMessage => MsgMatchers.globalPrivate.get()
+      case _: GroupMessage | _: DiscussMessage => MsgMatchers.globalGroup.get()
+      case _: PrivateMessage => MsgMatchers.globalPrivate.get()
     }
     val globalScopeMatchers = MsgMatchers.global.get()
     if (JamConfig.config.matchOutOfOrder) {

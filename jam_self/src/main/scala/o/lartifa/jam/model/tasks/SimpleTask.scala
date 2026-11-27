@@ -1,6 +1,5 @@
 package o.lartifa.jam.model.tasks
 
-import o.lartifa.jam.ob.event.events.message.{EventGroupMessage, EventMessage, EventPrivateMessage}
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.exception.ExecutionException
@@ -8,6 +7,7 @@ import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.cool.qq.listener.BanList
 import o.lartifa.jam.model.tasks.SimpleTask.{logger, unsafeMockContext}
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext, Executable}
+import o.lartifa.jam.onebot.domain.{ChatMessage, GroupMessage, PrivateMessage, SenderInfo}
 import o.lartifa.jam.pool.JamContext
 
 import java.sql.Timestamp
@@ -62,46 +62,49 @@ object SimpleTask {
   private val logger: HyLogger = JamContext.loggerFactory.get().getLogger(SimpleTask.getClass)
 
   /**
-   * 【不安全】设置 mocked 消息事件
-   * 兼容 java api，采用 setter 的方式设置事件
-   *
-   * @param event 被 mocked 消息事件
-   * @return 设置好的消息事件
-   */
-  private def unsafeSetUpMockedEventMessage(event: EventMessage): EventMessage = {
-    event.setBot(JamContext.bot.get())
-    event.setMessage("STDL定时任务自动触发")
-    event.setFont(-1)
-    event.setMessageId(-1)
-    event.setPostType("TASK")
-    event.setSelfId(BotConfig.qID)
-    event.setTime(System.currentTimeMillis())
-    event
-  }
-
-  /**
-   * 【不安全】设置 mocked 指令执行上下文
+   * 【不安全】创建 mocked 指令执行上下文
    *
    * @param chatInfo 会话信息
    * @param exec     异步执行上下文
    * @return mocked 指令执行上下文
    */
   private def unsafeMockContext(chatInfo: ChatInfo)(implicit exec: ExecutionContext): CommandExecuteContext = {
-    val mockedEvent: EventMessage = chatInfo.chatType match {
+    val outbound = JamContext.outbound.get()
+    if (outbound == null) throw ExecutionException("出站网关尚未就绪")
+    val message = "STDL定时任务自动触发"
+    val time = Instant.now.getEpochSecond
+    val mockedEvent: ChatMessage = chatInfo.chatType match {
       case MessageType.PRIVATE =>
-        val event = new EventPrivateMessage()
-        event.setSenderId(chatInfo.chatId)
-        event.setMessageType(MessageType.PRIVATE)
-        unsafeSetUpMockedEventMessage(event)
-        event
+        PrivateMessage(
+          postType = "TASK",
+          messageType = MessageType.PRIVATE,
+          messageId = -1L,
+          senderId = chatInfo.chatId,
+          selfId = BotConfig.qID,
+          time = time,
+          message = message,
+          rawMessage = message,
+          font = -1L,
+          subType = None,
+          sender = SenderInfo(chatInfo.chatId),
+          outbound = outbound,
+        )
       case MessageType.GROUP =>
-        val event = new EventGroupMessage()
-        event.setSenderId(chatInfo.chatId)
-        event.setMessageType(MessageType.GROUP)
-        unsafeSetUpMockedEventMessage(event)
-        event.setGroupId(chatInfo.chatId)
-        event.getGroup.refreshInfo()
-        event
+        GroupMessage(
+          postType = "TASK",
+          messageType = MessageType.GROUP,
+          messageId = -1L,
+          senderId = chatInfo.chatId,
+          selfId = BotConfig.qID,
+          time = time,
+          message = message,
+          rawMessage = message,
+          font = -1L,
+          subType = None,
+          groupId = chatInfo.chatId,
+          sender = SenderInfo(chatInfo.chatId),
+          outbound = outbound,
+        )
       case MessageType.DISCUSS => throw ExecutionException("STDL任务暂不支持讨论组")
     }
     new CommandExecuteContext(

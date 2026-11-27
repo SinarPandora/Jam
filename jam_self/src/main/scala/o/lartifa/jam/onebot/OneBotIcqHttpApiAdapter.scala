@@ -48,9 +48,16 @@ object OneBotIcqHttpApiAdapter {
 
   /**
    * 把账号管理器里已有账号的 HttpApi 换成适配器。
+   * @param reuse 若已有共享客户端（与 OutboundGateway 同源）则复用。
    */
-  def installOnAccounts(bot: PicqBotX, host: String, port: Int, accessToken: String = ""): OneBotHttpClient = {
-    val client = new OneBotHttpClient(host, port, accessToken)
+  def installOnAccounts(
+    bot: PicqBotX,
+    host: String,
+    port: Int,
+    accessToken: String = "",
+    reuse: Option[OneBotHttpClient] = None,
+  ): OneBotHttpClient = {
+    val client = reuse.getOrElse(new OneBotHttpClient(host, port, accessToken))
     bot.getAccountManager.getAccounts.forEach { account =>
       val adapter = new OneBotIcqHttpApiAdapter(bot, account, host, port, client)
       account.setHttpApi(adapter)

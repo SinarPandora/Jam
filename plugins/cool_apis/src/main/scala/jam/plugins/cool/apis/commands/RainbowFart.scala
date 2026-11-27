@@ -1,6 +1,5 @@
 package jam.plugins.cool.apis.commands
 
-import o.lartifa.jam.ob.event.events.message.EventGroupOrDiscussMessage
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.engine.ssdl.parser.{ParseEngineContext, SSDLCommandParser}
 import o.lartifa.jam.model.CommandExecuteContext
@@ -39,7 +38,7 @@ object RainbowFart extends RainbowFart {
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[String] = Future {
     val fart = requests.get("https://chp.shadiao.app/api.php").text()
-    if (context.eventMessage.isInstanceOf[EventGroupOrDiscussMessage]) reply(s"$atSender $fart")
+    if (isGroup) reply(s"$atSender $fart")
     else reply(fart)
     fart
   }.recover {

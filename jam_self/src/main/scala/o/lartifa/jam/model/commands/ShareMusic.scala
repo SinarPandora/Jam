@@ -1,9 +1,8 @@
 package o.lartifa.jam.model.commands
 
-import o.lartifa.jam.ob.sender.message.components.ComponentMusic
-import o.lartifa.jam.ob.sender.message.components.ComponentMusic.MusicSourceType
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
+import o.lartifa.jam.onebot.cq.Cq
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -14,7 +13,7 @@ import scala.util.Try
  * Author: sinar
  * 2020/12/27 14:20
  */
-case class ShareMusic(mId: RenderStrTemplate, sourceType: MusicSourceType) extends Command[Unit] {
+case class ShareMusic(mId: RenderStrTemplate, sourceType: Cq.MusicSource) extends Command[Unit] {
   /**
    * 执行
    *
@@ -24,7 +23,7 @@ case class ShareMusic(mId: RenderStrTemplate, sourceType: MusicSourceType) exten
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = {
     mId.execute().map(mId => {
-      reply(new ComponentMusic(Try(mId.toInt).getOrElse(throw ExecutionException("分享音乐ID不合法")), sourceType))
+      reply(Cq.Music(Try(mId.toInt).getOrElse(throw ExecutionException("分享音乐ID不合法")), sourceType))
     })
   }
 }

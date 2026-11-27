@@ -1,8 +1,10 @@
 package o.lartifa.jam.common.util
 
-import o.lartifa.jam.ob.event.events.message.{EventGroupMessage, EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
+import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.ChatInfo
+import o.lartifa.jam.onebot.domain.{ChatMessage, DiscussMessage, GroupMessage, PrivateMessage}
+import o.lartifa.jam.pool.JamContext
 
 import scala.util.Try
 
@@ -14,7 +16,7 @@ import scala.util.Try
  */
 object EventMessageHelper {
 
-  implicit class Helper(event: EventMessage) {
+  implicit class Helper(event: ChatMessage) {
     /**
      * 获取发送者昵称
      * 若存在群昵称则优先获取群昵称
@@ -62,8 +64,8 @@ object EventMessageHelper {
      */
     private def getNickname(isSelf: Boolean): String = {
       event match {
-        case _: EventGroupOrDiscussMessage => getGroupNickName(isSelf)
-        case _: EventPrivateMessage => getQQNickName(isSelf)
+        case _: GroupMessage | _: DiscussMessage => getGroupNickName(isSelf)
+        case _: PrivateMessage => getQQNickName(isSelf)
       }
     }
 
@@ -74,9 +76,8 @@ object EventMessageHelper {
      * @return 昵称
      */
     private def getQQNickName(isSelf: Boolean): String = {
-      if (isSelf) event.getBotAccount.getName
-      else Try(event.getSender.refreshInfo(true).getNickname)
-        .getOrElse(event.getSenderId.toString)
+      if (isSelf) JamConfig.config.name
+      else event.sender.nickname.filter(_.nonEmpty).getOrElse(event.senderId.toString)
     }
 
     /**
@@ -86,8 +87,10 @@ object EventMessageHelper {
      * @return 群昵称
      */
     private def getGroupNickName(isSelf: Boolean): String = {
-      val qid = if (isSelf) event.getSelfId else event.getSenderId
-      val groupNickName = toGroupMessage.getGroupUser(qid).refreshInfo.getCard
+      val groupNickName =
+        if (isSelf) Try(JamContext.apiClient.getGroupMemberInfo(toGroupMessage.groupId, event.selfId).getData.getCard)
+          .toOption.flatMap(Option(_)).getOrElse("")
+        else event.sender.card.getOrElse("")
       if (groupNickName.isEmpty) getQQNickName(isSelf)
       else groupNickName
     }
@@ -98,8 +101,8 @@ object EventMessageHelper {
      * @return 群消息
      */
     @throws[ExecutionException]
-    def toGroupMessage: EventGroupMessage =
-      Try(event.asInstanceOf[EventGroupMessage])
+    def toGroupMessage: GroupMessage =
+      Try(event.asInstanceOf[GroupMessage])
         .getOrElse(throw ExecutionException("该消息非群聊消息"))
 
     /**
@@ -109,9 +112,7 @@ object EventMessageHelper {
      */
     def isSenderManager: Boolean = {
       event match {
-        case message: EventGroupOrDiscussMessage =>
-          message.getGroup.refreshInfo()
-          message.getGroupSender.isAdmin
+        case _: GroupMessage | _: DiscussMessage => event.sender.isAdmin
         case _ => false
       }
     }

@@ -1,8 +1,8 @@
 package o.lartifa.jam.model.commands
 
-import o.lartifa.jam.ob.sender.message.components.ComponentLocation
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
+import o.lartifa.jam.onebot.cq.Cq
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -24,7 +24,7 @@ case class ShareLocation(lat: RenderStrTemplate, lon: RenderStrTemplate, title: 
     Future.sequence(Seq(lat.execute().map(_.toDouble), lon.execute().map(_.toDouble), title.execute(), content.execute()))
       .map(vars => {
         val Seq(_lat, _lon, _title, _content) = vars
-        reply(new ComponentLocation(
+        reply(Cq.Location(
           _lat.asInstanceOf[Double],
           _lon.asInstanceOf[Double],
           _title.asInstanceOf[String],

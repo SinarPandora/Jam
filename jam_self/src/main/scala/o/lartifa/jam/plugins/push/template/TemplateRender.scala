@@ -1,12 +1,12 @@
 package o.lartifa.jam.plugins.push.template
 
 import better.files.*
-import o.lartifa.jam.ob.sender.message.components.ComponentImage
 import cc.moecraft.logger.HyLogger
 import freemarker.template.Configuration
 import o.lartifa.jam.common.config.{JamConfig, PluginConfig, SystemConfig}
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.OSUtil
+import o.lartifa.jam.onebot.cq.Cq
 import o.lartifa.jam.plugins.push.source.SourceIdentity
 import o.lartifa.jam.pool.JamContext
 
@@ -72,7 +72,7 @@ object TemplateRender {
     val tmpDir = (tmp / s"${source.sourceType}_${source.sourceIdentity}").createDirectoryIfNotExists()
     val workDir = (tmpDir / messageKey).createDirectoryIfNotExists()
     val renderImage = workDir / "rendered.png"
-    val renderResult = Success(RenderResult(new ComponentImage(s"${OSUtil.fileProtocol}${renderImage.pathAsString}").toString))
+    val renderResult = Success(RenderResult(Cq.Image(s"${OSUtil.fileProtocol}${renderImage.pathAsString}").toString))
     if (renderImage.exists) renderResult
     else templates.get(source.sourceType) match {
       case Some(name) =>

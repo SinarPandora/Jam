@@ -1,6 +1,7 @@
 package o.lartifa.jam.model.commands
 
 import o.lartifa.jam.model.CommandExecuteContext
+import o.lartifa.jam.onebot.domain.{ChatMessage, DiscussMessage, GroupMessage, PrivateMessage}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -25,7 +26,7 @@ case class ShellLikeShortcut[T](prefixes: Set[String], command: Command[T], temp
     val content = prefixes.find(msg.startsWith).map(msg.stripPrefix).getOrElse(msg)
     val args = content.split("\\s+").toList
     val diff = argCount - args.size
-    context.eventMessage.setMessage {
+    context.eventMessage = withMessage(context.eventMessage) {
       if (diff > 0) {
         // 需要参数比实际多
         val strArgs = args ++ (1 to diff).map(_ => "")
@@ -44,5 +45,14 @@ case class ShellLikeShortcut[T](prefixes: Set[String], command: Command[T], temp
       }
     }
     command.execute()
+  }
+
+  /**
+   * ChatMessage 不可变，按模板替换消息内容后生成新的消息对象
+   */
+  private def withMessage(event: ChatMessage)(message: String): ChatMessage = event match {
+    case it: GroupMessage => it.copy(message = message)
+    case it: DiscussMessage => it.copy(message = message)
+    case it: PrivateMessage => it.copy(message = message)
   }
 }

@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.interactive
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 import o.lartifa.jam.common.util.ExtraActor
 import o.lartifa.jam.cool.qq.listener.interactive.InteractiveSessionProtocol.Manage
 import o.lartifa.jam.model.SpecificSender
@@ -21,7 +21,7 @@ object InteractiveSessionListener {
    * @param event 消息事件
    * @return 当未找到时，返回 true 表示消息由其他监听器继续处理，找到时返回 false
    */
-  def blockAndInactiveIfExist(event: EventMessage): Future[Boolean] = {
+  def blockAndInactiveIfExist(event: ChatMessage): Future[Boolean] = {
     val promise: Promise[Boolean] = Promise()
     ActorCreator.actorOf(ExtraActor(
       ctx => manager ! Manage.Search(SpecificSender(event), ctx.self),

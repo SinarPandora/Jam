@@ -1,9 +1,9 @@
 package o.lartifa.jam.cool.qq
 
-import o.lartifa.jam.ob.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.model.patterns.MatcherGroup
+import o.lartifa.jam.onebot.domain.{ChatMessage, DiscussMessage, GroupMessage, PrivateMessage}
 import o.lartifa.jam.pool.{JamContext, ThreadPools}
 
 import scala.collection.mutable
@@ -66,11 +66,13 @@ package object listener {
      * @param eventMessage 消息对象
      * @return 是否允许
      */
-    def isAllowed(eventMessage: EventMessage): Boolean = {
+    def isAllowed(eventMessage: ChatMessage): Boolean = {
       eventMessage match {
-        case msg: EventGroupOrDiscussMessage =>
-          !(BanList.group.contains(msg.getGroup.getId) || BanList.user.contains(msg.getSenderId))
-        case msg: EventPrivateMessage => !BanList.user.contains(msg.getSenderId)
+        case msg: GroupMessage =>
+          !(BanList.group.contains(msg.groupId) || BanList.user.contains(msg.senderId))
+        case msg: DiscussMessage =>
+          !(BanList.group.contains(msg.discussId) || BanList.user.contains(msg.senderId))
+        case msg: PrivateMessage => !BanList.user.contains(msg.senderId)
       }
     }
 

@@ -1,8 +1,8 @@
 package o.lartifa.jam.plugins.filppic
 
 import at.dhyan.open_imaging.GifDecoder
-import o.lartifa.jam.ob.event.events.message.EventMessage
-import o.lartifa.jam.ob.sender.message.components.ComponentImageBase64
+import o.lartifa.jam.onebot.cq.Cq
+import o.lartifa.jam.onebot.domain.ChatMessage
 import cc.moecraft.logger.HyLogger
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.GifSequenceWriter
@@ -29,11 +29,11 @@ object MessageImageUtil {
    * @param event 消息对象
    * @return 图片数据
    */
-  def getAndFlipImageFromMessage(event: EventMessage): Option[ComponentImageBase64] = Try {
+  def getAndFlipImageFromMessage(event: ChatMessage): Option[Cq.ImageBase64] = Try {
     QQImg.parseFromMessage(event).flatMap(flipImage)
-      .map(bytes => new ComponentImageBase64(Base64.getEncoder.encodeToString(bytes)))
+      .map(bytes => Cq.ImageBase64(Base64.getEncoder.encodeToString(bytes)))
   }.recoverWith { err =>
-    logger.error(s"处理图片失败，消息原文：${event.getMessage}", err)
+    logger.error(s"处理图片失败，消息原文：${event.message}", err)
     Failure(err)
   }.toOption.flatten
 

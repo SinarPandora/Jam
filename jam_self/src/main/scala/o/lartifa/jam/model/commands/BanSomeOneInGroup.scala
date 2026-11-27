@@ -2,9 +2,10 @@ package o.lartifa.jam.model.commands
 
 import java.util.concurrent.TimeUnit
 
-import o.lartifa.jam.ob.event.events.message.{EventGroupOrDiscussMessage, EventPrivateMessage}
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
+import o.lartifa.jam.onebot.domain.{DiscussMessage, GroupMessage}
+import o.lartifa.jam.pool.JamContext
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -24,16 +25,16 @@ case class BanSomeOneInGroup(qIdTemplate: RenderStrTemplate, timeTemplate: Rende
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] =
     Future.unit.flatMap { _ =>
-      if (context.eventMessage.isInstanceOf[EventPrivateMessage]) {
-        throw ExecutionException("无法在非群聊进行禁言")
+      val groupId = context.eventMessage match {
+        case message: GroupMessage => message.groupId
+        case message: DiscussMessage => message.discussId
+        case _ => throw ExecutionException("无法在非群聊进行禁言")
       }
       for {
         qId <- qIdTemplate.execute()
         time <- timeTemplate.execute()
       } yield {
-        context.eventMessage.getHttpApi.setGroupBan(
-          context.eventMessage.asInstanceOf[EventGroupOrDiscussMessage].getGroup.getId, qId.toLong, unit.toSeconds(time.toLong)
-        )
+        JamContext.apiClient.setGroupBan(groupId, qId.toLong, unit.toSeconds(time.toLong))
         ()
       }
     }

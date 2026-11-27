@@ -1,9 +1,9 @@
 package o.lartifa.jam.model
 
-import o.lartifa.jam.ob.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
 import o.lartifa.jam.ob.sender.returndata.ReturnData
 import o.lartifa.jam.ob.sender.returndata.returnpojo.send.RMessageReturnData
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
+import o.lartifa.jam.onebot.domain.{ChatMessage, DiscussMessage, GroupMessage, PrivateMessage}
 import o.lartifa.jam.pool.JamContext
 
 /**
@@ -27,12 +27,14 @@ object ChatInfo {
 
   def apply(chatType: String, chatId: Long): ChatInfo = new ChatInfo(chatType, chatId)
 
-  def apply(eventMessage: EventMessage): ChatInfo =
+  def apply(eventMessage: ChatMessage): ChatInfo =
     eventMessage match {
-      case message: EventGroupOrDiscussMessage =>
-        new ChatInfo(message.getMessageType, message.getGroup.getId)
-      case message: EventPrivateMessage =>
-        new ChatInfo(MessageType.PRIVATE, message.getSenderId)
+      case message: GroupMessage =>
+        new ChatInfo(message.messageType, message.groupId)
+      case message: DiscussMessage =>
+        new ChatInfo(message.messageType, message.discussId)
+      case message: PrivateMessage =>
+        new ChatInfo(MessageType.PRIVATE, message.senderId)
       case null => None
     }
 

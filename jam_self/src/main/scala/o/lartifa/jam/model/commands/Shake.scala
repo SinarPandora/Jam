@@ -1,7 +1,7 @@
 package o.lartifa.jam.model.commands
 
-import o.lartifa.jam.ob.sender.message.components.ComponentShake
 import o.lartifa.jam.model.CommandExecuteContext
+import o.lartifa.jam.onebot.cq.Cq
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -20,6 +20,6 @@ object Shake extends Command[Unit] {
    * @return 异步返回执行结果
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = Future {
-    reply(new ComponentShake())
+    reply(Cq.Shake)
   }
 }

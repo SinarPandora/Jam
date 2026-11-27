@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.prehandle
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -19,5 +19,5 @@ abstract class PreHandleTask(val name: String) {
    * @param exec 异步上下文
    * @return 如果返回 false，将打断后续的 SSDL 执行
    */
-  def execute(event: EventMessage)(implicit exec: ExecutionContext): Future[Boolean]
+  def execute(event: ChatMessage)(implicit exec: ExecutionContext): Future[Boolean]
 }

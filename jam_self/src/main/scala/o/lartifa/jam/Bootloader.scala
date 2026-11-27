@@ -8,7 +8,8 @@ import o.lartifa.jam.common.config.CoolQConfig.{postPort, postUrl, socketPort}
 import o.lartifa.jam.common.config.{DynamicConfigLoader, JamConfig, SystemConfig}
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.engine.JamLoader
-import o.lartifa.jam.onebot.{OneBotIcqHttpApiAdapter, OneBotInbound}
+import o.lartifa.jam.onebot.protocol.api.OutboundGateway
+import o.lartifa.jam.onebot.{OneBotHttpClient, OneBotIcqHttpApiAdapter, OneBotInbound}
 import o.lartifa.jam.pool.JamContext
 
 import scala.concurrent.Await
@@ -41,16 +42,21 @@ object Bootloader {
     JamContext.bot.set(client)
     JamContext.setAPIClient(() => client.getAccountManager.getNonAccountSpecifiedApi)
     JamContext.clientConfig.getAndSet(client.getConfig)
-    // M3 #20：自有 ZIO HTTP 入站，不再启动 PicqHttpServer
-    OneBotInbound.start(client, socketPort)
+    val accessToken = Option(client.getConfig.getAccessToken).getOrElse("")
+    val httpClient = new OneBotHttpClient(postUrl, postPort, accessToken)
+    val outbound = OutboundGateway(httpClient)
+    // M3 #20 / M4：自有 ZIO HTTP 入站；消息走领域管道
+    OneBotInbound.start(client, socketPort, outbound)
     val afterBoot = () => {
       JamContext.loggerFactory.get().system.log(
         if (stubBackend) s"${AnsiColor.GREEN}已连接 Stub OneBot，正在刷新数据..."
         else s"${AnsiColor.GREEN}已连接后端，正在刷新数据..."
       )
       client.addAccount(JamConfig.config.name, postUrl, postPort)
-      // 出站换成 ZIO OneBot 客户端适配器（构造期仍可能用过一次旧 HttpApi 拉登录信息）
-      OneBotIcqHttpApiAdapter.installOnAccounts(client, postUrl, postPort, client.getConfig.getAccessToken)
+      // 出站换成 ZIO OneBot 客户端适配器（与 OutboundGateway 共用 httpClient）
+      OneBotIcqHttpApiAdapter.installOnAccounts(
+        client, postUrl, postPort, accessToken, reuse = Some(httpClient),
+      )
       Await.result(JamLoader.init(client, args), Duration.Inf)
       JamContext.loggerFactory.get().system.log(s"${AnsiColor.GREEN}数据刷新成功！开始接收消息")
     }

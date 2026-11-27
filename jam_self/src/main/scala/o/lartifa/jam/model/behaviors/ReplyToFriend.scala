@@ -1,11 +1,10 @@
 package o.lartifa.jam.model.behaviors
 
-import o.lartifa.jam.ob.event.events.message.{EventGroupOrDiscussMessage, EventPrivateMessage}
-import o.lartifa.jam.ob.sender.message.components.ComponentAt
 import o.lartifa.jam.ob.sender.returndata.returnpojo.get.RGroupMemberInfo
-import o.lartifa.jam.ob.sender.returndata.returnpojo.send.RMessageReturnData
-import o.lartifa.jam.ob.sender.returndata.{ReturnData, ReturnStatus}
+import o.lartifa.jam.ob.sender.returndata.ReturnStatus
 import o.lartifa.jam.model.CommandExecuteContext
+import o.lartifa.jam.onebot.cq.Cq
+import o.lartifa.jam.onebot.domain.{DiscussMessage, GroupMessage, PrivateMessage}
 import o.lartifa.jam.pool.JamContext
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -26,7 +25,7 @@ trait ReplyToFriend {
    * @param context 指令上下文
    * @return 是否为私聊
    */
-  protected def isPrivate(implicit context: CommandExecuteContext): Boolean = context.eventMessage.isInstanceOf[EventPrivateMessage]
+  protected def isPrivate(implicit context: CommandExecuteContext): Boolean = context.eventMessage.isInstanceOf[PrivateMessage]
 
   /**
    * 是否为群聊
@@ -34,7 +33,7 @@ trait ReplyToFriend {
    * @param context 指令上下文
    * @return 是否为群聊
    */
-  protected def isGroup(implicit context: CommandExecuteContext): Boolean = context.eventMessage.isInstanceOf[EventGroupOrDiscussMessage]
+  protected def isGroup(implicit context: CommandExecuteContext): Boolean = context.eventMessage.isInstanceOf[GroupMessage] || context.eventMessage.isInstanceOf[DiscussMessage]
 
   /**
    * 获取当前消息的发送者 QQ
@@ -42,7 +41,7 @@ trait ReplyToFriend {
    * @param context 指令上下文
    * @return 发送者 QQ
    */
-  protected def senderId(implicit context: CommandExecuteContext): Long = context.eventMessage.getSenderId
+  protected def senderId(implicit context: CommandExecuteContext): Long = context.eventMessage.senderId
 
   /**
    * 获取指定群聊的群员列表
@@ -64,15 +63,12 @@ trait ReplyToFriend {
    * @param exec    异步上下文
    * @return 群员列表
    */
-  protected def groupMembers(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Option[List[RGroupMemberInfo]]] = Future {
+  protected def groupMembers(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Option[List[RGroupMemberInfo]]] =
     context.eventMessage match {
-      case message: EventGroupOrDiscussMessage =>
-        val result = JamContext.apiClient.getGroupMemberList(message.getGroup.getId)
-        if (result.status == ReturnStatus.ok) Some(result.data.asScala.toList)
-        else None
-      case _: EventPrivateMessage => None
+      case message: GroupMessage => groupMembers(message.groupId)
+      case message: DiscussMessage => groupMembers(message.discussId)
+      case _: PrivateMessage => Future.successful(None)
     }
-  }
 
   /**
    * 消息中对方的昵称
@@ -85,12 +81,12 @@ trait ReplyToFriend {
    */
   protected def senderNickName(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[String] =
     context.eventMessage match {
-      case _: EventGroupOrDiscussMessage =>
+      case _: GroupMessage | _: DiscussMessage =>
         context.tempVars.get("对方群昵称").flatMap {
           case Some(value) => Future.successful(value)
           case None => context.tempVars.get("对方昵称").map(_.getOrElse("这个人"))
         }
-      case _: EventPrivateMessage =>
+      case _: PrivateMessage =>
         context.tempVars.get("对方昵称").map(_.getOrElse("你"))
       case _ => Future.successful("这个人")
     }
@@ -102,7 +98,7 @@ trait ReplyToFriend {
    * @return at 的 CQ 码
    */
   protected def atSender(implicit context: CommandExecuteContext): String =
-    new ComponentAt(context.eventMessage.getSenderId).toString
+    Cq.At(context.eventMessage.senderId).toCq
 
   /**
    * 快速回复消息
@@ -111,7 +107,7 @@ trait ReplyToFriend {
    * @param context  指令上下文
    * @return 操作结果
    */
-  protected def reply(anyThing: Any)(implicit context: CommandExecuteContext): ReturnData[RMessageReturnData] =
+  protected def reply(anyThing: Any)(implicit context: CommandExecuteContext): Long =
     context.eventMessage.respond(anyThing.toString)
 
   /**
@@ -121,6 +117,6 @@ trait ReplyToFriend {
    * @param context  指令上下文
    * @return 操作结果
    */
-  protected def replyRaw(anyThing: Any)(implicit context: CommandExecuteContext): ReturnData[RMessageReturnData] =
+  protected def replyRaw(anyThing: Any)(implicit context: CommandExecuteContext): Long =
     context.eventMessage.respond(anyThing.toString, false)
 }

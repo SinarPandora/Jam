@@ -1,8 +1,8 @@
 package o.lartifa.jam.model.commands
 
-import o.lartifa.jam.ob.sender.message.components.ComponentPoke
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
+import o.lartifa.jam.onebot.cq.Cq
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -23,7 +23,7 @@ case class Poke(qId: RenderStrTemplate) extends Command[Unit] {
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = Future {
     qId.execute().foreach { qId =>
-      reply(new ComponentPoke(Try(qId.toLong).getOrElse(throw ExecutionException("群员QQ号不正确"))))
+      reply(Cq.Poke(Try(qId.toLong).getOrElse(throw ExecutionException("群员QQ号不正确"))))
     }
   }
 }

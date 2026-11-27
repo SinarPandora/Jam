@@ -1,6 +1,6 @@
 package jam.plugins.meme_maker.commands
 
-import o.lartifa.jam.ob.sender.message.components.ComponentImage
+import o.lartifa.jam.onebot.cq.Cq
 import jam.plugins.meme_maker.engine.MemeAPIResponse.TemplateInfo
 import jam.plugins.meme_maker.engine.MemeMakerAPI
 import o.lartifa.jam.cool.qq.listener.asking.{Answerer, Result}
@@ -90,7 +90,7 @@ object MemeMakerCommand extends Command[Unit] {
             case Success(id) =>
               templates.find(_.id == id) match {
                 case Some(template) =>
-                  reply(new ComponentImage(template.example_gif).toString)
+                  reply(Cq.Image(template.example_gif).toString)
                   Future.successful(Result.KeepCountAndContinueAsking)
                 case None =>
                   reply("没有该模板！")
@@ -143,7 +143,7 @@ object MemeMakerCommand extends Command[Unit] {
           reply("已退出")
           Future.successful(Result.Complete)
         case "=预览" =>
-          reply(new ComponentImage(templateInfo.example_gif).toString)
+          reply(Cq.Image(templateInfo.example_gif).toString)
           Future.successful(Result.KeepCountAndContinueAsking)
         case sentence =>
           sentences += sentence

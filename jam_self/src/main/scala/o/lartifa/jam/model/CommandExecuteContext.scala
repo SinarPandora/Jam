@@ -1,12 +1,13 @@
 package o.lartifa.jam.model
 
-import o.lartifa.jam.ob.event.events.message.{EventGroupMessage, EventMessage, EventPrivateMessage}
 import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.cool.qq.listener.base.ExitCodes
 import o.lartifa.jam.cool.qq.listener.base.ExitCodes.ExitCode
 import o.lartifa.jam.cool.qq.listener.event.CQEvent
+import o.lartifa.jam.onebot.domain.*
+import o.lartifa.jam.onebot.protocol.api.OutboundGateway
 import o.lartifa.jam.pool.*
 
 import java.sql.Timestamp
@@ -19,7 +20,7 @@ import scala.concurrent.ExecutionContext
  * Author: sinar
  * 2020/1/3 23:50
  */
-case class CommandExecuteContext(eventMessage: EventMessage, vars: DBVarPool,
+case class CommandExecuteContext(var eventMessage: ChatMessage, vars: DBVarPool,
                                  msgRecords: MessagePool, stepPool: StepPool,
                                  executionContext: ExecutionContext, startTime: Timestamp,
                                  var lastResult: Option[String] = None,
@@ -35,7 +36,7 @@ case class CommandExecuteContext(eventMessage: EventMessage, vars: DBVarPool,
   /**
    * 当前聊天的发送者
    */
-  val msgSender: SpecificSender = SpecificSender(this.chatInfo, eventMessage.getSenderId)
+  val msgSender: SpecificSender = SpecificSender(this.chatInfo, eventMessage.senderId)
 }
 
 object CommandExecuteContext {
@@ -46,7 +47,7 @@ object CommandExecuteContext {
    * @param exec         异步上下文
    * @return 执行上下文
    */
-  def apply(eventMessage: EventMessage)(implicit exec: ExecutionContext): CommandExecuteContext = {
+  def apply(eventMessage: ChatMessage)(implicit exec: ExecutionContext): CommandExecuteContext = {
     val startTime = Timestamp.from(Instant.now)
     new CommandExecuteContext(
       eventMessage,
@@ -67,25 +68,57 @@ object CommandExecuteContext {
    */
   def apply(event: CQEvent)(implicit exec: ExecutionContext): CommandExecuteContext = {
     val startTime = Timestamp.from(Instant.now)
-    val mockedMessage = event.chatInfo.chatType match {
-      case MessageType.GROUP | MessageType.DISCUSS =>
-        val mocked = new EventGroupMessage()
-        mocked.setGroupId(event.chatInfo.chatId)
-        mocked.setSubType(MessageType.EVENT)
-        mocked
+    val outbound = requireOutbound()
+    val mockedMessage: ChatMessage = event.chatInfo.chatType match {
+      case MessageType.GROUP =>
+        GroupMessage(
+          postType = MessageType.EVENT,
+          messageType = MessageType.EVENT,
+          messageId = -1L,
+          senderId = event.senderId,
+          selfId = BotConfig.qID,
+          time = Instant.now.getEpochSecond,
+          message = event.name,
+          rawMessage = event.name,
+          font = 0L,
+          subType = Some(MessageType.EVENT),
+          groupId = event.chatInfo.chatId,
+          sender = SenderInfo(event.senderId),
+          outbound = outbound,
+        )
+      case MessageType.DISCUSS =>
+        DiscussMessage(
+          postType = MessageType.EVENT,
+          messageType = MessageType.EVENT,
+          messageId = -1L,
+          senderId = event.senderId,
+          selfId = BotConfig.qID,
+          time = Instant.now.getEpochSecond,
+          message = event.name,
+          rawMessage = event.name,
+          font = 0L,
+          subType = Some(MessageType.EVENT),
+          discussId = event.chatInfo.chatId,
+          sender = SenderInfo(event.senderId),
+          outbound = outbound,
+        )
       case MessageType.PRIVATE =>
-        val mocked = new EventPrivateMessage()
-        mocked.setSubType(MessageType.EVENT)
-        mocked
+        PrivateMessage(
+          postType = MessageType.EVENT,
+          messageType = MessageType.EVENT,
+          messageId = -1L,
+          senderId = event.senderId,
+          selfId = BotConfig.qID,
+          time = Instant.now.getEpochSecond,
+          message = event.name,
+          rawMessage = event.name,
+          font = 0L,
+          subType = Some(MessageType.EVENT),
+          sender = SenderInfo(event.senderId),
+          outbound = outbound,
+        )
       case _ => throw ExecutionException("不支持的消息类型")
     }
-    mockedMessage.setSenderId(event.senderId)
-    mockedMessage.setPostType(MessageType.EVENT)
-    mockedMessage.setMessageType(MessageType.EVENT)
-    mockedMessage.setSelfId(BotConfig.qID)
-    mockedMessage.setBot(JamContext.bot.get())
-    mockedMessage.setMessage(event.name)
-    mockedMessage.setRawMessage(event.name)
     new CommandExecuteContext(
       mockedMessage,
       JamContext.variablePool,
@@ -94,5 +127,11 @@ object CommandExecuteContext {
       exec,
       startTime
     )
+  }
+
+  private def requireOutbound(): OutboundGateway = {
+    val gw = JamContext.outbound.get()
+    if (gw == null) throw ExecutionException("出站网关尚未就绪")
+    gw
   }
 }

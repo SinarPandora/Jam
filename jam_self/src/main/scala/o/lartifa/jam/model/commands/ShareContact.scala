@@ -1,9 +1,8 @@
 package o.lartifa.jam.model.commands
 
-import o.lartifa.jam.ob.sender.message.components.ComponentContact
-import o.lartifa.jam.ob.sender.message.components.ComponentContact.ContactType
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
+import o.lartifa.jam.onebot.cq.Cq
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -14,7 +13,7 @@ import scala.util.Try
  * Author: sinar
  * 2020/12/27 02:03
  */
-case class ShareContact(qId: RenderStrTemplate, contactType: ContactType) extends Command[Unit] {
+case class ShareContact(qId: RenderStrTemplate, contactType: Cq.ContactType) extends Command[Unit] {
   /**
    * 执行
    *
@@ -24,7 +23,7 @@ case class ShareContact(qId: RenderStrTemplate, contactType: ContactType) extend
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = {
     qId.execute().map(qId =>
-      reply(new ComponentContact(Try(qId.toLong)
+      reply(Cq.Contact(Try(qId.toLong)
         .getOrElse(throw ExecutionException(s"分享的聊天ID不合法：$qId")), contactType)))
   }
 }

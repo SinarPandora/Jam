@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.asking
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.util.MasterUtil
 import o.lartifa.jam.cool.qq.listener.asking.Question.{logger, questionTimer}
@@ -21,7 +21,7 @@ import scala.concurrent.duration.Duration
  * 2020/9/18 21:44
  */
 @deprecated(since = "3.1", message = "Please use o.lartifa.jam.cool.qq.listener.interactive")
-case class Question(hit: (EventMessage, Answerer) => Boolean, answerer: Answerer,
+case class Question(hit: (ChatMessage, Answerer) => Boolean, answerer: Answerer,
                     times: AtomicInteger = new AtomicInteger(1),
                     timeout: Option[Duration],
                     private val callback: QuestionContext => Future[Result],
@@ -40,7 +40,7 @@ case class Question(hit: (EventMessage, Answerer) => Boolean, answerer: Answerer
    * @param eventMessage 命中的回复消息
    * @param answerer     回答者
    */
-  def answerBy(eventMessage: EventMessage, answerer: Answerer): Future[Result] = {
+  def answerBy(eventMessage: ChatMessage, answerer: Answerer): Future[Result] = {
     callback(QuestionContext(answerer, eventMessage, this)).recover(err => {
       logger.error(err)
       MasterUtil.notifyMaster(s"%，在处理回答时出现问题，消息内容为：${eventMessage.message}")

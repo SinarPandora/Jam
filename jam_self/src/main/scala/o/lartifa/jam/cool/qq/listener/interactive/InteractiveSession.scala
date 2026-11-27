@@ -1,7 +1,7 @@
 package o.lartifa.jam.cool.qq.listener.interactive
 
 import org.apache.pekko.actor.{Actor, ActorRef}
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.cool.qq.listener.QMessageListener
 import o.lartifa.jam.cool.qq.listener.interactive.InteractiveSession.{Break, logger}
@@ -18,7 +18,7 @@ import o.lartifa.jam.pool.JamContext
 class InteractiveSession(f: InteractiveFunction, sender: SpecificSender, manager: ActorRef) extends Actor {
 
   override def receive: Receive = {
-    case event: EventMessage =>
+    case event: ChatMessage =>
       try f(this, event) catch {
         case Break => // 只是跳过
       }
@@ -46,7 +46,7 @@ class InteractiveSession(f: InteractiveFunction, sender: SpecificSender, manager
    *
    * @param event 消息事件
    */
-  def continue(event: EventMessage): Unit = {
+  def continue(event: ChatMessage): Unit = {
     QMessageListener.processMessage(event)
   }
 
@@ -62,7 +62,7 @@ class InteractiveSession(f: InteractiveFunction, sender: SpecificSender, manager
       }
       logger.debug(s"会话已销毁：${self.path.name}，$sender")
       context.stop(self)
-    case _: EventMessage => // 直接忽略注销过程中收到的其他聊天消息
+    case _: ChatMessage => // 直接忽略注销过程中收到的其他聊天消息
     case other => logger.warning(s"注销会话时收到未知消息：$other，类型：${other.getClass.getName}，$sender")
   }
 }

@@ -1,6 +1,6 @@
 package o.lartifa.jam.plugins.filppic
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 import cc.moecraft.logger.HyLogger
 import com.sksamuel.scrimage.nio.{ImageWriter, JpegWriter, PngWriter}
 import o.lartifa.jam.plugins.filppic.QQImg.ImageType
@@ -48,7 +48,7 @@ object QQImg {
    * @param event 消息对象
    * @return 可能存在的聊天图片
    */
-  def parseFromMessage(event: EventMessage): Option[QQImg] = {
+  def parseFromMessage(event: ChatMessage): Option[QQImg] = {
     parseFromMessage(event.message)
   }
 

@@ -1,6 +1,6 @@
 package jam.plugins.meme_maker.v1.commands
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 import jam.plugins.meme_maker.v1.engine.MemeAPIV1Response.TemplatePair
 import jam.plugins.meme_maker.v1.engine.MemeMakerAPI
 import o.lartifa.jam.cool.qq.listener.asking.{Answerer, Result}
@@ -174,7 +174,7 @@ object MemeMakerV1Command extends Command[Unit] {
    * @param event 消息对象
    * @return 执行结果
    */
-  private def previewTemplate(code: String, event: EventMessage): Future[Result] = {
+  private def previewTemplate(code: String, event: ChatMessage): Future[Result] = {
     event.respond(s"预览地址：${MemeMakerAPI.domain}/$code")
     Future.successful(Result.KeepCountAndContinueAsking)
   }

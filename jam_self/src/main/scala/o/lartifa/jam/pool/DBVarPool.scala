@@ -1,6 +1,6 @@
 package o.lartifa.jam.pool
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.TimeUtil
@@ -135,7 +135,7 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
    * @param eventMessage 消息事件
    * @return true：删除成功
    */
-  override def cleanAllInChat(eventMessage: EventMessage): Future[Boolean] = {
+  override def cleanAllInChat(eventMessage: ChatMessage): Future[Boolean] = {
     val ChatInfo(chatType, chatId) = ChatInfo(eventMessage)
     db.run {
       Variables.filter(row => row.chatId === chatId && row.chatType === chatType).delete
@@ -164,7 +164,7 @@ class DBVarPool(implicit exec: ExecutionContext) extends VariablePool {
    * @param eventMessage 消息事件
    * @return 全部变量
    */
-  override def listAllInChart(eventMessage: EventMessage): Future[Seq[Tables.VariablesRow]] = {
+  override def listAllInChart(eventMessage: ChatMessage): Future[Seq[Tables.VariablesRow]] = {
     val ChatInfo(chatType, chatId) = ChatInfo(eventMessage)
     db.run(Variables.filter(row => row.chatType === chatType && row.chatId === chatId).result)
   }

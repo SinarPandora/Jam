@@ -1,6 +1,6 @@
 package o.lartifa.jam.model
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 
 /**
@@ -14,8 +14,8 @@ case class SpecificSender(chat: ChatInfo, qid: Long) {
 }
 
 object SpecificSender {
-  def apply(eventMessage: EventMessage): SpecificSender = {
-    new SpecificSender(ChatInfo(eventMessage), eventMessage.getSenderId)
+  def apply(eventMessage: ChatMessage): SpecificSender = {
+    new SpecificSender(ChatInfo(eventMessage), eventMessage.senderId)
   }
 
   /**

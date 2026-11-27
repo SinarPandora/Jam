@@ -4,8 +4,8 @@ import java.time.LocalDateTime
 import java.util.Base64
 import java.util.concurrent.{SynchronousQueue, ThreadPoolExecutor, TimeUnit}
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
-import o.lartifa.jam.ob.sender.message.components.ComponentImageBase64
+import o.lartifa.jam.onebot.cq.Cq
+import o.lartifa.jam.onebot.domain.ChatMessage
 import cc.moecraft.logger.HyLogger
 import jam.plugins.meme_maker.v1.engine.MemeAPIV1Response._
 import o.lartifa.jam.pool.JamContext
@@ -41,7 +41,7 @@ object MemeMakerAPI {
    * @param event     消息对象
    * @return 生成结果
    */
-  def generate(code: String, sentences: List[String], event: EventMessage): Try[ComponentImageBase64] = Try {
+  def generate(code: String, sentences: List[String], event: ChatMessage): Try[Cq.ImageBase64] = Try {
     val step1Resp = requests.post(
       url = generateApi(code),
       headers = Map("content-type" -> "application/json;charset=UTF-8"),
@@ -53,7 +53,7 @@ object MemeMakerAPI {
     event.respond(s"Gif 已生成：$picUrl")
     val bytes = requests.get(picUrl, readTimeout = 60000).bytes
     val base64Data = Base64.getEncoder.encodeToString(bytes)
-    new ComponentImageBase64(base64Data)
+    Cq.ImageBase64(base64Data)
   }.recoverWith(err => {
     logger.error(s"Gif 生成失败，模板 code 为$code", err)
     Failure(err)

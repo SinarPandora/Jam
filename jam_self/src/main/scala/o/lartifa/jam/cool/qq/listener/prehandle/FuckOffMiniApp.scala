@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.prehandle
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 import o.lartifa.jam.pool.JamContext
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -25,7 +25,7 @@ object FuckOffMiniApp extends PreHandleTask("替换小程序跳转") {
    * @param exec  异步上下文
    * @return 如果返回 false，将打断后续的 SSDL 执行
    */
-  override def execute(event: EventMessage)(implicit exec: ExecutionContext): Future[Boolean] = Future.unit.flatMap { _ =>
+  override def execute(event: ChatMessage)(implicit exec: ExecutionContext): Future[Boolean] = Future.unit.flatMap { _ =>
     if (event.message.contains("聊天记录")) Future.successful(false)
     else {
       val regex = if (event.message.contains("qqdocurl")) RICH_MESSAGE_REGEX_DOC

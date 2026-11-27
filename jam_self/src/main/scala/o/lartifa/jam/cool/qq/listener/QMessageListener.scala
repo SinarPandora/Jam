@@ -1,7 +1,5 @@
 package o.lartifa.jam.cool.qq.listener
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
-import o.lartifa.jam.ob.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.{JamConfig, PluginConfig}
 import o.lartifa.jam.common.util.{MasterUtil, TriBoolValue}
@@ -13,6 +11,7 @@ import o.lartifa.jam.cool.qq.listener.interactive.InteractiveSessionListener
 import o.lartifa.jam.cool.qq.listener.posthandle.PostHandleTask
 import o.lartifa.jam.cool.qq.listener.prehandle.PreHandleTask
 import o.lartifa.jam.model.CommandExecuteContext
+import o.lartifa.jam.onebot.domain.ChatMessage
 import o.lartifa.jam.pool.{JamContext, MessagePool}
 
 import java.security.SecureRandom
@@ -26,7 +25,7 @@ import scala.concurrent.{Await, Future}
  * Author: sinar
  * 2020/9/18 18:39
  */
-object QMessageListener extends IcqListener {
+object QMessageListener {
 
   private val logger: HyLogger = JamContext.loggerFactory.get().getLogger(QMessageListener.getClass)
 
@@ -42,8 +41,7 @@ object QMessageListener extends IcqListener {
    *
    * @param eventMessage 消息对象
    */
-  @EventHandler
-  def listenEventMessage(eventMessage: EventMessage): Unit = {
+  def listenEventMessage(eventMessage: ChatMessage): Unit = {
     if (!JamContext.initLock.get() && isAllowed(eventMessage)) { // 在当前没有锁并且聊天没被禁止的情况下
       recordMessage(eventMessage) // 记录消息
         .flatMap(it => if (it) InteractiveSessionListener.blockAndInactiveIfExist(eventMessage) else Future.successful(false)) // 处理交互式会话
@@ -57,7 +55,7 @@ object QMessageListener extends IcqListener {
    *
    * @param eventMessage 消息对象
    */
-  def processMessage(eventMessage: EventMessage): Unit = {
+  def processMessage(eventMessage: ChatMessage): Unit = {
     if (willResponse()) {
       preHandleMessage(eventMessage)
         .foreach(it => if (it) SSDLRuleRunner.executeIfFound(eventMessage)
@@ -72,7 +70,7 @@ object QMessageListener extends IcqListener {
    * @return true：记录成功
    *         记录失败时会直接关闭Bot
    */
-  def recordMessage(eventMessage: EventMessage): Future[Boolean] =
+  def recordMessage(eventMessage: ChatMessage): Future[Boolean] =
     messageRecorder.recordMessage(eventMessage).recover(error => {
       logger.error(error)
       false
@@ -91,7 +89,7 @@ object QMessageListener extends IcqListener {
    * @param eventMessage 消息对象
    * @return 是否继续执行剩余步骤
    */
-  def preHandleMessage(eventMessage: EventMessage): Future[Boolean] =
+  def preHandleMessage(eventMessage: ChatMessage): Future[Boolean] =
     Future.unit.flatMap { _ =>
       val result: Future[Iterable[Boolean]] = if (PluginConfig.config.preHandle.runTaskAsync) {
         Future.sequence(preHandleTasks.map(_.execute(eventMessage)))
@@ -109,7 +107,7 @@ object QMessageListener extends IcqListener {
    *
    * @param eventMessage 消息对象
    */
-  @tailrec def postHandleMessage(eventMessage: EventMessage, contextOpt: Option[CommandExecuteContext]): Future[Unit] = {
+  @tailrec def postHandleMessage(eventMessage: ChatMessage, contextOpt: Option[CommandExecuteContext]): Future[Unit] = {
     if (contextOpt.isDefined && contextOpt.get.exitCode == ExitCodes.AsUnMatched) {
       postHandleMessage(eventMessage, None)
     } else {

@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.posthandle
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 import o.lartifa.jam.common.util.TriBoolValue
 import o.lartifa.jam.common.util.TriBoolValue.TriBool
 import o.lartifa.jam.model.CommandExecuteContext
@@ -30,5 +30,5 @@ abstract class PostHandleTask(val name: String, val handleOnProcessed: TriBool =
    * @param exec       异步上下文
    * @return 异步返回执行结果
    */
-  def execute(event: EventMessage, contextOpt: Option[CommandExecuteContext])(implicit exec: ExecutionContext): Future[Unit]
+  def execute(event: ChatMessage, contextOpt: Option[CommandExecuteContext])(implicit exec: ExecutionContext): Future[Unit]
 }

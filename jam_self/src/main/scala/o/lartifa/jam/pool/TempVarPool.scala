@@ -1,6 +1,6 @@
 package o.lartifa.jam.pool
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 import o.lartifa.jam.common.exception.{ExecutionException, VarNotFoundException}
 import o.lartifa.jam.common.util.EventMessageHelper.*
 import o.lartifa.jam.database.schema.Tables
@@ -16,7 +16,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * Author: sinar
  * 2020/7/17 21:08
  */
-class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(implicit exec: ExecutionContext) extends VariablePool {
+class TempVarPool(eventMessage: ChatMessage, commandStartTime: Timestamp)(implicit exec: ExecutionContext) extends VariablePool {
 
   private val PREDEF_VARIABLES: Set[String] = Set("Bot昵称", "自己的昵称", "BotQQ昵称", "自己的QQ昵称", "群号", "群名",
     "发送者昵称", "对方昵称", "发送者群昵称", "对方群昵称", "发送者QQ昵称", "对方QQ昵称", "发送者QQ", "对方QQ", "QQ号",
@@ -117,7 +117,7 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    * @param eventMessage 消息事件
    * @return true：删除成功
    */
-  override def cleanAllInChat(eventMessage: EventMessage): Future[Boolean] = cleanAll()
+  override def cleanAllInChat(eventMessage: ChatMessage): Future[Boolean] = cleanAll()
 
   /**
    * 清除全部变量
@@ -147,7 +147,7 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
    * @param eventMessage 消息事件
    * @return 全部变量
    */
-  override def listAllInChart(eventMessage: EventMessage): Future[Seq[Tables.VariablesRow]] = listAll()
+  override def listAllInChart(eventMessage: ChatMessage): Future[Seq[Tables.VariablesRow]] = listAll()
 
   /**
    * 获取临时变量
@@ -159,15 +159,17 @@ class TempVarPool(eventMessage: EventMessage, commandStartTime: Timestamp)(impli
     name match {
       case "Bot昵称" | "自己的昵称" => eventMessage.selfNickname
       case "BotQQ昵称" | "自己的QQ昵称" => eventMessage.selfQQName
-      case "群号" => eventMessage.toGroupMessage.getGroupId.toString
-      case "群名" => eventMessage.toGroupMessage.getGroup.refreshInfo().getGroupName
+      case "群号" => eventMessage.toGroupMessage.groupId.toString
+      case "群名" => JamContext.apiClient.getGroupInfo(eventMessage.toGroupMessage.groupId).getData.getGroupName
       case "发送者昵称" | "对方昵称" | "发送者群昵称" | "对方群昵称" => eventMessage.senderNickName
       case "发送者QQ昵称" | "对方QQ昵称" => eventMessage.senderQQName
-      case "发送者QQ" | "对方QQ" | "QQ号" => eventMessage.getSenderId.toString
-      case "发送者年龄" | "对方年龄" => eventMessage.getSender.refreshInfo(true).getAge.toString
-      case "发送者性别" | "对方性别" => eventMessage.getSender.refreshInfo(true).getSex
+      case "发送者QQ" | "对方QQ" | "QQ号" => eventMessage.senderId.toString
+      case "发送者年龄" | "对方年龄" => JamContext.apiClient.getStrangerInfo(eventMessage.senderId).getData.getAge.toString
+      case "发送者性别" | "对方性别" => JamContext.apiClient.getStrangerInfo(eventMessage.senderId).getData.getSex
       case "会话类型" => if (eventMessage.chatInfo.chatType == "private") "私聊" else "群聊"
-      case "是否为好友" => if (eventMessage.toGroupMessage.getGroupSender.getInfo.getUnfriendly) "否" else "是"
+      case "是否为好友" =>
+        val info = JamContext.apiClient.getGroupMemberInfo(eventMessage.toGroupMessage.groupId, eventMessage.senderId).getData
+        if (info.getUnfriendly) "否" else "是"
       case "对方管理状态" => if (eventMessage.isSenderManager) "是" else "否"
       case other => return _commandScopeParameters.get(other)
     }
