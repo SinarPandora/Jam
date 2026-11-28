@@ -9,7 +9,7 @@ import o.lartifa.jam.common.config.*
 import o.lartifa.jam.common.util.{LoggerFactory, MasterUtil}
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.cool.qq.command.MasterCommands
-import o.lartifa.jam.cool.qq.listener.{BanList, EvtMatchers, MsgMatchers, QEventListener, QMessageListener, SystemEventListener}
+import o.lartifa.jam.cool.qq.listener.{BanList, EvtMatchers, MsgMatchers, QMessageListener, SystemEventListener}
 import o.lartifa.jam.database.Memory
 import o.lartifa.jam.engine.SXDLParseEngine.{SSDLParseSuccessResult, STDLParseSuccessResult, SXDLParseFailResult, SXDLParseSuccessResult}
 import o.lartifa.jam.engine.stdl.ast.DTExpInterpreter.InterpreterResult
@@ -76,8 +76,8 @@ object JamLoader {
     } yield {
       ScriptRunner.init()
       runBootTasks()
-      // 消息热路径由 OneBotInbound 直喂 QMessageListener，避免与 Schema 管道双触发
-      client.getEventManager.registerListeners(QEventListener, SystemEventListener)
+      // 消息 / 热路径 notice·request 由 OneBotInbound 直喂；EventManager 只留 meta
+      client.getEventManager.registerListeners(SystemEventListener)
       o.lartifa.jam.onebot.OneBotInbound.resetMessageHandler()
       client.getCommandManager.registerCommands(MasterCommands.commands *)
       KeepAliveDreamingActor.showBootMessage()

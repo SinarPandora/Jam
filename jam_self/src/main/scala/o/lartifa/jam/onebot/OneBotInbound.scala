@@ -1,15 +1,15 @@
 package o.lartifa.jam.onebot
 
 import o.lartifa.jam.ob.PicqBotX
-import o.lartifa.jam.onebot.domain.ChatMessage
+import o.lartifa.jam.onebot.domain.{ChatMessage, NoticeEvent, RequestEvent}
 import o.lartifa.jam.onebot.protocol.api.OutboundGateway
-import o.lartifa.jam.onebot.protocol.event.MessageEventCodec
-import o.lartifa.jam.cool.qq.listener.QMessageListener
+import o.lartifa.jam.onebot.protocol.event.*
+import o.lartifa.jam.cool.qq.listener.{QEventListener, QMessageListener, SystemEventListener}
 import o.lartifa.jam.pool.JamContext
 import zio.Fiber
 
 /**
- * 启动自有入站 Server：消息走 Schema 领域管道，其它事件仍交 EventParser。
+ * 启动自有入站 Server：message / notice / request 热路径走领域管道，其余交 EventParser。
  *
  * Author: sinar
  * 2026/11/26
@@ -35,17 +35,49 @@ object OneBotInbound {
     JamContext.outbound.set(outbound)
     val fiber = EventInboundServer.start(
       port,
-      data =>
-        MessageEventCodec.tryDecode(data, outbound) match {
-          case Some(chat) =>
-            if (LegacyCommandBridge.tryHandle(chat, bot)) {
-              messageHandler(chat)
-            }
-          case None =>
-            bot.getEventManager.getEventParser.call(data)
-        },
+      data => dispatch(bot, outbound, data),
     )
     fiberOpt = Some(fiber)
+  }
+
+  private def dispatch(bot: PicqBotX, outbound: OutboundGateway, data: String): Unit = {
+    MessageEventCodec.tryDecode(data, outbound) match {
+      case Some(chat) =>
+        if (LegacyCommandBridge.tryHandle(chat, bot)) {
+          messageHandler(chat)
+        }
+      case None =>
+        NoticeEventCodec.tryDecode(data) match {
+          case Some(notice) =>
+            if (shouldDispatchNotice(bot, notice)) {
+              QEventListener.handleNoticeEvent(notice)
+            }
+          case None =>
+            RequestEventCodec.tryDecode(data, outbound) match {
+              case Some(request) =>
+                SystemEventListener.handleRequestEvent(request)
+              case None =>
+                bot.getEventManager.getEventParser.call(data)
+            }
+        }
+    }
+  }
+
+  private def shouldDispatchNotice(bot: PicqBotX, notice: NoticeEvent): Boolean = {
+    val enabled = bot.getConfig.isMultiAccountOptimizations(bot)
+    val identifier = notice match {
+      case g: o.lartifa.jam.onebot.domain.GroupPokeNotice            => g.groupId.toString
+      case g: o.lartifa.jam.onebot.domain.GroupMemberIncreaseNotice  => g.groupId.toString
+      case g: o.lartifa.jam.onebot.domain.GroupMemberDecreaseNotice  => g.groupId.toString
+      case f: o.lartifa.jam.onebot.domain.FriendPokeNotice           => f.userId.toString
+    }
+    val kind = notice match {
+      case _: o.lartifa.jam.onebot.domain.GroupPokeNotice           => "group_poke"
+      case _: o.lartifa.jam.onebot.domain.FriendPokeNotice          => "friend_poke"
+      case _: o.lartifa.jam.onebot.domain.GroupMemberIncreaseNotice => "group_inc"
+      case _: o.lartifa.jam.onebot.domain.GroupMemberDecreaseNotice => "group_dec"
+    }
+    EventDeduper.isNew(kind, identifier, notice.contentKey, notice.time, enabled)
   }
 
   def stop(): Unit = {

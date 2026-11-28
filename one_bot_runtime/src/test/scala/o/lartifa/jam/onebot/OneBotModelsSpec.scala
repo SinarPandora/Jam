@@ -32,4 +32,10 @@ class OneBotModelsSpec extends AnyFlatSpec with Matchers {
     back.isRight.`shouldBe`(true)
     back.toOption.get.data.map(_.message_id).`shouldBe`(Some(99L))
   }
+
+  "SetGroupAddRequestParams" should "encode type field" in {
+    val raw = SetGroupAddRequestParams("f", "invite", true).toJsonString
+    raw should include("\"type\"")
+    raw should include("invite")
+  }
 }
