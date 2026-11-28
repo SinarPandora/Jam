@@ -25,4 +25,11 @@ class OneBotModelsSpec extends AnyFlatSpec with Matchers {
   "SendGroupMsgParams" should "encode group_id" in {
     SendGroupMsgParams(713201079L, "验证券").toJsonString should include("713201079")
   }
+
+  "OneBotApiResponse" should "decode nested message_id" in {
+    val raw = """{"status":"ok","retcode":0,"data":{"message_id":99}}"""
+    val back = raw.fromJson[OneBotApiResponse]
+    back.isRight.`shouldBe`(true)
+    back.toOption.get.data.map(_.message_id).`shouldBe`(Some(99L))
+  }
 }

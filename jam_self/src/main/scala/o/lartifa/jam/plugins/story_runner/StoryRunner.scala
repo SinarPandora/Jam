@@ -1,7 +1,7 @@
 package o.lartifa.jam.plugins.story_runner
 
 import org.apache.pekko.actor.{Actor, ActorRef}
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 import com.bladecoder.ink.runtime.Story
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.behaviors.ReplyToFriend
@@ -16,7 +16,7 @@ import scala.jdk.CollectionConverters._
  * Author: sinar
  * 2021/2/2 20:47
  */
-class StoryRunner(story: Story, save: List[Int], initEvent: EventMessage, config: StoryConfig) extends Actor with ReplyToFriend {
+class StoryRunner(story: Story, save: List[Int], initEvent: ChatMessage, config: StoryConfig) extends Actor with ReplyToFriend {
 
   val choice: ListBuffer[Int] = ListBuffer.from(save)
 

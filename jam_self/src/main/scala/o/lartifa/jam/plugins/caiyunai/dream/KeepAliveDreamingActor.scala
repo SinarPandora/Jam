@@ -1,7 +1,7 @@
 package o.lartifa.jam.plugins.caiyunai.dream
 
 import org.apache.pekko.actor.{Actor, ActorRef, Cancellable, Props}
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 import cc.moecraft.logger.HyLogger
 import cn.hutool.core.util.NumberUtil
 import o.lartifa.jam.common.config.PluginConfig
@@ -57,7 +57,7 @@ class KeepAliveDreamingActor extends Actor {
    * @param senderRef    消息发送者
    * @param eventMessage 消息事件
    */
-  def login(senderRef: ActorRef, eventMessage: EventMessage): Unit = {
+  def login(senderRef: ActorRef, eventMessage: ChatMessage): Unit = {
     implicit val session: Session = requests.Session()
     val codeId = DreamClient.sendCaptcha(config.mobile) match {
       case Left(errMsg) => senderRef ! Fail(errMsg); return

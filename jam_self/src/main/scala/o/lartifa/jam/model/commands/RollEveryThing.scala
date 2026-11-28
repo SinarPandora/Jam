@@ -44,7 +44,7 @@ case class RollEveryThing(mode: Mode, random: Random) extends Command[Int] {
    */
   private def TRPGRoll()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Int] = Future {
     val event = context.eventMessage
-    val times -> size = TRPG_ROLL.findFirstMatchIn(event.getMessage)
+    val times -> size = TRPG_ROLL.findFirstMatchIn(event.message)
       .map(it => it.group("times").toInt -> it.group("size").toInt)
       .getOrElse(1 -> 100)
     if (times <= 1) {

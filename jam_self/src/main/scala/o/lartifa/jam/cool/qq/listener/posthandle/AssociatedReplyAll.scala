@@ -1,7 +1,7 @@
 package o.lartifa.jam.cool.qq.listener.posthandle
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
-import o.lartifa.jam.ob.sender.message.components.ComponentAt
+import o.lartifa.jam.onebot.cq.Cq
+import o.lartifa.jam.onebot.domain.ChatMessage
 import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.util.TriBoolValue
 import o.lartifa.jam.model.CommandExecuteContext
@@ -16,7 +16,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * 2021/6/13 03:53
  */
 object AssociatedReplyAll extends PostHandleTask("联想回复（匹配后）", TriBoolValue.Both) {
-  private val atMe: String = new ComponentAt(BotConfig.qID).toString
+  private val atMe: String = Cq.At(BotConfig.qID).toCq
 
   /**
    * 执行
@@ -26,7 +26,7 @@ object AssociatedReplyAll extends PostHandleTask("联想回复（匹配后）", 
    * @param exec       异步上下文
    * @return 异步返回执行结果
    */
-  override def execute(event: EventMessage, contextOpt: Option[CommandExecuteContext])(implicit exec: ExecutionContext): Future[Unit] = {
+  override def execute(event: ChatMessage, contextOpt: Option[CommandExecuteContext])(implicit exec: ExecutionContext): Future[Unit] = {
     implicit val context: CommandExecuteContext = contextOpt.getOrElse(CommandExecuteContext(event))
     val msg = event.message.replaceAll("\\s+", "")
     if (msg.startsWith(atMe)) {

@@ -76,7 +76,9 @@ object JamLoader {
     } yield {
       ScriptRunner.init()
       runBootTasks()
-      client.getEventManager.registerListeners(QMessageListener, QEventListener, SystemEventListener)
+      // 消息热路径由 OneBotInbound 直喂 QMessageListener，避免与 Schema 管道双触发
+      client.getEventManager.registerListeners(QEventListener, SystemEventListener)
+      o.lartifa.jam.onebot.OneBotInbound.resetMessageHandler()
       client.getCommandManager.registerCommands(MasterCommands.commands *)
       KeepAliveDreamingActor.showBootMessage()
       Runtime.getRuntime.addShutdownHook(shutdownHookThread)

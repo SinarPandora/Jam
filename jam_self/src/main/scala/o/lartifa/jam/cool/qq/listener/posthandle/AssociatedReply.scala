@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.posthandle
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -20,6 +20,6 @@ object AssociatedReply extends PostUnProcessedHandleTask("联想回复") {
    * @param exec  异步上下文
    * @return 异步返回执行结果
    */
-  override def execute(event: EventMessage)(implicit exec: ExecutionContext): Future[Unit] =
+  override def execute(event: ChatMessage)(implicit exec: ExecutionContext): Future[Unit] =
     AssociatedReplyAll.execute(event, None)
 }

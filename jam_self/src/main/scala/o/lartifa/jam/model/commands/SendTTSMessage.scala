@@ -1,7 +1,7 @@
 package o.lartifa.jam.model.commands
 
-import o.lartifa.jam.ob.sender.message.components.ComponentTTS
 import o.lartifa.jam.model.CommandExecuteContext
+import o.lartifa.jam.onebot.cq.Cq
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -20,6 +20,6 @@ case class SendTTSMessage(message: RenderStrTemplate) extends Command[Unit] {
    * @return 异步返回执行结果
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = Future {
-    message.execute().foreach(message => reply(new ComponentTTS(message)))
+    message.execute().foreach(message => reply(Cq.Tts(message)))
   }
 }

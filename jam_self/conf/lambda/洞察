@@ -1,16 +1,15 @@
 /**
  * lambda<NAME>(%{目标QQ}%)
  */
-import o.lartifa.jam.ob.event.events.message.EventDiscussMessage
-import o.lartifa.jam.ob.event.events.message.EventGroupMessage
-import o.lartifa.jam.ob.event.events.message.EventPrivateMessage
-import o.lartifa.jam.ob.sender.message.components.ComponentAt
-
+import o.lartifa.jam.onebot.domain.DiscussMessage
+import o.lartifa.jam.onebot.domain.GroupMessage
+import o.lartifa.jam.onebot.domain.PrivateMessage
+import o.lartifa.jam.onebot.cq.ComponentAt
 if ($args.isEmpty()) {
     return
 }
 
-if ($msg instanceof EventPrivateMessage || $msg instanceof EventDiscussMessage) {
+if ($msg instanceof PrivateMessage || $msg instanceof DiscussMessage) {
     return
 }
 

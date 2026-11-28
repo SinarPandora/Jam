@@ -1,8 +1,6 @@
 package wrapper
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
-import o.lartifa.jam.ob.sender.returndata.ReturnData
-import o.lartifa.jam.ob.sender.returndata.returnpojo.send.RMessageReturnData
+import o.lartifa.jam.onebot.domain.ChatMessage
 import o.lartifa.jam.common.util.AsyncUtil
 import o.lartifa.jam.cool.qq.listener.interactive.Interactive
 import o.lartifa.jam.cool.qq.listener.interactive.InteractiveFunction
@@ -53,8 +51,8 @@ class LambdaDSLWrapper {
          * @param message 消息内容
          * @return 回复结果
          */
-        ReturnData<RMessageReturnData> reply(Object message) {
-            context.eventMessage().respond(message.toString())
+        long reply(Object message) {
+            context.eventMessage().respond(message.toString(), false)
         }
 
         /**
@@ -64,12 +62,12 @@ class LambdaDSLWrapper {
          * @param sender 消息发送者
          * @return 询问会话引用
          */
-        CompletionStage<Object> ask(BiConsumer<InteractiveSession, EventMessage> behavior, SpecificSender sender = context.msgSender()) {
+        CompletionStage<Object> ask(BiConsumer<InteractiveSession, ChatMessage> behavior, SpecificSender sender = context.msgSender()) {
             // Groovy 无法正确调用 Scala 扩展 FutureOps.asJava（会落到 Future 本身）
             // 须走 javaapi：scala.jdk.javaapi.FutureConverters.asJava
             (CompletionStage<Object>) scala.jdk.javaapi.FutureConverters.asJava(interact(sender, new InteractiveFunction() {
                 @Override
-                void apply(InteractiveSession session, EventMessage event) {
+                void apply(InteractiveSession session, ChatMessage event) {
                     behavior.accept(session, event)
                 }
             }))

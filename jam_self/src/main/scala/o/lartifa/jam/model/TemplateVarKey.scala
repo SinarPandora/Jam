@@ -1,8 +1,8 @@
 package o.lartifa.jam.model
 
-import o.lartifa.jam.ob.sender.message.components.{ComponentAt, ComponentFace, ComponentImage}
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.TemplateVarKey.TemplateVarSubType
+import o.lartifa.jam.onebot.cq.Cq
 import o.lartifa.jam.pool.JamContext
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -27,12 +27,12 @@ class TemplateVarKey(valueVarKey: VarKey, subType: TemplateVarSubType) extends V
       subType match {
         case TemplateVarKey.At =>
           val qId = Try(value.toLong).getOrElse(throw ExecutionException(s"At参数不是合法的QQ号$value"))
-          Future.successful(new ComponentAt(qId))
+          Future.successful(Cq.At(qId))
         case TemplateVarKey.QQFace =>
           val fId = Try(value.toInt).getOrElse(throw ExecutionException(s"QQ小表情Id不合法$value"))
-          Future.successful(new ComponentFace(fId))
+          Future.successful(Cq.Face(fId))
         case TemplateVarKey.Image =>
-          Future.successful(new ComponentImage(value))
+          Future.successful(Cq.Image(value))
         case TemplateVarKey.Command =>
           val stepId = Try(value.toLong).getOrElse(throw ExecutionException(s"指令编号不合法$value"))
           JamContext.stepPool.get().getById(stepId)

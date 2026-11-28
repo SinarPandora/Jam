@@ -1,12 +1,11 @@
 package o.lartifa.jam.engine.ssdl.parser
 
-import o.lartifa.jam.ob.sender.message.components.ComponentContact.ContactType
-import o.lartifa.jam.ob.sender.message.components.ComponentMusic.MusicSourceType
 import cn.hutool.core.text.CharSequenceUtil
 import o.lartifa.jam.common.exception.ParseFailException
 import o.lartifa.jam.engine.proto.Parser
 import o.lartifa.jam.model.commands.*
 import o.lartifa.jam.model.commands.Ask.{AnyBody, CurrentSender}
+import o.lartifa.jam.onebot.cq.Cq
 import o.lartifa.jam.plugins.JamPluginLoader
 import o.lartifa.jam.plugins.lambda.RunLambda
 import o.lartifa.jam.plugins.picbot.*
@@ -593,8 +592,8 @@ object CommandParser extends Parser {
   private def parseShareContact(string: String, context: ParseEngineContext): Option[ShareContact] = {
     CommandPattern.shareContact.findFirstMatchIn(string).map(result => {
       val contactType = result.group("type") match {
-        case ShareContact.Friend.str => ContactType.qq
-        case ShareContact.Group.str => ContactType.group
+        case ShareContact.Friend.str => Cq.ContactType.Qq
+        case ShareContact.Group.str => Cq.ContactType.Group
       }
       ShareContact(context.getTemplate(result.group("qId")), contactType)
     })
@@ -610,9 +609,9 @@ object CommandParser extends Parser {
   private def parseShareMusic(string: String, context: ParseEngineContext): Option[ShareMusic] = {
     CommandPattern.shareMusic.findFirstMatchIn(string).map(result => {
       val sourceType = result.group("type") match {
-        case ShareMusic.Netease.str => MusicSourceType.netease
-        case ShareMusic.QQ.str => MusicSourceType.qq
-        case ShareMusic.XM.str => MusicSourceType.xm
+        case ShareMusic.Netease.str => Cq.MusicSource.Netease
+        case ShareMusic.QQ.str => Cq.MusicSource.Qq
+        case ShareMusic.XM.str => Cq.MusicSource.Xm
       }
       ShareMusic(context.getTemplate(result.group("mId")), sourceType)
     })

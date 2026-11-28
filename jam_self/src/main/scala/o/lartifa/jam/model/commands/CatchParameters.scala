@@ -22,7 +22,7 @@ case class CatchParameters(regex: Regex, varKeys: Seq[(VarKey, Int)]) extends Co
    */
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] =
     Future.unit.flatMap { _ =>
-      regex.findFirstMatchIn(context.eventMessage.getMessage).map(result => {
+      regex.findFirstMatchIn(context.eventMessage.message).map(result => {
         Future.sequence(varKeys.map { case (key, idx) => key.updateOrElseSet(result.group(idx + 1)) })
       }).getOrElse(throw ExecutionException("没有匹配到捕获变量"))
     }.map(_ => ())

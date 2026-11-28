@@ -1,5 +1,5 @@
 package o.lartifa.jam.pool
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 import o.lartifa.jam.database.schema.Tables
 import o.lartifa.jam.model.CommandExecuteContext
 
@@ -75,7 +75,7 @@ trait VariablePool {
    * @param eventMessage 消息事件
    * @return true：删除成功
    */
-  def cleanAllInChat(eventMessage: EventMessage): Future[Boolean]
+  def cleanAllInChat(eventMessage: ChatMessage): Future[Boolean]
 
   /**
    * 清除全部变量
@@ -97,5 +97,5 @@ trait VariablePool {
    * @param eventMessage 消息事件
    * @return 全部变量
    */
-  def listAllInChart(eventMessage: EventMessage): Future[Seq[Tables.VariablesRow]]
+  def listAllInChart(eventMessage: ChatMessage): Future[Seq[Tables.VariablesRow]]
 }

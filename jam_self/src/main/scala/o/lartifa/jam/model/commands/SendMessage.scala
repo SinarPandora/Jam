@@ -1,12 +1,11 @@
 package o.lartifa.jam.model.commands
 
 import better.files.File
-import o.lartifa.jam.ob.sender.message.MessageBuilder
-import o.lartifa.jam.ob.sender.message.components.{ComponentImage, ComponentImageBase64, ComponentRecord}
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.SendMessage.Type
+import o.lartifa.jam.onebot.cq.Cq
 import o.lartifa.jam.pool.JamContext
 
 import java.util.Base64
@@ -57,13 +56,13 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
    * @return 消息是否发送成功
    */
   private def sendPic()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = template.execute().map { message =>
-    val content = new MessageBuilder().add({
+    val content = new Cq.MessageBuilder().add({
       val lowCaseName = message.toLowerCase
       if (lowCaseName.startsWith("http://") || lowCaseName.startsWith("https://") || lowCaseName.contains("data/image") || lowCaseName.contains("data\\image")) {
-        new ComponentImage(message)
+        Cq.Image(message)
       } else {
         val bytes = Try(File(message).byteArray).getOrElse(throw ExecutionException(s"图片文件获取失败，地址：$message"))
-        new ComponentImageBase64(Base64.getEncoder.encodeToString(bytes))
+        Cq.ImageBase64(Base64.getEncoder.encodeToString(bytes))
       }
     }).toString
     Try(reply(content)) match {
@@ -82,7 +81,7 @@ case class SendMessage(`type`: Type, template: RenderStrTemplate) extends Comman
    * @return 消息是否发送成功
    */
   private def sendAudio()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Boolean] = template.execute().map { audioUri =>
-    val audioMessage = new MessageBuilder().add(new ComponentRecord(audioUri)).toString
+    val audioMessage = new Cq.MessageBuilder().add(Cq.Record(audioUri)).toString
     Try(reply(audioMessage)) match {
       case Failure(exception) =>
         logger.error("语音发送可能失败，请检查是否语音文件较大或尝试将语音文件放在对应后端的 /data/record 目录下", exception)

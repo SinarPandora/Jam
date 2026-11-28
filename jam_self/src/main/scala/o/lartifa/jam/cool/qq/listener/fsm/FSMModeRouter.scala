@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.fsm
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -14,7 +14,7 @@ object FSMModeRouter {
    * @param context 指令执行上下文
    * @param exec    异步执行上下文
    */
-  def forward(event: EventMessage)(implicit context: CommandExecuteContext,
+  def forward(event: ChatMessage)(implicit context: CommandExecuteContext,
                                    exec: ExecutionContext): Future[Boolean] = {
     val mode = modes.get(context.chatInfo)
     if (mode != null) {

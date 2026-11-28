@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.interactive
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 
 /**
  * 交互函数
@@ -9,5 +9,5 @@ import o.lartifa.jam.ob.event.events.message.EventMessage
  * 2021/8/20 01:18
  */
 trait InteractiveFunction {
-  def apply(session: InteractiveSession, event: EventMessage): Unit
+  def apply(session: InteractiveSession, event: ChatMessage): Unit
 }

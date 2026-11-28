@@ -1,6 +1,6 @@
 package o.lartifa.jam.cool.qq.listener.asking
 
-import o.lartifa.jam.ob.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
+import o.lartifa.jam.onebot.domain.{ChatMessage, DiscussMessage, GroupMessage, PrivateMessage}
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.cool.qq.listener.asking.Questioner.QuestionContext
 import o.lartifa.jam.model.CommandExecuteContext
@@ -56,12 +56,14 @@ object Answerer {
    * @param eventMessage 消息对象
    * @return 回答者
    */
-  def anyInThisSession(eventMessage: EventMessage): Answerer = {
+  def anyInThisSession(eventMessage: ChatMessage): Answerer = {
     eventMessage match {
-      case message: EventGroupOrDiscussMessage =>
-        new Answerer(None, Some(message.getGroup.getId))
-      case message: EventPrivateMessage =>
-        new Answerer(Some(message.getSenderId), None)
+      case message: GroupMessage =>
+        new Answerer(None, Some(message.groupId))
+      case message: DiscussMessage =>
+        new Answerer(None, Some(message.discussId))
+      case message: PrivateMessage =>
+        new Answerer(Some(message.senderId), None)
     }
   }
 
@@ -80,12 +82,14 @@ object Answerer {
    * @param eventMessage 消息对象
    * @return 回答者
    */
-  def sender(eventMessage: EventMessage): Answerer = {
+  def sender(eventMessage: ChatMessage): Answerer = {
     eventMessage match {
-      case message: EventGroupOrDiscussMessage =>
-        new Answerer(Some(message.getSenderId), Some(message.getGroup.getId))
-      case message: EventPrivateMessage =>
-        new Answerer(Some(message.getSenderId), None)
+      case message: GroupMessage =>
+        new Answerer(Some(message.senderId), Some(message.groupId))
+      case message: DiscussMessage =>
+        new Answerer(Some(message.senderId), Some(message.discussId))
+      case message: PrivateMessage =>
+        new Answerer(Some(message.senderId), None)
     }
   }
 

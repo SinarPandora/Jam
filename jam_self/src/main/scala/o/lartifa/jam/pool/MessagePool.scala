@@ -1,11 +1,11 @@
 package o.lartifa.jam.pool
 
-import o.lartifa.jam.ob.event.events.message.{EventGroupOrDiscussMessage, EventMessage, EventPrivateMessage}
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.database.Memory.database.db
 import o.lartifa.jam.database.schema.Tables.*
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
+import o.lartifa.jam.onebot.domain.{ChatMessage, DiscussMessage, GroupMessage, PrivateMessage}
 import o.lartifa.jam.plugins.filppic.QQImg
 
 import java.util.UUID
@@ -30,10 +30,11 @@ class MessagePool {
    * @tparam T 消息类型
    * @return 变更结果（true：成功，false：失败）
    */
-  def recordMessage[T <: EventMessage](message: T): Future[Boolean] = {
+  def recordMessage[T <: ChatMessage](message: T): Future[Boolean] = {
     val result: Future[Int] = message match {
-      case message: EventPrivateMessage => recordPrivateMessage(message)
-      case message: EventGroupOrDiscussMessage => recordGroupOrDiscussMessage(message)
+      case message: PrivateMessage => recordPrivateMessage(message)
+      case message: GroupMessage => recordGroupOrDiscussMessage(message, message.groupId)
+      case message: DiscussMessage => recordGroupOrDiscussMessage(message, message.discussId)
     }
     result.map(_ == 1)
   }
@@ -46,10 +47,11 @@ class MessagePool {
    * @tparam T 消息类型
    * @return 变更结果（true：成功，false：失败）
    */
-  def recordAPlaceholder[T <: EventMessage](message: T, content: String): Future[Boolean] = {
+  def recordAPlaceholder[T <: ChatMessage](message: T, content: String): Future[Boolean] = {
     val result: Future[Int] = message match {
-      case message: EventPrivateMessage => recordPrivatePlaceholder(message, content)
-      case message: EventGroupOrDiscussMessage => recordGroupOrDiscussPlaceholder(message, content)
+      case message: PrivateMessage => recordPrivatePlaceholder(message, content)
+      case message: GroupMessage => recordGroupOrDiscussPlaceholder(message, message.groupId, content)
+      case message: DiscussMessage => recordGroupOrDiscussPlaceholder(message, message.discussId, content)
     }
     result.map(_ == 1)
   }
@@ -68,7 +70,7 @@ class MessagePool {
    * @param event 当前消息对象
    * @return 消息记录（可能不存在）
    */
-  def previousMessage(event: EventMessage): Future[Option[MessageRecord]] = this.last(event, 2)
+  def previousMessage(event: ChatMessage): Future[Option[MessageRecord]] = this.last(event, 2)
 
   /**
    * 获取倒数第 n 条消息
@@ -89,7 +91,7 @@ class MessagePool {
    * @return 消息记录（可能不存在）
    */
   @throws[ExecutionException]
-  def last(event: EventMessage, number: Int): Future[Option[MessageRecord]] =
+  def last(event: ChatMessage, number: Int): Future[Option[MessageRecord]] =
     this.lasts(event, 1, number).map(_.headOption)
 
   /**
@@ -113,7 +115,7 @@ class MessagePool {
    * @return 消息记录（可能不存在）
    */
   @throws[ExecutionException]
-  def lasts(event: EventMessage, take: Int, from: Int): Future[Seq[MessageRecord]] =
+  def lasts(event: ChatMessage, take: Int, from: Int): Future[Seq[MessageRecord]] =
     this.lastMessages(take, from, ChatInfo(event))
 
   /**
@@ -160,7 +162,7 @@ class MessagePool {
    * @param event 当前消息对象
    * @return 是否复读
    */
-  def isRepeat(event: EventMessage): Future[Boolean] = {
+  def isRepeat(event: ChatMessage): Future[Boolean] = {
     this.lasts(event, 2, 1).map { it =>
       it.sizeIs == 2 && it.head.message == it.last.message
     }
@@ -172,7 +174,7 @@ class MessagePool {
    * @param event 当前消息对象
    * @return 是否复读
    */
-  def isPictureRepeat(event: EventMessage): Future[Boolean] = {
+  def isPictureRepeat(event: ChatMessage): Future[Boolean] = {
     this.lasts(event, 2, 1).map { it =>
       it.sizeIs == 2 && QQImg.isPicSame(it.head.message, it.last.message)
     }
@@ -194,31 +196,32 @@ class MessagePool {
    * @param msg 消息对象
    * @return 变更结果
    */
-  private def recordPrivateMessage(msg: EventPrivateMessage): Future[Int] = {
+  private def recordPrivateMessage(msg: PrivateMessage): Future[Int] = {
     db.run {
       MessageRecords
         .map(row =>
           (row.message, row.messageId, row.messageType, row.messageSubType, row.postType,
             row.rawMessage, row.selfId, row.senderId, row.font)
-        ) += (msg.getMessage, msg.getMessageId, msg.getMessageType, msg.getSubType, msg.getPostType,
-        msg.getRawMessage, msg.getSelfId, msg.getSenderId, msg.getFont)
+        ) += (msg.message, msg.messageId, msg.messageType, msg.subType.getOrElse(MessageType.SUB_TYPE_NORMAL), msg.postType,
+        msg.rawMessage, msg.selfId, msg.senderId, msg.font)
     }
   }
 
   /**
    * 记录群聊 / 讨论组消息
    *
-   * @param msg 消息对象
+   * @param msg     消息对象
+   * @param groupId 群 / 讨论组 ID
    * @return 变更结果
    */
-  private def recordGroupOrDiscussMessage(msg: EventGroupOrDiscussMessage): Future[Int] = {
+  private def recordGroupOrDiscussMessage(msg: ChatMessage, groupId: Long): Future[Int] = {
     db.run {
       MessageRecords
         .map(row =>
           (row.message, row.messageId, row.messageType, row.messageSubType, row.postType,
             row.rawMessage, row.selfId, row.senderId, row.groupId, row.font)
-        ) += (msg.getMessage, msg.getMessageId, msg.getMessageType, MessageType.SUB_TYPE_NORMAL, msg.getPostType,
-        msg.getRawMessage, msg.getSelfId, msg.getSenderId, msg.getGroup.getId, msg.getFont)
+        ) += (msg.message, msg.messageId, msg.messageType, MessageType.SUB_TYPE_NORMAL, msg.postType,
+        msg.rawMessage, msg.selfId, msg.senderId, groupId, msg.font)
     }
   }
 
@@ -229,15 +232,15 @@ class MessagePool {
    * @param content 消息类型
    * @return 变更结果
    */
-  private def recordPrivatePlaceholder(msg: EventPrivateMessage, content: String): Future[Int] = {
+  private def recordPrivatePlaceholder(msg: PrivateMessage, content: String): Future[Int] = {
     val placeholderMessage = s"$content ${UUID.randomUUID().toString}"
     db.run {
       MessageRecords
         .map(row =>
           (row.message, row.messageId, row.messageType, row.messageSubType, row.postType,
             row.rawMessage, row.selfId, row.senderId, row.font)
-        ) += (placeholderMessage, -1, msg.getMessageType, msg.getSubType, "placeholder",
-        placeholderMessage, msg.getSelfId, msg.getSelfId, msg.getFont)
+        ) += (placeholderMessage, -1, msg.messageType, msg.subType.getOrElse(MessageType.SUB_TYPE_NORMAL), "placeholder",
+        placeholderMessage, msg.selfId, msg.selfId, msg.font)
     }
   }
 
@@ -245,18 +248,19 @@ class MessagePool {
    * 记录群聊 / 讨论组占位符
    *
    * @param msg     消息对象
+   * @param groupId 群 / 讨论组 ID
    * @param content 消息类型
    * @return 变更结果
    */
-  private def recordGroupOrDiscussPlaceholder(msg: EventGroupOrDiscussMessage, content: String): Future[Int] = {
+  private def recordGroupOrDiscussPlaceholder(msg: ChatMessage, groupId: Long, content: String): Future[Int] = {
     val placeholderMessage = s"$content ${UUID.randomUUID().toString}"
     db.run {
       MessageRecords
         .map(row =>
           (row.message, row.messageId, row.messageType, row.messageSubType, row.postType,
             row.rawMessage, row.selfId, row.senderId, row.groupId, row.font)
-        ) += (placeholderMessage, -1, msg.getMessageType, MessageType.SUB_TYPE_NORMAL, "placeholder",
-        placeholderMessage, msg.getSelfId, msg.getSelfId, msg.getGroup.getId, msg.getFont)
+        ) += (placeholderMessage, -1, msg.messageType, MessageType.SUB_TYPE_NORMAL, "placeholder",
+        placeholderMessage, msg.selfId, msg.selfId, groupId, msg.font)
     }
   }
 }

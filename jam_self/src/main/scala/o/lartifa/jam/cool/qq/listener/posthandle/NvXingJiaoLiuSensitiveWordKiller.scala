@@ -1,9 +1,9 @@
 package o.lartifa.jam.cool.qq.listener.posthandle
 
-import o.lartifa.jam.ob.event.events.message.{EventGroupMessage, EventMessage}
-import o.lartifa.jam.ob.sender.message.components.ComponentAt
 import o.lartifa.jam.common.util.TriBoolValue
 import o.lartifa.jam.model.CommandExecuteContext
+import o.lartifa.jam.onebot.cq.Cq
+import o.lartifa.jam.onebot.domain.{ChatMessage, GroupMessage}
 import o.lartifa.jam.plugins.nv_xing_jiao_liu.SensitiveWordKiller
 import o.lartifa.jam.pool.JamContext
 
@@ -30,25 +30,25 @@ object NvXingJiaoLiuSensitiveWordKiller extends PostHandleTask("女性♂交流"
    * @param exec       异步上下文
    * @return 异步返回执行结果
    */
-  override def execute(event: EventMessage, contextOpt: Option[CommandExecuteContext])(implicit exec: ExecutionContext): Future[Unit] =
+  override def execute(event: ChatMessage, contextOpt: Option[CommandExecuteContext])(implicit exec: ExecutionContext): Future[Unit] =
     event match {
-      case message: EventGroupMessage =>
-        JamContext.variablePool.get(s"Group_${message.getGroupId}_NXJL_Enabled").flatMap { result =>
+      case message: GroupMessage =>
+        JamContext.variablePool.get(s"Group_${message.groupId}_NXJL_Enabled").flatMap { result =>
           if (result.exists(_.toBoolean)) {
-            val mentions = QQAt.findAllMatchIn(event.getMessage)
+            val mentions = QQAt.findAllMatchIn(event.message)
               .map(_.group("qq"))
-              .map(it => message.getGroupUser(it.toLong).refreshInfo().getCard)
+              .map(it => JamContext.apiClient.getGroupMemberInfo(message.groupId, it.toLong).getData.getCard)
               .mkString
             val words = SensitiveWordKiller.matching(mentions + event.message)
             if (words.nonEmpty) {
               val now = System.currentTimeMillis()
-              var reply = s"${new ComponentAt(event.getSenderId)}\n⚠️发现：${words.mkString("，")}${if (words.sizeIs > 1) s"\n${words.size}连击！" else ""}"
-              JamContext.variablePool.get(s"Group_${message.getGroupId}_NXJL_${message.getSenderId}_ACTIVE").map(_.map(_.toLong)).flatMap { lastActive =>
+              var reply = s"${Cq.At(event.senderId)}\n⚠️发现：${words.mkString("，")}${if (words.sizeIs > 1) s"\n${words.size}连击！" else ""}"
+              JamContext.variablePool.get(s"Group_${message.groupId}_NXJL_${message.senderId}_ACTIVE").map(_.map(_.toLong)).flatMap { lastActive =>
                 lastActive match {
                   case Some(timestamp) =>
                     if (TimeUnit.MILLISECONDS.toMinutes(now - timestamp) < 2) {
                       val banTime = if (words.size >= 22) Day_29_Seconds else 60 * math.pow(2, words.size).toInt
-                      event.getHttpApi.setGroupBan(message.getGroupId, message.getSenderId, banTime)
+                      JamContext.apiClient.setGroupBan(message.groupId, message.senderId, banTime)
                       reply += s"\n屡教不改！\n本功能由「言阅姬」提供"
                     } else {
                       reply += "\n「好不知廉耻！！」\n本功能由「言阅姬」提供"
@@ -56,7 +56,7 @@ object NvXingJiaoLiuSensitiveWordKiller extends PostHandleTask("女性♂交流"
                   case None => reply += "\n你没有注意到吗\n本功能由「言阅姬」提供"
                 }
                 event.respond(reply)
-                JamContext.variablePool.updateOrElseSet(s"Group_${message.getGroupId}_NXJL_${message.getSenderId}_ACTIVE", now.toString).map(_ => ())
+                JamContext.variablePool.updateOrElseSet(s"Group_${message.groupId}_NXJL_${message.senderId}_ACTIVE", now.toString).map(_ => ())
               }
             } else Future.unit
           } else Future.unit

@@ -2,6 +2,7 @@ package o.lartifa.jam.model.commands
 import o.lartifa.jam.common.exception.ExecutionException
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
+import o.lartifa.jam.pool.JamContext
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -22,6 +23,6 @@ case class GroupWholeBan(isBan: Boolean) extends Command[Unit] {
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = Future {
     val ChatInfo(chatType, chatId) = context.chatInfo
     if (chatType != MessageType.GROUP) throw ExecutionException(s"尝试在非群聊中使用全体禁言，聊天类型：$chatType，QQ：$chatId")
-    context.eventMessage.getHttpApi.setGroupWholeBan(chatId, isBan)
+    JamContext.apiClient.setGroupWholeBan(chatId, isBan)
   }
 }

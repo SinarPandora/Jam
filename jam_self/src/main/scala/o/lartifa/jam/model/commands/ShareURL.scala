@@ -1,7 +1,7 @@
 package o.lartifa.jam.model.commands
 
-import o.lartifa.jam.ob.sender.message.components.ComponentShare
 import o.lartifa.jam.model.CommandExecuteContext
+import o.lartifa.jam.onebot.cq.Cq
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -22,7 +22,7 @@ case class ShareURL(url: RenderStrTemplate, title: RenderStrTemplate, content: R
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] =
     Future.sequence(Seq(url, title, content, image).map(_.execute())).map(params => {
       val Seq(url, title, content, image) = params
-      reply(new ComponentShare(url, title, content, image))
+      reply(Cq.Share(url, title, content, image))
     })
 
 }

@@ -1,6 +1,6 @@
 package o.lartifa.jam.plugins.lambda.wrapper
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 import o.lartifa.jam.database.schema.Tables
 import o.lartifa.jam.pool.DBVarPool
 
@@ -15,7 +15,7 @@ import scala.jdk.CollectionConverters.*
  * Author: sinar
  * 2021/11/11 23:01
  */
-class DBVarPoolWrapper(pool: DBVarPool, eventMessage: EventMessage)(implicit exec: ExecutionContext) {
+class DBVarPoolWrapper(pool: DBVarPool, eventMessage: ChatMessage)(implicit exec: ExecutionContext) {
   /**
    * 更新变量，不存在时报错
    *

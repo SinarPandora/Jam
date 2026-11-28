@@ -1,9 +1,8 @@
 package o.lartifa.jam.cool.qq.listener
 
-import o.lartifa.jam.ob.event.events.message.{EventMessage, EventPrivateMessage}
-import o.lartifa.jam.ob.event.{EventHandler, IcqListener}
-import o.lartifa.jam.ob.sender.message.components.ComponentAt
 import o.lartifa.jam.common.config.{BotConfig, JamConfig}
+import o.lartifa.jam.onebot.cq.Cq
+import o.lartifa.jam.onebot.domain.{ChatMessage, PrivateMessage}
 
 import scala.util.Random
 import scala.util.chaining.*
@@ -14,20 +13,18 @@ import scala.util.chaining.*
  * Author: sinar
  * 2020/9/19 10:45
  */
-object SleepingStateListener extends IcqListener {
+object SleepingStateListener {
   private def balderdash: List[String] = JamConfig.config.balderdash
-  private lazy val atMyself: String = new ComponentAt(BotConfig.qID).toString
+  private lazy val atMyself: String = Cq.At(BotConfig.qID).toCq
 
   /**
    * 监听消息
    *
    * @param eventMessage 消息对象
    */
-  @EventHandler
-  def listen(eventMessage: EventMessage): Unit = {
-    if (eventMessage.isInstanceOf[EventPrivateMessage] || eventMessage.message.contains(atMyself)) {
-      balderdash.size pipe Random.nextInt pipe balderdash pipe eventMessage.respond
+  def listen(eventMessage: ChatMessage): Unit = {
+    if (eventMessage.isInstanceOf[PrivateMessage] || eventMessage.message.contains(atMyself)) {
+      balderdash.size pipe Random.nextInt pipe balderdash pipe (eventMessage.reply(_))
     }
   }
-
 }

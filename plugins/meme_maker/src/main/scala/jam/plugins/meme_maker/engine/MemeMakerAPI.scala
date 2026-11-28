@@ -1,6 +1,6 @@
 package jam.plugins.meme_maker.engine
 
-import o.lartifa.jam.ob.sender.message.components.ComponentImageBase64
+import o.lartifa.jam.onebot.cq.Cq
 import cc.moecraft.logger.HyLogger
 import jam.plugins.meme_maker.engine.MemeAPIResponse._
 import o.lartifa.jam.common.config.JSONConfig.formats
@@ -34,12 +34,12 @@ object MemeMakerAPI {
    * @param sentences 填充句集合
    * @return 生成结果
    */
-  def generate(id: Long, sentences: List[String]): Try[ComponentImageBase64] = Try {
+  def generate(id: Long, sentences: List[String]): Try[Cq.ImageBase64] = Try {
     val step1Resp = requests.post(generateApi, headers = Map("content-type" -> "application/json;charset=UTF-8"), data = MemeAPIRequest(id, sentences)).text()
     val picUrl = domain + read[Response[PicData]](step1Resp).body.url
     logger.log(s"Meme Gif 已生成：$picUrl")
     val base64Data = Base64.getEncoder.encodeToString(requests.get(picUrl).bytes)
-    new ComponentImageBase64(base64Data)
+    Cq.ImageBase64(base64Data)
   }.recoverWith(err => {
     logger.error(s"Gif 生成失败，模板 id 为$id", err)
     Failure(err)

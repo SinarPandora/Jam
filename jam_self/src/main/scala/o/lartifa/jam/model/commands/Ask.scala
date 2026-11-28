@@ -1,6 +1,6 @@
 package o.lartifa.jam.model.commands
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
+import o.lartifa.jam.onebot.domain.ChatMessage
 import o.lartifa.jam.cool.qq.listener.interactive.{Interactive, InteractiveSession}
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.model.commands.Ask.{AnswererType, AnyBody}
@@ -25,7 +25,7 @@ case class Ask(question: RenderStrTemplate, answererType: AnswererType, askMatch
   override def execute()(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Unit] = question.execute().map { result =>
     reply(result)
     interact(context.msgSender) { (session, event) =>
-      if (answererType == AnyBody || event.getSenderId == context.eventMessage.getSenderId) {
+      if (answererType == AnyBody || event.senderId == context.eventMessage.senderId) {
         answer(session, event)
       }
     }
@@ -39,7 +39,7 @@ case class Ask(question: RenderStrTemplate, answererType: AnswererType, askMatch
    * @param context 执行上下文
    * @param exec    异步上下文
    */
-  private def answer(session: InteractiveSession, event: EventMessage)(implicit context: CommandExecuteContext, exec: ExecutionContext): Unit = {
+  private def answer(session: InteractiveSession, event: ChatMessage)(implicit context: CommandExecuteContext, exec: ExecutionContext): Unit = {
     askMatchers.find {
       case (key, _) => key.equalsIgnoreCase(event.message.trim)
     } match {

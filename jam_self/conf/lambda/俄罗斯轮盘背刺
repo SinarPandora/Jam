@@ -1,6 +1,5 @@
-import o.lartifa.jam.ob.event.events.message.EventGroupMessage
-import o.lartifa.jam.ob.sender.message.components.ComponentAt
-
+import o.lartifa.jam.onebot.domain.GroupMessage
+import o.lartifa.jam.onebot.cq.ComponentAt
 static List<Integer> createCartridge() {
     def cartridge = [0, 0, 0, 0, 0, 0]
     def bulletPos = new Random().nextInt(6)
@@ -8,8 +7,8 @@ static List<Integer> createCartridge() {
     return cartridge
 }
 
-def luckyDog = $temp.get("目标") == null? $msg.getSenderId(): $temp.get("目标").toLong()
-def entrap = luckyDog != $msg.getSenderId()
+def luckyDog = $temp.get("目标") == null? $msg.senderId(): $temp.get("目标").toLong()
+def entrap = luckyDog != $msg.senderId()
 
 def prompts = [
         """${new ComponentAt($msg.senderId).toString()} 把抢抵在 ${new ComponentAt(luckyDog).toString()} 的太阳穴""",
@@ -25,11 +24,11 @@ if ($scope.cartridge == null) {
 }
 
 if (($scope.cartridge as List<Integer>).remove(0) == 1) {
-    if ($msg instanceof EventGroupMessage) {
+    if ($msg instanceof GroupMessage) {
         reply("""$prompt
 
 砰！你死了。""")
-        $api.setGroupBan($msg.getGroupId(), luckyDog, 60 + random.nextInt(6) * 60)
+        $api.setGroupBan($msg.groupId(), luckyDog, 60 + random.nextInt(6) * 60)
     }
     $scope.cartridge = null
 } else {
