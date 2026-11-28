@@ -88,7 +88,7 @@ object EventMessageHelper {
      */
     private def getGroupNickName(isSelf: Boolean): String = {
       val groupNickName =
-        if (isSelf) Try(JamContext.apiClient.getGroupMemberInfo(toGroupMessage.groupId, event.selfId).getData.getCard)
+        if (isSelf) Try(JamContext.apiClient.getGroupMemberInfo(toGroupMessage.groupId, event.selfId).map(_.card).get)
           .toOption.flatMap(Option(_)).getOrElse("")
         else event.sender.card.getOrElse("")
       if (groupNickName.isEmpty) getQQNickName(isSelf)

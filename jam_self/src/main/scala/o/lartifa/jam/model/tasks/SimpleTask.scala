@@ -13,7 +13,6 @@ import o.lartifa.jam.pool.JamContext
 import java.sql.Timestamp
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
-import scala.jdk.CollectionConverters.*
 
 /**
  * 简单任务
@@ -31,12 +30,12 @@ class SimpleTask(id: Long, name: String, val cronExp: String, chatInfo: ChatInfo
    */
   override def run()(implicit exec: ExecutionContext): Future[Unit] = {
     if (chatInfo.chatId == -1) {
-      lazy val friends = JamContext.bot.get().getUserManager.userCache.keySet().asScala
-        .map(_.toLong).diff(BanList.user)
-        .map(qId => chatInfo.copy(chatId = qId)).toSet
-      lazy val groups = JamContext.bot.get().getGroupManager.groupCache.keySet().asScala
-        .map(_.toLong).diff(BanList.group)
-        .map(qId => chatInfo.copy(chatId = qId)).toSet
+      lazy val friends = JamContext.bot.get().friendIds
+        .diff(BanList.user)
+        .map(qId => chatInfo.copy(chatId = qId))
+      lazy val groups = JamContext.bot.get().groupIds
+        .diff(BanList.group)
+        .map(qId => chatInfo.copy(chatId = qId))
       val qIDs: Set[ChatInfo] = chatInfo.chatType match {
         case MessageType.PRIVATE => friends
         case MessageType.GROUP => groups

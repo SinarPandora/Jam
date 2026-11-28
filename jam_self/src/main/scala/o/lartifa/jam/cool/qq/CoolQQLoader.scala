@@ -1,10 +1,13 @@
 package o.lartifa.jam.cool.qq
 
-import o.lartifa.jam.ob.{PicqBotX, PicqConfig}
-import o.lartifa.jam.common.config.CoolQConfig.socketPort
-import o.lartifa.jam.common.config.SystemConfig
+import cc.moecraft.logger.LoggerInstanceManager
+import cc.moecraft.logger.environments.ConsoleEnv
+import o.lartifa.jam.common.config.CoolQConfig.{postPort, postUrl}
+import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.common.util.LoggerFactory
 import o.lartifa.jam.cool.qq.command.{MasterCommandShell, MasterCommands}
+import o.lartifa.jam.onebot.protocol.api.HttpBotApi
+import o.lartifa.jam.onebot.{JamBot, OneBotHttpClient}
 import o.lartifa.jam.pool.JamContext
 
 /**
@@ -16,14 +19,28 @@ import o.lartifa.jam.pool.JamContext
 object CoolQQLoader {
 
   /**
-   * 创建酷Q客户端
-   * @return 尚未启动的酷Q客户端
+   * 带控制台环境的 HyLogger 工厂。
+   * 用 ConsoleEnv 而非 ConsoleColoredEnv：后者依赖旧 jansi 原生库，在 Apple Silicon 上会 UnsatisfiedLinkError。
    */
-  def createCoolQQClient(): PicqBotX = {
-    // 入站由 OneBotInbound（ZIO）负责；指令由 MasterCommandShell，不再 enableCommandManager
-    val client = new PicqBotX(new PicqConfig(socketPort).setNoVerify(true).setDebug(SystemConfig.debugMode))
-    JamContext.loggerFactory.set(new LoggerFactory(client.getLoggerInstanceManager))
-    client
+  def createLoggerFactory(): LoggerFactory = {
+    val manager = new LoggerInstanceManager()
+    manager.addEnvironment(new ConsoleEnv())
+    new LoggerFactory(manager)
+  }
+
+  /**
+   * 创建自有薄壳 JamBot（日志工厂一并就绪）。
+   */
+  def createJamBot(accessToken: String = ""): JamBot = {
+    JamContext.loggerFactory.set(createLoggerFactory())
+    val httpClient = new OneBotHttpClient(postUrl, postPort, accessToken)
+    val api = new HttpBotApi(httpClient)
+    new JamBot(
+      name = JamConfig.config.name,
+      httpClient = httpClient,
+      api = api,
+      multiAccountOptimizations = true,
+    )
   }
 
   /**

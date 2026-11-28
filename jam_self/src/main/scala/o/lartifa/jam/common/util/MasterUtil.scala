@@ -1,8 +1,8 @@
 package o.lartifa.jam.common.util
 
-import o.lartifa.jam.ob.sender.IcqHttpApi
 import cc.moecraft.logger.{HyLogger, LogLevel}
 import o.lartifa.jam.common.config.JamConfig
+import o.lartifa.jam.onebot.protocol.api.BotApi
 import o.lartifa.jam.pool.JamContext
 
 /**
@@ -13,7 +13,7 @@ import o.lartifa.jam.pool.JamContext
  */
 object MasterUtil {
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(MasterUtil.getClass)
-  protected lazy val httpApi: IcqHttpApi = JamContext.apiClient
+  protected lazy val httpApi: BotApi = JamContext.apiClient
 
   /**
    * 通知监护人

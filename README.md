@@ -4,8 +4,8 @@
 
 > QQBot  
 > 协议端：**NapCat**（OneBot v11 HTTP 反向）  
-> 客户端：自有 `one_bot_runtime`（ZIO HTTP）+ `one_bot_legacy`（业务事件/指令壳，包名 `o.lartifa.jam.ob`）  
-> 已退役：`picq_bot_x_fork` / `PicqHttpServer`
+> 客户端：自有 `one_bot_runtime`（ZIO HTTP + BotApi）+ `jam_self` 薄壳 `JamBot`  
+> 已退役：`one_bot_legacy` / `picq_bot_x_fork` / `PicqHttpServer`
 
 ## Getting Started 使用指南
 

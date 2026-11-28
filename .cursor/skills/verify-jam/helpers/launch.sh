@@ -47,16 +47,20 @@ if [[ -d "$INSTALL_DIR/plugins" ]]; then
   fi
 fi
 
-# setsid：脱离 agent/工具进程组，避免父 shell 结束后 stub 被连带收割
-setsid env -u ELECTRON_RUN_AS_NODE "$JAVA_HOME/bin/java" \
-  -Dconfig.file="$JAM_VERIFY_BOT_CONF" \
-  -Dfile.encoding=UTF-8 \
-  -Xmx512m \
-  -cp "$CP" \
-  o.lartifa.jam.Bootloader \
-  --config="$JAM_VERIFY_BOT_CONF" \
-  --stub_backend \
-  >"$JAM_VERIFY_LOG" 2>&1 < /dev/null &
+# 脱离 agent/工具进程组：优先 setsid（Linux）；macOS 无 setsid 时退回 nohup
+_java_cmd=(env -u ELECTRON_RUN_AS_NODE "$JAVA_HOME/bin/java"
+  -Dconfig.file="$JAM_VERIFY_BOT_CONF"
+  -Dfile.encoding=UTF-8
+  -Xmx512m
+  -cp "$CP"
+  o.lartifa.jam.Bootloader
+  --config="$JAM_VERIFY_BOT_CONF"
+  --stub_backend)
+if command -v setsid >/dev/null 2>&1; then
+  setsid "${_java_cmd[@]}" >"$JAM_VERIFY_LOG" 2>&1 < /dev/null &
+else
+  nohup "${_java_cmd[@]}" >"$JAM_VERIFY_LOG" 2>&1 < /dev/null &
+fi
 echo $! >"$JAM_VERIFY_PID_FILE"
 
 ready=0

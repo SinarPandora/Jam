@@ -1,11 +1,10 @@
 package o.lartifa.jam.pool
 
 import org.apache.pekko.actor.ActorSystem
-import o.lartifa.jam.ob.sender.IcqHttpApi
-import o.lartifa.jam.ob.{PicqBotX, PicqConfig}
 import o.lartifa.jam.common.config.botConfigFile
 import o.lartifa.jam.common.util.LoggerFactory
-import o.lartifa.jam.onebot.protocol.api.OutboundGateway
+import o.lartifa.jam.onebot.JamBot
+import o.lartifa.jam.onebot.protocol.api.{BotApi, OutboundGateway}
 
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 
@@ -17,20 +16,19 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
  * 2020/1/4 23:52
  */
 object JamContext {
-  val bot: AtomicReference[PicqBotX] = new AtomicReference[PicqBotX]()
+  val bot: AtomicReference[JamBot] = new AtomicReference[JamBot]()
   val initLock: AtomicBoolean = new AtomicBoolean(false)
   val stepPool: AtomicReference[StepPool] = new AtomicReference[StepPool]()
   val cronTaskPool: AtomicReference[CronTaskPool] = new AtomicReference[CronTaskPool]()
   val variablePool: DBVarPool = DBVarPool()
   val loggerFactory: AtomicReference[LoggerFactory] = new AtomicReference[LoggerFactory]()
   val messagePool: MessagePool = new MessagePool()
-  val clientConfig: AtomicReference[PicqConfig] = new AtomicReference[PicqConfig]()
   val outbound: AtomicReference[OutboundGateway] = new AtomicReference[OutboundGateway]()
   val actorSystem: ActorSystem = ActorSystem("System", config = botConfigFile)
 
-  private var httpApi: () => IcqHttpApi = _
+  private var httpApi: () => BotApi = _
 
-  def setAPIClient(generator: () => IcqHttpApi): Unit = this.httpApi = generator
+  def setAPIClient(generator: () => BotApi): Unit = this.httpApi = generator
 
-  def apiClient: IcqHttpApi = this.httpApi.apply()
+  def apiClient: BotApi = this.httpApi.apply()
 }

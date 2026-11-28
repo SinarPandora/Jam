@@ -1,14 +1,12 @@
 package o.lartifa.jam.model.behaviors
 
-import o.lartifa.jam.ob.sender.returndata.returnpojo.get.RGroupMemberInfo
-import o.lartifa.jam.ob.sender.returndata.ReturnStatus
 import o.lartifa.jam.model.CommandExecuteContext
 import o.lartifa.jam.onebot.cq.Cq
 import o.lartifa.jam.onebot.domain.{DiscussMessage, GroupMessage, PrivateMessage}
+import o.lartifa.jam.onebot.protocol.api.GroupMemberInfo
 import o.lartifa.jam.pool.JamContext
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.jdk.CollectionConverters.*
 import scala.language.implicitConversions
 
 /**
@@ -50,10 +48,9 @@ trait ReplyToFriend {
    * @param exec    异步上下文
    * @return 群员列表
    */
-  protected def groupMembers(groupId: Long)(implicit exec: ExecutionContext): Future[Option[List[RGroupMemberInfo]]] = Future {
+  protected def groupMembers(groupId: Long)(implicit exec: ExecutionContext): Future[Option[List[GroupMemberInfo]]] = Future {
     val result = JamContext.apiClient.getGroupMemberList(groupId)
-    if (result.status == ReturnStatus.ok) Some(result.data.asScala.toList)
-    else None
+    if (result.nonEmpty) Some(result) else None
   }
 
   /**
@@ -63,7 +60,7 @@ trait ReplyToFriend {
    * @param exec    异步上下文
    * @return 群员列表
    */
-  protected def groupMembers(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Option[List[RGroupMemberInfo]]] =
+  protected def groupMembers(implicit context: CommandExecuteContext, exec: ExecutionContext): Future[Option[List[GroupMemberInfo]]] =
     context.eventMessage match {
       case message: GroupMessage => groupMembers(message.groupId)
       case message: DiscussMessage => groupMembers(message.discussId)

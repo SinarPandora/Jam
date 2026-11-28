@@ -37,7 +37,7 @@ object NvXingJiaoLiuSensitiveWordKiller extends PostHandleTask("女性♂交流"
           if (result.exists(_.toBoolean)) {
             val mentions = QQAt.findAllMatchIn(event.message)
               .map(_.group("qq"))
-              .map(it => JamContext.apiClient.getGroupMemberInfo(message.groupId, it.toLong).getData.getCard)
+              .map(it => JamContext.apiClient.getGroupMemberInfo(message.groupId, it.toLong).map(_.card).getOrElse(""))
               .mkString
             val words = SensitiveWordKiller.matching(mentions + event.message)
             if (words.nonEmpty) {

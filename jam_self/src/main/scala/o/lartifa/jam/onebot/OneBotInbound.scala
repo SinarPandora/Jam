@@ -1,6 +1,5 @@
 package o.lartifa.jam.onebot
 
-import o.lartifa.jam.ob.PicqBotX
 import o.lartifa.jam.onebot.domain.{ChatMessage, NoticeEvent, RequestEvent, UnhandledNotice}
 import o.lartifa.jam.onebot.protocol.api.OutboundGateway
 import o.lartifa.jam.onebot.protocol.event.*
@@ -10,8 +9,8 @@ import o.lartifa.jam.pool.JamContext
 import zio.Fiber
 
 /**
-   * 启动自有入站 Server：message / notice / request / meta 走领域管道，不再调用 EventParser；
-   * 指令由 MasterCommandShell 直接吃 ChatMessage。
+ * 启动自有入站 Server：message / notice / request / meta 走领域管道，不再调用 EventParser；
+ * 指令由 MasterCommandShell 直接吃 ChatMessage。
  *
  * Author: sinar
  * 2026/11/26
@@ -32,7 +31,7 @@ object OneBotInbound {
   /**
    * 在 coolQQ.port.socket 启动入站（幂等：重复调用会先停旧 fiber）。
    */
-  def start(bot: PicqBotX, port: Int, outbound: OutboundGateway): Unit = {
+  def start(bot: JamBot, port: Int, outbound: OutboundGateway): Unit = {
     stop()
     JamContext.outbound.set(outbound)
     val fiber = EventInboundServer.start(
@@ -42,7 +41,7 @@ object OneBotInbound {
     fiberOpt = Some(fiber)
   }
 
-  private def dispatch(bot: PicqBotX, outbound: OutboundGateway, data: String): Unit = {
+  private def dispatch(bot: JamBot, outbound: OutboundGateway, data: String): Unit = {
     MessageEventCodec.tryDecode(data, outbound) match {
       case Some(chat) =>
         if (MasterCommandShell.tryHandle(chat)) {
@@ -75,8 +74,8 @@ object OneBotInbound {
     }
   }
 
-  private def shouldDispatchNotice(bot: PicqBotX, notice: NoticeEvent): Boolean = {
-    val enabled = bot.getConfig.isMultiAccountOptimizations(bot)
+  private def shouldDispatchNotice(bot: JamBot, notice: NoticeEvent): Boolean = {
+    val enabled = bot.multiAccountOptimizations
     val identifier = notice match {
       case g: o.lartifa.jam.onebot.domain.GroupPokeNotice           => g.groupId.toString
       case g: o.lartifa.jam.onebot.domain.GroupMemberIncreaseNotice => g.groupId.toString

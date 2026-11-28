@@ -160,16 +160,16 @@ class TempVarPool(eventMessage: ChatMessage, commandStartTime: Timestamp)(implic
       case "Bot昵称" | "自己的昵称" => eventMessage.selfNickname
       case "BotQQ昵称" | "自己的QQ昵称" => eventMessage.selfQQName
       case "群号" => eventMessage.toGroupMessage.groupId.toString
-      case "群名" => JamContext.apiClient.getGroupInfo(eventMessage.toGroupMessage.groupId).getData.getGroupName
+      case "群名" => JamContext.apiClient.getGroupInfo(eventMessage.toGroupMessage.groupId).map(_.groupName).getOrElse("")
       case "发送者昵称" | "对方昵称" | "发送者群昵称" | "对方群昵称" => eventMessage.senderNickName
       case "发送者QQ昵称" | "对方QQ昵称" => eventMessage.senderQQName
       case "发送者QQ" | "对方QQ" | "QQ号" => eventMessage.senderId.toString
-      case "发送者年龄" | "对方年龄" => JamContext.apiClient.getStrangerInfo(eventMessage.senderId).getData.getAge.toString
-      case "发送者性别" | "对方性别" => JamContext.apiClient.getStrangerInfo(eventMessage.senderId).getData.getSex
+      case "发送者年龄" | "对方年龄" => JamContext.apiClient.getStrangerInfo(eventMessage.senderId).map(_.age.toString).getOrElse("0")
+      case "发送者性别" | "对方性别" => JamContext.apiClient.getStrangerInfo(eventMessage.senderId).map(_.sex).getOrElse("unknown")
       case "会话类型" => if (eventMessage.chatInfo.chatType == "private") "私聊" else "群聊"
       case "是否为好友" =>
-        val info = JamContext.apiClient.getGroupMemberInfo(eventMessage.toGroupMessage.groupId, eventMessage.senderId).getData
-        if (info.getUnfriendly) "否" else "是"
+        val info = JamContext.apiClient.getGroupMemberInfo(eventMessage.toGroupMessage.groupId, eventMessage.senderId)
+        if (info.exists(_.unfriendly)) "否" else "是"
       case "对方管理状态" => if (eventMessage.isSenderManager) "是" else "否"
       case other => return _commandScopeParameters.get(other)
     }

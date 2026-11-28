@@ -52,19 +52,6 @@ lazy val one_bot_protocol = (project in file("one_bot_protocol"))
     ),
   )
 
-/** Absorbed Picq types under o.lartifa.jam.ob (no PicqHttpServer). Retires picq_bot_x_fork for jam_self. */
-lazy val one_bot_legacy = (project in file("one_bot_legacy"))
-  .settings(javaLibSettings*)
-  .settings(
-    name := "one_bot_legacy",
-    libraryDependencies ++= Seq(
-      "cn.hutool" % "hutool-all" % "5.8.2",
-      "com.github.hydevelop" % "HyLogger" % "4.0.254",
-      "com.github.hydevelop" % "HyCommonUtils" % "1.4.0.207",
-      "com.google.code.gson" % "gson" % "2.11.0",
-    ),
-  )
-
 lazy val jam_utils = (project in file("jam_utils"))
   .settings(commonTestSettings*)
   .settings(
@@ -94,7 +81,7 @@ lazy val one_bot_runtime = (project in file("one_bot_runtime"))
   )
 
 lazy val jam_self = (project in file("jam_self"))
-  .dependsOn(one_bot_legacy, jam_utils, one_bot_runtime)
+  .dependsOn(jam_utils, one_bot_runtime)
   .enablePlugins(JavaAppPackaging)
   .settings(commonTestSettings*)
   .settings(FlywayTasks.settings(flywayVersion)*)
@@ -202,7 +189,6 @@ lazy val story_runner = jamPlugin("story_runner")
 lazy val root = (project in file("."))
   .aggregate(
     one_bot_protocol,
-    one_bot_legacy,
     jam_utils,
     one_bot_runtime,
     jam_self,
