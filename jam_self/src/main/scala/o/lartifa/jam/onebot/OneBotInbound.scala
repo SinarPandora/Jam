@@ -1,7 +1,7 @@
 package o.lartifa.jam.onebot
 
 import o.lartifa.jam.ob.PicqBotX
-import o.lartifa.jam.onebot.domain.{ChatMessage, NoticeEvent, RequestEvent}
+import o.lartifa.jam.onebot.domain.{ChatMessage, NoticeEvent, RequestEvent, UnhandledNotice}
 import o.lartifa.jam.onebot.protocol.api.OutboundGateway
 import o.lartifa.jam.onebot.protocol.event.*
 import o.lartifa.jam.cool.qq.listener.{QEventListener, QMessageListener, SystemEventListener}
@@ -9,7 +9,7 @@ import o.lartifa.jam.pool.JamContext
 import zio.Fiber
 
 /**
- * 启动自有入站 Server：message / notice / request 热路径走领域管道，其余交 EventParser。
+ * 启动自有入站 Server：message / notice / request / meta 走领域管道，不再调用 EventParser。
  *
  * Author: sinar
  * 2026/11/26
@@ -48,6 +48,9 @@ object OneBotInbound {
         }
       case None =>
         NoticeEventCodec.tryDecode(data) match {
+          case Some(_: UnhandledNotice) =>
+            // 冷路径 notice：本阶段 no-op（SSDL 接通见 #44）
+            ()
           case Some(notice) =>
             if (shouldDispatchNotice(bot, notice)) {
               QEventListener.handleNoticeEvent(notice)
@@ -57,7 +60,14 @@ object OneBotInbound {
               case Some(request) =>
                 SystemEventListener.handleRequestEvent(request)
               case None =>
-                bot.getEventManager.getEventParser.call(data)
+                MetaEventCodec.tryDecode(data) match {
+                  case Some(meta) =>
+                    SystemEventListener.handleMetaEvent(meta)
+                  case None =>
+                    JamContext.loggerFactory.get()
+                      .getLogger(OneBotInbound.getClass)
+                      .debug(s"忽略未识别入站事件：${data.take(120)}")
+                }
             }
         }
     }
@@ -66,16 +76,18 @@ object OneBotInbound {
   private def shouldDispatchNotice(bot: PicqBotX, notice: NoticeEvent): Boolean = {
     val enabled = bot.getConfig.isMultiAccountOptimizations(bot)
     val identifier = notice match {
-      case g: o.lartifa.jam.onebot.domain.GroupPokeNotice            => g.groupId.toString
-      case g: o.lartifa.jam.onebot.domain.GroupMemberIncreaseNotice  => g.groupId.toString
-      case g: o.lartifa.jam.onebot.domain.GroupMemberDecreaseNotice  => g.groupId.toString
-      case f: o.lartifa.jam.onebot.domain.FriendPokeNotice           => f.userId.toString
+      case g: o.lartifa.jam.onebot.domain.GroupPokeNotice           => g.groupId.toString
+      case g: o.lartifa.jam.onebot.domain.GroupMemberIncreaseNotice => g.groupId.toString
+      case g: o.lartifa.jam.onebot.domain.GroupMemberDecreaseNotice => g.groupId.toString
+      case f: o.lartifa.jam.onebot.domain.FriendPokeNotice          => f.userId.toString
+      case _: UnhandledNotice                                       => return false
     }
     val kind = notice match {
       case _: o.lartifa.jam.onebot.domain.GroupPokeNotice           => "group_poke"
       case _: o.lartifa.jam.onebot.domain.FriendPokeNotice          => "friend_poke"
       case _: o.lartifa.jam.onebot.domain.GroupMemberIncreaseNotice => "group_inc"
       case _: o.lartifa.jam.onebot.domain.GroupMemberDecreaseNotice => "group_dec"
+      case _: UnhandledNotice                                       => "unhandled"
     }
     EventDeduper.isNew(kind, identifier, notice.contentKey, notice.time, enabled)
   }

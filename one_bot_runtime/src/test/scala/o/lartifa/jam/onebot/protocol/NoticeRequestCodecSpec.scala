@@ -2,7 +2,7 @@ package o.lartifa.jam.onebot.protocol
 
 import o.lartifa.jam.onebot.domain.*
 import o.lartifa.jam.onebot.protocol.api.OutboundGateway
-import o.lartifa.jam.onebot.protocol.event.{EventDeduper, NoticeEventCodec, RequestEventCodec}
+import o.lartifa.jam.onebot.protocol.event.{EventDeduper, MetaEventCodec, NoticeEventCodec, RequestEventCodec}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -44,10 +44,33 @@ class NoticeRequestCodecSpec extends AnyFlatSpec with Matchers with BeforeAndAft
     NoticeEventCodec.tryDecode(raw).get shouldBe a[FriendPokeNotice]
   }
 
-  it should "ignore recall (cold path)" in {
+  it should "decode recall as UnhandledNotice (cold path)" in {
     val raw =
       """{"post_type":"notice","notice_type":"group_recall","group_id":1,"user_id":2,"self_id":9,"time":10,"message_id":1}"""
-    NoticeEventCodec.tryDecode(raw).isEmpty.`shouldBe`(true)
+    val evt = NoticeEventCodec.tryDecode(raw).get
+    evt shouldBe a[UnhandledNotice]
+    evt.asInstanceOf[UnhandledNotice].noticeType.`shouldBe`("group_recall")
+  }
+
+  "MetaEventCodec" should "decode heartbeat" in {
+    val raw =
+      """{"post_type":"meta_event","meta_event_type":"heartbeat","self_id":9,"time":10,"interval":5000}"""
+    val evt = MetaEventCodec.tryDecode(raw).get
+    evt shouldBe a[MetaHeartbeat]
+    evt.asInstanceOf[MetaHeartbeat].interval.`shouldBe`(Some(5000L))
+  }
+
+  it should "decode lifecycle" in {
+    val raw =
+      """{"post_type":"meta_event","meta_event_type":"lifecycle","sub_type":"enable","self_id":9,"time":10}"""
+    MetaEventCodec.tryDecode(raw).get shouldBe a[MetaLifecycle]
+  }
+
+  it should "reject non-meta post_type" in {
+    MetaEventCodec
+      .tryDecode("""{"post_type":"notice","meta_event_type":"heartbeat","self_id":9,"time":10}""")
+      .isEmpty
+      .`shouldBe`(true)
   }
 
   "RequestEventCodec" should "decode friend request" in {

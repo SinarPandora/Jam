@@ -39,7 +39,7 @@ Teardown:
 .cursor/skills/verify-jam/helpers/cleanup.sh "$RUN_DIR/meta.env" --remove-run-dir
 ```
 
-`--stub_backend` starts an embedded fake OneBot HTTP API on `coolQQ.port.post`, then boots the ZIO OneBot inbound server on `coolQQ.port.socket` (EventParser still in `one_bot_legacy`) and loads SXDL. Outbound uses the ZIO `OneBotHttpClient` via a temporary `IcqHttpApi` adapter. Bootloader blocks on `OneBotInbound.blockUntilStopped()` so the JVM stays up after PicqHttpServer retirement. No Mirai/NapCat process is required. `prepare-run.sh` / `cleanup.sh` auto-add Postgres.app `bin` on macOS when `createdb`/`dropdb` are not on `PATH`.
+`--stub_backend` starts an embedded fake OneBot HTTP API on `coolQQ.port.post`, then boots the ZIO OneBot inbound server on `coolQQ.port.socket`（message/notice/request/meta 领域分流；`EventParser` 入站已停用）and loads SXDL. Outbound uses the ZIO `OneBotHttpClient` via a temporary `IcqHttpApi` adapter. Bootloader blocks on `OneBotInbound.blockUntilStopped()` so the JVM stays up after PicqHttpServer retirement. No Mirai/NapCat process is required. `prepare-run.sh` / `cleanup.sh` auto-add Postgres.app `bin` on macOS when `createdb`/`dropdb` are not on `PATH`.
 
 ## Doctor
 

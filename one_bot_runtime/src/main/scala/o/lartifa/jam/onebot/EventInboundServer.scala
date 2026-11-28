@@ -14,7 +14,7 @@ object EventInboundServer {
   /**
    * 构建入站路由。成功处理返回 204（与 PicqHttpServer 对齐）。
    *
-   * @param onEvent 原始 JSON 回调（由 jam_self 交给 EventParser）
+   * @param onEvent 原始 JSON 回调（由 jam_self 领域 codec 分流）
    */
   def routes(onEvent: String => Unit): Routes[Any, Response] =
     Routes(

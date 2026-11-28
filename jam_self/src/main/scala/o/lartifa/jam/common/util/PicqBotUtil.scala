@@ -46,7 +46,7 @@ object PicqBotUtil {
     def switchToWakeUpMode(): Unit = {
       this.deregisterAllListeners()
       bot.getEventManager.registerListeners(recreateSystemListeners()*)
-      // 消息 / 热路径 notice·request 由 OneBotInbound 直喂；EventManager 只留 meta 等
+      // 消息 / notice / request / meta 由 OneBotInbound 直喂；EventManager 注册仅占位
       bot.getEventManager.registerListeners(SystemEventListener)
       OneBotInbound.resetMessageHandler()
     }
