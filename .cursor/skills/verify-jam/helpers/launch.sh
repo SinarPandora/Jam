@@ -47,7 +47,8 @@ if [[ -d "$INSTALL_DIR/plugins" ]]; then
   fi
 fi
 
-nohup "$JAVA_HOME/bin/java" \
+# setsid：脱离 agent/工具进程组，避免父 shell 结束后 stub 被连带收割
+setsid env -u ELECTRON_RUN_AS_NODE "$JAVA_HOME/bin/java" \
   -Dconfig.file="$JAM_VERIFY_BOT_CONF" \
   -Dfile.encoding=UTF-8 \
   -Xmx512m \
@@ -55,7 +56,7 @@ nohup "$JAVA_HOME/bin/java" \
   o.lartifa.jam.Bootloader \
   --config="$JAM_VERIFY_BOT_CONF" \
   --stub_backend \
-  >"$JAM_VERIFY_LOG" 2>&1 &
+  >"$JAM_VERIFY_LOG" 2>&1 < /dev/null &
 echo $! >"$JAM_VERIFY_PID_FILE"
 
 ready=0

@@ -4,12 +4,14 @@ import o.lartifa.jam.ob.PicqBotX
 import o.lartifa.jam.onebot.domain.{ChatMessage, NoticeEvent, RequestEvent, UnhandledNotice}
 import o.lartifa.jam.onebot.protocol.api.OutboundGateway
 import o.lartifa.jam.onebot.protocol.event.*
+import o.lartifa.jam.cool.qq.command.MasterCommandShell
 import o.lartifa.jam.cool.qq.listener.{QEventListener, QMessageListener, SystemEventListener}
 import o.lartifa.jam.pool.JamContext
 import zio.Fiber
 
 /**
- * 启动自有入站 Server：message / notice / request / meta 走领域管道，不再调用 EventParser。
+   * 启动自有入站 Server：message / notice / request / meta 走领域管道，不再调用 EventParser；
+   * 指令由 MasterCommandShell 直接吃 ChatMessage。
  *
  * Author: sinar
  * 2026/11/26
@@ -43,7 +45,7 @@ object OneBotInbound {
   private def dispatch(bot: PicqBotX, outbound: OutboundGateway, data: String): Unit = {
     MessageEventCodec.tryDecode(data, outbound) match {
       case Some(chat) =>
-        if (LegacyCommandBridge.tryHandle(chat, bot)) {
+        if (MasterCommandShell.tryHandle(chat)) {
           messageHandler(chat)
         }
       case None =>
