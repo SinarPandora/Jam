@@ -116,7 +116,13 @@ object StubOneBotBackend {
           "area" -> JString(""),
           "level" -> JString(""),
           "role" -> JString("member"),
-          "title" -> JString("")
+          "title" -> JString(""),
+          "unfriendly" -> JBool(false)
+        )
+      case "get_group_info" =>
+        JObject(
+          "group_id" -> JLong(713201079L),
+          "group_name" -> JString("jam-verify")
         )
       case "get_group_list" =>
         // Picq AccountManager indexes bots by group membership; empty list → NPE on group events

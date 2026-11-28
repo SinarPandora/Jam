@@ -15,23 +15,21 @@ object EventEnrichment {
   def botName: String = JamConfig.config.name
 
   def strangerNickname(qq: Long): String =
-    Try(JamContext.apiClient.getStrangerInfo(qq).getData.getNickname)
+    Try(JamContext.apiClient.getStrangerInfo(qq).map(_.nickname).get)
       .toOption
       .filter(n => n != null && n.nonEmpty)
       .getOrElse(qq.toString)
 
   def groupName(groupId: Long): String =
-    Try(JamContext.apiClient.getGroupInfo(groupId).getData.getGroupName)
+    Try(JamContext.apiClient.getGroupInfo(groupId).map(_.groupName).get)
       .toOption
       .filter(n => n != null && n.nonEmpty)
       .getOrElse(groupId.toString)
 
   def groupCardOrNick(groupId: Long, qq: Long): String =
     Try {
-      val info = JamContext.apiClient.getGroupMemberInfo(groupId, qq).getData
-      val card = info.getCard
-      if (card != null && card.nonEmpty) card
-      else info.getNickname
+      val info = JamContext.apiClient.getGroupMemberInfo(groupId, qq).get
+      if (info.card.nonEmpty) info.card else info.nickname
     }.toOption
       .filter(n => n != null && n.nonEmpty)
       .getOrElse(qq.toString)

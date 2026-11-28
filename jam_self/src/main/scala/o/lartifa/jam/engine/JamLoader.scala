@@ -1,7 +1,6 @@
 package o.lartifa.jam.engine
 
 import better.files.StringExtensions
-import o.lartifa.jam.ob.PicqBotX
 import cc.moecraft.logger.{HyLogger, LoggerInstanceManager}
 import cc.moecraft.logger.format.AnsiColor
 import o.lartifa.jam.bionic.BehaviorInitializer
@@ -9,7 +8,8 @@ import o.lartifa.jam.common.config.*
 import o.lartifa.jam.common.util.{LoggerFactory, MasterUtil}
 import o.lartifa.jam.cool.qq.CoolQQLoader
 import o.lartifa.jam.cool.qq.command.MasterCommands
-import o.lartifa.jam.cool.qq.listener.{BanList, EvtMatchers, MsgMatchers, QMessageListener, SystemEventListener}
+import o.lartifa.jam.cool.qq.listener.{BanList, EvtMatchers, MsgMatchers, QMessageListener}
+import o.lartifa.jam.onebot.JamBot
 import o.lartifa.jam.database.Memory
 import o.lartifa.jam.engine.SXDLParseEngine.{SSDLParseSuccessResult, STDLParseSuccessResult, SXDLParseFailResult, SXDLParseSuccessResult}
 import o.lartifa.jam.engine.stdl.ast.DTExpInterpreter.InterpreterResult
@@ -56,11 +56,11 @@ object JamLoader {
   /**
    * 加载果酱各组件
    *
-   * @param client PicqBotX client
-   * @param args   命令行参数
+   * @param bot  自有薄壳
+   * @param args 命令行参数
    * @return 异步结果
    */
-  def init(client: PicqBotX, args: Array[String]): Future[Unit] =
+  def init(_bot: JamBot, args: Array[String]): Future[Unit] =
     for {
       _ <- Future.unit
       _ = {
@@ -76,8 +76,6 @@ object JamLoader {
     } yield {
       ScriptRunner.init()
       runBootTasks()
-      // 消息 / notice / request / meta 由 OneBotInbound 直喂；EventManager 注册仅占位
-      client.getEventManager.registerListeners(SystemEventListener)
       o.lartifa.jam.onebot.OneBotInbound.resetMessageHandler()
       o.lartifa.jam.cool.qq.command.MasterCommandShell.register(MasterCommands.commands)
       KeepAliveDreamingActor.showBootMessage()
@@ -120,7 +118,7 @@ object JamLoader {
    */
   def compileOnly(): Future[Unit] =
     Future.unit.flatMap { _ =>
-      JamContext.loggerFactory.set(new LoggerFactory(new LoggerInstanceManager()))
+      JamContext.loggerFactory.set(CoolQQLoader.createLoggerFactory())
       JamContext.setAPIClient(() => null)
       initSXDL(true)
     }

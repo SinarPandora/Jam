@@ -1,7 +1,5 @@
 package o.lartifa.jam.model
 
-import o.lartifa.jam.ob.sender.returndata.ReturnData
-import o.lartifa.jam.ob.sender.returndata.returnpojo.send.RMessageReturnData
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.onebot.domain.{ChatMessage, DiscussMessage, GroupMessage, PrivateMessage}
 import o.lartifa.jam.pool.JamContext
@@ -47,9 +45,9 @@ object ChatInfo {
      * 发送消息
      *
      * @param obj 消息对象
-     * @return 发送结果
+     * @return message_id，失败为 -1
      */
-    def sendMsg(obj: Any): ReturnData[RMessageReturnData] = {
+    def sendMsg(obj: Any): Long = {
       val client = JamContext.apiClient
       chatInfo.chatType match {
         case MessageType.PRIVATE => client.sendPrivateMsg(chatInfo.chatId, obj.toString)

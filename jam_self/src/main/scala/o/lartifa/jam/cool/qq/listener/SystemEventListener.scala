@@ -1,6 +1,5 @@
 package o.lartifa.jam.cool.qq.listener
 
-import o.lartifa.jam.ob.event.IcqListener
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.JamConfig
 import o.lartifa.jam.onebot.domain.{FriendAddRequest, GroupInviteRequest, MetaEvent, MetaHeartbeat, MetaLifecycle, RequestEvent}
@@ -10,12 +9,11 @@ import scala.util.Try
 
 /**
  * 系统事件监听器：request / meta 由 OneBotInbound 直喂。
- * 仍注册为 IcqListener，供清醒/睡眠切换时占位（EventParser 已停用）。
  *
  * Author: sinar
  * 2020/1/18 02:59
  */
-object SystemEventListener extends IcqListener {
+object SystemEventListener {
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(SystemEventListener.getClass)
 
   /**
@@ -32,8 +30,10 @@ object SystemEventListener extends IcqListener {
           event.accept()
         }
     }
-    Try(JamContext.bot.get().getAccountManager.refreshCache()).failed.foreach { err =>
-      logger.debug(s"请求处理后刷新缓存失败：${err.getMessage}")
+    Option(JamContext.bot.get()).foreach { bot =>
+      Try(bot.refreshCache()).failed.foreach { err =>
+        logger.debug(s"请求处理后刷新缓存失败：${err.getMessage}")
+      }
     }
   }
 
@@ -44,8 +44,10 @@ object SystemEventListener extends IcqListener {
     event match {
       case _: MetaHeartbeat =>
         logger.debug("正在刷新账号缓存")
-        Try(JamContext.bot.get().getAccountManager.refreshCache()).foreach { _ =>
-          logger.debug("缓存刷新成功")
+        Option(JamContext.bot.get()).foreach { bot =>
+          Try(bot.refreshCache()).foreach { _ =>
+            logger.debug("缓存刷新成功")
+          }
         }
       case _: MetaLifecycle =>
         ()

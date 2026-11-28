@@ -95,7 +95,7 @@ object MasterCommands {
 
   private object Refresh extends MasterEverywhereCommand("刷新", "刷新缓存") {
     override def task(chat: ChatMessage, command: String, args: List[String]): Future[String] = Future {
-      JamContext.bot.get().getAccountManager.refreshCache()
+      JamContext.bot.get().refreshCache()
       "缓存刷新成功"
     }
   }
