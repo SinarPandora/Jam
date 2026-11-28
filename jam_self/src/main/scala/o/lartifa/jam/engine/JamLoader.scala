@@ -79,7 +79,7 @@ object JamLoader {
       // 消息 / notice / request / meta 由 OneBotInbound 直喂；EventManager 注册仅占位
       client.getEventManager.registerListeners(SystemEventListener)
       o.lartifa.jam.onebot.OneBotInbound.resetMessageHandler()
-      client.getCommandManager.registerCommands(MasterCommands.commands *)
+      o.lartifa.jam.cool.qq.command.MasterCommandShell.register(MasterCommands.commands)
       KeepAliveDreamingActor.showBootMessage()
       Runtime.getRuntime.addShutdownHook(shutdownHookThread)
     }

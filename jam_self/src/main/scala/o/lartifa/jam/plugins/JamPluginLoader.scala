@@ -1,6 +1,5 @@
 package o.lartifa.jam.plugins
 
-import o.lartifa.jam.ob.event.events.message.EventMessage
 import cc.moecraft.logger.format.AnsiColor
 import cc.moecraft.logger.{HyLogger, LogLevel}
 import o.lartifa.jam.common.config.{JamConfig, JamPluginConfig}
@@ -15,6 +14,7 @@ import o.lartifa.jam.engine.JamLoader
 import o.lartifa.jam.engine.ssdl.parser.SSDLCommandParser
 import o.lartifa.jam.engine.ssdl.parser.SSDLCommandParser.*
 import o.lartifa.jam.model.tasks.LifeCycleTask
+import o.lartifa.jam.onebot.domain.ChatMessage
 import o.lartifa.jam.plugins.api.JamPluginInstaller
 import o.lartifa.jam.pool.CronTaskPool.TaskDefinition
 import o.lartifa.jam.pool.JamContext
@@ -284,54 +284,54 @@ object JamPluginLoader {
    * @param reloadNow 是否立刻重新加载果酱
    * @param exec      异步执行上下文
    */
-  def enablePlugin(event: EventMessage, id: Long, reloadNow: Boolean = true)(implicit exec: ExecutionContext): Future[Unit] =
-    updatePluginStatus(event, id, isEnabled = true, reloadNow = reloadNow)
+  def enablePlugin(chat: ChatMessage, id: Long, reloadNow: Boolean = true)(implicit exec: ExecutionContext): Future[Unit] =
+    updatePluginStatus(chat, id, isEnabled = true, reloadNow = reloadNow)
 
   /**
    * 禁用插件
    *
-   * @param event     消息对象
+   * @param chat      消息对象
    * @param id        插件 ID
    * @param reloadNow 是否立刻重新加载果酱
    * @param exec      异步执行上下文
    */
-  def disablePlugin(event: EventMessage, id: Long, reloadNow: Boolean = true)(implicit exec: ExecutionContext): Future[Unit] =
-    updatePluginStatus(event, id, isEnabled = false, reloadNow = reloadNow)
+  def disablePlugin(chat: ChatMessage, id: Long, reloadNow: Boolean = true)(implicit exec: ExecutionContext): Future[Unit] =
+    updatePluginStatus(chat, id, isEnabled = false, reloadNow = reloadNow)
 
   /**
    * 更新插件状态
    *
-   * @param event     消息对象
+   * @param chat      消息对象
    * @param id        插件 ID
    * @param isEnabled 启用 or 禁用
    * @param reloadNow 是否立刻重新加载果酱
    * @param exec      异步执行上下文
    */
-  private def updatePluginStatus(event: EventMessage, id: Long, isEnabled: Boolean, reloadNow: Boolean)(implicit exec: ExecutionContext): Future[Unit] =
+  private def updatePluginStatus(chat: ChatMessage, id: Long, isEnabled: Boolean, reloadNow: Boolean)(implicit exec: ExecutionContext): Future[Unit] =
     getPluginById(id).flatMap { plugin =>
       if (plugin.isDefined) {
         if (isEnabled == plugin.get._1.isEnabled) {
-          event.respond(s"插件已经${if (isEnabled) "启用" else "禁用"}了")
+          chat.respond(s"插件已经${if (isEnabled) "启用" else "禁用"}了")
           Future.unit
         } else {
           db.run(Plugins.filter(_.id === id).map(_.isEnabled).update(isEnabled)).flatMap { result =>
             if (result != 1) {
               logger.error("更新插件状态失败，请检查数据库连接！")
-              event.respond("更新插件状态失败，请检查数据库连接！")
+              chat.respond("更新插件状态失败，请检查数据库连接！")
               Future.unit
             } else {
-              event.respond(s"插件已成功${if (isEnabled) "启用" else "禁用"}")
+              chat.respond(s"插件已成功${if (isEnabled) "启用" else "禁用"}")
               if (reloadNow) {
                 JamLoader.reload().recover { err =>
                   logger.error(s"重新加载过程中出现错误！", err)
-                  event.respond(s"重新加载过程中出现错误！请检查${JamConfig.config.name}的日志")
+                  chat.respond(s"重新加载过程中出现错误！请检查${JamConfig.config.name}的日志")
                 }
               } else Future.unit
             }
           }
         }
       } else {
-        event.respond("指定编号的插件不存在！")
+        chat.respond("指定编号的插件不存在！")
         Future.unit
       }
     }
@@ -340,35 +340,35 @@ object JamPluginLoader {
   /**
    * 卸载插件
    *
-   * @param event 消息对象
-   * @param id    插件 ID
-   * @param exec  异步执行上下文
+   * @param chat 消息对象
+   * @param id   插件 ID
+   * @param exec 异步执行上下文
    */
-  def uninstallPlugin(event: EventMessage, id: Long)(implicit exec: ExecutionContext): Future[Unit] =
+  def uninstallPlugin(chat: ChatMessage, id: Long)(implicit exec: ExecutionContext): Future[Unit] =
     getPluginById(id).flatMap {
       case Some((_, installer)) =>
         for {
-          _ <- disablePlugin(event, id)
+          _ <- disablePlugin(chat, id)
           uninstalled <- installer.uninstall()
           _ <- uninstalled match {
             case Failure(exception) =>
               logger.error(s"未能成功卸载，请联系插件的作者：${installer.author}", exception)
-              event.respond(s"未能成功卸载，请联系插件的作者：${installer.author}")
+              chat.respond(s"未能成功卸载，请联系插件的作者：${installer.author}")
               Future.unit
             case Success(_) =>
               db.run(Plugins.filter(_.id === id).delete).map { result =>
                 if (result != 1) {
                   logger.error("插件记录删除失败，请检查数据库连接！")
-                  event.respond("插件记录删除失败，请检查数据库连接！")
+                  chat.respond("插件记录删除失败，请检查数据库连接！")
                 } else {
-                  event.respond("插件卸载成功！")
+                  chat.respond("插件卸载成功！")
                 }
                 ()
               }
           }
         } yield ()
       case None =>
-        event.respond("指定编号的插件不存在")
+        chat.respond("指定编号的插件不存在")
         Future.unit
     }
 

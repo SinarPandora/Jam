@@ -1,0 +1,19 @@
+{
+  "post_type": "message",
+  "message_type": "group",
+  "sub_type": "normal",
+  "message_id": 424243,
+  "group_id": 713201079,
+  "user_id": 10001,
+  "self_id": 90001,
+  "font": 0,
+  "time": 1700000001,
+  "message": "!ping",
+  "raw_message": "!ping",
+  "sender": {
+    "user_id": 10001,
+    "nickname": "监管者",
+    "card": "",
+    "role": "member"
+  }
+}
