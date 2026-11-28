@@ -1,63 +1,35 @@
 package o.lartifa.jam.cool.qq.listener.event
 
-import o.lartifa.jam.ob.event.events.notice.EventNoticeGroupPoke
 import o.lartifa.jam.common.config.BotConfig
 import o.lartifa.jam.common.util.GlobalConstant.MessageType
 import o.lartifa.jam.model.ChatInfo
 import o.lartifa.jam.model.patterns.ContentMatcher.Events
+import o.lartifa.jam.onebot.domain.GroupPokeNotice
 
 import java.sql.Timestamp
 
 /**
  * 群聊双击头像事件
  *
- * Example: 在群 935752317 中，1211402231 戳 1580265059
- * {
- * "group_id": 935752317,    [Support]
- * "notice_type": "notify",  [Support]
- * "post_type": "notice",    [Support]
- * "self_id": 2062406606,    [Useless]
- * "sender_id": 1211402231,  [Support]
- * "sub_type": "poke",       [Support]
- * "target_id": 1580265059,  [Support]
- * "time": 1625890531,       [Partially]
- * "user_id": 1211402231     [Support]
- * }
- *
  * Author: sinar
  * 2021/7/9 22:25
  */
-case class PokeInGroupEvent(event: EventNoticeGroupPoke) extends CQEvent(Events.PokeInGroup.name, event.getUserId) {
-  /**
-   * 会话信息
-   */
-  override val chatInfo: ChatInfo = ChatInfo(MessageType.GROUP, event.getGroupId)
+case class PokeInGroupEvent(event: GroupPokeNotice) extends CQEvent(Events.PokeInGroup.name, event.userId) {
+  override val chatInfo: ChatInfo = ChatInfo(MessageType.GROUP, event.groupId)
 
-  /**
-   * 该事件是否将不会被响应
-   */
-  override val willNotResponse: Boolean = event.getUserId == BotConfig.qID
+  override val willNotResponse: Boolean = event.userId == BotConfig.qID
 
-  /**
-   * 事件中的数据
-   *
-   * @return 数据
-   */
   override val data: Map[String, String] = Map(
-    // 目标信息
-    "目标QQ" -> event.getTargetId.toString,
-    "目标群昵称" -> event.getTargetGroupUser.getInfo.getNickname,
-    // 发送者信息
-    "发送者QQ" -> event.getUserId.toString,
-    "发送者群昵称" -> event.getSenderGroupUser.getInfo.getNickname,
-    // 群信息
-    "群号" -> event.getGroupId.toString,
-    "群名" -> event.getGroup.getInfo.getGroupName,
-    // Metadata
-    "事件类型" -> event.getPostType,
-    "通知类型" -> event.getNoticeType,
-    "事件子类型" -> event.getSubType,
-    "会话ID" -> event.getGroupId.toString,
-    "发送时间" -> new Timestamp(event.getTime * 100).toString
+    "目标QQ" -> event.targetId.toString,
+    "目标群昵称" -> EventEnrichment.groupCardOrNick(event.groupId, event.targetId),
+    "发送者QQ" -> event.userId.toString,
+    "发送者群昵称" -> EventEnrichment.groupCardOrNick(event.groupId, event.userId),
+    "群号" -> event.groupId.toString,
+    "群名" -> EventEnrichment.groupName(event.groupId),
+    "事件类型" -> event.postType,
+    "通知类型" -> event.noticeType,
+    "事件子类型" -> event.subType.getOrElse(""),
+    "会话ID" -> event.groupId.toString,
+    "发送时间" -> new Timestamp(event.time * 100).toString,
   )
 }

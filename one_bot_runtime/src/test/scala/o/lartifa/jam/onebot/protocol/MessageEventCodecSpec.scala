@@ -18,6 +18,13 @@ class MessageEventCodecSpec extends AnyFlatSpec with Matchers {
     def sendPrivate(userId: Long, message: String, autoEscape: Boolean = false): Long = -1L
     def sendGroup(groupId: Long, message: String, autoEscape: Boolean = false): Long = -1L
     def sendDiscuss(discussId: Long, message: String, autoEscape: Boolean = false): Long = -1L
+    def setFriendAddRequest(flag: String, approve: Boolean, remark: String = ""): Unit = ()
+    def setGroupAddRequest(
+      flag: String,
+      requestType: String,
+      approve: Boolean,
+      reason: String = "",
+    ): Unit = ()
   }
 
   private val groupFixture =

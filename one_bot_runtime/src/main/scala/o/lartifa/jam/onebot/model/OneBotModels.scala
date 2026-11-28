@@ -28,6 +28,19 @@ final case class SendDiscussMsgParams(
 
 final case class SetGroupBanParams(group_id: Long, user_id: Long, duration: Long) derives Schema
 
+final case class SetFriendAddRequestParams(
+  flag: String,
+  approve: Boolean,
+  remark: String = "",
+) derives Schema
+
+final case class SetGroupAddRequestParams(
+  flag: String,
+  `type`: String,
+  approve: Boolean,
+  reason: String = "",
+) derives Schema
+
 final case class SendMsgResult(message_id: Long) derives Schema
 
 /** 通用 OneBot HTTP 回执（data 为嵌套对象）。 */

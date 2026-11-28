@@ -1,9 +1,5 @@
 package o.lartifa.jam.cool.qq.listener
 
-import o.lartifa.jam.ob.event.events.notice.groupmember.decrease.EventNoticeGroupMemberDecrease
-import o.lartifa.jam.ob.event.events.notice.groupmember.increase.EventNoticeGroupMemberIncrease
-import o.lartifa.jam.ob.event.events.notice.{EventNotice, EventNoticeFriendPoke, EventNoticeGroupPoke}
-import o.lartifa.jam.ob.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
 import cc.moecraft.logger.format.AnsiColor
 import cn.hutool.core.date.StopWatch
@@ -14,34 +10,33 @@ import o.lartifa.jam.cool.qq.listener.base.Break
 import o.lartifa.jam.cool.qq.listener.event.*
 import o.lartifa.jam.model.patterns.ContentMatcher
 import o.lartifa.jam.model.{ChatInfo, CommandExecuteContext}
+import o.lartifa.jam.onebot.domain.*
 import o.lartifa.jam.pool.JamContext
 
 import scala.concurrent.Future
 import scala.util.Random
 
 /**
- * CQ 事件监听器
+ * CQ 事件监听器（由 OneBotInbound 直喂领域 NoticeEvent）。
  *
  * Author: sinar
  * 2021/7/4 11:49
  */
-object QEventListener extends IcqListener {
+object QEventListener {
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(QEventListener.getClass)
 
   /**
-   * 监听全部通知事件
+   * 监听热路径通知事件
    *
    * @param event 通知事件
    */
-  @EventHandler
-  def handleNoticeEvent(event: EventNotice): Unit = {
-    if (!JamContext.initLock.get() && event.getUserId != BotConfig.qID) {
+  def handleNoticeEvent(event: NoticeEvent): Unit = {
+    if (!JamContext.initLock.get() && event.userId != BotConfig.qID) {
       val evt = event match {
-        case evt: EventNoticeFriendPoke => PokeEvent(evt)
-        case evt: EventNoticeGroupPoke => PokeInGroupEvent(evt)
-        case evt: EventNoticeGroupMemberIncrease => MemberIncEvent(evt)
-        case evt: EventNoticeGroupMemberDecrease => MemberDecEvent(evt)
-        case _ => return // 其他事件直接忽略
+        case evt: FriendPokeNotice           => PokeEvent(evt)
+        case evt: GroupPokeNotice            => PokeInGroupEvent(evt)
+        case evt: GroupMemberIncreaseNotice  => MemberIncEvent(evt)
+        case evt: GroupMemberDecreaseNotice  => MemberDecEvent(evt)
       }
       handleEvent(evt)
     }

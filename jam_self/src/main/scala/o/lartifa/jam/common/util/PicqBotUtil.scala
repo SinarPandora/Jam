@@ -5,7 +5,7 @@ import o.lartifa.jam.ob.accounts.AccountManagerListener
 import o.lartifa.jam.ob.event.IcqListener
 import o.lartifa.jam.ob.listeners.HyExpressionListener
 import o.lartifa.jam.common.config.JamConfig
-import o.lartifa.jam.cool.qq.listener.{QEventListener, SleepingStateListener, SystemEventListener}
+import o.lartifa.jam.cool.qq.listener.{SleepingStateListener, SystemEventListener}
 import o.lartifa.jam.onebot.OneBotInbound
 import o.lartifa.jam.pool.JamContext
 
@@ -46,8 +46,8 @@ object PicqBotUtil {
     def switchToWakeUpMode(): Unit = {
       this.deregisterAllListeners()
       bot.getEventManager.registerListeners(recreateSystemListeners()*)
-      // 消息热路径由 OneBotInbound 直喂 QMessageListener，不再注册到 EventManager
-      bot.getEventManager.registerListeners(QEventListener, SystemEventListener)
+      // 消息 / 热路径 notice·request 由 OneBotInbound 直喂；EventManager 只留 meta 等
+      bot.getEventManager.registerListeners(SystemEventListener)
       OneBotInbound.resetMessageHandler()
     }
   }

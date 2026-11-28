@@ -16,6 +16,15 @@ trait OutboundGateway {
   def sendGroup(groupId: Long, message: String, autoEscape: Boolean = false): Long
 
   def sendDiscuss(discussId: Long, message: String, autoEscape: Boolean = false): Long
+
+  def setFriendAddRequest(flag: String, approve: Boolean, remark: String = ""): Unit
+
+  def setGroupAddRequest(
+    flag: String,
+    requestType: String,
+    approve: Boolean,
+    reason: String = "",
+  ): Unit
 }
 
 object OutboundGateway {
@@ -56,6 +65,23 @@ object OutboundGateway {
             SendDiscussMsgParams(discussId, message, autoEscape).toJsonString,
           ),
         )
+
+    def setFriendAddRequest(flag: String, approve: Boolean, remark: String = ""): Unit =
+      client.postRaw(
+        "set_friend_add_request",
+        SetFriendAddRequestParams(flag, approve, remark).toJsonString,
+      ): Unit
+
+    def setGroupAddRequest(
+      flag: String,
+      requestType: String,
+      approve: Boolean,
+      reason: String = "",
+    ): Unit =
+      client.postRaw(
+        "set_group_add_request",
+        SetGroupAddRequestParams(flag, requestType, approve, reason).toJsonString,
+      ): Unit
 
     private def parseMessageId(body: String): Long =
       body.fromJson[OneBotApiResponse] match {

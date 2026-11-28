@@ -1,16 +1,16 @@
 package o.lartifa.jam.cool.qq.listener
 
 import o.lartifa.jam.ob.event.events.meta.EventMetaHeartbeat
-import o.lartifa.jam.ob.event.events.request.{EventFriendRequest, EventGroupInviteRequest}
 import o.lartifa.jam.ob.event.{EventHandler, IcqListener}
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.JamConfig
+import o.lartifa.jam.onebot.domain.{FriendAddRequest, GroupInviteRequest, RequestEvent}
 import o.lartifa.jam.pool.JamContext
 
 import scala.util.Try
 
 /**
- * 系统事件监听器
+ * 系统事件监听器：request 由 OneBotInbound 直喂；meta 仍挂 EventManager。
  *
  * Author: sinar
  * 2020/1/18 02:59
@@ -19,29 +19,22 @@ object SystemEventListener extends IcqListener {
   private lazy val logger: HyLogger = JamContext.loggerFactory.get().getLogger(SystemEventListener.getClass)
 
   /**
-   * 被邀请时自动加群
-   *
-   * @param event 加群事件
+   * 处理热路径请求事件（好友申请 / 群邀请）
    */
-  @EventHandler
-  def autoAddGroup(event: EventGroupInviteRequest): Unit = {
-    if (JamConfig.config.autoAcceptGroupRequest) {
-      event.accept()
+  def handleRequestEvent(event: RequestEvent): Unit = {
+    event match {
+      case _: GroupInviteRequest =>
+        if (JamConfig.config.autoAcceptGroupRequest) {
+          event.accept()
+        }
+      case _: FriendAddRequest =>
+        if (JamConfig.config.autoAcceptFriendRequest) {
+          event.accept()
+        }
     }
-    event.getBot.getAccountManager.refreshCache()
-  }
-
-  /**
-   * 自动加好友
-   *
-   * @param event 加好友事件
-   */
-  @EventHandler
-  def autoAddFriends(event: EventFriendRequest): Unit = {
-    if (JamConfig.config.autoAcceptFriendRequest) {
-      event.accept()
+    Try(JamContext.bot.get().getAccountManager.refreshCache()).failed.foreach { err =>
+      logger.debug(s"请求处理后刷新缓存失败：${err.getMessage}")
     }
-    event.getBot.getAccountManager.refreshCache()
   }
 
   /**
