@@ -1,16 +1,16 @@
 package o.lartifa.jam.cool.qq.listener
 
-import o.lartifa.jam.ob.event.events.meta.EventMetaHeartbeat
-import o.lartifa.jam.ob.event.{EventHandler, IcqListener}
+import o.lartifa.jam.ob.event.IcqListener
 import cc.moecraft.logger.HyLogger
 import o.lartifa.jam.common.config.JamConfig
-import o.lartifa.jam.onebot.domain.{FriendAddRequest, GroupInviteRequest, RequestEvent}
+import o.lartifa.jam.onebot.domain.{FriendAddRequest, GroupInviteRequest, MetaEvent, MetaHeartbeat, MetaLifecycle, RequestEvent}
 import o.lartifa.jam.pool.JamContext
 
 import scala.util.Try
 
 /**
- * 系统事件监听器：request 由 OneBotInbound 直喂；meta 仍挂 EventManager。
+ * 系统事件监听器：request / meta 由 OneBotInbound 直喂。
+ * 仍注册为 IcqListener，供清醒/睡眠切换时占位（EventParser 已停用）。
  *
  * Author: sinar
  * 2020/1/18 02:59
@@ -38,15 +38,16 @@ object SystemEventListener extends IcqListener {
   }
 
   /**
-   * 心跳事件刷新缓存
-   *
-   * @param event 心跳事件
+   * 处理元事件：心跳刷新账号缓存；lifecycle 本阶段 no-op。
    */
-  @EventHandler
-  def autoRefresh(event: EventMetaHeartbeat): Unit = {
-    logger.debug("正在刷新账号缓存")
-    Try(event.getBot.getAccountManager.refreshCache()).foreach(_ => {
-      logger.debug("缓存刷新成功")
-    })
-  }
+  def handleMetaEvent(event: MetaEvent): Unit =
+    event match {
+      case _: MetaHeartbeat =>
+        logger.debug("正在刷新账号缓存")
+        Try(JamContext.bot.get().getAccountManager.refreshCache()).foreach { _ =>
+          logger.debug("缓存刷新成功")
+        }
+      case _: MetaLifecycle =>
+        ()
+    }
 }

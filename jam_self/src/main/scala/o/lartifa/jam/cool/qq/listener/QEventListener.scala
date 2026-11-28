@@ -33,12 +33,13 @@ object QEventListener {
   def handleNoticeEvent(event: NoticeEvent): Unit = {
     if (!JamContext.initLock.get() && event.userId != BotConfig.qID) {
       val evt = event match {
-        case evt: FriendPokeNotice           => PokeEvent(evt)
-        case evt: GroupPokeNotice            => PokeInGroupEvent(evt)
-        case evt: GroupMemberIncreaseNotice  => MemberIncEvent(evt)
-        case evt: GroupMemberDecreaseNotice  => MemberDecEvent(evt)
+        case evt: FriendPokeNotice           => Some(PokeEvent(evt))
+        case evt: GroupPokeNotice            => Some(PokeInGroupEvent(evt))
+        case evt: GroupMemberIncreaseNotice  => Some(MemberIncEvent(evt))
+        case evt: GroupMemberDecreaseNotice  => Some(MemberDecEvent(evt))
+        case _: UnhandledNotice              => None
       }
-      handleEvent(evt)
+      evt.foreach(handleEvent)
     }
   }
 

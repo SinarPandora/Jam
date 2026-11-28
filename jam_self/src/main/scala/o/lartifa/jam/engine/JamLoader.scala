@@ -76,7 +76,7 @@ object JamLoader {
     } yield {
       ScriptRunner.init()
       runBootTasks()
-      // 消息 / 热路径 notice·request 由 OneBotInbound 直喂；EventManager 只留 meta
+      // 消息 / notice / request / meta 由 OneBotInbound 直喂；EventManager 注册仅占位
       client.getEventManager.registerListeners(SystemEventListener)
       o.lartifa.jam.onebot.OneBotInbound.resetMessageHandler()
       client.getCommandManager.registerCommands(MasterCommands.commands *)
